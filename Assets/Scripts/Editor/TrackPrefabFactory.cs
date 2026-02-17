@@ -1,279 +1,139 @@
+#if UNITY_EDITOR
 using UnityEngine;
-using System;
-using System.Collections.Generic;
+using UnityEditor;
 
-public class GameManager : MonoBehaviour
+/// <summary>
+/// 트랙 프리팹 생성 팩토리 (에디터 전용)
+/// 
+/// 트랙 프리팹 구조:
+///   Track_XXX (Prefab Root)
+///     ├── Background       → SpriteRenderer (배경 이미지)
+///     ├── Props            → 소품 그룹 (애니메이션 가능)
+///     │   ├── Cloud_1      → 구름 이동 애니메이션
+///     │   ├── Cloud_2
+///     │   └── ...
+///     ├── ForegroundProps   → 전경 소품 (캐릭터 위에 표시)
+///     └── Effects          → 파티클/셰이더 효과
+/// 
+/// 프리팹 저장 위치: Assets/Resources/TrackPrefabs/
+/// 
+/// 사용: 메뉴 → DopamineRace → 트랙 프리팹 생성
+/// </summary>
+public static class TrackPrefabFactory
 {
-    public static GameManager Instance { get; private set; }
-    public enum GameState { Betting, Countdown, Racing, Result, Finish }
-    public GameState CurrentState { get; private set; } = GameState.Betting;
+    private const string PREFAB_FOLDER = "Assets/Resources/TrackPrefabs";
+    private const float BG_PPU = 70f;
+    private const int BG_SORTING_ORDER = -100;
 
-    public event Action<GameState> OnStateChanged;
-    public event Action<int> OnCountdownTick;
-    public event Action OnRaceStart;
-    public event Action<int> OnRoundChanged;          // ★ 라운드 변경 알림
-    public event Action<TrackInfo> OnTrackChanged;     // ★ 트랙 변경 알림
-
-    private float countdownTimer;
-
-    // ═══ 기존 호환 (쌍승 전용) ═══
-    public int BetFirst { get; private set; } = -1;
-    public int BetSecond { get; private set; } = -1;
-
-    // ═══ 라운드 시스템 ═══
-    public int CurrentRound { get; private set; } = 1;      // 1-based
-    public int TotalRounds => GameSettings.Instance.TotalRounds;
-    public int CurrentRoundLaps => GameSettings.Instance.GetLapsForRound(CurrentRound);
-    public bool IsLastRound => CurrentRound >= TotalRounds;
-
-    // ═══ 배팅 시스템 ═══
-    public BetInfo CurrentBet { get; private set; }
-
-    private void Awake()
+    [MenuItem("DopamineRace/트랙 프리팹 생성/전체 생성 (5종)")]
+    public static void CreateAllTrackPrefabs()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
+        EnsureFolder();
+
+        CreateTrackPrefab("Track_Normal",  "일반",    "Tracks/bg_normal");
+        CreateTrackPrefab("Track_Rainy",   "비",      "Tracks/bg_rainy");
+        CreateTrackPrefab("Track_Snow",    "설산",    "Tracks/bg_snow");
+        CreateTrackPrefab("Track_Desert",  "사막",    "Tracks/bg_desert");
+        CreateTrackPrefab("Track_Highland","고산지대", "Tracks/bg_highland");
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Debug.Log("★ 트랙 프리팹 5종 생성 완료! → " + PREFAB_FOLDER);
     }
 
-    private void Start()
-    {
-        StartNewGame();
-    }
+    [MenuItem("DopamineRace/트랙 프리팹 생성/일반 트랙")]
+    public static void CreateNormal() { EnsureFolder(); CreateTrackPrefab("Track_Normal", "일반", "Tracks/bg_normal"); Finish(); }
 
-    private void Update()
+    [MenuItem("DopamineRace/트랙 프리팹 생성/비 트랙")]
+    public static void CreateRainy() { EnsureFolder(); CreateTrackPrefab("Track_Rainy", "비", "Tracks/bg_rainy"); Finish(); }
+
+    [MenuItem("DopamineRace/트랙 프리팹 생성/설산 트랙")]
+    public static void CreateSnow() { EnsureFolder(); CreateTrackPrefab("Track_Snow", "설산", "Tracks/bg_snow"); Finish(); }
+
+    [MenuItem("DopamineRace/트랙 프리팹 생성/사막 트랙")]
+    public static void CreateDesert() { EnsureFolder(); CreateTrackPrefab("Track_Desert", "사막", "Tracks/bg_desert"); Finish(); }
+
+    [MenuItem("DopamineRace/트랙 프리팹 생성/고산 트랙")]
+    public static void CreateHighland() { EnsureFolder(); CreateTrackPrefab("Track_Highland", "고산지대", "Tracks/bg_highland"); Finish(); }
+
+    // ══════════════════════════════════════
+    //  프리팹 생성
+    // ══════════════════════════════════════
+
+    private static void CreateTrackPrefab(string prefabName, string trackLabel, string bgImagePath)
     {
-        if (CurrentState == GameState.Countdown)
+        string prefabPath = PREFAB_FOLDER + "/" + prefabName + ".prefab";
+
+        // 이미 존재하면 스킵
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null)
         {
-            countdownTimer -= Time.deltaTime;
-            OnCountdownTick?.Invoke(Mathf.CeilToInt(countdownTimer));
-            if (countdownTimer <= 0f) ChangeState(GameState.Racing);
-        }
-    }
-
-    // ═══ 게임 초기화 (새 게임 시작) ═══
-    public void StartNewGame()
-    {
-        CurrentRound = 1;
-        CurrentBet = new BetInfo(BetType.Exacta);   // 기본 = 쌍승
-        ScoreManager.Instance?.ResetAll();
-
-        // ★ 트랙 히스토리 리셋
-        if (TrackDatabase.Instance != null)
-        {
-            TrackDatabase.Instance.ResetTrackHistory();
-        }
-
-        // ★ 캐릭터 선발 (CSV 풀에서 랜덤)
-        if (CharacterDatabase.Instance != null)
-        {
-            CharacterDatabase.Instance.SelectRandom(GameSettings.Instance.racerCount);
-        }
-
-        // ★ 선발된 캐릭터로 레이서 재스폰
-        if (RaceManager.Instance != null)
-        {
-            RaceManager.Instance.RespawnRacers();
-        }
-
-        // ★ Round 1 = 기본 트랙 적용
-        ApplyTrackForCurrentRound();
-
-        ApplyRoundLaps();
-        Debug.Log("═══ 새 게임 시작 | 총 " + TotalRounds + " 라운드 | "
-            + GameConstants.RACER_COUNT + "명 선발 ═══");
-        ChangeState(GameState.Betting);
-    }
-
-    // ═══ 배팅 타입 선택 ═══
-    public void SelectBetType(BetType type)
-    {
-        if (CurrentState != GameState.Betting) return;
-        CurrentBet = new BetInfo(type);
-        BetFirst = -1;
-        BetSecond = -1;
-        Debug.Log("[배팅] 타입 변경: " + BettingCalculator.GetTypeName(type)
-            + " (" + BettingCalculator.GetTypeDesc(type) + ") → "
-            + BettingCalculator.GetPayout(type) + "점");
-    }
-
-    // ═══ 선택 추가 ═══
-    public void AddSelection(int racerIndex)
-    {
-        if (CurrentState != GameState.Betting) return;
-        if (CurrentBet == null) return;
-        if (CurrentBet.IsComplete) return;
-        if (CurrentBet.selections.Contains(racerIndex)) return;
-
-        CurrentBet.selections.Add(racerIndex);
-        Debug.Log("[배팅] 선택 추가: " + GameConstants.RACER_NAMES[racerIndex]
-            + " (" + CurrentBet.selections.Count + "/" + CurrentBet.RequiredSelections + ")");
-
-        // 기존 호환: BetFirst / BetSecond 동기화
-        SyncLegacyBets();
-    }
-
-    // ═══ 선택 제거 ═══
-    public void RemoveSelection(int racerIndex)
-    {
-        if (CurrentState != GameState.Betting) return;
-        if (CurrentBet == null) return;
-
-        int idx = CurrentBet.selections.IndexOf(racerIndex);
-        if (idx >= 0)
-        {
-            CurrentBet.selections.RemoveAt(idx);
-            Debug.Log("[배팅] 선택 제거: " + GameConstants.RACER_NAMES[racerIndex]
-                + " (" + CurrentBet.selections.Count + "/" + CurrentBet.RequiredSelections + ")");
-            SyncLegacyBets();
-        }
-    }
-
-    // 기존 BetFirst/BetSecond와 동기화
-    private void SyncLegacyBets()
-    {
-        BetFirst = CurrentBet.selections.Count > 0 ? CurrentBet.selections[0] : -1;
-        BetSecond = CurrentBet.selections.Count > 1 ? CurrentBet.selections[1] : -1;
-    }
-
-    // ═══ 상태 변경 ═══
-    public void ChangeState(GameState s)
-    {
-        CurrentState = s;
-        if (s == GameState.Betting)
-        {
-            // 배팅 타입은 유지, 선택만 리셋
-            if (CurrentBet != null)
-                CurrentBet.selections.Clear();
-            BetFirst = -1;
-            BetSecond = -1;
-        }
-        if (s == GameState.Countdown) countdownTimer = 3f;
-        if (s == GameState.Racing) OnRaceStart?.Invoke();
-        if (s == GameState.Result) CalcScore();
-        if (s == GameState.Finish) ScoreManager.Instance?.SaveToLeaderboard();
-        OnStateChanged?.Invoke(s);
-    }
-
-    // ═══ 기존 호환: PlaceBet ═══
-    public void PlaceBet(int first, int second)
-    {
-        BetFirst = first;
-        BetSecond = second;
-        // BetInfo에도 반영
-        if (CurrentBet != null)
-        {
-            CurrentBet.selections.Clear();
-            CurrentBet.selections.Add(first);
-            if (CurrentBet.RequiredSelections > 1)
-                CurrentBet.selections.Add(second);
-        }
-    }
-
-    // ═══ 레이스 시작 ═══
-    public void StartRace()
-    {
-        if (CurrentBet == null || !CurrentBet.IsComplete) return;
-
-        string trackName = TrackDatabase.Instance?.CurrentTrackInfo != null
-            ? TrackDatabase.Instance.CurrentTrackInfo.trackIcon + " " + TrackDatabase.Instance.CurrentTrackInfo.trackName
-            : "일반";
-
-        Debug.Log("═══ Round " + CurrentRound + "/" + TotalRounds
-            + " | " + CurrentRoundLaps + "바퀴 | 트랙: " + trackName
-            + " | " + BettingCalculator.GetTypeName(CurrentBet.type) + " 배팅 ═══");
-        ChangeState(GameState.Countdown);
-    }
-
-    // ═══ 점수 계산 ═══
-    private void CalcScore()
-    {
-        var rankings = RaceManager.Instance?.GetFinalRankings();
-        if (rankings == null || rankings.Count < 3) return;
-
-        // 인덱스 리스트 (0=1등, 1=2등, 2=3등...)
-        List<int> rankingIndices = new List<int>();
-        foreach (var r in rankings)
-            rankingIndices.Add(r.racerIndex);
-
-        int score = BettingCalculator.Calculate(CurrentBet, rankingIndices);
-
-        Debug.Log("[결과] Round " + CurrentRound + " | "
-            + BettingCalculator.GetTypeName(CurrentBet.type) + " → "
-            + (score > 0 ? "적중! +" + score + "점" : "실패 +0점"));
-
-        // ScoreManager에 라운드 결과 기록
-        ScoreManager.Instance?.RecordRound(CurrentBet.type, score);
-    }
-
-    // ═══ 다음 라운드 ═══
-    public void NextRound()
-    {
-        if (IsLastRound)
-        {
-            // 마지막 라운드 → Finish 화면
-            Debug.Log("═══ 전체 " + TotalRounds + " 라운드 종료! 총점: "
-                + ScoreManager.Instance?.CurrentGameScore + " ═══");
-            ChangeState(GameState.Finish);
+            Debug.Log("  이미 존재: " + prefabPath + " (스킵)");
             return;
         }
 
-        CurrentRound++;
-        ApplyRoundLaps();
-        RaceManager.Instance?.ResetRace();
+        // ── 루트 오브젝트 ──
+        GameObject root = new GameObject(prefabName);
 
-        // ★ 트랙 변경 (전판 제외 + weight 랜덤)
-        ApplyTrackForCurrentRound();
+        // ── Background ──
+        GameObject bgObj = new GameObject("Background");
+        bgObj.transform.SetParent(root.transform);
+        bgObj.transform.localPosition = Vector3.zero;
 
-        Debug.Log("═══ Next → Round " + CurrentRound + "/" + TotalRounds
-            + " | " + CurrentRoundLaps + "바퀴 ═══");
+        SpriteRenderer bgSR = bgObj.AddComponent<SpriteRenderer>();
+        bgSR.sortingOrder = BG_SORTING_ORDER;
 
-        OnRoundChanged?.Invoke(CurrentRound);
-        ChangeState(GameState.Betting);
-    }
-
-    // ═══ 트랙 적용 ═══
-    private void ApplyTrackForCurrentRound()
-    {
-        var trackDB = TrackDatabase.Instance;
-        if (trackDB == null)
+        // 배경 이미지 로드 시도
+        Texture2D bgTex = Resources.Load<Texture2D>(bgImagePath);
+        if (bgTex != null)
         {
-            Debug.LogWarning("[GameManager] TrackDatabase 없음 → 트랙 미적용");
-            return;
-        }
-
-        TrackInfo trackInfo = trackDB.ApplyTrackForRound(CurrentRound);
-        if (trackInfo == null) return;
-
-        // TrackVisualizer에 배경 교체 요청
-        var gs = GameSettings.Instance;
-        if (gs.enableTrackTransition && CurrentRound > 1 && TrackTransition.Instance != null)
-        {
-            // ★ 페이드 전환 연출
-            TrackTransition.Instance.PlayTransition(gs.trackTransitionFadeDuration, () =>
-            {
-                if (TrackVisualizer.Instance != null)
-                    TrackVisualizer.Instance.LoadTrack(trackInfo);
-            });
+            bgTex.filterMode = FilterMode.Point;
+            bgSR.sprite = Sprite.Create(bgTex,
+                new Rect(0, 0, bgTex.width, bgTex.height),
+                new Vector2(0.5f, 0.5f), BG_PPU);
         }
         else
         {
-            // 연출 OFF 또는 Round 1 → 즉시 교체
-            if (TrackVisualizer.Instance != null)
-                TrackVisualizer.Instance.LoadTrack(trackInfo);
+            Debug.LogWarning("  배경 이미지 없음: " + bgImagePath + " (나중에 추가 가능)");
         }
 
-        // ★ 트랙별 웨이포인트 재로드
-        if (RaceManager.Instance != null)
-            RaceManager.Instance.ReloadWaypoints();
+        // ── Props (소품 그룹 - 애니메이션 대상) ──
+        GameObject propsObj = new GameObject("Props");
+        propsObj.transform.SetParent(root.transform);
+        propsObj.transform.localPosition = Vector3.zero;
 
-        OnTrackChanged?.Invoke(trackInfo);
+        // ── ForegroundProps (전경 소품 - 캐릭터 위에 표시) ──
+        GameObject fgProps = new GameObject("ForegroundProps");
+        fgProps.transform.SetParent(root.transform);
+        fgProps.transform.localPosition = Vector3.zero;
+
+        // ── Effects (파티클/셰이더) ──
+        GameObject effectsObj = new GameObject("Effects");
+        effectsObj.transform.SetParent(root.transform);
+        effectsObj.transform.localPosition = Vector3.zero;
+
+        // ── 프리팹 저장 ──
+        GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+        Object.DestroyImmediate(root);
+
+        Debug.Log("  생성: " + prefabPath + " (" + trackLabel + ")");
     }
 
-    // 현재 라운드의 바퀴 수를 RaceManager에 적용
-    private void ApplyRoundLaps()
+    // ══════════════════════════════════════
+    //  유틸
+    // ══════════════════════════════════════
+
+    private static void EnsureFolder()
     {
-        int laps = CurrentRoundLaps;
-        RaceManager.Instance?.SetLaps(laps);
-        Debug.Log("[라운드] Round " + CurrentRound + ", Laps: " + laps);
+        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
+            AssetDatabase.CreateFolder("Assets", "Resources");
+        if (!AssetDatabase.IsValidFolder("Assets/Resources/TrackPrefabs"))
+            AssetDatabase.CreateFolder("Assets/Resources", "TrackPrefabs");
+    }
+
+    private static void Finish()
+    {
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
     }
 }
+#endif
