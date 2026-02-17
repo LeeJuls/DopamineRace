@@ -436,8 +436,16 @@ public class CollisionVFX : MonoBehaviour
     {
         EnsureSprites();
 
+        var gs = GameSettings.Instance;
+
         if (vfxRoot == null)
-            CreateVFXObjects();
+            CreateVFXObjects(gs);
+
+        // ── GameSettings에서 크기 읽기 ──
+        float iconScale = gs.vfxIconScale;
+        float labelCharSize = gs.vfxLabelSize;
+        float height = gs.vfxHeight;
+        floatSpeed = gs.vfxFloatSpeed;
 
         // ── 타입별 설정 ──
         Color bgColor;
@@ -450,21 +458,21 @@ public class CollisionVFX : MonoBehaviour
             case CollisionVFXType.Hit:
                 bgColor = new Color(1f, 0.2f, 0.1f, 0.9f);    // 빨강
                 iconColor = new Color(1f, 1f, 0.3f, 1f);        // 노랑
-                icon = starSprite;
+                icon = gs.vfxHitIcon != null ? gs.vfxHitIcon : starSprite;
                 text = "HIT!";
                 break;
 
             case CollisionVFXType.Dodge:
                 bgColor = new Color(0.2f, 0.6f, 1f, 0.9f);     // 파랑
                 iconColor = new Color(0.8f, 1f, 1f, 1f);        // 연하늘
-                icon = shieldSprite;
+                icon = gs.vfxDodgeIcon != null ? gs.vfxDodgeIcon : shieldSprite;
                 text = "MISS";
                 break;
 
             case CollisionVFXType.Slingshot:
                 bgColor = new Color(0.1f, 0.9f, 0.3f, 0.9f);   // 초록
                 iconColor = new Color(1f, 1f, 0.5f, 1f);        // 연노랑
-                icon = arrowSprite;
+                icon = gs.vfxSlingshotIcon != null ? gs.vfxSlingshotIcon : arrowSprite;
                 text = "BOOST!";
                 break;
 
@@ -476,20 +484,26 @@ public class CollisionVFX : MonoBehaviour
                 break;
         }
 
+        // ── 커스텀 아이콘이면 tint 안 먹이기 ──
+        bool isCustomIcon = (type == CollisionVFXType.Hit && gs.vfxHitIcon != null)
+            || (type == CollisionVFXType.Dodge && gs.vfxDodgeIcon != null)
+            || (type == CollisionVFXType.Slingshot && gs.vfxSlingshotIcon != null);
+
         // ── 적용 ──
         bgSprite.sprite = circleSprite;
         bgSprite.color = bgColor;
-        bgSprite.transform.localScale = Vector3.one * 0.5f;
+        bgSprite.transform.localScale = Vector3.one * iconScale;
 
         iconSprite.sprite = icon;
-        iconSprite.color = iconColor;
-        iconSprite.transform.localScale = Vector3.one * 0.3f;
+        iconSprite.color = isCustomIcon ? Color.white : iconColor;
+        iconSprite.transform.localScale = Vector3.one * (iconScale * 0.6f);
         iconSprite.transform.localPosition = new Vector3(0, 0, -0.01f);
 
         label.text = text;
         label.color = Color.white;
+        label.characterSize = labelCharSize;
 
-        startLocalPos = new Vector3(0, 1.8f, 0);
+        startLocalPos = new Vector3(0, height, 0);
         vfxRoot.transform.localPosition = startLocalPos;
         vfxRoot.SetActive(true);
 
@@ -500,11 +514,14 @@ public class CollisionVFX : MonoBehaviour
         FixFlip();
     }
 
-    private void CreateVFXObjects()
+    private void CreateVFXObjects(GameSettings gs)
     {
+        float height = gs != null ? gs.vfxHeight : 1.8f;
+        float labelCharSize = gs != null ? gs.vfxLabelSize : 0.08f;
+
         vfxRoot = new GameObject("CollisionVFX");
         vfxRoot.transform.SetParent(transform);
-        vfxRoot.transform.localPosition = new Vector3(0, 1.8f, 0);
+        vfxRoot.transform.localPosition = new Vector3(0, height, 0);
 
         // 배경 원
         var bgObj = new GameObject("BG");
@@ -527,7 +544,7 @@ public class CollisionVFX : MonoBehaviour
         label = labelObj.AddComponent<TextMesh>();
         label.alignment = TextAlignment.Center;
         label.anchor = TextAnchor.MiddleCenter;
-        label.characterSize = 0.08f;
+        label.characterSize = labelCharSize;
         label.fontSize = 36;
         label.fontStyle = FontStyle.Bold;
         label.color = Color.white;

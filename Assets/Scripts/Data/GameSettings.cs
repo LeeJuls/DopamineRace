@@ -213,6 +213,33 @@ public class GameSettings : ScriptableObject
     [Range(0.1f, 1.0f)]
     public float crowdDampen = 0.5f;
 
+    [Header("═══ 충돌 VFX 크기 설정 ═══")]
+    [Tooltip("VFX 아이콘 크기 (배경 원 크기)\n기본값 0.5, 작게 하려면 0.2~0.3")]
+    [Range(0.1f, 1.5f)]
+    public float vfxIconScale = 0.5f;
+
+    [Tooltip("VFX 텍스트 크기\n기본값 0.08, 작게 하려면 0.04~0.06")]
+    [Range(0.02f, 0.2f)]
+    public float vfxLabelSize = 0.08f;
+
+    [Tooltip("VFX 표시 높이 (캐릭터 머리 위 오프셋)\n기본값 1.8")]
+    [Range(0.5f, 3.0f)]
+    public float vfxHeight = 1.8f;
+
+    [Tooltip("VFX 떠오르는 속도\n기본값 1.5")]
+    [Range(0.5f, 4.0f)]
+    public float vfxFloatSpeed = 1.5f;
+
+    [Header("═══ 충돌 VFX 커스텀 아이콘 (선택) ═══")]
+    [Tooltip("충돌(HIT) 아이콘 스프라이트\n비워두면 기본 별 모양 사용")]
+    public Sprite vfxHitIcon;
+
+    [Tooltip("회피(DODGE) 아이콘 스프라이트\n비워두면 기본 방패 모양 사용")]
+    public Sprite vfxDodgeIcon;
+
+    [Tooltip("슬링샷(BOOST) 아이콘 스프라이트\n비워두면 기본 화살표 모양 사용")]
+    public Sprite vfxSlingshotIcon;
+
     [Header("═══ 슬링샷 ═══")]
     [Tooltip("brave 1당 슬링샷 가속량")]
     [Range(0.005f, 0.1f)]

@@ -69,6 +69,13 @@ MonoBehaviour:
   loserPenaltyDuration: 0.5
   crowdThreshold: 3
   crowdDampen: 0.5
+  vfxIconScale: 0.35
+  vfxLabelSize: 0.06
+  vfxHeight: 0.5
+  vfxFloatSpeed: 1
+  vfxHitIcon: {fileID: 0}
+  vfxDodgeIcon: {fileID: 0}
+  vfxSlingshotIcon: {fileID: 0}
   slingshotFactor: 0.02
   slingshotDuration: 1
   slingshotMaxBoost: 0.4
@@ -79,4 +86,6 @@ MonoBehaviour:
   luckDodgeChance: 0.02
   currentTrack: {fileID: 0}
   randomTrackPerRound: 0
+  enableTrackTransition: 1
+  trackTransitionFadeDuration: 0.3
   enableRaceDebug: 1
