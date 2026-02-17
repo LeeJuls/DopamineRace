@@ -1,0 +1,6 @@
+track_id,track_name,track_icon,track_description,bg_prefab,weight,speed_mul,noise_mul,fatigue_mul,collision_range_mul,collision_penalty_mul,slingshot_mul,early_bonus_mul,mid_bonus_mul,late_bonus_mul,power_speed_bonus,brave_speed_bonus,luck_mul,has_mid_slow_zone,mid_slow_start,mid_slow_end,mid_slow_speed_mul,loser_penalty_dur_mul
+normal,일반,🏟️,표준 트랙. 순수 스탯 경쟁!,TrackPrefabs/Track_Normal,100,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0,0,1.0,false,0,0,1.0,1.0
+rainy,비,🌧️,미끄러운 노면. calm 유리!,TrackPrefabs/Track_Rainy,80,1.0,2.0,1.0,1.4,0.6,0.7,0.6,1.0,1.0,0,0,1.3,false,0,0,1.0,1.0
+snow,설산,❄️,빙판+체력소모. endurance 유리!,TrackPrefabs/Track_Snow,60,0.9,1.0,1.8,1.0,1.5,1.6,1.0,1.0,1.0,0,0,0.7,false,0,0,1.0,1.0
+desert,사막,🏜️,모래 저항+열사병. power 유리!,TrackPrefabs/Track_Desert,70,1.0,1.6,1.4,1.0,1.0,1.0,1.0,1.0,1.0,0.15,0,1.2,false,0,0,1.0,1.6
+highland,고산지대,🏔️,산소부족+오르막. brave 유리!,TrackPrefabs/Track_Highland,50,0.85,1.0,1.0,0.7,0.7,1.0,1.0,1.0,1.0,0,0.12,0.8,true,0.4,0.6,0.8,1.0

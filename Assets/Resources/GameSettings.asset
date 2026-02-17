@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc087597b8911e547bfa008df77a4b6c, type: 3}
+  m_Name: GameSettings
+  m_EditorClassIdentifier: Assembly-CSharp::GameSettings
+  racerCount: 8
+  racerMinSpeed: 1
+  racerMaxSpeed: 4
+  speedChangeInterval: 3
+  speedLerpRate: 3
+  roundLaps: 0100000002000000030000000400000005000000
+  payoutWin: 8
+  payoutPlace: 3
+  payoutQuinella: 31
+  payoutExacta: 81
+  payoutTrio: 120
+  payoutWide: 11
+  pathDeviation: 0.7
+  characterScale: 1.2
+  laneOffset: 0.05
+  labelSize: 0.07
+  labelHeight: 0.8
+  betMarkerSize: 0.07
+  betMarkerHeight: -0.01
+  iconFileZoom: 1.3
+  iconFileOffsetY: 0.05
+  iconFileOffsetX: 0
+  iconPrefabZoom: 3.8
+  iconPrefabOffsetY: 0.55
+  iconPrefabOffsetX: -0.75
+  bettingButtonHeight: 120
+  bgmDelay: 1
+  bgmVolume: 0.4
+  globalSpeedMultiplier: 2.5
+  noiseFactor: 0.1
+  fatigueFactor: 0.15
+  raceSpeedLerp: 3
+  earlyBonus_Runner: 0.15
+  earlyBonus_Leader: 0.08
+  earlyBonus_Chaser: 0
+  earlyBonus_Reckoner: -0.05
+  midBonus_Runner: -0.05
+  midBonus_Leader: 0.05
+  midBonus_Chaser: 0.1
+  midBonus_Reckoner: 0.03
+  lateBonus_Runner: -0.1
+  lateBonus_Leader: 0
+  lateBonus_Chaser: 0.05
+  lateBonus_Reckoner: 0.18
+  enableCollision: 1
+  enableCollisionVFX: 1
+  collisionChance: 0.8
+  shakeMagnitude: 0.04
+  shakeWinnerDuration: 0.15
+  shakeLoserDuration: 0.18
+  collisionRange: 0.8
+  collisionCooldown: 2
+  collisionBasePenalty: 0.3
+  winnerPenaltyDuration: 0.3
+  loserPenaltyDuration: 0.5
+  crowdThreshold: 3
+  crowdDampen: 0.5
+  slingshotFactor: 0.02
+  slingshotDuration: 1
+  slingshotMaxBoost: 0.4
+  luckCheckInterval: 3
+  luckCritChance: 0.005
+  luckCritBoost: 1.3
+  luckCritDuration: 1.5
+  luckDodgeChance: 0.02
+  currentTrack: {fileID: 0}
+  randomTrackPerRound: 0
+  enableRaceDebug: 1

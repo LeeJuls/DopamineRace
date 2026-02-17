@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 914319ea858bc9d4cbbe6ecafa781395, type: 3}
+  m_Name: Track_Highland
+  m_EditorClassIdentifier: Assembly-CSharp::TrackData
+  trackName: "\uACE0\uC0B0\uC9C0\uB300"
+  trackIcon: "\U0001F3D4\uFE0F"
+  trackDescription: "\uC0B0\uC18C \uBD80\uC871, \uAE09\uACBD\uC0AC \uC624\uB974\uB9C9.\nbrave
+    \uB192\uC740 \uCE90\uB9AD\uD130 \uC720\uB9AC!\n\uCDA9\uB3CC \uC801\uC74C, \uC758\uC9C0\uB825
+    \uB808\uC774\uC2A4"
+  speedMultiplier: 0.85
+  noiseMultiplier: 1
+  fatigueMultiplier: 1
+  collisionRangeMultiplier: 0.7
+  collisionPenaltyMultiplier: 0.7
+  slingshotMultiplier: 1
+  earlyBonusMultiplier: 1
+  midBonusMultiplier: 1
+  lateBonusMultiplier: 1
+  powerSpeedBonus: 0
+  braveSpeedBonus: 0.12
+  luckMultiplier: 0.8
+  hasMidSlowZone: 1
+  midSlowZoneStart: 0.4
+  midSlowZoneEnd: 0.6
+  midSlowZoneSpeedMultiplier: 0.8
+  loserPenaltyDurationMultiplier: 1

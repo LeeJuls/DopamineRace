@@ -1,0 +1,13 @@
+char_name,char_base_speed,char_base_power,char_base_brave,char_base_calm,char_base_endurance,char_base_luck,char_type,char_ability,char_resource_prefabs,char_icon,char_weapon
+번개,1,10,5,12,15,10,Runner,추후 구현,\Pixem\Resources\CharacterPrefabs\Character_0.prefab,,L
+태풍,1.2,10,11,6,14,9,Leader,추후 구현,\Pixem\Resources\CharacterPrefabs\Character_1.prefab,,L
+혜성,0.9,9,12,7,13,5,Chaser,추후 구현,\Pixem\Resources\CharacterPrefabs\Character_2.prefab,,L
+로켓,1.1,8,13,8,12,15,Reckoner,추후 구현,\Pixem\Resources\CharacterPrefabs\Character_3.prefab,,L
+불꽃,1.1,7,14,10,10,11,Runner,추후 구현,\Pixem\Resources\CharacterPrefabs\Character_4.prefab,,L
+질풍,1.1,11,5,9,11,12,Leader,추후 구현,\Pixem\Resources\CharacterPrefabs\Character_5.prefab,,L
+천둥,1.1,12,6,11,9,20,Chaser,추후 구현,\Pixem\Resources\CharacterPrefabs\Character_6.prefab,,L
+유성,1.1,13,7,12,11,22,Reckoner,추후 구현,\Pixem\Resources\CharacterPrefabs\Character_7.prefab,,L
+폭풍,1.1,11,8,13,12,3,Reckoner,추후 구현,\Pixem\Resources\CharacterPrefabs\Character_8.prefab,,L
+섬광,1.1,9,10,5,15,6,Chaser,추후 구현,\Pixem\Resources\CharacterPrefabs\Character_9.prefab,,L
+해일,1.1,15,5,9,10,8,Leader,추후 구현,\Pixem\Resources\CharacterPrefabs\Character_10.prefab,,L
+선녀,1.1,7,10,10,10,10,Runner,추후 구현,\Pixem\Resources\CharacterPrefabs\Character_11.prefab,,L
