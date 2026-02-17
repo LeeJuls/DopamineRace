@@ -26,6 +26,7 @@ public class RaceDebugOverlay : MonoBehaviour
     private GUIStyle headerStyle;
     private GUIStyle normalStyle;
     private GUIStyle critStyle;
+    private GUIStyle copyBtnStyle;
     private bool stylesInitialized = false;
 
     // ── 갱신 주기 ──
@@ -33,6 +34,10 @@ public class RaceDebugOverlay : MonoBehaviour
     private float refreshTimer = 0f;
     private string cachedSimpleText = "";
     private string cachedDetailText = "";
+
+    // ── 복사 피드백 ──
+    private float copyFeedbackTimer = 0f;
+    private string copyFeedbackMsg = "";
 
     // ══════════════════════════════════════
     //  라운드별 이벤트 저장소
@@ -68,6 +73,12 @@ public class RaceDebugOverlay : MonoBehaviour
         }
 
         public bool IsRacingEvent() => type != EventType.Finish;
+
+        /// <summary>복사용 plain text (리치텍스트 제거)</summary>
+        public string ToPlainText()
+        {
+            return string.Format("[{0:F1}s] {1} {2}", time, GetIcon(), description);
+        }
     }
 
     public class RoundLog
@@ -186,6 +197,79 @@ public class RaceDebugOverlay : MonoBehaviour
     public void ClearLog() { }
 
     // ══════════════════════════════════════
+    //  ★ 로그 복사 기능
+    // ══════════════════════════════════════
+
+    /// <summary>
+    /// 특정 라운드의 전체 이벤트 로그를 plain text로 반환
+    /// </summary>
+    private string BuildCopyText(int round)
+    {
+        if (!allRoundLogs.ContainsKey(round)) return "(로그 없음)";
+        var log = allRoundLogs[round];
+
+        StringBuilder sb = new StringBuilder();
+        sb.AppendFormat("═══ 라운드 {0} 이벤트 로그 ═══\n", round);
+
+        // 레이싱 이벤트
+        sb.AppendFormat("\n▶ 레이싱 이벤트 ({0}건)\n", log.racingEvents.Count);
+        sb.AppendLine("────────────────────────");
+        foreach (var e in log.racingEvents)
+            sb.AppendLine(e.ToPlainText());
+
+        // 완주 기록
+        sb.AppendFormat("\n▶ 완주 기록 ({0}건)\n", log.finishEvents.Count);
+        sb.AppendLine("────────────────────────");
+        foreach (var e in log.finishEvents)
+            sb.AppendLine(e.ToPlainText());
+
+        // 리포트 (있으면)
+        if (!string.IsNullOrEmpty(log.reportText))
+        {
+            sb.AppendLine("\n▶ 라운드 리포트");
+            sb.AppendLine("────────────────────────");
+            // 리치텍스트 태그 제거
+            string plain = log.reportText;
+            plain = System.Text.RegularExpressions.Regex.Replace(plain, "<[^>]+>", "");
+            sb.AppendLine(plain);
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// 모든 라운드의 이벤트 로그를 plain text로 반환
+    /// </summary>
+    private string BuildCopyTextAll()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("═══ 전체 라운드 이벤트 로그 ═══");
+        sb.AppendLine();
+
+        var sortedKeys = new List<int>(allRoundLogs.Keys);
+        sortedKeys.Sort();
+
+        foreach (int round in sortedKeys)
+        {
+            sb.AppendLine(BuildCopyText(round));
+            sb.AppendLine();
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// 클립보드에 복사 + 피드백 표시
+    /// </summary>
+    private void CopyToClipboard(string text, string feedbackMsg)
+    {
+        GUIUtility.systemCopyBuffer = text;
+        copyFeedbackMsg = feedbackMsg;
+        copyFeedbackTimer = 2f;
+        Debug.Log("[Debug] 클립보드 복사 완료: " + feedbackMsg);
+    }
+
+    // ══════════════════════════════════════
     //  Update / LateUpdate
     // ══════════════════════════════════════
 
@@ -211,6 +295,10 @@ public class RaceDebugOverlay : MonoBehaviour
             refreshTimer = refreshInterval;
             RebuildCache();
         }
+
+        // 복사 피드백 타이머
+        if (copyFeedbackTimer > 0f)
+            copyFeedbackTimer -= Time.deltaTime;
     }
 
     private void LateUpdate()
@@ -349,6 +437,10 @@ public class RaceDebugOverlay : MonoBehaviour
         { fontSize = 11, fontStyle = FontStyle.Bold, richText = true };
         critStyle.normal.textColor = new Color(1f, 0.5f, 0f);
 
+        copyBtnStyle = new GUIStyle(GUI.skin.button)
+        { fontSize = 10, fontStyle = FontStyle.Bold };
+        copyBtnStyle.normal.textColor = Color.white;
+
         stylesInitialized = true;
     }
 
@@ -394,13 +486,42 @@ public class RaceDebugOverlay : MonoBehaviour
 
         GUILayout.Label("트랙: " + trackName + "  |  보기: " + roundLabel + "  |  저장: " + allRoundLogs.Count + "R", normalStyle);
         GUILayout.Label("라운드: " + roundTabs, normalStyle);
+
+        // ★ 복사 버튼 영역
+        GUILayout.BeginHorizontal();
+        {
+            int displayRoundForCopy = viewingRound == -1 ? currentRound : viewingRound;
+
+            if (GUILayout.Button("📋 R" + displayRoundForCopy + " 로그복사", copyBtnStyle, GUILayout.Width(130), GUILayout.Height(22)))
+            {
+                string text = BuildCopyText(displayRoundForCopy);
+                CopyToClipboard(text, "R" + displayRoundForCopy + " 로그 복사됨!");
+            }
+
+            if (allRoundLogs.Count > 1)
+            {
+                if (GUILayout.Button("📋 전체 로그복사", copyBtnStyle, GUILayout.Width(120), GUILayout.Height(22)))
+                {
+                    string text = BuildCopyTextAll();
+                    CopyToClipboard(text, "전체 " + allRoundLogs.Count + "R 로그 복사됨!");
+                }
+            }
+
+            // 복사 피드백 표시
+            if (copyFeedbackTimer > 0f)
+            {
+                GUILayout.Label("<color=#66FF66>✓ " + copyFeedbackMsg + "</color>", normalStyle);
+            }
+        }
+        GUILayout.EndHorizontal();
+
         GUILayout.Label("─────────────────────────────────────", normalStyle);
 
         int displayRound = viewingRound == -1 ? currentRound : viewingRound;
         RoundLog displayLog = allRoundLogs.ContainsKey(displayRound) ? allRoundLogs[displayRound] : null;
 
         // ── 상단: 레이스 상태 (현재) 또는 리포트 (과거) ──
-        float statusHeight = (panelHeight - 140) * 0.35f;
+        float statusHeight = (panelHeight - 160) * 0.35f;
 
         if (viewingRound == -1)
         {
@@ -424,7 +545,7 @@ public class RaceDebugOverlay : MonoBehaviour
         int racingCount = displayLog != null ? displayLog.racingEvents.Count : 0;
         GUILayout.Label("⚡ 레이싱 이벤트 R" + displayRound + " (" + racingCount + "건)", headerStyle);
 
-        float raceLogHeight = (panelHeight - 140) * 0.3f;
+        float raceLogHeight = (panelHeight - 160) * 0.3f;
         raceLogScroll = GUILayout.BeginScrollView(raceLogScroll, GUILayout.Height(raceLogHeight));
         if (displayLog != null)
         {
@@ -451,7 +572,7 @@ public class RaceDebugOverlay : MonoBehaviour
         int finishCount = displayLog != null ? displayLog.finishEvents.Count : 0;
         GUILayout.Label("🏁 완주 기록 R" + displayRound + " (" + finishCount + "건)", headerStyle);
 
-        float finishLogHeight = (panelHeight - 140) * 0.2f;
+        float finishLogHeight = (panelHeight - 160) * 0.2f;
         finishLogScroll = GUILayout.BeginScrollView(finishLogScroll, GUILayout.Height(finishLogHeight));
         if (displayLog != null)
         {
