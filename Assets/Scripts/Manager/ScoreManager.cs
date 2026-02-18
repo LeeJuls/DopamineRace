@@ -32,9 +32,9 @@ public class ScoreManager : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         // 누적 통계는 PlayerPrefs에서 로드 (전체 세션 통계)
-        TotalScore = PlayerPrefs.GetInt("S", 0);
-        TotalRounds = PlayerPrefs.GetInt("R", 0);
-        TotalWins = PlayerPrefs.GetInt("W", 0);
+        TotalScore = PlayerPrefs.GetInt("DopamineRace_TotalScore", 0);
+        TotalRounds = PlayerPrefs.GetInt("DopamineRace_TotalRounds", 0);
+        TotalWins = PlayerPrefs.GetInt("DopamineRace_TotalWins", 0);
     }
 
     /// <summary>
@@ -137,9 +137,9 @@ public class ScoreManager : MonoBehaviour
 
     private void SaveStats()
     {
-        PlayerPrefs.SetInt("S", TotalScore);
-        PlayerPrefs.SetInt("R", TotalRounds);
-        PlayerPrefs.SetInt("W", TotalWins);
+        PlayerPrefs.SetInt("DopamineRace_TotalScore", TotalScore);
+        PlayerPrefs.SetInt("DopamineRace_TotalRounds", TotalRounds);
+        PlayerPrefs.SetInt("DopamineRace_TotalWins", TotalWins);
         PlayerPrefs.Save();
     }
 }
