@@ -52,8 +52,30 @@ public class CollisionVFX : MonoBehaviour
         spritesCreated = true;
     }
 
+    // ── 현재 표시 중인 VFX 타입 ──
+    private CollisionVFXType currentType;
+
+    // 우선순위: Crit > Hit > Dodge > Slingshot
+    private static int GetPriority(CollisionVFXType type)
+    {
+        switch (type)
+        {
+            case CollisionVFXType.Crit:      return 3;
+            case CollisionVFXType.Hit:       return 2;
+            case CollisionVFXType.Dodge:     return 1;
+            case CollisionVFXType.Slingshot: return 0;
+            default: return -1;
+        }
+    }
+
     public void Show(CollisionVFXType type, float duration)
     {
+        // ★ 우선순위 보호: 높은 VFX 표시 중이면 낮은 건 스킵
+        if (timer > 0f && GetPriority(type) < GetPriority(currentType))
+            return;
+
+        currentType = type;
+
         EnsureSprites();
 
         var gs = GameSettings.Instance;
