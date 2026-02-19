@@ -93,6 +93,10 @@ public class RaceManager : MonoBehaviour
             GameManager.Instance.OnRaceStart -= OnRaceStart;
             GameManager.Instance.OnStateChanged -= OnGameStateChanged;
         }
+
+        // ★ 레이서 이벤트 일괄 해제 (비정상 종료 시 누수 방지)
+        foreach (var r in racers)
+            if (r != null) r.OnFinished -= OnRacerFinished;
     }
 
     // ══════════════════════════════════════

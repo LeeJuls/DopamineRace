@@ -113,7 +113,7 @@ public class RacerController : MonoBehaviour
         lastPosition = transform.position;
 
         // 스탯 기반 초기 속도
-        currentSpeed = GetBaseSpeed() * 0.5f;
+        currentSpeed = GetBaseSpeed() * GameSettings.Instance.initialSpeedMultiplier;
 
         // noise/luck 타이머 초기화
         noiseValue = 0f;
@@ -175,7 +175,7 @@ public class RacerController : MonoBehaviour
         Vector3 dir = target - transform.position;
         float dist = dir.magnitude;
 
-        if (dist < 0.25f)
+        if (dist < GameSettings.Instance.waypointArrivalDist)
         {
             if (headingToFinish)
             {
@@ -475,7 +475,7 @@ public class RacerController : MonoBehaviour
 
         // 쿨다운 설정 (애니메이션 재생 + 여유)
         if (triggered)
-            attackCooldown = 0.6f;
+            attackCooldown = GameSettings.Instance.attackAnimCooldown;
 
         return triggered;
     }

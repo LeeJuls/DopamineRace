@@ -288,6 +288,19 @@ public class GameSettings : ScriptableObject
     [Range(0.1f, 1.0f)]
     public float trackTransitionFadeDuration = 0.3f;
 
+    [Header("═══ 세부 조정 ═══")]
+    [Tooltip("웨이포인트 도착 판정 거리: 레이서가 다음 웨이포인트까지 이 거리 이내면 도착 처리. 작을수록 정밀하게 코너를 돔. (기본값: 0.25)")]
+    [Range(0.1f, 1.0f)]
+    public float waypointArrivalDist = 0.25f;
+
+    [Tooltip("초기 속도 배율: 레이스 시작 시 baseSpeed × 이 값으로 출발. 1.0이면 풀스피드 출발, 낮을수록 천천히 가속. (기본값: 0.5)")]
+    [Range(0.1f, 1.0f)]
+    public float initialSpeedMultiplier = 0.5f;
+
+    [Tooltip("공격 애니메이션 쿨다운(초): 충돌 시 공격 모션 재생 후 다음 공격까지 대기 시간. 짧으면 연속 공격 가능. (기본값: 0.6)")]
+    [Range(0.1f, 2.0f)]
+    public float attackAnimCooldown = 0.6f;
+
     [Header("═══ 디버그 ═══")]
     [Tooltip("레이스 디버그 오버레이 (F1:토글 F2:상세 F3:캐릭터선택)")]
     public bool enableRaceDebug = true;
