@@ -205,7 +205,12 @@ public class CollisionVFX : MonoBehaviour
         // 텍스트도 sorting 맞추기
         var labelRenderer = labelObj.GetComponent<MeshRenderer>();
         if (labelRenderer != null)
+        {
             labelRenderer.sortingOrder = 102;
+            // TextMesh는 font.material도 설정해야 글자가 보임
+            if (label.font != null && label.font.material != null)
+                labelRenderer.material = label.font.material;
+        }
     }
 
     private void Update()
