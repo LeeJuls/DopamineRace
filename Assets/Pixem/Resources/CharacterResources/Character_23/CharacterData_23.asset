@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 00753528b80def7448d9baec74b38dd1, type: 3}
-  m_Name: SampleData
+  m_Name: CharacterData_23
   m_EditorClassIdentifier: 
   T_Cape: {fileID: 2800000, guid: e18b7553e98ce554a9c2e1e83ac907ac, type: 3}
   T_Body: {fileID: 2800000, guid: f2b1b7b4101d489429cfe427e560ee6f, type: 3}

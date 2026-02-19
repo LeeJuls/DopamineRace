@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 00753528b80def7448d9baec74b38dd1, type: 3}
-  m_Name: SampleData
+  m_Name: CharacterData_19
   m_EditorClassIdentifier: 
-  T_Cape: {fileID: 2800000, guid: e18b7553e98ce554a9c2e1e83ac907ac, type: 3}
-  T_Body: {fileID: 2800000, guid: f2b1b7b4101d489429cfe427e560ee6f, type: 3}
-  T_Face: {fileID: 2800000, guid: d4241321e32ac604b8bb39eb9082e03c, type: 3}
-  T_FaceAcc_1: {fileID: 2800000, guid: 5ae6ad8888d202645bad0de17a12b46e, type: 3}
-  T_FaceAcc_2: {fileID: 2800000, guid: 684244558bccf164fba82e8fd34f5ba3, type: 3}
-  T_Hair: {fileID: 2800000, guid: 49f6911b1b313824abdfd1cb9d8defef, type: 3}
-  T_HairAcc: {fileID: 2800000, guid: f4a657d4d87b48b479c8bff69173b9cd, type: 3}
+  T_Cape: {fileID: 2800000, guid: 05c7f8531d3024f42910ed757834614c, type: 3}
+  T_Body: {fileID: 2800000, guid: 6913a9cf1beab7245bfe7897a5346714, type: 3}
+  T_Face: {fileID: 2800000, guid: cbe06159744d56f449b32b671dcec294, type: 3}
+  T_FaceAcc_1: {fileID: 2800000, guid: b950880ca79ba7b41bbc28098fb6e4d5, type: 3}
+  T_FaceAcc_2: {fileID: 2800000, guid: 31a6ecf39e6c32246a50614890368837, type: 3}
+  T_Hair: {fileID: 2800000, guid: bc175f1852c5c714a81ada3a0e32dc39, type: 3}
+  T_HairAcc: {fileID: 2800000, guid: 50234d9bddb4caf4385d8bffd4a121d4, type: 3}
   T_Helmet: {fileID: 2800000, guid: 3b1f17f2facff4542b9a038fd3801ada, type: 3}
-  T_Top: {fileID: 2800000, guid: 38a960c5f50dd9445b2f1e4b00db3909, type: 3}
-  T_Pants: {fileID: 2800000, guid: 0bb7339729147114e8949cc24d6a6473, type: 3}
+  T_Top: {fileID: 2800000, guid: 872f2cfc344507442887fe4ecd6b47f7, type: 3}
+  T_Pants: {fileID: 2800000, guid: b4254ae903d56c242be05cc4afa81d1a, type: 3}
   T_RightHandWeapon: {fileID: 2800000, guid: b451a246cbe270c47a15363804ea7a95, type: 3}
   T_Shield: {fileID: 2800000, guid: 4b41180e3a43c224d86ab18a0bd17d19, type: 3}
   T_LeftHandWeapon: {fileID: 2800000, guid: 8874984002083e1479c530990b3c89f2, type: 3}
@@ -30,7 +30,7 @@ MonoBehaviour:
   C_Face: {r: 1, g: 1, b: 1, a: 1}
   C_FaceAcc_1: {r: 1, g: 1, b: 1, a: 1}
   C_FaceAcc_2: {r: 1, g: 1, b: 1, a: 1}
-  C_Hair: {r: 0, g: 1, b: 0.042056024, a: 1}
+  C_Hair: {r: 1, g: 1, b: 1, a: 1}
   C_HairAcc: {r: 1, g: 1, b: 1, a: 1}
   C_Helmet: {r: 1, g: 1, b: 1, a: 1}
   C_Top: {r: 1, g: 1, b: 1, a: 1}
