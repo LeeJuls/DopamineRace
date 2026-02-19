@@ -267,6 +267,55 @@ public class GameManager : MonoBehaviour
             RaceManager.Instance.ReloadWaypoints();
 
         OnTrackChanged?.Invoke(trackInfo);
+
+        // ── 트랙 효과 디버그 로그 ──
+        LogTrackEffects(gs.currentTrack, trackInfo);
+    }
+
+    /// <summary>
+    /// 트랙 적용 시 변경된 수치만 디버그 오버레이에 기록
+    /// </summary>
+    private void LogTrackEffects(TrackData track, TrackInfo trackInfo)
+    {
+        if (track == null) return;
+        var rm = RaceManager.Instance;
+        if (rm == null) return;
+        var overlay = rm.GetComponent<RaceDebugOverlay>();
+        if (overlay == null) return;
+
+        var parts = new System.Collections.Generic.List<string>();
+
+        if (track.speedMultiplier != 1f)
+            parts.Add(string.Format("speed:×{0:F1}", track.speedMultiplier));
+        if (track.noiseMultiplier != 1f)
+            parts.Add(string.Format("noise:×{0:F1}", track.noiseMultiplier));
+        if (track.fatigueMultiplier != 1f)
+            parts.Add(string.Format("fatigue:×{0:F1}", track.fatigueMultiplier));
+        if (track.powerSpeedBonus != 0f)
+            parts.Add(string.Format("power→spd:+{0:F2}", track.powerSpeedBonus));
+        if (track.braveSpeedBonus != 0f)
+            parts.Add(string.Format("brave→spd:+{0:F2}", track.braveSpeedBonus));
+        if (track.luckMultiplier != 1f)
+            parts.Add(string.Format("luck:×{0:F1}", track.luckMultiplier));
+        if (track.earlyBonusMultiplier != 1f)
+            parts.Add(string.Format("초반:×{0:F1}", track.earlyBonusMultiplier));
+        if (track.midBonusMultiplier != 1f)
+            parts.Add(string.Format("중반:×{0:F1}", track.midBonusMultiplier));
+        if (track.lateBonusMultiplier != 1f)
+            parts.Add(string.Format("후반:×{0:F1}", track.lateBonusMultiplier));
+        if (track.hasMidSlowZone)
+            parts.Add(string.Format("감속구간:{0:P0}~{1:P0}(×{2:F1})",
+                track.midSlowZoneStart, track.midSlowZoneEnd, track.midSlowZoneSpeedMultiplier));
+        if (track.collisionRangeMultiplier != 1f)
+            parts.Add(string.Format("충돌범위:×{0:F1}", track.collisionRangeMultiplier));
+        if (track.slingshotMultiplier != 1f)
+            parts.Add(string.Format("슬링샷:×{0:F1}", track.slingshotMultiplier));
+
+        string trackName = trackInfo != null ? trackInfo.trackName : track.name;
+        string effects = parts.Count > 0 ? string.Join(" ", parts.ToArray()) : "보정 없음";
+
+        overlay.LogEvent(RaceDebugOverlay.EventType.Track,
+            string.Format("{0} 적용 | {1}", trackName, effects));
     }
 
     // 현재 라운드의 바퀴 수를 RaceManager에 적용

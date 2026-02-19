@@ -220,26 +220,31 @@ public class RacerController : MonoBehaviour
 
         TrackData track = gs.currentTrack; // null이면 일반 트랙
 
-        // ── 기본 속도 ──
+        float speed = GetBaseTrackSpeed(gs, track);
+        speed *= (1f + GetTypeBonus(gs, track) + GetPowerBonus(track) + GetBraveBonus(track));
+        speed += GetNoiseValue(gs, track);
+        speed -= GetFatigue(gs, track);
+        speed *= GetSlowZoneMultiplier(track);
+        speed *= GetLuckCritMultiplier(gs, track);
+        speed *= GetCollisionMultiplier();
+
+        return Mathf.Max(speed, 0.1f); // 최소 속도 보장
+    }
+
+    // ── 기본 속도 (캐릭터 스피드 × 글로벌 × 트랙) ──
+    private float GetBaseTrackSpeed(GameSettings gs, TrackData track)
+    {
         float trackSpeedMul = track != null ? track.speedMultiplier : 1f;
-        float baseSpeed = charData.charBaseSpeed * gs.globalSpeedMultiplier * trackSpeedMul;
+        return charData.charBaseSpeed * gs.globalSpeedMultiplier * trackSpeedMul;
+    }
 
-        // ── calm → 속도 noise ──
-        float trackNoiseMul = track != null ? track.noiseMultiplier : 1f;
-        UpdateNoise(gs, trackNoiseMul);
-        float noise = noiseValue;
-
-        // ── endurance → 후반 피로 ──
-        float trackFatigueMul = track != null ? track.fatigueMultiplier : 1f;
+    // ── 타입 보너스 (구간별 + 트랙 배율) ──
+    private float GetTypeBonus(GameSettings gs, TrackData track)
+    {
         float progress = OverallProgress;
-        float endurance = Mathf.Max(charData.charBaseEndurance, 1f);
-        float fatigue = progress * (1f / endurance) * gs.fatigueFactor * trackFatigueMul;
-
-        // ── 타입 보너스 ──
         int phase = progress < 0.35f ? 0 : progress < 0.70f ? 1 : 2;
         float typeBonus = gs.GetTypeBonus(charData.charType, phase);
 
-        // 트랙별 구간 보너스 배율
         if (track != null)
         {
             float phaseMul = phase == 0 ? track.earlyBonusMultiplier :
@@ -247,43 +252,61 @@ public class RacerController : MonoBehaviour
                                           track.lateBonusMultiplier;
             typeBonus *= phaseMul;
         }
+        return typeBonus;
+    }
 
-        // ── 트랙 특수: power/brave → 속도 ──
-        float powerBonus = 0f;
-        float braveBonus = 0f;
-        if (track != null)
-        {
-            powerBonus = (charData.charBasePower / 20f) * track.powerSpeedBonus;
-            braveBonus = (charData.charBaseBrave / 20f) * track.braveSpeedBonus;
-        }
+    // ── 트랙 특수: power → 속도 보너스 ──
+    private float GetPowerBonus(TrackData track)
+    {
+        if (track == null) return 0f;
+        return (charData.charBasePower / 20f) * track.powerSpeedBonus;
+    }
 
-        // ── 트랙 특수: 중반 감속 구간 (고산 오르막) ──
-        float slowZoneMul = 1f;
-        if (track != null && track.hasMidSlowZone)
-        {
-            if (progress >= track.midSlowZoneStart && progress <= track.midSlowZoneEnd)
-            {
-                slowZoneMul = track.midSlowZoneSpeedMultiplier;
-            }
-        }
+    // ── 트랙 특수: brave → 속도 보너스 ──
+    private float GetBraveBonus(TrackData track)
+    {
+        if (track == null) return 0f;
+        return (charData.charBaseBrave / 20f) * track.braveSpeedBonus;
+    }
 
-        // ── Luck 크리티컬 부스트 ──
-        float critMul = UpdateLuckCrit(gs, track);
+    // ── calm 기반 noise 값 ──
+    private float GetNoiseValue(GameSettings gs, TrackData track)
+    {
+        float trackNoiseMul = track != null ? track.noiseMultiplier : 1f;
+        UpdateNoise(gs, trackNoiseMul);
+        return noiseValue;
+    }
 
-        // ── 충돌 페널티/슬링샷 (A-3에서 값이 세팅됨) ──
+    // ── endurance 기반 후반 피로 ──
+    private float GetFatigue(GameSettings gs, TrackData track)
+    {
+        float trackFatigueMul = track != null ? track.fatigueMultiplier : 1f;
+        float progress = OverallProgress;
+        float endurance = Mathf.Max(charData.charBaseEndurance, 1f);
+        return progress * (1f / endurance) * gs.fatigueFactor * trackFatigueMul;
+    }
+
+    // ── 트랙 중반 감속 구간 ──
+    private float GetSlowZoneMultiplier(TrackData track)
+    {
+        if (track == null || !track.hasMidSlowZone) return 1f;
+        float progress = OverallProgress;
+        if (progress >= track.midSlowZoneStart && progress <= track.midSlowZoneEnd)
+            return track.midSlowZoneSpeedMultiplier;
+        return 1f;
+    }
+
+    // ── Luck 크리티컬 배율 ──
+    private float GetLuckCritMultiplier(GameSettings gs, TrackData track)
+    {
+        return UpdateLuckCrit(gs, track);
+    }
+
+    // ── 충돌 페널티/슬링샷 배율 ──
+    private float GetCollisionMultiplier()
+    {
         UpdateCollisionTimers();
-        float collisionMul = 1f - collisionPenalty + slingshotBoost;
-
-        // ── 최종 조합 ──
-        float finalSpeed = baseSpeed;
-        finalSpeed *= (1f + typeBonus + powerBonus + braveBonus); // 보너스 적용
-        finalSpeed += noise;                                       // noise 가감
-        finalSpeed -= fatigue;                                     // 피로 감소
-        finalSpeed *= slowZoneMul;                                 // 감속 구간
-        finalSpeed *= critMul;                                     // 크리티컬
-        finalSpeed *= collisionMul;                                // 충돌 효과
-
-        return Mathf.Max(finalSpeed, 0.1f); // 최소 속도 보장
+        return 1f - collisionPenalty + slingshotBoost;
     }
 
     // ── calm 기반 noise ──

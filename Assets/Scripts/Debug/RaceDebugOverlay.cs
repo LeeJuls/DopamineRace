@@ -50,7 +50,7 @@ public class RaceDebugOverlay : MonoBehaviour
 
     private Dictionary<int, bool> prevCritState = new Dictionary<int, bool>();
 
-    public enum EventType { Critical, CollisionHit, CollisionDodge, Slingshot, Attack, Finish }
+    public enum EventType { Critical, CollisionHit, CollisionDodge, Slingshot, Attack, Finish, Track }
 
     public struct RaceEvent
     {
@@ -68,6 +68,7 @@ public class RaceDebugOverlay : MonoBehaviour
                 case EventType.Slingshot:      return "🚀";
                 case EventType.Attack:         return "⚔️";
                 case EventType.Finish:         return "🏁";
+                case EventType.Track:          return "🗺️";
                 default: return "•";
             }
         }
@@ -560,6 +561,7 @@ public class RaceDebugOverlay : MonoBehaviour
                     case EventType.CollisionDodge: c = "#88CCFF"; break;
                     case EventType.Slingshot: c = "#66FF66"; break;
                     case EventType.Attack: c = "#FFD700"; break;
+                    case EventType.Track: c = "#CC88FF"; break;
                 }
                 GUILayout.Label(string.Format("<color={0}>[{1:F1}s] {2} {3}</color>",
                     c, e.time, e.GetIcon(), e.description), normalStyle);
