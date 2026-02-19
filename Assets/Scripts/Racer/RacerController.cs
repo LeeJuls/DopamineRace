@@ -400,7 +400,11 @@ public class RacerController : MonoBehaviour
                 // ★ 잔여 Attack Trigger 제거 후 Run 복귀
                 animator.ResetTrigger("AttackSlash");
                 animator.ResetTrigger("AttackShoot");
-                animator.SetTrigger("Run");
+                SwapModel(toAttack: false);  // ★ 맨몸 복귀 (Run 트리거 포함)
+
+                // attackModel 없는 경우 fallback
+                if (normalModel == null || attackModel == null)
+                    animator.SetTrigger("Run");
             }
         }
 
@@ -465,12 +469,15 @@ public class RacerController : MonoBehaviour
         // 쿨다운 체크 (1회만)
         if (attackCooldown > 0f) return false;
 
-        // Animator 파라미터 캐싱 (최초 1회)
-        if (!attackAnimChecked)
+        // ★ 먼저 무기 모델로 교체 (Animator도 교체됨)
+        SwapModel(toAttack: true);
+
+        // Animator 파라미터 캐싱 (모델 교체 후 재확인)
+        attackAnimChecked = false;
+        hasSlash = false;
+        hasShoot = false;
+        if (animator != null)
         {
-            attackAnimChecked = true;
-            hasSlash = false;
-            hasShoot = false;
             foreach (var param in animator.parameters)
             {
                 if (param.type == AnimatorControllerParameterType.Trigger)
@@ -479,6 +486,7 @@ public class RacerController : MonoBehaviour
                     if (param.name == "AttackShoot") hasShoot = true;
                 }
             }
+            attackAnimChecked = true;
         }
 
         // ★ Trigger 큐 클리어 (이전 잔여 Trigger 제거)
@@ -505,9 +513,15 @@ public class RacerController : MonoBehaviour
             else if (hasShoot) { animator.SetTrigger("AttackShoot"); triggered = true; }
         }
 
-        // 쿨다운 설정 (애니메이션 재생 + 여유)
         if (triggered)
+        {
             attackCooldown = GameSettings.Instance.attackAnimCooldown;
+        }
+        else
+        {
+            // 트리거 실패 시 맨몸 복귀
+            SwapModel(toAttack: false);
+        }
 
         return triggered;
     }
@@ -546,10 +560,9 @@ public class RacerController : MonoBehaviour
         skillRemainingTime = charData.skillData.durationSec;
         skillCollisionCount = 0; // 카운트 리셋 (재발동 가능)
 
-        // 공격 모델 교체
-        SwapModel(toAttack: true);
+        // ★ 모델 교체 안 함 (공격 시에만 잠깐 무기 표시)
 
-        Debug.Log(string.Format("[스킬 발동] {0} → 무기 꺼냄! ({1}초)",
+        Debug.Log(string.Format("[스킬 발동] {0} → 각성! ({1}초)",
             charData.charName, charData.skillData.durationSec));
     }
 
