@@ -31,7 +31,6 @@ public class CharacterDatabase : MonoBehaviour
     {
         if (Instance != null) { Destroy(gameObject); return; }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
         LoadCSV();
     }
 

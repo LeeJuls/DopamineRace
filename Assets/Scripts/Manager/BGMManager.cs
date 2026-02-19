@@ -15,7 +15,6 @@ public class BGMManager : MonoBehaviour
     {
         if (Instance != null) { Destroy(gameObject); return; }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
 
         audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.loop = true;

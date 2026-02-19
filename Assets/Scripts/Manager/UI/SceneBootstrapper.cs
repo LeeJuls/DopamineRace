@@ -83,18 +83,36 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ══════════════════════════════════════
     private void Awake()
     {
-        if (GameManager.Instance != null) return;
-
         font = Font.CreateDynamicFontFromOSFont("Malgun Gothic", 24);
         if (font == null) font = Font.CreateDynamicFontFromOSFont("Arial", 24);
 
-        new GameObject("GameManager").AddComponent<GameManager>();
-        new GameObject("RaceManager").AddComponent<RaceManager>();
-        new GameObject("ScoreManager").AddComponent<ScoreManager>();
-        new GameObject("CharacterDatabase").AddComponent<CharacterDatabase>();
-        new GameObject("TrackDatabase").AddComponent<TrackDatabase>();
-        new GameObject("TrackTransition").AddComponent<TrackTransition>();
-        new GameObject("BGMManager").AddComponent<BGMManager>();
+        // ═══ 매니저 초기화 순서 (변경 시 주의!) ═══
+        // 1단계: 데이터 (다른 매니저가 참조)
+        // 2단계: 코어 로직 (데이터에 의존)
+        // 3단계: 유틸리티 (코어에 의존)
+        //
+        // AddComponent → 즉시 Awake() → Instance 설정
+        // Start()는 다음 프레임에 호출 → 이 시점에 모든 Instance 보장
+
+        // 1단계: 데이터
+        if (CharacterDatabase.Instance == null)
+            new GameObject("CharacterDatabase").AddComponent<CharacterDatabase>();
+        if (TrackDatabase.Instance == null)
+            new GameObject("TrackDatabase").AddComponent<TrackDatabase>();
+
+        // 2단계: 코어 로직
+        if (GameManager.Instance == null)
+            new GameObject("GameManager").AddComponent<GameManager>();
+        if (RaceManager.Instance == null)
+            new GameObject("RaceManager").AddComponent<RaceManager>();
+        if (ScoreManager.Instance == null)
+            new GameObject("ScoreManager").AddComponent<ScoreManager>();
+
+        // 3단계: 유틸리티
+        if (TrackTransition.Instance == null)
+            new GameObject("TrackTransition").AddComponent<TrackTransition>();
+        if (BGMManager.Instance == null)
+            new GameObject("BGMManager").AddComponent<BGMManager>();
 
         Camera cam = Camera.main;
         if (cam != null)
