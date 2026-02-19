@@ -201,8 +201,36 @@ public class GameManager : MonoBehaviour
             + BettingCalculator.GetTypeName(CurrentBet.type) + " → "
             + (score > 0 ? "적중! +" + score + "점" : "실패 +0점"));
 
+        // ── 순위 데이터 구성 ──
+        var racerResults = new List<RoundRacerResult>();
+        foreach (var r in rankings)
+        {
+            racerResults.Add(new RoundRacerResult
+            {
+                charName = r.racerName,
+                rank = r.rank
+            });
+        }
+
+        // ── 트랙명 ──
+        string trackName = "기본";
+        if (TrackDatabase.Instance?.CurrentTrackInfo != null)
+            trackName = TrackDatabase.Instance.CurrentTrackInfo.trackName;
+
+        // ── 내가 선택한 캐릭터 이름들 ──
+        var selectedNames = new List<string>();
+        if (CurrentBet != null && RaceManager.Instance?.Racers != null)
+        {
+            var racers = RaceManager.Instance.Racers;
+            foreach (int idx in CurrentBet.selections)
+            {
+                if (idx >= 0 && idx < racers.Count && racers[idx].CharData != null)
+                    selectedNames.Add(racers[idx].CharData.charName);
+            }
+        }
+
         // ScoreManager에 라운드 결과 기록
-        ScoreManager.Instance?.RecordRound(CurrentBet.type, score);
+        ScoreManager.Instance?.RecordRound(CurrentBet.type, score, trackName, racerResults, selectedNames);
     }
 
     // ═══ 다음 라운드 ═══
