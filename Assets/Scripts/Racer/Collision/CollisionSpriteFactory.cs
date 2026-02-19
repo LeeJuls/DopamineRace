@@ -32,7 +32,7 @@ public static class CollisionSpriteFactory
     }
 
     /// <summary>별 모양 스프라이트 (충돌)</summary>
-    public static Sprite CreateStarSprite(int size, Color color)
+    public static Sprite CreateStarSprite(int size, Color color, int points = 6)
     {
         Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
         tex.filterMode = FilterMode.Point;
@@ -42,7 +42,6 @@ public static class CollisionSpriteFactory
         for (int i = 0; i < clear.Length; i++) clear[i] = Color.clear;
         tex.SetPixels(clear);
 
-        int points = 6;
         float outerR = size / 2f - 1f;
         float innerR = outerR * 0.45f;
 

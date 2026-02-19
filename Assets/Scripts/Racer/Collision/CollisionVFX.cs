@@ -35,7 +35,8 @@ public class CollisionVFX : MonoBehaviour
 
     // ── 캐싱된 텍스처/스프라이트 (static으로 1번만 생성) ──
     private static Sprite circleSprite;
-    private static Sprite starSprite;
+    private static Sprite starSprite;      // 6각 별 (Hit용)
+    private static Sprite star5Sprite;     // 5각 별 (Crit용)
     private static Sprite arrowSprite;
     private static Sprite shieldSprite;
     private static bool spritesCreated = false;
@@ -44,7 +45,8 @@ public class CollisionVFX : MonoBehaviour
     {
         if (spritesCreated) return;
         circleSprite = CollisionSpriteFactory.CreateCircleSprite(32, Color.white);
-        starSprite = CollisionSpriteFactory.CreateStarSprite(32, Color.white);
+        starSprite = CollisionSpriteFactory.CreateStarSprite(32, Color.white, 6);
+        star5Sprite = CollisionSpriteFactory.CreateStarSprite(32, Color.white, 5);
         arrowSprite = CollisionSpriteFactory.CreateArrowSprite(32, Color.white);
         shieldSprite = CollisionSpriteFactory.CreateShieldSprite(32, Color.white);
         spritesCreated = true;
@@ -97,7 +99,7 @@ public class CollisionVFX : MonoBehaviour
             case CollisionVFXType.Crit:
                 bgColor = new Color(0.1f, 0.9f, 0.3f, 0.9f);   // 초록 (슬링샷과 동일)
                 iconColor = new Color(1f, 1f, 0.3f, 1f);        // 노랑
-                icon = starSprite;                                // ⭐ 별
+                icon = star5Sprite;                               // ⭐ 5각 별
                 text = "BOOST!";
                 break;
 
