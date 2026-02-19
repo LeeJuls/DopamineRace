@@ -233,7 +233,10 @@ public class RaceManager : MonoBehaviour
 
             // 캐릭터 스탯 주입
             if (charData != null)
+            {
                 rc.SetCharacterData(charData);
+                rc.SetupAttackModel();  // ★ 공격 프리팹 미리 로드
+            }
 
             // 레이스 라벨 (번호 표시)
             CreateRaceLabel(racerObj.transform, i);

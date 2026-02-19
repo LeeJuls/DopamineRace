@@ -40,6 +40,13 @@ public class RacerController : MonoBehaviour
     private float slingshotBoost = 0f;         // 슬링샷 가속 비율
     private float slingshotTimer = 0f;         // 슬링샷 남은 시간
 
+    // ── ★ 스킬 시스템 ──
+    private int skillCollisionCount = 0;       // 충돌 횟수 누적
+    private bool skillActive = false;          // 현재 스킬 발동 중 (무기 꺼냄)
+    private float skillRemainingTime = 0f;     // 스킬 남은 시간
+    private GameObject normalModel;            // 맨몸 모델
+    private GameObject attackModel;            // 무기 든 모델 (미리 생성, 비활성)
+
     // ── 외부 접근 ──
     public int RacerIndex => racerIndex;
     public bool IsFinished => isFinished;
@@ -48,6 +55,8 @@ public class RacerController : MonoBehaviour
     public int CurrentLap => currentLap;
     public CharacterData CharData => charData;
     public bool IsCritActive => isCritActive;
+    public bool SkillActive => skillActive;           // 스킬 발동 중 여부 (외부 참조용)
+    public int SkillCollisionCount => skillCollisionCount;
     public float CollisionPenalty => collisionPenalty;
     public float SlingshotBoost => slingshotBoost;
 
@@ -128,6 +137,12 @@ public class RacerController : MonoBehaviour
         slingshotBoost = 0f;
         slingshotTimer = 0f;
 
+        // 스킬 상태 초기화
+        skillCollisionCount = 0;
+        skillActive = false;
+        skillRemainingTime = 0f;
+        DeactivateSkill();
+
         // 흔들림 초기화
         deviationOffset = 0f;
         deviationTarget = 0f;
@@ -145,6 +160,7 @@ public class RacerController : MonoBehaviour
         slingshotBoost = 0f; slingshotTimer = 0f;
         critBoostRemaining = 0f; isCritActive = false;
         attackCooldown = 0f; attackAnimChecked = false;
+        skillCollisionCount = 0; skillActive = false; skillRemainingTime = 0f;
         transform.position = pos;
         lastPosition = pos;
         if (animator != null) animator.SetTrigger("Idle");
@@ -384,6 +400,16 @@ public class RacerController : MonoBehaviour
                 animator.SetTrigger("Run");
             }
         }
+
+        // ★ 스킬 타이머
+        if (skillActive)
+        {
+            skillRemainingTime -= Time.deltaTime;
+            if (skillRemainingTime <= 0f)
+            {
+                DeactivateSkill();
+            }
+        }
     }
 
     // ══════════════════════════════════════
@@ -423,12 +449,15 @@ public class RacerController : MonoBehaviour
 
     /// <summary>
     /// 충돌 승리 시 공격 애니메이션 (CollisionSystem에서 호출)
+    /// ★ 스킬 발동 중(skillActive)일 때만 공격 모션 재생
     /// CSV char_weapon: L → AttackSlash, R → AttackShoot
-    /// 1회 발동 후 쿨다운으로 무한 루프 방지
     /// </summary>
     public bool PlayAttackAnim()
     {
         if (animator == null || charData == null) return false;
+
+        // ★ 스킬 발동 중이 아니면 공격 안 함
+        if (!skillActive) return false;
 
         // 쿨다운 체크 (1회만)
         if (attackCooldown > 0f) return false;
@@ -484,6 +513,113 @@ public class RacerController : MonoBehaviour
     private bool hasSlash = false;
     private bool hasShoot = false;
     private float attackCooldown = 0f;
+
+    // ══════════════════════════════════════
+    //  ★ 스킬 시스템
+    // ══════════════════════════════════════
+
+    /// <summary>
+    /// 충돌 시 호출 (CollisionSystem에서) → 충돌 횟수 증가 → 조건 달성 시 스킬 발동
+    /// </summary>
+    public void OnSkillCollisionHit()
+    {
+        if (skillActive) return;                      // 이미 발동 중이면 무시
+        if (charData == null || charData.skillData == null) return;
+
+        skillCollisionCount++;
+
+        if (charData.skillData.CheckCollisionTrigger(skillCollisionCount))
+        {
+            ActivateSkill();
+        }
+    }
+
+    /// <summary>
+    /// 스킬 발동: 무기 꺼냄 → 공격 프리팹으로 교체 + 타이머 시작
+    /// </summary>
+    private void ActivateSkill()
+    {
+        skillActive = true;
+        skillRemainingTime = charData.skillData.durationSec;
+        skillCollisionCount = 0; // 카운트 리셋 (재발동 가능)
+
+        // 공격 모델 교체
+        SwapModel(toAttack: true);
+
+        Debug.Log(string.Format("[스킬 발동] {0} → 무기 꺼냄! ({1}초)",
+            charData.charName, charData.skillData.durationSec));
+    }
+
+    /// <summary>
+    /// 스킬 종료: 맨몸으로 복귀
+    /// </summary>
+    private void DeactivateSkill()
+    {
+        skillActive = false;
+        skillRemainingTime = 0f;
+
+        // 맨몸 모델 복귀
+        SwapModel(toAttack: false);
+
+        if (charData != null)
+            Debug.Log(string.Format("[스킬 종료] {0} → 맨몸 복귀", charData.charName));
+    }
+
+    /// <summary>
+    /// 공격 프리팹 미리 생성 (RaceManager 스폰 후 호출)
+    /// 비활성 상태로 자식에 보관
+    /// </summary>
+    public void SetupAttackModel()
+    {
+        if (charData == null) return;
+        GameObject attackPrefab = charData.LoadAttackPrefab();
+        if (attackPrefab == null) return;
+
+        // 현재 모델을 normalModel로 지정
+        normalModel = FindModel();
+
+        // 공격 프리팹에서 모델 복제 → 자식으로 추가
+        GameObject attackObj = Instantiate(attackPrefab, transform);
+        attackModel = attackObj;
+        attackModel.transform.localPosition = Vector3.zero;
+        attackModel.SetActive(false);
+
+        Debug.Log(string.Format("[스킬 준비] {0} → 공격 프리팹 로드 완료", charData.charName));
+    }
+
+    /// <summary>
+    /// 모델 교체 (맨몸 ↔ 무기)
+    /// </summary>
+    private void SwapModel(bool toAttack)
+    {
+        if (normalModel == null || attackModel == null) return;
+
+        normalModel.SetActive(!toAttack);
+        attackModel.SetActive(toAttack);
+
+        // Animator 교체 (새 모델의 Animator 사용)
+        GameObject activeModel = toAttack ? attackModel : normalModel;
+        animator = activeModel.GetComponentInChildren<Animator>();
+        attackAnimChecked = false; // Animator 파라미터 캐시 리셋
+
+        if (animator != null)
+            animator.SetTrigger("Run");
+    }
+
+    /// <summary>
+    /// 현재 모델(자식 중 SpriteRenderer가 있는 것) 찾기
+    /// </summary>
+    private GameObject FindModel()
+    {
+        // 자식 중 Animator 또는 SpriteRenderer가 있는 첫 번째 오브젝트
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Transform child = transform.GetChild(i);
+            if (child.GetComponentInChildren<SpriteRenderer>() != null)
+                return child.gameObject;
+        }
+        return null;
+    }
 
     // ══════════════════════════════════════
     //  기본 속도 (초기값용)

@@ -127,31 +127,59 @@ public class CollisionSystem : MonoBehaviour
         var cdB = b.CharData;
         if (cdA == null || cdB == null) return;
 
-        // ── power 확률적 승패 결정 ──
-        float powerA = cdA.charBasePower;
-        float powerB = cdB.charBasePower;
-        float effA = powerA;
-        float effB = powerB;
+        // ── ★ 스킬 충돌 카운트 (양쪽 모두) ──
+        a.OnSkillCollisionHit();
+        b.OnSkillCollisionHit();
 
-        if (powerA > powerB)
-        {
-            float benefit = powerA / (powerA + powerB);
-            effA = powerA * (1f + benefit);
-        }
-        else if (powerB > powerA)
-        {
-            float benefit = powerB / (powerA + powerB);
-            effB = powerB * (1f + benefit);
-        }
-
-        float totalEff = effA + effB;
-        float bWinChance = totalEff > 0f ? effB / totalEff : 0.5f;
-
+        // ── 승패 결정 ──
         RacerController winner, loser;
-        if (Random.value < bWinChance)
-        { winner = b; loser = a; }
+
+        bool aArmed = a.SkillActive;
+        bool bArmed = b.SkillActive;
+
+        if (aArmed && !bArmed)
+        {
+            // A만 무장 → A 무조건 승리
+            winner = a; loser = b;
+            if (debugOverlay != null)
+                debugOverlay.LogEvent(RaceDebugOverlay.EventType.CollisionHit,
+                    string.Format("★ {0} 스킬 발동 중 → 무조건 승리!", a.CharData.charName));
+        }
+        else if (bArmed && !aArmed)
+        {
+            // B만 무장 → B 무조건 승리
+            winner = b; loser = a;
+            if (debugOverlay != null)
+                debugOverlay.LogEvent(RaceDebugOverlay.EventType.CollisionHit,
+                    string.Format("★ {0} 스킬 발동 중 → 무조건 승리!", b.CharData.charName));
+        }
         else
-        { winner = a; loser = b; }
+        {
+            // 둘 다 무장 또는 둘 다 맨몸 → 기존 power 확률 로직
+            float powerA = cdA.charBasePower;
+            float powerB = cdB.charBasePower;
+            float effA = powerA;
+            float effB = powerB;
+
+            if (powerA > powerB)
+            {
+                float benefit = powerA / (powerA + powerB);
+                effA = powerA * (1f + benefit);
+            }
+            else if (powerB > powerA)
+            {
+                float benefit = powerB / (powerA + powerB);
+                effB = powerB * (1f + benefit);
+            }
+
+            float totalEff = effA + effB;
+            float bWinChance = totalEff > 0f ? effB / totalEff : 0.5f;
+
+            if (Random.value < bWinChance)
+            { winner = b; loser = a; }
+            else
+            { winner = a; loser = b; }
+        }
 
         // ── luck 회피 판정 (패자 측) ──
         if (loser.TryDodge())

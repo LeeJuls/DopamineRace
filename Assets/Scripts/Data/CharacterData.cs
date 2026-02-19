@@ -25,6 +25,12 @@ public enum WeaponHand
 
 /// <summary>
 /// 캐릭터 1명의 전체 데이터 (CSV 1행)
+///
+/// CSV 컬럼 순서:
+///   0:char_name, 1:speed, 2:power, 3:brave, 4:calm, 5:endurance, 6:luck,
+///   7:type, 8:char_ability, 9:char_ability_time_sec,
+///   10:char_resource_prefabs, 11:char_attack_resource_prefabs,
+///   12:char_icon, 13:char_weapon
 /// </summary>
 [System.Serializable]
 public class CharacterData
@@ -38,14 +44,32 @@ public class CharacterData
     public float charBaseLuck;
     public CharacterType charType;
     public string charAbility;
+    public float charAbilityTimeSec;               // 스킬 지속 시간 (초)
     public string charResourcePrefabs;
+    public string charAttackResourcePrefabs;       // 무기 든 프리팹 경로
     public string charIcon;
-    public WeaponHand charWeapon;     // ★ 무기 위치 (L/R/N)
+    public WeaponHand charWeapon;                  // 무기 위치 (L/R/N)
+
+    public SkillData skillData;                    // 파싱된 스킬 데이터
 
     public GameObject LoadPrefab()
     {
         if (string.IsNullOrEmpty(charResourcePrefabs)) return null;
-        string path = charResourcePrefabs.Replace('\\', '/');
+        return LoadPrefabFromPath(charResourcePrefabs);
+    }
+
+    /// <summary>
+    /// 무기 든 공격 프리팹 로드 (스킬 발동 시 사용)
+    /// </summary>
+    public GameObject LoadAttackPrefab()
+    {
+        if (string.IsNullOrEmpty(charAttackResourcePrefabs)) return null;
+        return LoadPrefabFromPath(charAttackResourcePrefabs);
+    }
+
+    private GameObject LoadPrefabFromPath(string rawPath)
+    {
+        string path = rawPath.Replace('\\', '/');
         if (path.Contains("Resources/"))
             path = path.Substring(path.IndexOf("Resources/") + 10);
         if (path.EndsWith(".prefab"))
@@ -86,6 +110,12 @@ public class CharacterData
 
     /// <summary>
     /// CSV 1행 파싱
+    ///
+    /// 컬럼 순서:
+    ///   0:char_name, 1:speed, 2:power, 3:brave, 4:calm, 5:endurance, 6:luck,
+    ///   7:type, 8:char_ability, 9:char_ability_time_sec,
+    ///   10:char_resource_prefabs, 11:char_attack_resource_prefabs,
+    ///   12:char_icon, 13:char_weapon
     /// </summary>
     public static CharacterData ParseCSVLine(string line)
     {
@@ -103,13 +133,28 @@ public class CharacterData
         float.TryParse(cols[6].Trim(), out d.charBaseLuck);
         d.charType = ParseType(cols[7].Trim());
         d.charAbility = cols[8].Trim();
-        d.charResourcePrefabs = cols[9].Trim();
-        d.charIcon = cols.Length > 10 ? cols[10].Trim() : "";
 
-        // ★ 무기 위치 (12번째 컬럼, 없으면 N)
+        // char_ability_time_sec (9번)
+        d.charAbilityTimeSec = 5f; // 기본값
+        if (cols.Length > 9)
+            float.TryParse(cols[9].Trim(), out d.charAbilityTimeSec);
+
+        // char_resource_prefabs (10번)
+        d.charResourcePrefabs = cols.Length > 10 ? cols[10].Trim() : "";
+
+        // char_attack_resource_prefabs (11번)
+        d.charAttackResourcePrefabs = cols.Length > 11 ? cols[11].Trim() : "";
+
+        // char_icon (12번)
+        d.charIcon = cols.Length > 12 ? cols[12].Trim() : "";
+
+        // char_weapon (13번)
         d.charWeapon = WeaponHand.None;
-        if (cols.Length > 11)
-            d.charWeapon = ParseWeapon(cols[11].Trim());
+        if (cols.Length > 13)
+            d.charWeapon = ParseWeapon(cols[13].Trim());
+
+        // ★ 스킬 데이터 파싱
+        d.skillData = SkillData.Parse(d.charAbility, d.charAbilityTimeSec);
 
         return d;
     }
