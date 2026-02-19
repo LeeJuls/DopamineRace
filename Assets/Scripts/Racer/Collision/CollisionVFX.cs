@@ -8,7 +8,8 @@ public enum CollisionVFXType
 {
     Hit,        // 💥 충돌
     Dodge,      // 🛡️ 회피
-    Slingshot   // 🚀 슬링샷
+    Slingshot,  // 🚀 슬링샷 (추격)
+    Crit        // ⭐ Lucky 크리티컬
 }
 
 // ══════════════════════════════════════════
@@ -90,6 +91,13 @@ public class CollisionVFX : MonoBehaviour
                 bgColor = new Color(0.1f, 0.9f, 0.3f, 0.9f);   // 초록
                 iconColor = new Color(1f, 1f, 0.5f, 1f);        // 연노랑
                 icon = gs.vfxSlingshotIcon != null ? gs.vfxSlingshotIcon : arrowSprite;
+                text = "CHASE!";
+                break;
+
+            case CollisionVFXType.Crit:
+                bgColor = new Color(0.1f, 0.9f, 0.3f, 0.9f);   // 초록 (슬링샷과 동일)
+                iconColor = new Color(1f, 1f, 0.3f, 1f);        // 노랑
+                icon = starSprite;                                // ⭐ 별
                 text = "BOOST!";
                 break;
 

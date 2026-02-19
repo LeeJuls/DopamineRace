@@ -366,6 +366,13 @@ public class RacerController : MonoBehaviour
             {
                 critBoostRemaining = gs.luckCritDuration;
                 isCritActive = true;
+
+                // ★ Lucky 크리티컬 VFX 표시
+                var critVfx = GetComponent<CollisionVFX>();
+                if (critVfx == null)
+                    critVfx = gameObject.AddComponent<CollisionVFX>();
+                critVfx.Show(CollisionVFXType.Crit, 0.8f);
+
                 Debug.Log("★ 크리티컬! " + charData.charName + " (luck:" + charData.charBaseLuck + ")");
                 return gs.luckCritBoost;
             }
