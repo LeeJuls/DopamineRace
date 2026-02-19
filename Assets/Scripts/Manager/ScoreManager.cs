@@ -85,6 +85,10 @@ public class ScoreManager : MonoBehaviour
         string betJson = PlayerPrefs.GetString("DopamineRace_BetRecords", "");
         if (!string.IsNullOrEmpty(betJson))
             betRecordStore = JsonUtility.FromJson<BetRecordStore>(betJson);
+
+        Debug.Log("[ScoreManager 로드] 캐릭터 기록: " + charRecordStore.records.Count + "명"
+            + " | 배팅 기록: " + betRecordStore.records.Count + "건"
+            + " | 누적: " + TotalScore + "점/" + TotalRounds + "라운드/" + TotalWins + "승");
     }
 
     // ═══════════════════════════════════════
