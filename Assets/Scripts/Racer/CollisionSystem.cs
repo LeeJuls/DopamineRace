@@ -34,6 +34,7 @@ public class CollisionSystem : MonoBehaviour
         public float triggerTime;
         public float boost;
         public float duration;
+        public string reason;
     }
 
     private void Update()
@@ -190,7 +191,11 @@ public class CollisionSystem : MonoBehaviour
             racer = behind,
             triggerTime = Time.time + behindPenaltyDur,
             boost = boost,
-            duration = gs.slingshotDuration
+            duration = gs.slingshotDuration,
+            reason = string.Format("{0}(pow:{1}) > {2}(pow:{3}) 충돌 → {4} 뒤처져서 슬링샷 (brave:{5})",
+                winner.CharData.charName, winner.CharData.charBasePower,
+                loser.CharData.charName, loser.CharData.charBasePower,
+                behind.CharData.charName, behind.CharData.charBaseBrave)
         });
 
         // ── 디버그 로그 ──
@@ -253,10 +258,10 @@ public class CollisionSystem : MonoBehaviour
                 if (debugOverlay != null)
                 {
                     debugOverlay.LogEvent(RaceDebugOverlay.EventType.Slingshot,
-                        string.Format("{0} 슬링샷! +{1:F0}% (brave:{2})",
+                        string.Format("{0} 슬링샷! +{1:F0}% | 원인: {2}",
                             res.racer.CharData.charName,
                             res.boost * 100,
-                            res.racer.CharData.charBaseBrave));
+                            res.reason));
                 }
 
                 if (gs.enableCollisionVFX)
