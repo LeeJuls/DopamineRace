@@ -292,19 +292,7 @@ public class RaceManager : MonoBehaviour
         tm.anchor = TextAnchor.MiddleCenter;
 
         // 폰트 적용
-        if (gs.mainFont != null)
-        {
-            tm.font = gs.mainFont;
-        }
-
-        MeshRenderer mr = labelObj.GetComponent<MeshRenderer>();
-        if (mr != null)
-        {
-            mr.sortingOrder = 40;
-            // TextMesh는 font.material도 설정해야 글자가 보임
-            if (tm.font != null && tm.font.material != null)
-                mr.material = tm.font.material;
-        }
+        FontHelper.ApplyToTextMesh(tm, 40);
 
         labelObj.SetActive(false);
     }

@@ -83,15 +83,8 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ══════════════════════════════════════
     private void Awake()
     {
-        // 폰트 설정: GameSettings 우선, 없으면 OS 폰트 fallback
-        var gs = GameSettings.Instance;
-        if (gs != null && gs.mainFont != null)
-            font = gs.mainFont;
-        else
-        {
-            font = Font.CreateDynamicFontFromOSFont("Malgun Gothic", 24);
-            if (font == null) font = Font.CreateDynamicFontFromOSFont("Arial", 24);
-        }
+        // 폰트 설정: FontHelper가 GameSettings → OS fallback 처리
+        font = FontHelper.GetUIFontWithFallback();
 
         // ═══ 매니저 초기화 순서 (변경 시 주의!) ═══
         // 1단계: 데이터 (다른 매니저가 참조)

@@ -198,19 +198,8 @@ public class CollisionVFX : MonoBehaviour
         label.fontStyle = FontStyle.Bold;
         label.color = Color.white;
 
-        // 폰트 적용 (GameSettings에 설정된 경우)
-        if (gs != null && gs.mainFont != null)
-            label.font = gs.mainFont;
-
-        // 텍스트도 sorting 맞추기
-        var labelRenderer = labelObj.GetComponent<MeshRenderer>();
-        if (labelRenderer != null)
-        {
-            labelRenderer.sortingOrder = 102;
-            // TextMesh는 font.material도 설정해야 글자가 보임
-            if (label.font != null && label.font.material != null)
-                labelRenderer.material = label.font.material;
-        }
+        // 폰트 적용
+        FontHelper.ApplyToTextMesh(label, 102);
     }
 
     private void Update()

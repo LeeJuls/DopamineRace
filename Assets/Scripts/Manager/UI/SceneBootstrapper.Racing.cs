@@ -37,12 +37,12 @@ public partial class SceneBootstrapper
             ro.transform.SetParent(rankPanel.transform, false);
             Text rt = ro.AddComponent<Text>();
             rt.font = font;
-            rt.fontSize = 16;
+            rt.fontSize = FontHelper.ScaledFontSize(16);
             rt.color = Color.white;
             rt.alignment = TextAnchor.MiddleLeft;
             rt.resizeTextForBestFit = true;
-            rt.resizeTextMinSize = 10;
-            rt.resizeTextMaxSize = 16;
+            rt.resizeTextMinSize = FontHelper.ScaledFontSize(10);
+            rt.resizeTextMaxSize = FontHelper.ScaledFontSize(16);
             rankTexts[i] = rt;
         }
 

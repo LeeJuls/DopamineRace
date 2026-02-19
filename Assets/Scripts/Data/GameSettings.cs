@@ -308,25 +308,9 @@ public class GameSettings : ScriptableObject
     [Tooltip("한글 전용 폰트 (메인 폰트에 한글이 없을 경우)\n비워두면 메인 폰트 사용")]
     public Font koreanFont;
 
-    /// <summary>한글 문자 포함 여부에 따라 적절한 폰트 반환</summary>
-    public Font GetFont(string text = null)
-    {
-        if (koreanFont != null && !string.IsNullOrEmpty(text) && ContainsKorean(text))
-            return koreanFont;
-        return mainFont; // null이면 Unity 기본 폰트
-    }
-
-    private static bool ContainsKorean(string text)
-    {
-        for (int i = 0; i < text.Length; i++)
-        {
-            char c = text[i];
-            // 한글 음절(가~힣) + 한글 자모(ㄱ~ㅎ,ㅏ~ㅣ)
-            if ((c >= 0xAC00 && c <= 0xD7A3) || (c >= 0x3131 && c <= 0x318E))
-                return true;
-        }
-        return false;
-    }
+    [Tooltip("UI 폰트 크기 배율\n도트 폰트가 기존보다 넓을 때 줄이기 (Neo둥근모: 0.65 권장)")]
+    [Range(0.3f, 2.0f)]
+    public float uiFontScale = 1.0f;
 
     [Header("═══ 디버그 ═══")]
     [Tooltip("레이스 디버그 오버레이 (F1:토글 F2:상세 F3:캐릭터선택)")]

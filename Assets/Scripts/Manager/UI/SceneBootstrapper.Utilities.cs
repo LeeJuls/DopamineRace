@@ -116,7 +116,9 @@ public partial class SceneBootstrapper
         tm.fontSize = 48;
         tm.fontStyle = FontStyle.Bold;
         tm.color = color;
-        obj.GetComponent<MeshRenderer>().sortingOrder = 50;
+
+        // 폰트 적용
+        FontHelper.ApplyToTextMesh(tm, 50);
 
         return obj;
     }
@@ -170,7 +172,8 @@ public partial class SceneBootstrapper
         rt.anchoredPosition = pos; rt.sizeDelta = size;
 
         Text t = o.AddComponent<Text>();
-        t.font = font; t.text = text; t.fontSize = fontSize;
+        t.font = font; t.text = text;
+        t.fontSize = FontHelper.ScaledFontSize(fontSize);
         t.alignment = align; t.color = color ?? Color.white;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
         t.verticalOverflow = VerticalWrapMode.Overflow;

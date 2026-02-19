@@ -163,12 +163,12 @@ public partial class SceneBootstrapper
             Text nt = nameObj.AddComponent<Text>();
             nt.font = font;
             nt.text = "";
-            nt.fontSize = 26;
+            nt.fontSize = FontHelper.ScaledFontSize(26);
             nt.color = Color.black;
             nt.alignment = TextAnchor.MiddleLeft;
             nt.resizeTextForBestFit = true;
-            nt.resizeTextMinSize = 16;
-            nt.resizeTextMaxSize = 26;
+            nt.resizeTextMinSize = FontHelper.ScaledFontSize(16);
+            nt.resizeTextMaxSize = FontHelper.ScaledFontSize(26);
             racerTexts[i] = nt;
 
             // 선택 라벨 (우측)
@@ -182,7 +182,7 @@ public partial class SceneBootstrapper
             Text lt = lblObj.AddComponent<Text>();
             lt.font = font;
             lt.text = "";
-            lt.fontSize = 18;
+            lt.fontSize = FontHelper.ScaledFontSize(18);
             lt.color = new Color(0.8f, 0.1f, 0.1f);
             lt.alignment = TextAnchor.MiddleCenter;
             lt.fontStyle = FontStyle.Bold;
