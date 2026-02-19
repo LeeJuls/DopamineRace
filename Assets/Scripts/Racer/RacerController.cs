@@ -163,6 +163,7 @@ public class RacerController : MonoBehaviour
         critBoostRemaining = 0f; isCritActive = false;
         attackCooldown = 0f; attackAnimChecked = false;
         skillCollisionCount = 0; skillActive = false; skillRemainingTime = 0f;
+        DeactivateSkill();
         transform.position = pos;
         lastPosition = pos;
         if (animator != null) animator.SetTrigger("Idle");
