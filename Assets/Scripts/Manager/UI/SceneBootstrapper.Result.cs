@@ -78,7 +78,7 @@ public partial class SceneBootstrapper
 
         resultDetailText.text = detail;
 
-        int totalScore = ScoreManager.Instance?.TotalScore ?? 0;
+        int totalScore = ScoreManager.Instance?.CurrentGameScore ?? 0;
         resultScoreText.text = score > 0
             ? "+" + score + "점 획득!  (총점: " + totalScore + ")"
             : "0점  (총점: " + totalScore + ")";

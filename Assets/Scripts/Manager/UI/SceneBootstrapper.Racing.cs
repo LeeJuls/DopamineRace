@@ -108,7 +108,7 @@ public partial class SceneBootstrapper
     private void UpdateScore()
     {
         if (scoreText != null && ScoreManager.Instance != null)
-            scoreText.text = "총점: " + ScoreManager.Instance.TotalScore;
+            scoreText.text = "총점: " + ScoreManager.Instance.CurrentGameScore;
     }
 
     private void UpdateMyBet()
