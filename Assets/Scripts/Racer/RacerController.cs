@@ -46,6 +46,8 @@ public class RacerController : MonoBehaviour
     private float skillRemainingTime = 0f;     // 스킬 남은 시간
     private GameObject normalModel;            // 맨몸 모델
     private GameObject attackModel;            // 무기 든 모델 (미리 생성, 비활성)
+    private Animator normalAnimator;           // 맨몸 Animator
+    private Animator attackAnimator;           // 무기 Animator
 
     // ── 외부 접근 ──
     public int RacerIndex => racerIndex;
@@ -578,10 +580,17 @@ public class RacerController : MonoBehaviour
         // 현재 모델을 normalModel로 지정
         normalModel = FindModel();
 
+        // ★ 맨몸 Animator 캐싱 (루트에 있음)
+        normalAnimator = GetComponentInChildren<Animator>();
+
         // 공격 프리팹에서 모델 복제 → 자식으로 추가
         GameObject attackObj = Instantiate(attackPrefab, transform);
         attackModel = attackObj;
         attackModel.transform.localPosition = Vector3.zero;
+
+        // ★ 공격 Animator 캐싱 (비활성 전에 가져와야 함)
+        attackAnimator = attackModel.GetComponentInChildren<Animator>();
+
         attackModel.SetActive(false);
 
         Debug.Log(string.Format("[스킬 준비] {0} → 공격 프리팹 로드 완료", charData.charName));
@@ -597,9 +606,8 @@ public class RacerController : MonoBehaviour
         normalModel.SetActive(!toAttack);
         attackModel.SetActive(toAttack);
 
-        // Animator 교체 (새 모델의 Animator 사용)
-        GameObject activeModel = toAttack ? attackModel : normalModel;
-        animator = activeModel.GetComponentInChildren<Animator>();
+        // ★ 캐싱된 Animator 사용 (루트 vs 공격모델)
+        animator = toAttack ? attackAnimator : normalAnimator;
         attackAnimChecked = false; // Animator 파라미터 캐시 리셋
 
         if (animator != null)
