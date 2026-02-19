@@ -119,7 +119,7 @@ public class CollisionVFX : MonoBehaviour
                 break;
 
             case CollisionVFXType.Crit:
-                bgColor = new Color(0.1f, 0.9f, 0.3f, 0.9f);   // 초록 (슬링샷과 동일)
+                bgColor = new Color(0.5f, 0.1f, 0.8f, 0.9f);   // 보라
                 iconColor = new Color(1f, 1f, 0.3f, 1f);        // 노랑
                 icon = star5Sprite;                               // ⭐ 5각 별
                 text = "BOOST!";
