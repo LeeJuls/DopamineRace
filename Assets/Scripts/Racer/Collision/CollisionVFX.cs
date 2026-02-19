@@ -108,7 +108,7 @@ public class CollisionVFX : MonoBehaviour
                 bgColor = new Color(0.2f, 0.6f, 1f, 0.9f);     // 파랑
                 iconColor = new Color(0.8f, 1f, 1f, 1f);        // 연하늘
                 icon = gs.vfxDodgeIcon != null ? gs.vfxDodgeIcon : shieldSprite;
-                text = "MISS";
+                text = "DODGE!";
                 break;
 
             case CollisionVFXType.Slingshot:
