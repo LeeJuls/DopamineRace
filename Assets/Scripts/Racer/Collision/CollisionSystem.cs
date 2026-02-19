@@ -244,7 +244,6 @@ public class CollisionSystem : MonoBehaviour
             ShakeRacer(loser, gs.shakeLoserDuration, gs.shakeMagnitude);
 
             ShowVFX(winner, CollisionVFXType.Hit, 0.6f);
-            ShowVFX(loser, CollisionVFXType.Hit, 0.8f);
 
             bool attacked = winner.PlayAttackAnim();
             if (attacked)
