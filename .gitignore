@@ -1,7 +1,6 @@
 # =====================
 # Unity .gitignore
 # DopamineRace Project
-# =====================
 
 # Unity 자동 생성 폴더 (절대 올리면 안 됨)
 /[Ll]ibrary/
@@ -11,12 +10,10 @@
 /[Bb]uilds/
 /[Ll]ogs/
 /[Uu]serSettings/
-
 # IDE 설정
 /.vscode/
 /.idea/
 /.vs/
-
 # Visual Studio / Rider 자동 생성 파일
 *.csproj
 *.sln
@@ -32,41 +29,32 @@
 *.mdb
 *.opendb
 *.VC.db
-
 # Unity3D 자동 생성
 *.pidb.meta
 *.pdb.meta
 *.mdb.meta
-
 # OS 자동 생성
 .DS_Store
 Thumbs.db
 desktop.ini
-
 # Crash Reports
 sysinfo.txt
 crashlytics-build.properties
-
 # Asset Store 캐시
 /[Aa]ssets/AssetStoreTools*
-
 # 백업/압축 파일 (zip 등)
 *.zip
 *.rar
 *.7z
 *.unitypackage
-
 # Addressables
 /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
-
 # TextMeshPro (필요시 주석 해제)
 # /[Aa]ssets/TextMesh*Pro/
-
 # Recordings (Unity Recorder)
 /[Rr]ecordings/
-
 # 메모/문서 파일 (선택)
 *.txt
 !Assets/**/*.txt
