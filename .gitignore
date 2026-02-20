@@ -55,6 +55,9 @@ crashlytics-build.properties
 # /[Aa]ssets/TextMesh*Pro/
 # Recordings (Unity Recorder)
 /[Rr]ecordings/
+# Claude Code 설정
+.claude/
+
 # 메모/문서 파일 (선택)
 *.txt
 !Assets/**/*.txt
