@@ -217,7 +217,7 @@ public class ScoreManager : MonoBehaviour
                 Debug.Log("[ScoreManager] 캐릭터 최근 순위 초기화 (출전 횟수 유지)");
                 break;
         }
-        SaveStats();
+        SaveCharRecords();
     }
 
     // ═══════════════════════════════════════
