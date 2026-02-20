@@ -62,6 +62,93 @@ public class GameSettings : ScriptableObject
     [Tooltip("복연승 배당 (3착 이내 2마리, 순서 무관)")]
     public int payoutWide = 2;
 
+    // ──────────────────────────────────────────────────────────────────────
+    [Header("═══ 컨디션 확률 (합계 = 1.0) ═══")]
+    [Tooltip("최상 컨디션 확률")]
+    [Range(0f, 1f)] public float conditionRate_best   = 0.12f;
+    [Tooltip("상 컨디션 확률")]
+    [Range(0f, 1f)] public float conditionRate_good   = 0.18f;
+    [Tooltip("중 컨디션 확률")]
+    [Range(0f, 1f)] public float conditionRate_normal = 0.40f;
+    [Tooltip("하 컨디션 확률")]
+    [Range(0f, 1f)] public float conditionRate_bad    = 0.18f;
+    [Tooltip("최하 컨디션 확률")]
+    [Range(0f, 1f)] public float conditionRate_worst  = 0.12f;
+
+    [Header("═══ 컨디션 스탯 배수 ═══")]
+    [Tooltip("최상: 스탯에 곱해지는 배수")]
+    public float conditionMul_best   = 1.20f;
+    [Tooltip("상: 스탯에 곱해지는 배수")]
+    public float conditionMul_good   = 1.10f;
+    [Tooltip("중: 스탯에 곱해지는 배수 (기준값)")]
+    public float conditionMul_normal = 1.00f;
+    [Tooltip("하: 스탯에 곱해지는 배수")]
+    public float conditionMul_bad    = 0.95f;
+    [Tooltip("최하: 스탯에 곱해지는 배수")]
+    public float conditionMul_worst  = 0.90f;
+
+    // ──────────────────────────────────────────────────────────────────────
+    [Header("═══ 인기도 스탯 가중치 ═══")]
+    [Tooltip("speed 스탯이 인기도에 미치는 비중")]
+    public float oddsStatWeight_speed      = 0.35f;
+    [Tooltip("power 스탯이 인기도에 미치는 비중")]
+    public float oddsStatWeight_power      = 0.15f;
+    [Tooltip("luck 스탯이 인기도에 미치는 비중")]
+    public float oddsStatWeight_luck       = 0.20f;
+    [Tooltip("endurance 스탯이 인기도에 미치는 비중")]
+    public float oddsStatWeight_endurance  = 0.15f;
+    [Tooltip("brave 스탯이 인기도에 미치는 비중")]
+    public float oddsStatWeight_brave      = 0.10f;
+    [Tooltip("calm 스탯이 인기도에 미치는 비중")]
+    public float oddsStatWeight_calm       = 0.05f;
+
+    [Header("═══ 인기도 실적 가중치 ═══")]
+    [Tooltip("1착 승률이 인기도에 미치는 가중치")]
+    public float oddsRecordWeight_win   = 3.0f;
+    [Tooltip("2착 비율이 인기도에 미치는 가중치")]
+    public float oddsRecordWeight_place = 1.5f;
+    [Tooltip("3착 비율이 인기도에 미치는 가중치")]
+    public float oddsRecordWeight_show  = 0.8f;
+
+    [Header("═══ 트랙 특화 보정 ═══")]
+    [Range(0f, 1f)]
+    [Tooltip("트랙별 기록 반영 비율 (0=전체기록만, 1=트랙기록만)")]
+    public float trackOddsWeight  = 0.4f;
+    [Tooltip("트랙별 기록을 반영하기 위한 최소 출전 횟수")]
+    public int trackOddsMinRaces = 3;
+
+    [Header("═══ 신규 캐릭터 불확실성 ═══")]
+    [Range(0f, 0.5f)]
+    [Tooltip("기록 부족 시 배당에 추가되는 랜덤 변동 폭 (0.3 = ±30%)")]
+    public float newCharOddsVariance = 0.3f;
+    [Tooltip("이 횟수 미만이면 신규(isNew=true) 처리")]
+    public int newCharThreshold = 5;
+
+    [Header("═══ 단승 배당 범위 (인기순위 1~12위) ═══")]
+    [Tooltip("인기순위별 배당 최솟값. 배열 길이 = 최대 레이서 수(12)")]
+    public float[] oddsRangeMin = { 1.5f, 3.0f, 5.0f, 8.0f, 13f, 20f, 30f, 45f, 55f, 65f, 75f, 85f };
+    [Tooltip("인기순위별 배당 최댓값. 배열 길이 = 최대 레이서 수(12)")]
+    public float[] oddsRangeMax = { 3.0f, 5.0f, 8.0f, 13f, 20f, 30f, 45f, 55f, 65f, 75f, 85f, 99f };
+
+    [Header("═══ 복합 승식 계수 ═══")]
+    [Tooltip("연승 배당 계수 (단승 평균 × 이 값)")]
+    public float oddsCoef_place    = 0.35f;
+    [Tooltip("복승 배당 계수 (단승A × 단승B × 이 값)")]
+    public float oddsCoef_quinella = 0.55f;
+    [Tooltip("쌍승 배당 계수 (단승A × 단승B × 이 값, 순서 맞춰야 하므로 높음)")]
+    public float oddsCoef_exacta   = 1.10f;
+    [Tooltip("복연승 배당 계수")]
+    public float oddsCoef_wide     = 0.45f;
+    [Tooltip("삼복승 배당 계수 (3개 곱이라 낮게 설정)")]
+    public float oddsCoef_trio     = 0.20f;
+
+    [Header("═══ 복합 승식 배당 상한/하한 ═══")]
+    public float oddsMin_place    = 1.0f;  public float oddsMax_place    = 15f;
+    public float oddsMin_quinella = 2.0f;  public float oddsMax_quinella = 200f;
+    public float oddsMin_exacta   = 3.0f;  public float oddsMax_exacta   = 500f;
+    public float oddsMin_wide     = 1.5f;  public float oddsMax_wide     = 100f;
+    public float oddsMin_trio     = 5.0f;  public float oddsMax_trio     = 999f;
+
     [Header("═══ 경로 설정 ═══")]
     [Tooltip("경로 이탈 가중치\n0 = 정확히 트랙 위\n0.1~0.3 = 약간 흔들림")]
     [Range(0f, 1f)]

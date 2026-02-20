@@ -110,12 +110,30 @@ public static class BettingCalculator
     /// <summary>
     /// 배팅 결과 점수 계산
     /// rankings: 인덱스 0=1등, 1=2등, 2=3등... (racerIndex 값)
+    /// OddsCalculator가 초기화되어 있으면 동적 배당, 아니면 기존 고정 배당 fallback
     /// </summary>
     public static int Calculate(BetInfo bet, List<int> rankings)
     {
         if (bet == null || rankings == null || rankings.Count < 3) return 0;
         if (!bet.IsComplete) return 0;
 
+        // OddsCalculator 미초기화 시 기존 고정 배당 fallback
+        if (OddsCalculator.CurrentOdds == null || OddsCalculator.CurrentOdds.Count == 0)
+            return CalculateLegacy(bet, rankings);
+
+        var racers = CharacterDatabase.Instance?.SelectedCharacters;
+        if (racers == null || racers.Count == 0)
+            return CalculateLegacy(bet, rankings);
+
+        float multiplier = OddsCalculator.CalcPayout(bet, rankings, racers);
+        if (multiplier <= 0f) return 0;
+
+        return Mathf.Max(1, Mathf.FloorToInt(multiplier));
+    }
+
+    /// <summary>기존 고정 배당 방식 (fallback)</summary>
+    private static int CalculateLegacy(BetInfo bet, List<int> rankings)
+    {
         var s = bet.selections;
         var gs = GameSettings.Instance;
 

@@ -117,7 +117,8 @@ public class CharacterRecord
 
     // ── 내부 유틸 ──
 
-    private CharacterTrackRecord FindTrackRecord(string trackName)
+    /// <summary>특정 트랙 기록 반환 (없으면 null). OddsCalculator에서 사용.</summary>
+    public CharacterTrackRecord FindTrackRecord(string trackName)
     {
         foreach (var tr in trackRecords)
             if (tr.trackName == trackName) return tr;
@@ -132,6 +133,19 @@ public class CharacterRecord
         var newRecord = new CharacterTrackRecord { trackName = trackName };
         trackRecords.Add(newRecord);
         return newRecord;
+    }
+
+    /// <summary>
+    /// 자동 감쇠: 트랙별 raceCount가 threshold 초과 시 절반 압축
+    /// ScoreManager.ResetCharacterRecords("decay")에서 호출
+    /// </summary>
+    public void AutoDecayIfNeeded(int threshold = 100)
+    {
+        foreach (var tr in trackRecords)
+        {
+            if (tr.raceCount > threshold)
+                tr.raceCount = threshold / 2;
+        }
     }
 }
 

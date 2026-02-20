@@ -178,6 +178,11 @@ public class GameManager : MonoBehaviour
             ? TrackDatabase.Instance.CurrentTrackInfo.trackIcon + " " + TrackDatabase.Instance.CurrentTrackInfo.DisplayName
             : "일반";
 
+        // ★ 컨디션 뽑기 + 배당 계산 (레이스 시작 전)
+        var racers = CharacterDatabase.Instance?.SelectedCharacters;
+        string trackId = TrackDatabase.Instance?.CurrentTrackInfo?.trackId ?? "normal";
+        OddsCalculator.Calculate(racers, trackId);
+
         Debug.Log("═══ Round " + CurrentRound + "/" + TotalRounds
             + " | " + CurrentRoundLaps + "바퀴 | 트랙: " + trackName
             + " | " + BettingCalculator.GetTypeName(CurrentBet.type) + " 배팅 ═══");

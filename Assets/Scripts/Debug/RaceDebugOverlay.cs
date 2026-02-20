@@ -422,6 +422,85 @@ public class RaceDebugOverlay : MonoBehaviour
     // ══════════════════════════════════════
     //  OnGUI
     // ══════════════════════════════════════
+    //  인기도 / 배당 / 컨디션 섹션
+    // ══════════════════════════════════════
+
+    private bool showOddsSection = true;
+
+    private void DrawOddsSection()
+    {
+        var odds = OddsCalculator.CurrentOdds;
+
+        // 헤더 (클릭으로 접기/펼치기)
+        GUILayout.BeginHorizontal();
+        string oddsHeader = showOddsSection ? "▼ 🎲 인기도 / 배당 / 컨디션" : "▶ 🎲 인기도 / 배당 / 컨디션";
+        if (GUILayout.Button(oddsHeader, normalStyle, GUILayout.ExpandWidth(true)))
+            showOddsSection = !showOddsSection;
+        GUILayout.EndHorizontal();
+
+        if (!showOddsSection) return;
+
+        if (odds == null || odds.Count == 0)
+        {
+            GUILayout.Label("  <color=#888888>(배당 데이터 없음 — 배팅 완료 후 Start 누르면 표시)</color>", normalStyle);
+            GUILayout.Label("─────────────────────────────────────", normalStyle);
+            return;
+        }
+
+        // 헤더 행
+        GUILayout.Label(
+            "<color=yellow>인기  이름    단승   컨디션         최근순위        출전</color>",
+            normalStyle);
+
+        // 각 캐릭터 행
+        foreach (var info in odds)
+        {
+            // 인기순위 색상
+            string rankColor;
+            string rankStar;
+            if      (info.popularityRank == 1) { rankColor = "#FFD700"; rankStar = "★"; }
+            else if (info.popularityRank <= 3)  { rankColor = "#AAAAFF"; rankStar = "☆"; }
+            else                                { rankColor = "#888888"; rankStar = " "; }
+
+            // 배당 색상 (낮을수록 초록, 높을수록 빨강)
+            string oddsColor;
+            if      (info.winOdds < 5f)  oddsColor = "#66FF66";
+            else if (info.winOdds < 15f) oddsColor = "#FFFF66";
+            else if (info.winOdds < 40f) oddsColor = "#FFAA44";
+            else                         oddsColor = "#FF6666";
+
+            // 컨디션 색상 + 이름
+            string condColor = ConditionHelper.GetColorHex(info.condition);
+            string condName  = ConditionHelper.GetDisplayName(info.condition);
+            float  condMul   = info.conditionMul;
+
+            // 신규 표시
+            string newTag = info.isNew ? " <color=#88CCFF>[신규]</color>" : "";
+
+            GUILayout.Label(string.Format(
+                "<color={0}>{1,2}위{2}</color>  {3,-4}  <color={4}>{5,5:F1}x</color>  " +
+                "<color={6}>{7}({8:F2}x)</color>  {9,-12}  {10}판{11}",
+                rankColor, info.popularityRank, rankStar,
+                info.charName,
+                oddsColor, info.winOdds,
+                condColor, condName, condMul,
+                info.recentRankStr,
+                info.totalRaces, newTag),
+                normalStyle);
+        }
+
+        // 하단 요약: 평균 배당
+        float avgOdds = 0f;
+        foreach (var info in odds) avgOdds += info.winOdds;
+        avgOdds /= odds.Count;
+        GUILayout.Label(string.Format(
+            "  <color=#888888>단승 평균배당: {0:F1}x | 출전 {1}마리</color>",
+            avgOdds, odds.Count), normalStyle);
+
+        GUILayout.Label("─────────────────────────────────────", normalStyle);
+    }
+
+    // ══════════════════════════════════════
 
     private void InitStyles()
     {
@@ -520,6 +599,9 @@ public class RaceDebugOverlay : MonoBehaviour
 
         int displayRound = viewingRound == -1 ? currentRound : viewingRound;
         RoundLog displayLog = allRoundLogs.ContainsKey(displayRound) ? allRoundLogs[displayRound] : null;
+
+        // ── 인기도 / 배당 / 컨디션 섹션 ──
+        DrawOddsSection();
 
         // ── 상단: 레이스 상태 (현재) 또는 리포트 (과거) ──
         float statusHeight = (panelHeight - 160) * 0.35f;

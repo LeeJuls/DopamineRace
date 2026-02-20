@@ -239,10 +239,13 @@ public class RacerController : MonoBehaviour
 
         TrackData track = gs.currentTrack; // null이면 일반 트랙
 
+        // ── 컨디션 배수 (스탯 보너스 계열에 적용) ──
+        float condMul = OddsCalculator.GetConditionMultiplier(charData.charName);
+
         float speed = GetBaseTrackSpeed(gs, track);
-        speed *= (1f + GetTypeBonus(gs, track) + GetPowerBonus(track) + GetBraveBonus(track));
-        speed += GetNoiseValue(gs, track);
-        speed -= GetFatigue(gs, track);
+        speed *= (1f + (GetTypeBonus(gs, track) + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
+        speed += GetNoiseValue(gs, track) * condMul;
+        speed -= GetFatigue(gs, track) / condMul;   // 컨디션 좋으면 피로 감소
         speed *= GetSlowZoneMultiplier(track);
         speed *= GetLuckCritMultiplier(gs, track);
         speed *= GetCollisionMultiplier();

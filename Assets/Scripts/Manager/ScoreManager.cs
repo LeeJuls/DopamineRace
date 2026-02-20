@@ -192,6 +192,34 @@ public class ScoreManager : MonoBehaviour
         Debug.Log("[점수] 새 게임 시작 → 게임 히스토리 초기화 (누적 통계 유지)");
     }
 
+    /// <summary>
+    /// 캐릭터 성적 기록 리셋
+    /// "all"   = 전체 초기화 (배당 균등화)
+    /// "decay" = raceCount 절반 압축 (소프트 리셋)
+    /// "recent"= 최근 순위만 초기화 (트랙 출전횟수는 유지)
+    /// </summary>
+    public void ResetCharacterRecords(string mode = "all")
+    {
+        switch (mode)
+        {
+            case "all":
+                charRecordStore.records.Clear();
+                Debug.Log("[ScoreManager] 캐릭터 성적 전체 초기화");
+                break;
+            case "decay":
+                foreach (var r in charRecordStore.records)
+                    r.AutoDecayIfNeeded(100);
+                Debug.Log("[ScoreManager] 캐릭터 성적 감쇠 처리 (출전 횟수 절반 압축)");
+                break;
+            case "recent":
+                foreach (var r in charRecordStore.records)
+                    r.recentOverallRanks.Clear();
+                Debug.Log("[ScoreManager] 캐릭터 최근 순위 초기화 (출전 횟수 유지)");
+                break;
+        }
+        SaveStats();
+    }
+
     // ═══════════════════════════════════════
     //  Finish 시 리더보드 저장
     // ═══════════════════════════════════════
