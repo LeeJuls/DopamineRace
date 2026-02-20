@@ -143,7 +143,7 @@ public class CollisionSystem : MonoBehaviour
             winner = a; loser = b;
             if (debugOverlay != null)
                 debugOverlay.LogEvent(RaceDebugOverlay.EventType.CollisionHit,
-                    string.Format("★ {0} 스킬 발동 중 → 무조건 승리!", a.CharData.charName));
+                    string.Format("★ {0} 스킬 발동 중 → 무조건 승리!", a.CharData.DisplayName));
         }
         else if (bArmed && !aArmed)
         {
@@ -151,7 +151,7 @@ public class CollisionSystem : MonoBehaviour
             winner = b; loser = a;
             if (debugOverlay != null)
                 debugOverlay.LogEvent(RaceDebugOverlay.EventType.CollisionHit,
-                    string.Format("★ {0} 스킬 발동 중 → 무조건 승리!", b.CharData.charName));
+                    string.Format("★ {0} 스킬 발동 중 → 무조건 승리!", b.CharData.DisplayName));
         }
         else
         {
@@ -188,7 +188,7 @@ public class CollisionSystem : MonoBehaviour
             {
                 debugOverlay.LogEvent(RaceDebugOverlay.EventType.CollisionDodge,
                     string.Format("{0} → {1} 회피! (luck:{2})",
-                        winner.CharData.charName, loser.CharData.charName,
+                        winner.CharData.DisplayName, loser.CharData.DisplayName,
                         loser.CharData.charBaseLuck));
             }
             if (gs.enableCollisionVFX)
@@ -221,19 +221,19 @@ public class CollisionSystem : MonoBehaviour
             boost = boost,
             duration = gs.slingshotDuration,
             reason = string.Format("{0}(pow:{1}) > {2}(pow:{3}) 충돌 → {4} 뒤처져서 슬링샷 (brave:{5})",
-                winner.CharData.charName, winner.CharData.charBasePower,
-                loser.CharData.charName, loser.CharData.charBasePower,
-                behind.CharData.charName, behind.CharData.charBaseBrave)
+                winner.CharData.DisplayName, winner.CharData.charBasePower,
+                loser.CharData.DisplayName, loser.CharData.charBasePower,
+                behind.CharData.DisplayName, behind.CharData.charBaseBrave)
         });
 
         // ── 디버그 로그 ──
         if (debugOverlay != null)
         {
-            string behindName = behind.CharData.charName;
+            string behindName = behind.CharData.DisplayName;
             debugOverlay.LogEvent(RaceDebugOverlay.EventType.CollisionHit,
                 string.Format("{0}(pow:{1}) > {2}(pow:{3}) 충돌! 슬링샷→{4}(brv:{5})",
-                    winner.CharData.charName, winner.CharData.charBasePower,
-                    loser.CharData.charName, loser.CharData.charBasePower,
+                    winner.CharData.DisplayName, winner.CharData.charBasePower,
+                    loser.CharData.DisplayName, loser.CharData.charBasePower,
                     behindName, behind.CharData.charBaseBrave));
         }
 
@@ -255,8 +255,8 @@ public class CollisionSystem : MonoBehaviour
                         : winner.CharData.charWeapon == WeaponHand.Right ? "Shoot" : "?";
                     attackDebug.LogEvent(RaceDebugOverlay.EventType.Attack,
                         string.Format("{0} 공격모션! ({1}) → {2}",
-                            winner.CharData.charName, weaponType,
-                            loser.CharData.charName));
+                            winner.CharData.DisplayName, weaponType,
+                            loser.CharData.DisplayName));
                 }
             }
         }
@@ -286,7 +286,7 @@ public class CollisionSystem : MonoBehaviour
                 {
                     debugOverlay.LogEvent(RaceDebugOverlay.EventType.Slingshot,
                         string.Format("{0} 슬링샷! +{1:F0}% | 원인: {2}",
-                            res.racer.CharData.charName,
+                            res.racer.CharData.DisplayName,
                             res.boost * 100,
                             res.reason));
                 }

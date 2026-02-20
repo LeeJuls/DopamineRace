@@ -11,11 +11,11 @@ public partial class SceneBootstrapper
         Image bg = parent.gameObject.AddComponent<Image>();
         bg.color = new Color(0, 0, 0, 0.9f);
 
-        leaderboardTitleText = MkText(parent, "Top 100 리더보드",
+        leaderboardTitleText = MkText(parent, Loc.Get("str.leaderboard.title"),
             new Vector2(0.5f, 0.95f), new Vector2(0.5f, 0.95f),
             Vector2.zero, new Vector2(500, 50), 34, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.2f));
 
-        MkText(parent, "<b>순위    점수    적중    날짜              요약</b>",
+        MkText(parent, "<b>" + Loc.Get("str.leaderboard.header") + "</b>",
             new Vector2(0.5f, 0.89f), new Vector2(0.5f, 0.89f),
             Vector2.zero, new Vector2(800, 30), 16, TextAnchor.MiddleCenter, new Color(0.8f, 0.8f, 0.8f));
 
@@ -36,7 +36,7 @@ public partial class SceneBootstrapper
         closeBtn.AddComponent<Image>().color = new Color(0.5f, 0.3f, 0.3f);
         Button cb = closeBtn.AddComponent<Button>();
         cb.onClick.AddListener(() => leaderboardPopup.SetActive(false));
-        MkText(closeBtn.transform, "닫기",
+        MkText(closeBtn.transform, Loc.Get("str.btn.close"),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             Vector2.zero, new Vector2(200, 50), 24, TextAnchor.MiddleCenter, Color.white);
     }
@@ -48,7 +48,7 @@ public partial class SceneBootstrapper
 
         if (entries.Count == 0)
         {
-            content = "\n\n\n기록이 없습니다.\n게임을 완료하면 자동으로 기록됩니다.";
+            content = "\n\n\n" + Loc.Get("str.leaderboard.empty");
         }
         else
         {
@@ -64,7 +64,7 @@ public partial class SceneBootstrapper
                 if (summary.Length > 40) summary = summary.Substring(0, 40) + "...";
 
                 bool isGold = i < 3;
-                string line = rank + "위  " + score + "점  " + rounds + "  " + date + "  " + summary;
+                string line = Loc.Get("str.leaderboard.row", rank, score, e.rounds, date, summary);
 
                 if (isGold)
                     content += "<color=#FFD700>" + line + "</color>\n";

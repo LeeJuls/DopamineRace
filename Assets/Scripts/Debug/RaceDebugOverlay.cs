@@ -319,7 +319,7 @@ public class RaceDebugOverlay : MonoBehaviour
             {
                 LogEvent(EventType.Critical,
                     string.Format("{0} (luck:{1}) 크리티컬!",
-                        racer.CharData.charName, racer.CharData.charBaseLuck));
+                        racer.CharData.DisplayName, racer.CharData.charBaseLuck));
             }
 
             if (racer.IsFinished && racer.FinishOrder > 0)
@@ -328,13 +328,13 @@ public class RaceDebugOverlay : MonoBehaviour
                 bool already = false;
                 foreach (var e in log.finishEvents)
                 {
-                    if (e.description.Contains(racer.CharData.charName)) { already = true; break; }
+                    if (e.description.Contains(racer.CharData.DisplayName)) { already = true; break; }
                 }
                 if (!already)
                 {
                     LogEvent(EventType.Finish,
                         string.Format("{0} {1}착 완주! (SPD:{2:F2} {3})",
-                            racer.CharData.charName, racer.FinishOrder,
+                            racer.CharData.DisplayName, racer.FinishOrder,
                             racer.CharData.charBaseSpeed, racer.CharData.GetTypeName()));
                 }
             }
@@ -378,7 +378,7 @@ public class RaceDebugOverlay : MonoBehaviour
             else if (racer.SlingshotBoost > 0) { status = "🚀+" + (int)(racer.SlingshotBoost * 100) + "%"; col = "#66FF66"; }
 
             sb.AppendFormat("<color={0}>{1,2}위  {2,-4}  {3,-3}  {4,5:F2}  {5,5:F1}%  {6}</color>\n",
-                col, i + 1, cd.charName, cd.GetTypeName(),
+                col, i + 1, cd.DisplayName, cd.GetTypeName(),
                 racer.CurrentSpeed, racer.OverallProgress * 100, status);
         }
         cachedSimpleText = sb.ToString();
@@ -402,7 +402,7 @@ public class RaceDebugOverlay : MonoBehaviour
 
             string nameCol = racer.IsCritActive ? "#FF8800" : racer.IsFinished ? "#AAAAAA" : "#FFDD44";
             sb.AppendFormat("<color={0}>── {1}위: {2} ({3}) ──</color>\n",
-                nameCol, i + 1, cd.charName, cd.GetTypeName());
+                nameCol, i + 1, cd.DisplayName, cd.GetTypeName());
             sb.AppendFormat("  SPD:<color=#88CCFF>{0:F2}</color>  POW:{1}  BRV:{2}  CLM:{3}  END:{4}  LCK:{5}\n",
                 cd.charBaseSpeed, cd.charBasePower, cd.charBaseBrave,
                 cd.charBaseCalm, cd.charBaseEndurance, cd.charBaseLuck);
@@ -464,7 +464,7 @@ public class RaceDebugOverlay : MonoBehaviour
 
         var gs = GameSettings.Instance;
         TrackData track = gs.currentTrack;
-        string trackName = track != null ? track.trackIcon + " " + track.trackName : "🏟️ 일반";
+        string trackName = track != null ? track.trackIcon + " " + Loc.Get(track.trackName) : "🏟️ 일반";
 
         GUILayout.Label("🏇 Race Debug [F1:토글 F2:상세 F3:라운드]", headerStyle);
 

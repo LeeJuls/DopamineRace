@@ -11,7 +11,7 @@ public partial class SceneBootstrapper
         Image bg = parent.gameObject.AddComponent<Image>();
         bg.color = new Color(0, 0, 0, 0.85f);
 
-        finishTitleText = MkText(parent, "Finish!!",
+        finishTitleText = MkText(parent, Loc.Get("str.finish.title"),
             new Vector2(0.5f, 0.92f), new Vector2(0.5f, 0.92f),
             Vector2.zero, new Vector2(500, 70), 55, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.2f));
 
@@ -39,7 +39,7 @@ public partial class SceneBootstrapper
         {
             GameManager.Instance?.StartNewGame();
         });
-        MkText(newGameBtn.transform, "새 게임",
+        MkText(newGameBtn.transform, Loc.Get("str.btn.new_game"),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             Vector2.zero, new Vector2(220, 55), 26, TextAnchor.MiddleCenter, Color.white);
 
@@ -55,7 +55,7 @@ public partial class SceneBootstrapper
         top100Btn.AddComponent<Image>().color = new Color(0.5f, 0.3f, 0.6f);
         Button t100b = top100Btn.AddComponent<Button>();
         t100b.onClick.AddListener(() => ShowLeaderboard());
-        MkText(top100Btn.transform, "Top 100",
+        MkText(top100Btn.transform, Loc.Get("str.btn.top100"),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             Vector2.zero, new Vector2(220, 55), 26, TextAnchor.MiddleCenter, Color.white);
     }
@@ -65,13 +65,17 @@ public partial class SceneBootstrapper
         var sm = ScoreManager.Instance;
         if (sm == null) return;
 
-        string detail = "<b>라운드별 결과</b>\n";
+        string detail = "<b>" + Loc.Get("str.finish.round_header") + "</b>\n";
         detail += "─────────────────────────\n";
         foreach (var r in sm.RoundHistory)
         {
             string typeName = BettingCalculator.GetTypeName(r.betType);
-            string scoreStr = r.score > 0 ? "<color=#FFD700>+" + r.score + "점</color>" : "<color=#888888>+0점</color>";
-            string result = r.isWin ? "<color=#66FF66>적중!</color>" : "<color=#FF6666>실패</color>";
+            string scoreStr = r.score > 0
+                ? "<color=#FFD700>" + Loc.Get("str.finish.score_plus", r.score) + "</color>"
+                : "<color=#888888>" + Loc.Get("str.finish.score_zero") + "</color>";
+            string result = r.isWin
+                ? "<color=#66FF66>" + Loc.Get("str.finish.hit") + "</color>"
+                : "<color=#FF6666>" + Loc.Get("str.finish.miss") + "</color>";
             detail += "R" + r.round + "  |  " + typeName + "  |  " + result + "  " + scoreStr + "\n";
         }
         detail += "─────────────────────────";
@@ -83,6 +87,6 @@ public partial class SceneBootstrapper
         foreach (var r in sm.RoundHistory)
             if (r.isWin) wins++;
 
-        finishTotalScoreText.text = "총점: " + total + "점  (" + wins + "/" + sm.RoundHistory.Count + " 적중)";
+        finishTotalScoreText.text = Loc.Get("str.finish.total", total, wins, sm.RoundHistory.Count);
     }
 }

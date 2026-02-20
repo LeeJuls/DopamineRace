@@ -240,7 +240,7 @@ public class TrackDatabase : MonoBehaviour
         previousTrackId = selected.trackId;
 
         Debug.Log(string.Format("[TrackDB] Round {0} 트랙 적용: {1} {2}",
-            roundNumber, selected.trackIcon, selected.trackName));
+            roundNumber, selected.trackIcon, selected.DisplayName));
 
         return selected;
     }

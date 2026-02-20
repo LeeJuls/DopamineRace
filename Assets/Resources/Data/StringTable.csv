@@ -1,0 +1,106 @@
+UID,ko,en,jp
+str.char.001.name,번개,Thunder,雷
+str.char.001.ability,전력질주,Sprint,全力疾走
+str.char.002.name,태풍,Typhoon,台風
+str.char.002.ability,전력질주,Sprint,全力疾走
+str.char.003.name,혜성,Comet,彗星
+str.char.003.ability,전력질주,Sprint,全力疾走
+str.char.004.name,로켓,Rocket,ロケット
+str.char.004.ability,전력질주,Sprint,全力疾走
+str.char.005.name,불꽃,Flame,炎
+str.char.005.ability,전력질주,Sprint,全力疾走
+str.char.006.name,질풍,Gale,疾風
+str.char.006.ability,전력질주,Sprint,全力疾走
+str.char.007.name,천둥,Lightning,雷鳴
+str.char.007.ability,전력질주,Sprint,全力疾走
+str.char.008.name,유성,Meteor,流星
+str.char.008.ability,전력질주,Sprint,全力疾走
+str.char.009.name,폭풍,Storm,嵐
+str.char.009.ability,전력질주,Sprint,全力疾走
+str.char.010.name,섬광,Flash,閃光
+str.char.010.ability,전력질주,Sprint,全力疾走
+str.char.011.name,해일,Tsunami,津波
+str.char.011.ability,전력질주,Sprint,全力疾走
+str.char.012.name,선녀,Fairy,仙女
+str.char.012.ability,전력질주,Sprint,全力疾走
+str.chartype.runner,도주,Runner,逃げ
+str.chartype.leader,선행,Leader,先行
+str.chartype.chaser,선입,Chaser,差し
+str.chartype.reckoner,추입,Reckoner,追込
+str.track.normal.name,일반,Normal,通常
+str.track.normal.desc,표준 트랙. 순수 스탯 경쟁!,Standard track. Pure stat competition!,標準トラック
+str.track.rainy.name,비,Rainy,雨
+str.track.rainy.desc,미끄러운 노면. calm 유리!,Slippery surface. Calm stat advantage!,滑りやすい路面
+str.track.snow.name,설산,Snow,雪山
+str.track.snow.desc,"빙판+체력소모. endurance 유리!","Ice + stamina drain. Endurance advantage!",氷上+スタミナ消耗
+str.track.desert.name,사막,Desert,砂漠
+str.track.desert.desc,"모래 저항+열사병. power 유리!","Sand resistance + heat. Power advantage!",砂の抵抗+熱中症
+str.track.highland.name,고산지대,Highland,高山地帯
+str.track.highland.desc,"산소부족+오르막. brave 유리!","Oxygen depletion + slope. Brave advantage!",酸素不足+上り坂
+str.bet.win.name,단승,Win,単勝
+str.bet.place.name,연승,Place,複勝
+str.bet.quinella.name,복승,Quinella,馬連
+str.bet.exacta.name,쌍승,Exacta,馬単
+str.bet.trio.name,삼복승,Trio,3連複
+str.bet.wide.name,복연승,Wide,ワイド
+str.bet.win.desc,1착 맞추기,Predict 1st place,1着予想
+str.bet.place.desc,"3착 이내 1마리 (7두↓ 2착)","1 horse in top 3 (top 2 if ≤7)",3着以内1頭
+str.bet.quinella.desc,1~2착 2마리 (순서무관),Top 2 horses (any order),1~2着2頭
+str.bet.exacta.desc,1착+2착 순서 정확히,1st+2nd in exact order,1着+2着順番通り
+str.bet.trio.desc,1~3착 3마리 (순서무관),Top 3 horses (any order),1~3着3頭
+str.bet.wide.desc,3착 이내 2마리 (순서무관),2 horses in top 3 (any order),3着以内2頭
+str.bet.label.first,1착,1st,1着
+str.bet.label.second,2착,2nd,2着
+str.bet.label.place,입상,Place,入着
+str.bet.label.select,선택,Pick,選択
+str.bet.guide.win.empty,1착 예측 선택!,Pick your 1st place!,1着を予想！
+str.bet.guide.place.empty,3착 이내 들어올 말 선택!,Pick a horse for top 3!,3着以内の馬を選択！
+str.bet.guide.quinella.empty,1~2착 할 말 2마리 선택!,Pick 2 horses for top 2!,1~2着の馬を2頭選択！
+str.bet.guide.quinella.one,1마리 더 선택!,Pick 1 more!,あと1頭選択！
+str.bet.guide.exacta.empty,1착 예측 선택!,Pick your 1st place!,1着を予想！
+str.bet.guide.exacta.one,2착 예측 선택!,Pick your 2nd place!,2着を予想！
+str.bet.guide.trio.empty,1~3착 할 말 3마리 선택!,Pick 3 horses for top 3!,1~3着の馬を3頭選択！
+str.bet.guide.trio.one,2마리 더 선택!,Pick 2 more!,あと2頭選択！
+str.bet.guide.trio.two,1마리 더 선택!,Pick 1 more!,あと1頭選択！
+str.bet.guide.wide.empty,3착 이내 들어올 말 2마리 선택!,Pick 2 horses for top 3!,3着以内の馬を2頭選択！
+str.bet.guide.wide.one,1마리 더 선택!,Pick 1 more!,あと1頭選択！
+str.bet.guide.complete,선택 완료!,Selection complete!,選択完了！
+str.btn.start,Start,Start,スタート
+str.btn.next_round,다음 라운드,Next Round,次のラウンド
+str.btn.new_game,새 게임,New Game,新しいゲーム
+str.btn.close,닫기,Close,閉じる
+str.btn.top100,Top 100,Top 100,Top 100
+str.btn.panel_close,◀ 닫기,◀ Close,◀ 閉じる
+str.btn.panel_open,열기 ▶,Open ▶,開く ▶
+str.panel.bet_title,배팅 선택,Place Your Bet,ベット選択
+str.leaderboard.title,Top 100 리더보드,Top 100 Leaderboard,Top 100リーダーボード
+str.leaderboard.header,순위    점수    적중    날짜              요약,"Rank    Score    Hits    Date              Summary",順位    点数    的中    日付              概要
+str.leaderboard.empty,"기록이 없습니다.\n게임을 완료하면 자동으로 기록됩니다.","No records yet.\nComplete a game to save your score.",記録がありません。
+str.hud.round,Round {0}/{1},Round {0}/{1},ラウンド{0}/{1}
+str.hud.lap,{0}바퀴,{0} Laps,{0}周
+str.hud.this_race,이번 경기: {0}바퀴,This Race: {0} Laps,このレース: {0}周
+str.hud.total_score,총점: {0},Total: {0},合計: {0}
+str.hud.timer,{0}초,{0}s,{0}秒
+str.hud.rank,{0}위,{0}th,{0}位
+str.hud.lap_progress,{0}/{1}바퀴,{0}/{1} Laps,{0}/{1}周
+str.hud.finished,완주,Finished,完走
+str.hud.my_bet,내 배팅 ▶ {0} | {1},My Bet ▶ {0} | {1},マイベット ▶ {0} | {1}
+str.hud.race_info,"Round {0}/{1}  |  {2}바퀴","Round {0}/{1}  |  {2} Laps",ラウンド{0}/{1}  |  {2}周
+str.result.title,레이스 결과,Race Result,レース結果
+str.result.win,적중!,Hit!,的中！
+str.result.lose,아쉽네요...,So close...,残念...
+str.result.rank1,1착: {0},1st: {0},1着: {0}
+str.result.rank2,2착: {0},2nd: {0},2着: {0}
+str.result.rank3,3착: {0},3rd: {0},3着: {0}
+str.result.bet_type,배팅: {0} ({1}),Bet: {0} ({1}),ベット: {0}（{1}）
+str.result.my_pick,내 {0} 예측: {1} → 실제 {2}착,My {0}: {1} → Actual {2}nd,マイ{0}: {1} → 実際{2}着
+str.result.score_win,+{0}점 획득!  (총점: {1}),+{0} pts!  (Total: {1}),+{0}点獲得！（合計: {1}）
+str.result.score_lose,0점  (총점: {0}),0 pts  (Total: {0}),0点（合計: {0}）
+str.finish.title,Finish!!,Finish!!,フィニッシュ！！
+str.finish.round_header,라운드별 결과,Round Results,ラウンド別結果
+str.finish.hit,적중!,Hit!,的中！
+str.finish.miss,실패,Miss,失敗
+str.finish.score_plus,+{0}점,+{0} pts,+{0}点
+str.finish.score_zero,+0점,+0 pts,+0点
+str.finish.total,"총점: {0}점  ({1}/{2} 적중)","Total: {0} pts  ({1}/{2} hits)",合計: {0}点（{1}/{2}的中）
+str.leaderboard.row,"{0}위  {1}점  {2}R  {3}  {4}","{0}th  {1}pts  {2}R  {3}  {4}",{0}位  {1}点  {2}R  {3}  {4}

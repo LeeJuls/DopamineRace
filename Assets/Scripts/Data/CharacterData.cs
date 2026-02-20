@@ -183,14 +183,19 @@ public class CharacterData
         }
     }
 
+    /// <summary>
+    /// 로컬라이즈된 표시 이름 (charName이 UID면 번역, 아니면 그대로)
+    /// </summary>
+    public string DisplayName => Loc.Get(charName);
+
     public string GetTypeName()
     {
         switch (charType)
         {
-            case CharacterType.Runner:   return "도주";
-            case CharacterType.Leader:   return "선행";
-            case CharacterType.Chaser:   return "선입";
-            case CharacterType.Reckoner: return "추입";
+            case CharacterType.Runner:   return Loc.Get("str.chartype.runner");
+            case CharacterType.Leader:   return Loc.Get("str.chartype.leader");
+            case CharacterType.Chaser:   return Loc.Get("str.chartype.chaser");
+            case CharacterType.Reckoner: return Loc.Get("str.chartype.reckoner");
             default: return "???";
         }
     }

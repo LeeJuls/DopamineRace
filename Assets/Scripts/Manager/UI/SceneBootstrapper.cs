@@ -83,6 +83,9 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ══════════════════════════════════════
     private void Awake()
     {
+        // 다국어 초기화 (가장 먼저!)
+        Loc.Init();
+
         // 폰트 설정: FontHelper가 GameSettings → OS fallback 처리
         font = FontHelper.GetUIFontWithFallback();
 
@@ -159,7 +162,7 @@ public partial class SceneBootstrapper : MonoBehaviour
         if (GameManager.Instance.CurrentState == GameManager.GameState.Racing)
         {
             raceTimer += Time.deltaTime;
-            if (raceTimerText != null) raceTimerText.text = raceTimer.ToString("F1") + "초";
+            if (raceTimerText != null) raceTimerText.text = Loc.Get("str.hud.timer", raceTimer.ToString("F1"));
 
             rankUpdateTimer -= Time.deltaTime;
             if (rankUpdateTimer <= 0f)

@@ -37,9 +37,9 @@ public partial class SceneBootstrapper
         tb.onClick.AddListener(() => {
             bool isOpen = leftPanelObj.activeSelf;
             leftPanelObj.SetActive(!isOpen);
-            toggleBtnText.text = isOpen ? "열기 ▶" : "◀ 닫기";
+            toggleBtnText.text = isOpen ? Loc.Get("str.btn.panel_open") : Loc.Get("str.btn.panel_close");
         });
-        toggleBtnText = MkText(toggleBtn.transform, "◀ 닫기",
+        toggleBtnText = MkText(toggleBtn.transform, Loc.Get("str.btn.panel_close"),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             Vector2.zero, new Vector2(80, 35), 18, TextAnchor.MiddleCenter, Color.white);
 
@@ -47,7 +47,7 @@ public partial class SceneBootstrapper
         BuildBetTypeTabs(leftPanel.transform);
 
         // 타이틀 + 안내
-        titleText = MkText(leftPanel.transform, "배팅 선택",
+        titleText = MkText(leftPanel.transform, Loc.Get("str.panel.bet_title"),
             new Vector2(0.5f, 1), new Vector2(0.5f, 1),
             new Vector2(0, -75), new Vector2(300, 30), 22, TextAnchor.MiddleCenter, Color.black);
 
@@ -213,20 +213,20 @@ public partial class SceneBootstrapper
         startButton.interactable = false;
         startButton.onClick.AddListener(OnStartClicked);
 
-        MkText(startObj.transform, "Start",
+        MkText(startObj.transform, Loc.Get("str.btn.start"),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             Vector2.zero, new Vector2(200, 65), 30, TextAnchor.MiddleCenter, Color.black);
 
         // === 우상단 정보 ===
-        roundText = MkText(parent, "Round 1/7",
+        roundText = MkText(parent, Loc.Get("str.hud.round", 1, 7),
             new Vector2(1, 1), new Vector2(1, 1),
             new Vector2(-20, -10), new Vector2(250, 30), 22, TextAnchor.MiddleRight, Color.white);
 
-        lapText = MkText(parent, "이번 경기: 1바퀴",
+        lapText = MkText(parent, Loc.Get("str.hud.this_race", 1),
             new Vector2(1, 1), new Vector2(1, 1),
             new Vector2(-20, -38), new Vector2(250, 25), 18, TextAnchor.MiddleRight, new Color(0.8f, 0.9f, 1f));
 
-        scoreText = MkText(parent, "총점: 0",
+        scoreText = MkText(parent, Loc.Get("str.hud.total_score", 0),
             new Vector2(1, 1), new Vector2(1, 1),
             new Vector2(-20, -62), new Vector2(250, 25), 20, TextAnchor.MiddleRight, Color.yellow);
 
@@ -249,7 +249,7 @@ public partial class SceneBootstrapper
         top100Btn.colors = t100cb;
         top100Btn.onClick.AddListener(() => ShowLeaderboard());
 
-        MkText(top100Obj.transform, "Top 100",
+        MkText(top100Obj.transform, Loc.Get("str.btn.top100"),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             Vector2.zero, new Vector2(200, 40), 20, TextAnchor.MiddleCenter, Color.white);
     }
@@ -262,12 +262,12 @@ public partial class SceneBootstrapper
         BetType[] types = { BetType.Win, BetType.Place, BetType.Quinella, BetType.Exacta, BetType.Trio, BetType.Wide };
         var gs = GameSettings.Instance;
         string[] labels = {
-            "단승\n" + gs.payoutWin + "pt",
-            "연승\n" + gs.payoutPlace + "pt",
-            "복승\n" + gs.payoutQuinella + "pt",
-            "쌍승\n" + gs.payoutExacta + "pt",
-            "삼복승\n" + gs.payoutTrio + "pt",
-            "복연승\n" + gs.payoutWide + "pt"
+            Loc.Get("str.bet.win.name") + "\n" + gs.payoutWin + "pt",
+            Loc.Get("str.bet.place.name") + "\n" + gs.payoutPlace + "pt",
+            Loc.Get("str.bet.quinella.name") + "\n" + gs.payoutQuinella + "pt",
+            Loc.Get("str.bet.exacta.name") + "\n" + gs.payoutExacta + "pt",
+            Loc.Get("str.bet.trio.name") + "\n" + gs.payoutTrio + "pt",
+            Loc.Get("str.bet.wide.name") + "\n" + gs.payoutWide + "pt"
         };
 
         GameObject tabArea = new GameObject("TabArea");
@@ -405,7 +405,7 @@ public partial class SceneBootstrapper
         if (infoText != null)
             infoText.text = bet.GetSelectionGuide();
         if (titleText != null)
-            titleText.text = BettingCalculator.GetTypeName(bet.type) + " 배팅";
+            titleText.text = Loc.Get("str.panel.bet_title");
     }
 
     private void OnStartClicked()

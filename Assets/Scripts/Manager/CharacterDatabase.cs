@@ -101,7 +101,7 @@ public class CharacterDatabase : MonoBehaviour
         }
 
         Debug.Log("[CharacterDB] " + pool.Count + "명 중 " + pick + "명 선발: "
-            + string.Join(", ", selectedCharacters.ConvertAll(c => c.charName)));
+            + string.Join(", ", selectedCharacters.ConvertAll(c => c.DisplayName)));
 
         SelectionVersion++;
         GameConstants.InvalidateCache();

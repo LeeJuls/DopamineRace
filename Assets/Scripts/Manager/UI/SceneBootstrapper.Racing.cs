@@ -57,7 +57,7 @@ public partial class SceneBootstrapper
             new Vector2(-15, -10), new Vector2(250, 30), 20, TextAnchor.MiddleRight, new Color(0.8f, 0.9f, 1f));
 
         // 타이머
-        raceTimerText = MkText(parent, "0.0초",
+        raceTimerText = MkText(parent, Loc.Get("str.hud.timer", "0.0"),
             new Vector2(1, 1), new Vector2(1, 1),
             new Vector2(-15, -38), new Vector2(130, 30), 22, TextAnchor.MiddleRight, Color.white);
     }
@@ -80,9 +80,9 @@ public partial class SceneBootstrapper
         {
             var r = live[i];
             string mark = myPicks.Contains(r.RacerIndex) ? " ★" : "";
-            string lapInfo = r.IsFinished ? "완주" : "[" + r.CurrentLap + "/" + totalLaps + "바퀴]";
+            string lapInfo = r.IsFinished ? Loc.Get("str.hud.finished") : "[" + Loc.Get("str.hud.lap_progress", r.CurrentLap, totalLaps) + "]";
             string spd = r.IsFinished ? "" : " x" + r.CurrentSpeed.ToString("F1");
-            rankTexts[i].text = (i + 1) + "위 " + GameConstants.RACER_NAMES[r.RacerIndex] + " " + lapInfo + spd + mark;
+            rankTexts[i].text = Loc.Get("str.hud.rank", i + 1) + " " + GameConstants.RACER_NAMES[r.RacerIndex] + " " + lapInfo + spd + mark;
             rankTexts[i].color = myPicks.Contains(r.RacerIndex) ? new Color(1f, 0.9f, 0.3f) : Color.white;
         }
     }
@@ -92,9 +92,9 @@ public partial class SceneBootstrapper
         var gm = GameManager.Instance;
         if (gm == null) return;
         if (roundText != null)
-            roundText.text = "Round " + gm.CurrentRound + "/" + gm.TotalRounds;
+            roundText.text = Loc.Get("str.hud.round", gm.CurrentRound, gm.TotalRounds);
         if (lapText != null)
-            lapText.text = "이번 경기: " + gm.CurrentRoundLaps + "바퀴";
+            lapText.text = Loc.Get("str.hud.this_race", gm.CurrentRoundLaps);
     }
 
     private void UpdateRacingRoundInfo()
@@ -102,13 +102,13 @@ public partial class SceneBootstrapper
         var gm = GameManager.Instance;
         if (gm == null) return;
         if (racingRoundText != null)
-            racingRoundText.text = "Round " + gm.CurrentRound + "/" + gm.TotalRounds + "  |  " + gm.CurrentRoundLaps + "바퀴";
+            racingRoundText.text = Loc.Get("str.hud.race_info", gm.CurrentRound, gm.TotalRounds, gm.CurrentRoundLaps);
     }
 
     private void UpdateScore()
     {
         if (scoreText != null && ScoreManager.Instance != null)
-            scoreText.text = "총점: " + ScoreManager.Instance.CurrentGameScore;
+            scoreText.text = Loc.Get("str.hud.total_score", ScoreManager.Instance.CurrentGameScore);
     }
 
     private void UpdateMyBet()
@@ -124,6 +124,6 @@ public partial class SceneBootstrapper
             if (i > 0) names += ", ";
             names += bet.GetSelectionLabel(i) + ":" + GameConstants.RACER_NAMES[bet.selections[i]];
         }
-        myBetText.text = "내 배팅 ▶ " + typeName + " | " + names;
+        myBetText.text = Loc.Get("str.hud.my_bet", typeName, names);
     }
 }

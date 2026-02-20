@@ -98,7 +98,7 @@ public static class GameConstants
 
         for (int i = 0; i < selected.Count; i++)
         {
-            _cachedNames[i] = selected[i].charName;
+            _cachedNames[i] = selected[i].DisplayName;
             _cachedColors[i] = selected[i].GetTypeColor();
         }
 

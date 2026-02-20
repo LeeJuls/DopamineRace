@@ -59,26 +59,26 @@ public class BetInfo
         switch (type)
         {
             case BetType.Win:
-                return selections.Count == 0 ? "1착 예측 선택!" : "선택 완료!";
+                return selections.Count == 0 ? Loc.Get("str.bet.guide.win.empty") : Loc.Get("str.bet.guide.complete");
             case BetType.Place:
-                return selections.Count == 0 ? "3착 이내 들어올 말 선택!" : "선택 완료!";
+                return selections.Count == 0 ? Loc.Get("str.bet.guide.place.empty") : Loc.Get("str.bet.guide.complete");
             case BetType.Quinella:
-                if (selections.Count == 0) return "1~2착 할 말 2마리 선택!";
-                if (selections.Count == 1) return "1마리 더 선택!";
-                return "선택 완료!";
+                if (selections.Count == 0) return Loc.Get("str.bet.guide.quinella.empty");
+                if (selections.Count == 1) return Loc.Get("str.bet.guide.quinella.one");
+                return Loc.Get("str.bet.guide.complete");
             case BetType.Exacta:
-                if (selections.Count == 0) return "1착 예측 선택!";
-                if (selections.Count == 1) return "2착 예측 선택!";
-                return "선택 완료!";
+                if (selections.Count == 0) return Loc.Get("str.bet.guide.exacta.empty");
+                if (selections.Count == 1) return Loc.Get("str.bet.guide.exacta.one");
+                return Loc.Get("str.bet.guide.complete");
             case BetType.Trio:
-                if (selections.Count == 0) return "1~3착 할 말 3마리 선택!";
-                if (selections.Count == 1) return "2마리 더 선택!";
-                if (selections.Count == 2) return "1마리 더 선택!";
-                return "선택 완료!";
+                if (selections.Count == 0) return Loc.Get("str.bet.guide.trio.empty");
+                if (selections.Count == 1) return Loc.Get("str.bet.guide.trio.one");
+                if (selections.Count == 2) return Loc.Get("str.bet.guide.trio.two");
+                return Loc.Get("str.bet.guide.complete");
             case BetType.Wide:
-                if (selections.Count == 0) return "3착 이내 들어올 말 2마리 선택!";
-                if (selections.Count == 1) return "1마리 더 선택!";
-                return "선택 완료!";
+                if (selections.Count == 0) return Loc.Get("str.bet.guide.wide.empty");
+                if (selections.Count == 1) return Loc.Get("str.bet.guide.wide.one");
+                return Loc.Get("str.bet.guide.complete");
             default:
                 return "";
         }
@@ -91,12 +91,12 @@ public class BetInfo
     {
         switch (type)
         {
-            case BetType.Win:      return "1착";
-            case BetType.Place:    return "입상";
-            case BetType.Exacta:   return selectionOrder == 0 ? "1착" : "2착";
-            case BetType.Quinella: return "선택";
-            case BetType.Wide:     return "선택";
-            case BetType.Trio:     return "선택";
+            case BetType.Win:      return Loc.Get("str.bet.label.first");
+            case BetType.Place:    return Loc.Get("str.bet.label.place");
+            case BetType.Exacta:   return selectionOrder == 0 ? Loc.Get("str.bet.label.first") : Loc.Get("str.bet.label.second");
+            case BetType.Quinella: return Loc.Get("str.bet.label.select");
+            case BetType.Wide:     return Loc.Get("str.bet.label.select");
+            case BetType.Trio:     return Loc.Get("str.bet.label.select");
             default: return "";
         }
     }
@@ -166,12 +166,12 @@ public static class BettingCalculator
     {
         switch (type)
         {
-            case BetType.Win:      return "단승";
-            case BetType.Place:    return "연승";
-            case BetType.Quinella: return "복승";
-            case BetType.Exacta:   return "쌍승";
-            case BetType.Trio:     return "삼복승";
-            case BetType.Wide:     return "복연승";
+            case BetType.Win:      return Loc.Get("str.bet.win.name");
+            case BetType.Place:    return Loc.Get("str.bet.place.name");
+            case BetType.Quinella: return Loc.Get("str.bet.quinella.name");
+            case BetType.Exacta:   return Loc.Get("str.bet.exacta.name");
+            case BetType.Trio:     return Loc.Get("str.bet.trio.name");
+            case BetType.Wide:     return Loc.Get("str.bet.wide.name");
             default: return "";
         }
     }
@@ -180,12 +180,12 @@ public static class BettingCalculator
     {
         switch (type)
         {
-            case BetType.Win:      return "1착 맞추기";
-            case BetType.Place:    return "3착 이내 1마리 (7두↓ 2착)";
-            case BetType.Quinella: return "1~2착 2마리 (순서무관)";
-            case BetType.Exacta:   return "1착+2착 순서 정확히";
-            case BetType.Trio:     return "1~3착 3마리 (순서무관)";
-            case BetType.Wide:     return "3착 이내 2마리 (순서무관)";
+            case BetType.Win:      return Loc.Get("str.bet.win.desc");
+            case BetType.Place:    return Loc.Get("str.bet.place.desc");
+            case BetType.Quinella: return Loc.Get("str.bet.quinella.desc");
+            case BetType.Exacta:   return Loc.Get("str.bet.exacta.desc");
+            case BetType.Trio:     return Loc.Get("str.bet.trio.desc");
+            case BetType.Wide:     return Loc.Get("str.bet.wide.desc");
             default: return "";
         }
     }

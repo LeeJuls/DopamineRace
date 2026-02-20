@@ -175,7 +175,7 @@ public class GameManager : MonoBehaviour
         if (CurrentBet == null || !CurrentBet.IsComplete) return;
 
         string trackName = TrackDatabase.Instance?.CurrentTrackInfo != null
-            ? TrackDatabase.Instance.CurrentTrackInfo.trackIcon + " " + TrackDatabase.Instance.CurrentTrackInfo.trackName
+            ? TrackDatabase.Instance.CurrentTrackInfo.trackIcon + " " + TrackDatabase.Instance.CurrentTrackInfo.DisplayName
             : "일반";
 
         Debug.Log("═══ Round " + CurrentRound + "/" + TotalRounds
@@ -215,7 +215,7 @@ public class GameManager : MonoBehaviour
         // ── 트랙명 ──
         string trackName = "기본";
         if (TrackDatabase.Instance?.CurrentTrackInfo != null)
-            trackName = TrackDatabase.Instance.CurrentTrackInfo.trackName;
+            trackName = TrackDatabase.Instance.CurrentTrackInfo.DisplayName;
 
         // ── 내가 선택한 캐릭터 이름들 ──
         var selectedNames = new List<string>();
@@ -225,7 +225,7 @@ public class GameManager : MonoBehaviour
             foreach (int idx in CurrentBet.selections)
             {
                 if (idx >= 0 && idx < racers.Count && racers[idx].CharData != null)
-                    selectedNames.Add(racers[idx].CharData.charName);
+                    selectedNames.Add(racers[idx].CharData.DisplayName);
             }
         }
 
@@ -339,7 +339,7 @@ public class GameManager : MonoBehaviour
         if (track.slingshotMultiplier != 1f)
             parts.Add(string.Format("슬링샷:×{0:F1}", track.slingshotMultiplier));
 
-        string trackName = trackInfo != null ? trackInfo.trackName : track.name;
+        string trackName = trackInfo != null ? trackInfo.DisplayName : track.name;
         string effects = parts.Count > 0 ? string.Join(" ", parts.ToArray()) : "보정 없음";
 
         overlay.LogEvent(RaceDebugOverlay.EventType.Track,

@@ -373,7 +373,7 @@ public class RacerController : MonoBehaviour
                     critVfx = gameObject.AddComponent<CollisionVFX>();
                 critVfx.Show(CollisionVFXType.Crit, 0.8f);
 
-                Debug.Log("★ 크리티컬! " + charData.charName + " (luck:" + charData.charBaseLuck + ")");
+                Debug.Log("★ 크리티컬! " + charData.DisplayName + " (luck:" + charData.charBaseLuck + ")");
                 return gs.luckCritBoost;
             }
         }
@@ -570,7 +570,7 @@ public class RacerController : MonoBehaviour
         // ★ 모델 교체 안 함 (공격 시에만 잠깐 무기 표시)
 
         Debug.Log(string.Format("[스킬 발동] {0} → 각성! ({1}초)",
-            charData.charName, charData.skillData.durationSec));
+            charData.DisplayName, charData.skillData.durationSec));
     }
 
     /// <summary>
@@ -585,7 +585,7 @@ public class RacerController : MonoBehaviour
         SwapModel(toAttack: false);
 
         if (charData != null)
-            Debug.Log(string.Format("[스킬 종료] {0} → 맨몸 복귀", charData.charName));
+            Debug.Log(string.Format("[스킬 종료] {0} → 맨몸 복귀", charData.DisplayName));
     }
 
     /// <summary>
@@ -614,7 +614,7 @@ public class RacerController : MonoBehaviour
 
         attackModel.SetActive(false);
 
-        Debug.Log(string.Format("[스킬 준비] {0} → 공격 프리팹 로드 완료", charData.charName));
+        Debug.Log(string.Format("[스킬 준비] {0} → 공격 프리팹 로드 완료", charData.DisplayName));
     }
 
     /// <summary>

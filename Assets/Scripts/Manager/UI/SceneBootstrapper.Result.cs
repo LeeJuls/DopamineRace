@@ -11,7 +11,7 @@ public partial class SceneBootstrapper
         Image bg = parent.gameObject.AddComponent<Image>();
         bg.color = new Color(0, 0, 0, 0.75f);
 
-        resultTitleText = MkText(parent, "레이스 결과",
+        resultTitleText = MkText(parent, Loc.Get("str.result.title"),
             new Vector2(0.5f, 0.8f), new Vector2(0.5f, 0.8f),
             Vector2.zero, new Vector2(500, 60), 42, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.2f));
 
@@ -36,7 +36,7 @@ public partial class SceneBootstrapper
         nextRoundButton = nb.AddComponent<Button>();
         nextRoundButton.onClick.AddListener(() => GameManager.Instance?.NextRound());
 
-        nextRoundBtnText = MkText(nb.transform, "다음 라운드",
+        nextRoundBtnText = MkText(nb.transform, Loc.Get("str.btn.next_round"),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             Vector2.zero, new Vector2(250, 60), 26, TextAnchor.MiddleCenter, Color.white);
     }
@@ -50,16 +50,18 @@ public partial class SceneBootstrapper
         var bet = gm?.CurrentBet;
         int score = ScoreManager.Instance?.LastRoundScore ?? 0;
 
-        resultTitleText.text = score > 0 ? "적중!" : "아쉽네요...";
+        resultTitleText.text = score > 0 ? Loc.Get("str.result.win") : Loc.Get("str.result.lose");
         resultTitleText.color = score > 0 ? new Color(1f, 0.85f, 0.2f) : new Color(0.7f, 0.7f, 0.7f);
 
         string detail = "";
-        detail += "1착: " + rankings[0].racerName + "  /  2착: " + rankings[1].racerName + "  /  3착: " + rankings[2].racerName + "\n\n";
+        detail += Loc.Get("str.result.rank1", rankings[0].racerName) + "  /  "
+                + Loc.Get("str.result.rank2", rankings[1].racerName) + "  /  "
+                + Loc.Get("str.result.rank3", rankings[2].racerName) + "\n\n";
 
         if (bet != null)
         {
             string typeName = BettingCalculator.GetTypeName(bet.type);
-            detail += "배팅: " + typeName + " (" + BettingCalculator.GetTypeDesc(bet.type) + ")\n";
+            detail += Loc.Get("str.result.bet_type", typeName, BettingCalculator.GetTypeDesc(bet.type)) + "\n";
 
             for (int i = 0; i < bet.selections.Count; i++)
             {
@@ -72,7 +74,7 @@ public partial class SceneBootstrapper
                 {
                     if (rankings[r].racerIndex == sel) { actualRank = r + 1; break; }
                 }
-                detail += "내 " + label + " 예측: " + selName + " → 실제 " + actualRank + "착\n";
+                detail += Loc.Get("str.result.my_pick", label, selName, actualRank) + "\n";
             }
         }
 
@@ -80,16 +82,16 @@ public partial class SceneBootstrapper
 
         int totalScore = ScoreManager.Instance?.CurrentGameScore ?? 0;
         resultScoreText.text = score > 0
-            ? "+" + score + "점 획득!  (총점: " + totalScore + ")"
-            : "0점  (총점: " + totalScore + ")";
+            ? Loc.Get("str.result.score_win", score, totalScore)
+            : Loc.Get("str.result.score_lose", totalScore);
         resultScoreText.color = score > 0 ? Color.yellow : new Color(0.7f, 0.7f, 0.7f);
 
         if (nextRoundBtnText != null)
         {
             if (gm != null && gm.IsLastRound)
-                nextRoundBtnText.text = "새 게임";
+                nextRoundBtnText.text = Loc.Get("str.btn.new_game");
             else
-                nextRoundBtnText.text = "다음 라운드";
+                nextRoundBtnText.text = Loc.Get("str.btn.next_round");
         }
     }
 }

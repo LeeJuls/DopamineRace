@@ -53,6 +53,12 @@ public class TrackInfo
     // ── 충돌 후 추가 효과 ──
     public float loserPenaltyDurationMultiplier = 1f;
 
+    // ── 로컬라이즈 표시용 ──
+    /// <summary>로컬라이즈된 트랙 이름</summary>
+    public string DisplayName => Loc.Get(trackName);
+    /// <summary>로컬라이즈된 트랙 설명</summary>
+    public string DisplayDesc => Loc.Get(trackDescription);
+
     /// <summary>
     /// CSV 한 줄 파싱
     /// 헤더 순서:

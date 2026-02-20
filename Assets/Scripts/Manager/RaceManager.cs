@@ -212,7 +212,7 @@ public class RaceManager : MonoBehaviour
                 if (prefab != null)
                 {
                     racerObj = Instantiate(prefab);
-                    racerObj.name = "Racer_" + i + "_" + charData.charName;
+                    racerObj.name = "Racer_" + i + "_" + charData.DisplayName;
                 }
             }
 
@@ -346,7 +346,7 @@ public class RaceManager : MonoBehaviour
         racer.FinishOrder = finishCount;
         racer.OnFinished -= OnRacerFinished;
 
-        string name = racer.CharData != null ? racer.CharData.charName
+        string name = racer.CharData != null ? racer.CharData.DisplayName
             : GameConstants.RACER_NAMES[racer.RacerIndex];
 
         finalRankings.Add(new RankingEntry
@@ -478,7 +478,7 @@ public class RaceManager : MonoBehaviour
         int nextRank = result.Count + 1;
         foreach (var r in unfinished)
         {
-            string name = r.CharData != null ? r.CharData.charName
+            string name = r.CharData != null ? r.CharData.DisplayName
                 : GameConstants.RACER_NAMES[r.RacerIndex];
 
             result.Add(new RankingEntry
