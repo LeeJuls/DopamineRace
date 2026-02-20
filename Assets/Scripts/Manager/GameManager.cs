@@ -81,6 +81,12 @@ public class GameManager : MonoBehaviour
         ApplyRoundLaps();
         Debug.Log("═══ 새 게임 시작 | 총 " + TotalRounds + " 라운드 | "
             + GameConstants.RACER_COUNT + "명 선발 ═══");
+
+        // ★ 배팅 화면 진입 전 인기도/배당/컨디션 계산
+        var racersForOdds = CharacterDatabase.Instance?.SelectedCharacters;
+        string trackIdForOdds = TrackDatabase.Instance?.CurrentTrackInfo?.trackId ?? "normal";
+        OddsCalculator.Calculate(racersForOdds, trackIdForOdds);
+
         ChangeState(GameState.Betting);
     }
 
@@ -261,6 +267,12 @@ public class GameManager : MonoBehaviour
             + " | " + CurrentRoundLaps + "바퀴 ═══");
 
         OnRoundChanged?.Invoke(CurrentRound);
+
+        // ★ 배팅 화면 진입 전 인기도/배당/컨디션 계산
+        var racersForOdds2 = CharacterDatabase.Instance?.SelectedCharacters;
+        string trackIdForOdds2 = TrackDatabase.Instance?.CurrentTrackInfo?.trackId ?? "normal";
+        OddsCalculator.Calculate(racersForOdds2, trackIdForOdds2);
+
         ChangeState(GameState.Betting);
     }
 

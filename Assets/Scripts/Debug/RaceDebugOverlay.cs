@@ -426,6 +426,7 @@ public class RaceDebugOverlay : MonoBehaviour
     // ══════════════════════════════════════
 
     private bool showOddsSection = true;
+    private Vector2 oddsScrollPos;
 
     private void DrawOddsSection()
     {
@@ -442,15 +443,21 @@ public class RaceDebugOverlay : MonoBehaviour
 
         if (odds == null || odds.Count == 0)
         {
-            GUILayout.Label("  <color=#888888>(배당 데이터 없음 — 배팅 완료 후 Start 누르면 표시)</color>", normalStyle);
+            GUILayout.Label("  <color=#888888>(배당 데이터 없음 — 게임 시작하면 자동으로 표시됩니다)</color>", normalStyle);
             GUILayout.Label("─────────────────────────────────────", normalStyle);
             return;
         }
 
         // 헤더 행
         GUILayout.Label(
-            "<color=yellow>인기  이름    단승   컨디션         최근순위        출전</color>",
+            "<color=yellow>인기  이름    단승   컨디션         최근순위   출전</color>",
             normalStyle);
+
+        // 1줄 높이 약 16px, 3~4개 = 64px, 최대 6개 = 96px 스크롤 영역
+        float rowHeight = 16f;
+        float scrollHeight = Mathf.Clamp(odds.Count * rowHeight, rowHeight * 3.5f, rowHeight * 6f);
+
+        oddsScrollPos = GUILayout.BeginScrollView(oddsScrollPos, GUILayout.Height(scrollHeight));
 
         // 각 캐릭터 행
         foreach (var info in odds)
@@ -479,7 +486,7 @@ public class RaceDebugOverlay : MonoBehaviour
 
             GUILayout.Label(string.Format(
                 "<color={0}>{1,2}위{2}</color>  {3,-4}  <color={4}>{5,5:F1}x</color>  " +
-                "<color={6}>{7}({8:F2}x)</color>  {9,-12}  {10}판{11}",
+                "<color={6}>{7}({8:F2}x)</color>  {9,-10}  {10}판{11}",
                 rankColor, info.popularityRank, rankStar,
                 info.charName,
                 oddsColor, info.winOdds,
@@ -488,6 +495,8 @@ public class RaceDebugOverlay : MonoBehaviour
                 info.totalRaces, newTag),
                 normalStyle);
         }
+
+        GUILayout.EndScrollView();
 
         // 하단 요약: 평균 배당
         float avgOdds = 0f;
