@@ -226,16 +226,16 @@ public class CharacterInfoPopup : MonoBehaviour
         rankChart.ClearComponentData();
 
         // 제목 비활성
-        var title = rankChart.GetOrAddChartComponent<Title>();
+        var title = rankChart.EnsureChartComponent<Title>();
         title.show = false;
 
         // X축 (회차)
-        var xAxis = rankChart.GetOrAddChartComponent<XAxis>();
+        var xAxis = rankChart.EnsureChartComponent<XAxis>();
         xAxis.type = Axis.AxisType.Category;
         xAxis.show = false;
 
         // Y축 (순위 1~12, inverse)
-        var yAxis = rankChart.GetOrAddChartComponent<YAxis>();
+        var yAxis = rankChart.EnsureChartComponent<YAxis>();
         yAxis.type = Axis.AxisType.Value;
         yAxis.inverse = true;
         yAxis.min = 1;
@@ -243,14 +243,14 @@ public class CharacterInfoPopup : MonoBehaviour
         yAxis.show = false;
 
         // 그리드
-        var grid = rankChart.GetOrAddChartComponent<GridCoord>();
+        var grid = rankChart.EnsureChartComponent<GridCoord>();
         grid.left = 10;
         grid.right = 10;
         grid.top = 10;
         grid.bottom = 10;
 
         // 배경 투명
-        var bg = rankChart.GetOrAddChartComponent<Background>();
+        var bg = rankChart.EnsureChartComponent<Background>();
         bg.show = false;
     }
 
@@ -338,15 +338,15 @@ public class CharacterInfoPopup : MonoBehaviour
         radarChart.ClearComponentData();
 
         // 제목 비활성
-        var title = radarChart.GetOrAddChartComponent<Title>();
+        var title = radarChart.EnsureChartComponent<Title>();
         title.show = false;
 
         // 배경 투명
-        var bg = radarChart.GetOrAddChartComponent<Background>();
+        var bg = radarChart.EnsureChartComponent<Background>();
         bg.show = false;
 
         // RadarCoord 설정 (6각형)
-        var radar = radarChart.GetOrAddChartComponent<RadarCoord>();
+        var radar = radarChart.EnsureChartComponent<RadarCoord>();
         radar.shape = RadarCoord.Shape.Polygon;
         radar.splitNumber = 4; // 4구역 (5, 10, 15, 20)
 
@@ -361,11 +361,8 @@ public class CharacterInfoPopup : MonoBehaviour
             radar.AddIndicator(Loc.Get(key), 0, 20);
         }
 
-        // 4색 구역 (splitArea)
-        radar.indicatorList.ForEach(ind => {
-            ind.textStyle.fontSize = 12;
-            ind.textStyle.color = Color.white;
-        });
+        // 인디케이터 라벨 스타일은 RadarCoord의 기본 설정 사용
+        // (XCharts 최신 버전에서는 Indicator에 직접 textStyle 없음)
     }
 
     private void UpdateRadarChart(CharacterData data)
