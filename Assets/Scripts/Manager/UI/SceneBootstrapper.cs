@@ -190,6 +190,7 @@ public partial class SceneBootstrapper : MonoBehaviour
         GameObject canvasObj = new GameObject("Canvas");
         Canvas canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.pixelPerfect = true;
         canvas.sortingOrder = 100;
 
         CanvasScaler sc = canvasObj.AddComponent<CanvasScaler>();
