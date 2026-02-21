@@ -2,6 +2,18 @@ using UnityEngine;
 using System.Collections.Generic;
 
 // ══════════════════════════════════════════
+//  순위 그래프용 레이스 기록 1건
+// ══════════════════════════════════════════
+
+[System.Serializable]
+public class RaceEntry
+{
+    public int rank;
+    public string trackName;
+    public int laps;          // 거리 판별용 (GameSettings.GetDistanceKey)
+}
+
+// ══════════════════════════════════════════
 //  캐릭터의 특정 맵에서의 기록
 // ══════════════════════════════════════════
 
@@ -43,16 +55,34 @@ public class CharacterRecord
     public string charName;
     public List<CharacterTrackRecord> trackRecords = new List<CharacterTrackRecord>();
     public List<int> recentOverallRanks = new List<int>();  // 최근 10게임 순위 (맵 무관)
+    public List<RaceEntry> recentRaceEntries = new List<RaceEntry>();  // 최근 6게임 (순위 그래프용)
 
     private const int MAX_RECENT = 10;
+    private const int MAX_RACE_ENTRIES = 6;  // 순위 그래프 최대 표시 수
 
     /// <summary>레이스 결과 기록 (맵별 + 전체)</summary>
     public void AddResult(string trackName, int rank)
+    {
+        AddResult(trackName, rank, 0);
+    }
+
+    /// <summary>레이스 결과 기록 (맵별 + 전체 + 순위 그래프용)</summary>
+    public void AddResult(string trackName, int rank, int laps)
     {
         // 전체 최근 순위
         recentOverallRanks.Insert(0, rank);
         if (recentOverallRanks.Count > MAX_RECENT)
             recentOverallRanks.RemoveAt(recentOverallRanks.Count - 1);
+
+        // 순위 그래프용 (최대 6개, 최신이 리스트 앞)
+        recentRaceEntries.Insert(0, new RaceEntry
+        {
+            rank = rank,
+            trackName = trackName,
+            laps = laps
+        });
+        if (recentRaceEntries.Count > MAX_RACE_ENTRIES)
+            recentRaceEntries.RemoveAt(recentRaceEntries.Count - 1);
 
         // 맵별 기록
         CharacterTrackRecord tr = GetOrCreateTrackRecord(trackName);

@@ -30,7 +30,7 @@ public enum WeaponHand
 ///   0:char_name, 1:speed, 2:power, 3:brave, 4:calm, 5:endurance, 6:luck,
 ///   7:type, 8:char_ability, 9:char_ability_time_sec,
 ///   10:char_resource_prefabs, 11:char_attack_resource_prefabs,
-///   12:char_icon, 13:char_weapon
+///   12:char_icon, 13:char_weapon, 14:char_skill_desc, 15:char_illustration
 /// </summary>
 [System.Serializable]
 public class CharacterData
@@ -49,6 +49,8 @@ public class CharacterData
     public string charAttackResourcePrefabs;       // 무기 든 프리팹 경로
     public string charIcon;
     public WeaponHand charWeapon;                  // 무기 위치 (L/R/N)
+    public string charSkillDesc;                   // 스킬 설명 StringUID
+    public string charIllustration;                // 일러스트 Resources 경로
 
     public SkillData skillData;                    // 파싱된 스킬 데이터
 
@@ -75,6 +77,22 @@ public class CharacterData
         if (path.EndsWith(".prefab"))
             path = path.Substring(0, path.Length - 7);
         return Resources.Load<GameObject>(path);
+    }
+
+    /// <summary>
+    /// 일러스트 스프라이트 로드 (charIllustration 경로 사용, 없으면 LoadIcon() 대체)
+    /// </summary>
+    public Sprite LoadIllustration()
+    {
+        if (!string.IsNullOrEmpty(charIllustration))
+        {
+            string path = charIllustration.Replace('\\', '/');
+            if (path.EndsWith(".png"))
+                path = path.Substring(0, path.Length - 4);
+            Sprite spr = Resources.Load<Sprite>(path);
+            if (spr != null) return spr;
+        }
+        return LoadIcon();
     }
 
     public bool HasIconFile()
@@ -115,7 +133,7 @@ public class CharacterData
     ///   0:char_name, 1:speed, 2:power, 3:brave, 4:calm, 5:endurance, 6:luck,
     ///   7:type, 8:char_ability, 9:char_ability_time_sec,
     ///   10:char_resource_prefabs, 11:char_attack_resource_prefabs,
-    ///   12:char_icon, 13:char_weapon
+    ///   12:char_icon, 13:char_weapon, 14:char_skill_desc, 15:char_illustration
     /// </summary>
     public static CharacterData ParseCSVLine(string line)
     {
@@ -152,6 +170,12 @@ public class CharacterData
         d.charWeapon = WeaponHand.None;
         if (cols.Length > 13)
             d.charWeapon = ParseWeapon(cols[13].Trim());
+
+        // char_skill_desc (14번)
+        d.charSkillDesc = cols.Length > 14 ? cols[14].Trim() : "";
+
+        // char_illustration (15번)
+        d.charIllustration = cols.Length > 15 ? cols[15].Trim() : "";
 
         // ★ 스킬 데이터 파싱
         d.skillData = SkillData.Parse(d.charAbility, d.charAbilityTimeSec);

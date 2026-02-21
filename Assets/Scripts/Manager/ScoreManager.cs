@@ -148,10 +148,11 @@ public class ScoreManager : MonoBehaviour
         SaveCumulativeStats();
 
         // ── 캐릭터 영구 기록 갱신 ──
+        int currentLaps = GameSettings.Instance.GetLapsForRound(roundNum);
         foreach (var rr in racerResults)
         {
             var charRecord = charRecordStore.GetOrCreate(rr.charName);
-            charRecord.AddResult(trackName, rr.rank);
+            charRecord.AddResult(trackName, rr.rank, currentLaps);
             Debug.Log(string.Format("[ScoreManager] 기록저장: {0}({1}) rank={2} → TotalRaces={3} recentRanks=[{4}]",
                 rr.charName, Loc.Get(rr.charName), rr.rank,
                 charRecord.TotalRaces, charRecord.GetOverallRankString()));

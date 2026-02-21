@@ -129,3 +129,24 @@ str.ui.condition.normal,컨디션 중,Normal,普通
 str.ui.condition.bad,컨디션 하,Bad,不調
 str.ui.condition.worst,컨디션 최하,Worst,最悪
 str.ui.charinfo.coming_soon,준비 중...,Coming Soon...,準備中...
+str.char.001.skill.desc,충돌 5회시 공격,Attack after 5 collisions,5回衝突で攻撃
+str.char.002.skill.desc,충돌 5회시 공격,Attack after 5 collisions,5回衝突で攻撃
+str.char.003.skill.desc,충돌 5회시 공격,Attack after 5 collisions,5回衝突で攻撃
+str.char.004.skill.desc,충돌 5회시 공격,Attack after 5 collisions,5回衝突で攻撃
+str.char.005.skill.desc,충돌 5회시 공격,Attack after 5 collisions,5回衝突で攻撃
+str.char.006.skill.desc,충돌 5회시 공격,Attack after 5 collisions,5回衝突で攻撃
+str.char.007.skill.desc,충돌 5회시 공격,Attack after 5 collisions,5回衝突で攻撃
+str.char.008.skill.desc,충돌 5회시 공격,Attack after 5 collisions,5回衝突で攻撃
+str.char.009.skill.desc,충돌 5회시 공격,Attack after 5 collisions,5回衝突で攻撃
+str.char.010.skill.desc,충돌 5회시 공격,Attack after 5 collisions,5回衝突で攻撃
+str.char.011.skill.desc,충돌 5회시 공격,Attack after 5 collisions,5回衝突で攻撃
+str.char.012.skill.desc,충돌 5회시 공격,Attack after 5 collisions,5回衝突で攻撃
+str.ui.char.winrate,승률 : {0}%,Win Rate : {0}%,勝率 : {0}%
+str.ui.char.rank_label,{0}위{1},{0}{1},{0}位{1}
+str.ui.char.no_record,출전 기록 없음,No race record,出走記録なし
+str.ui.char.stat.speed,Speed,Speed,Speed
+str.ui.char.stat.power,Power,Power,Power
+str.ui.char.stat.brave,Brave,Brave,Brave
+str.ui.char.stat.calm,Calm,Calm,Calm
+str.ui.char.stat.endurance,Endurance,Endurance,Endurance
+str.ui.char.stat.luck,Luck,Luck,Luck
