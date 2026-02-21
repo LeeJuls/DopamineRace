@@ -1,11 +1,25 @@
 {
   "dependencies": {
+    "com.cysharp.unitask": {
+      "version": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "73a63b7f672b88f7e9992f6917eb458a8cbb6fa9"
+    },
     "com.monitor1394.xcharts": {
       "version": "https://github.com/XCharts-Team/XCharts.git",
       "depth": 0,
       "source": "git",
       "dependencies": {},
       "hash": "90e9187808c3f32462c65fb9394e79bc6026ad84"
+    },
+    "com.signal-loop.unitycodemcpserver": {
+      "version": "https://github.com/Signal-Loop/UnityCodeMCPServer.git?path=Assets/Plugins/UnityCodeMcpServer",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "e8ca6a5cfc98fde99b78c72b53119e26723af6de"
     },
     "com.unity.2d.animation": {
       "version": "13.0.4",
