@@ -24,6 +24,70 @@ MonoBehaviour:
   payoutExacta: 81
   payoutTrio: 120
   payoutWide: 11
+  conditionRate_best: 0.12
+  conditionRate_good: 0.18
+  conditionRate_normal: 0.4
+  conditionRate_bad: 0.18
+  conditionRate_worst: 0.12
+  conditionMul_best: 1.2
+  conditionMul_good: 1.1
+  conditionMul_normal: 1
+  conditionMul_bad: 0.95
+  conditionMul_worst: 0.9
+  oddsStatWeight_speed: 0.35
+  oddsStatWeight_power: 0.15
+  oddsStatWeight_luck: 0.2
+  oddsStatWeight_endurance: 0.15
+  oddsStatWeight_brave: 0.1
+  oddsStatWeight_calm: 0.05
+  oddsRecordWeight_win: 3
+  oddsRecordWeight_place: 1.5
+  oddsRecordWeight_show: 0.8
+  trackOddsWeight: 0.4
+  trackOddsMinRaces: 3
+  newCharOddsVariance: 0.3
+  newCharThreshold: 5
+  oddsRangeMin:
+  - 1.5
+  - 3
+  - 5
+  - 8
+  - 13
+  - 20
+  - 30
+  - 45
+  - 55
+  - 65
+  - 75
+  - 85
+  oddsRangeMax:
+  - 3
+  - 5
+  - 8
+  - 13
+  - 20
+  - 30
+  - 45
+  - 55
+  - 65
+  - 75
+  - 85
+  - 99
+  oddsCoef_place: 0.35
+  oddsCoef_quinella: 0.55
+  oddsCoef_exacta: 1.1
+  oddsCoef_wide: 0.45
+  oddsCoef_trio: 0.2
+  oddsMin_place: 1
+  oddsMax_place: 15
+  oddsMin_quinella: 2
+  oddsMax_quinella: 200
+  oddsMin_exacta: 3
+  oddsMax_exacta: 500
+  oddsMin_wide: 1.5
+  oddsMax_wide: 100
+  oddsMin_trio: 5
+  oddsMax_trio: 999
   pathDeviation: 0.7
   characterScale: 1.2
   laneOffset: 0.05
@@ -88,4 +152,10 @@ MonoBehaviour:
   randomTrackPerRound: 0
   enableTrackTransition: 1
   trackTransitionFadeDuration: 0.3
+  waypointArrivalDist: 0.25
+  initialSpeedMultiplier: 0.5
+  attackAnimCooldown: 0.6
+  mainFont: {fileID: 12800000, guid: d33d11b90102e7042ad01b77a72b3fe6, type: 3}
+  koreanFont: {fileID: 0}
+  uiFontScale: 1
   enableRaceDebug: 1
