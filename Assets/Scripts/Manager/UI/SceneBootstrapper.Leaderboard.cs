@@ -36,7 +36,7 @@ public partial class SceneBootstrapper
         closeBtn.AddComponent<Image>().color = new Color(0.5f, 0.3f, 0.3f);
         Button cb = closeBtn.AddComponent<Button>();
         cb.onClick.AddListener(() => leaderboardPopup.SetActive(false));
-        MkText(closeBtn.transform, Loc.Get("str.btn.close"),
+        MkText(closeBtn.transform, Loc.Get("str.ui.btn.close"),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             Vector2.zero, new Vector2(200, 50), 24, TextAnchor.MiddleCenter, Color.white);
     }

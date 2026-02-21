@@ -39,7 +39,7 @@ public partial class SceneBootstrapper
         {
             GameManager.Instance?.StartNewGame();
         });
-        MkText(newGameBtn.transform, Loc.Get("str.btn.new_game"),
+        MkText(newGameBtn.transform, Loc.Get("str.ui.btn.new_game"),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             Vector2.zero, new Vector2(220, 55), 26, TextAnchor.MiddleCenter, Color.white);
 
@@ -55,7 +55,7 @@ public partial class SceneBootstrapper
         top100Btn.AddComponent<Image>().color = new Color(0.5f, 0.3f, 0.6f);
         Button t100b = top100Btn.AddComponent<Button>();
         t100b.onClick.AddListener(() => ShowLeaderboard());
-        MkText(top100Btn.transform, Loc.Get("str.btn.top100"),
+        MkText(top100Btn.transform, Loc.Get("str.ui.btn.top100"),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             Vector2.zero, new Vector2(220, 55), 26, TextAnchor.MiddleCenter, Color.white);
     }

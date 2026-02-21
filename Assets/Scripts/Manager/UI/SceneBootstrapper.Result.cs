@@ -36,7 +36,7 @@ public partial class SceneBootstrapper
         nextRoundButton = nb.AddComponent<Button>();
         nextRoundButton.onClick.AddListener(() => GameManager.Instance?.NextRound());
 
-        nextRoundBtnText = MkText(nb.transform, Loc.Get("str.btn.next_round"),
+        nextRoundBtnText = MkText(nb.transform, Loc.Get("str.ui.btn.next_round"),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             Vector2.zero, new Vector2(250, 60), 26, TextAnchor.MiddleCenter, Color.white);
     }
@@ -89,9 +89,9 @@ public partial class SceneBootstrapper
         if (nextRoundBtnText != null)
         {
             if (gm != null && gm.IsLastRound)
-                nextRoundBtnText.text = Loc.Get("str.btn.new_game");
+                nextRoundBtnText.text = Loc.Get("str.ui.btn.new_game");
             else
-                nextRoundBtnText.text = Loc.Get("str.btn.next_round");
+                nextRoundBtnText.text = Loc.Get("str.ui.btn.next_round");
         }
     }
 }

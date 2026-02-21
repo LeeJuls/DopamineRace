@@ -86,9 +86,26 @@ public class ScoreManager : MonoBehaviour
         if (!string.IsNullOrEmpty(betJson))
             betRecordStore = JsonUtility.FromJson<BetRecordStore>(betJson);
 
+        // ★ DisplayName 키로 잘못 저장된 기록 자동 정리
+        CleanupInvalidCharRecords();
+
         Debug.Log("[ScoreManager 로드] 캐릭터 기록: " + charRecordStore.records.Count + "명"
             + " | 배팅 기록: " + betRecordStore.records.Count + "건"
             + " | 누적: " + TotalScore + "점/" + TotalRounds + "라운드/" + TotalWins + "승");
+    }
+
+    /// <summary>
+    /// charName이 Loc 키 형식(str.char.*)이 아닌 기록을 제거 (이전 버전 호환)
+    /// </summary>
+    private void CleanupInvalidCharRecords()
+    {
+        int removed = charRecordStore.records.RemoveAll(r =>
+            r.charName != null && !r.charName.StartsWith("str."));
+        if (removed > 0)
+        {
+            Debug.LogWarning("[ScoreManager] DisplayName 기반 잘못된 기록 " + removed + "건 제거");
+            SaveCharRecords();
+        }
     }
 
     // ═══════════════════════════════════════
@@ -135,6 +152,9 @@ public class ScoreManager : MonoBehaviour
         {
             var charRecord = charRecordStore.GetOrCreate(rr.charName);
             charRecord.AddResult(trackName, rr.rank);
+            Debug.Log(string.Format("[ScoreManager] 기록저장: {0}({1}) rank={2} → TotalRaces={3} recentRanks=[{4}]",
+                rr.charName, Loc.Get(rr.charName), rr.rank,
+                charRecord.TotalRaces, charRecord.GetOverallRankString()));
         }
         SaveCharRecords();
 

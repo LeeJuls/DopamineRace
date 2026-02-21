@@ -149,6 +149,28 @@ public class GameSettings : ScriptableObject
     public float oddsMin_wide     = 1.5f;  public float oddsMax_wide     = 100f;
     public float oddsMin_trio     = 5.0f;  public float oddsMax_trio     = 999f;
 
+    [Header("═══ 거리 구분 설정 ═══")]
+    [Tooltip("이 바퀴 수 이하 = 단거리")]
+    public int shortDistanceMax = 2;
+    [Tooltip("이 바퀴 수 이하 = 중거리 (초과 = 장거리)")]
+    public int midDistanceMax = 4;
+
+    [Header("═══ UI 프리팹 ═══")]
+    [Tooltip("배팅 패널 프리팹 (BettingUIPrefabCreator로 자동 생성)")]
+    public GameObject bettingPanelPrefab;
+    [Tooltip("캐릭터 아이템 프리팹 (BettingUIPrefabCreator로 자동 생성)")]
+    public GameObject characterItemPrefab;
+
+    /// <summary>
+    /// 바퀴 수 → 거리 구분 Loc 키 반환
+    /// </summary>
+    public string GetDistanceKey(int laps)
+    {
+        if (laps <= shortDistanceMax) return "str.ui.track.short";
+        if (laps <= midDistanceMax)   return "str.ui.track.mid";
+        return "str.ui.track.long";
+    }
+
     [Header("═══ 경로 설정 ═══")]
     [Tooltip("경로 이탈 가중치\n0 = 정확히 트랙 위\n0.1~0.3 = 약간 흔들림")]
     [Range(0f, 1f)]

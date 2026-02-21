@@ -212,13 +212,32 @@ public class GameManager : MonoBehaviour
             + BettingCalculator.GetTypeName(CurrentBet.type) + " → "
             + (score > 0 ? "적중! +" + score + "점" : "실패 +0점"));
 
-        // ── 순위 데이터 구성 ──
+        // ── 순위 데이터 구성 (charName = UID 사용, DisplayName 혼용 금지) ──
         var racerResults = new List<RoundRacerResult>();
+        var allRacers = RaceManager.Instance?.Racers;
+        Debug.Log("[CalcScore] allRacers count=" + (allRacers != null ? allRacers.Count : 0));
         foreach (var r in rankings)
         {
+            // racerIndex로 CharData에서 charName(UID) 획득
+            string uid = r.racerName; // fallback: DisplayName
+            if (allRacers != null && r.racerIndex >= 0 && r.racerIndex < allRacers.Count)
+            {
+                var cd = allRacers[r.racerIndex].CharData;
+                if (cd != null) uid = cd.charName;
+
+                // 진단 로그: racerIndex ↔ charName 매핑 검증
+                Debug.Log(string.Format("[CalcScore] rank={0} racerIdx={1} DisplayName={2} → UID={3}",
+                    r.rank, r.racerIndex, r.racerName, uid));
+            }
+            else
+            {
+                Debug.LogWarning(string.Format("[CalcScore] rank={0} racerIdx={1} → allRacers에서 찾지 못함! fallback={2}",
+                    r.rank, r.racerIndex, uid));
+            }
+
             racerResults.Add(new RoundRacerResult
             {
-                charName = r.racerName,
+                charName = uid,
                 rank = r.rank
             });
         }

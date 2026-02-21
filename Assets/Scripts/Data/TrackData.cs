@@ -1,9 +1,18 @@
 using UnityEngine;
 
 /// <summary>
+/// 트랙 타입 (기본/더트)
+/// </summary>
+public enum TrackType
+{
+    E_Base,  // 기본
+    E_Dirt   // 더트
+}
+
+/// <summary>
 /// 트랙 지형 데이터 (ScriptableObject)
 /// Inspector에서 실시간 편집 가능, Play 중 수정 시 즉시 반영
-/// 
+///
 /// 생성: Project 우클릭 → Create → DopamineRace → TrackData
 /// 위치: Assets/Resources/Data/Tracks/
 /// </summary>
@@ -13,6 +22,9 @@ public class TrackData : ScriptableObject
     [Header("═══ 기본 정보 ═══")]
     [Tooltip("트랙 이름 (UI 표시용)")]
     public string trackName = "일반";
+
+    [Tooltip("트랙 타입 (기본/더트)")]
+    public TrackType trackType = TrackType.E_Base;
 
     [Tooltip("트랙 아이콘/이모지 (UI 표시용)")]
     public string trackIcon = "🏟️";

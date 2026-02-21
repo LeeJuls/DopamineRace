@@ -488,7 +488,7 @@ public class RaceDebugOverlay : MonoBehaviour
                 "<color={0}>{1,2}위{2}</color>  {3,-4}  <color={4}>{5,5:F1}x</color>  " +
                 "<color={6}>{7}({8:F2}x)</color>  {9,-10}  {10}판{11}",
                 rankColor, info.popularityRank, rankStar,
-                info.charName,
+                Loc.Get(info.charName),
                 oddsColor, info.winOdds,
                 condColor, condName, condMul,
                 info.recentRankStr,

@@ -89,12 +89,12 @@ public static class ConditionHelper
     {
         switch (condition)
         {
-            case Condition.Best:   return "str.condition.best";
-            case Condition.Good:   return "str.condition.good";
-            case Condition.Normal: return "str.condition.normal";
-            case Condition.Bad:    return "str.condition.bad";
-            case Condition.Worst:  return "str.condition.worst";
-            default: return "str.condition.normal";
+            case Condition.Best:   return "str.ui.condition.best";
+            case Condition.Good:   return "str.ui.condition.good";
+            case Condition.Normal: return "str.ui.condition.normal";
+            case Condition.Bad:    return "str.ui.condition.bad";
+            case Condition.Worst:  return "str.ui.condition.worst";
+            default: return "str.ui.condition.normal";
         }
     }
 }

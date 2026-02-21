@@ -53,6 +53,9 @@ public class TrackInfo
     // ── 충돌 후 추가 효과 ──
     public float loserPenaltyDurationMultiplier = 1f;
 
+    // ── 트랙 타입 ──
+    public TrackType trackType = TrackType.E_Base;
+
     // ── 로컬라이즈 표시용 ──
     /// <summary>로컬라이즈된 트랙 이름</summary>
     public string DisplayName => Loc.Get(trackName);
@@ -67,7 +70,7 @@ public class TrackInfo
     /// slingshot_mul,early_bonus_mul,mid_bonus_mul,late_bonus_mul,
     /// power_speed_bonus,brave_speed_bonus,luck_mul,
     /// has_mid_slow_zone,mid_slow_start,mid_slow_end,mid_slow_speed_mul,
-    /// loser_penalty_dur_mul
+    /// loser_penalty_dur_mul,track_type
     /// </summary>
     public static TrackInfo ParseCSVLine(string line)
     {
@@ -112,6 +115,16 @@ public class TrackInfo
             t.midSlowZoneEnd                = ParseFloat(cols[i++], 0f);
             t.midSlowZoneSpeedMultiplier    = ParseFloat(cols[i++], 1f);
             t.loserPenaltyDurationMultiplier = ParseFloat(cols[i++], 1f);
+
+            // track_type (옵션: 없으면 E_Base)
+            if (i < cols.Length)
+            {
+                string typeStr = cols[i++].Trim();
+                if (typeStr == "E_Dirt")
+                    t.trackType = TrackType.E_Dirt;
+                else
+                    t.trackType = TrackType.E_Base;
+            }
         }
         catch (System.Exception e)
         {
@@ -135,6 +148,7 @@ public class TrackInfo
     {
         var td = ScriptableObject.CreateInstance<TrackData>();
         td.trackName                    = trackName;
+        td.trackType                    = trackType;
         td.trackIcon                    = trackIcon;
         td.trackDescription             = trackDescription;
         td.speedMultiplier              = speedMultiplier;

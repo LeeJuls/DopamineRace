@@ -2,222 +2,39 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 배팅 UI: 패널 빌드, 타입 탭, 캐릭터 선택, 버튼 비주얼
+/// 배팅 UI: 프리팹 기반 패널 빌드, 타입 탭, 캐릭터 선택, 배당/트랙 표시
 /// </summary>
 public partial class SceneBootstrapper
 {
     // ══════════════════════════════════════
-    //  배팅 화면 빌드
+    //  배팅 화면 빌드 (프리팹 Instantiate)
     // ══════════════════════════════════════
     private void BuildBettingUI(Transform parent)
     {
-        // === 왼쪽 패널 ===
-        GameObject leftPanel = new GameObject("LeftPanel");
-        leftPanel.transform.SetParent(parent, false);
-        RectTransform lprt = leftPanel.AddComponent<RectTransform>();
-        lprt.anchorMin = new Vector2(0, 0);
-        lprt.anchorMax = new Vector2(0.25f, 1);
-        lprt.offsetMin = Vector2.zero;
-        lprt.offsetMax = Vector2.zero;
-        Image lpbg = leftPanel.AddComponent<Image>();
-        lpbg.color = new Color(0.95f, 0.85f, 0.15f);
-        leftPanelObj = leftPanel;
+        var gs = GameSettings.Instance;
 
-        // 닫기/열기 토글 버튼
-        GameObject toggleBtn = new GameObject("ToggleBtn");
-        toggleBtn.transform.SetParent(parent, false);
-        RectTransform trt = toggleBtn.AddComponent<RectTransform>();
-        trt.anchorMin = new Vector2(0, 1);
-        trt.anchorMax = new Vector2(0, 1);
-        trt.pivot = new Vector2(0, 1);
-        trt.anchoredPosition = new Vector2(5, -5);
-        trt.sizeDelta = new Vector2(80, 35);
-        toggleBtn.AddComponent<Image>().color = new Color(0.3f, 0.3f, 0.3f, 0.9f);
-        Button tb = toggleBtn.AddComponent<Button>();
-        tb.onClick.AddListener(() => {
-            bool isOpen = leftPanelObj.activeSelf;
-            leftPanelObj.SetActive(!isOpen);
-            toggleBtnText.text = isOpen ? Loc.Get("str.btn.panel_open") : Loc.Get("str.btn.panel_close");
-        });
-        toggleBtnText = MkText(toggleBtn.transform, Loc.Get("str.btn.panel_close"),
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-            Vector2.zero, new Vector2(80, 35), 18, TextAnchor.MiddleCenter, Color.white);
-
-        // ── 배팅 타입 탭 (상단) ──
-        BuildBetTypeTabs(leftPanel.transform);
-
-        // 타이틀 + 안내
-        titleText = MkText(leftPanel.transform, Loc.Get("str.panel.bet_title"),
-            new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -75), new Vector2(300, 30), 22, TextAnchor.MiddleCenter, Color.black);
-
-        infoText = MkText(leftPanel.transform, "",
-            new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -100), new Vector2(300, 25), 15, TextAnchor.MiddleCenter, new Color(0.3f, 0.3f, 0.3f));
-
-        // 버튼 목록 (스크롤 가능)
-        GameObject scrollObj = new GameObject("ScrollArea");
-        scrollObj.transform.SetParent(leftPanel.transform, false);
-        RectTransform scrollRT = scrollObj.AddComponent<RectTransform>();
-        scrollRT.anchorMin = new Vector2(0.03f, 0.02f);
-        scrollRT.anchorMax = new Vector2(0.97f, 0.87f);
-        scrollRT.offsetMin = Vector2.zero;
-        scrollRT.offsetMax = Vector2.zero;
-
-        ScrollRect scrollRect = scrollObj.AddComponent<ScrollRect>();
-        scrollRect.horizontal = false;
-        scrollRect.vertical = true;
-        scrollRect.movementType = ScrollRect.MovementType.Clamped;
-        scrollRect.scrollSensitivity = 30f;
-
-        scrollObj.AddComponent<RectMask2D>();
-
-        GameObject content = new GameObject("Content");
-        content.transform.SetParent(scrollObj.transform, false);
-        RectTransform contentRT = content.AddComponent<RectTransform>();
-        contentRT.anchorMin = new Vector2(0, 1);
-        contentRT.anchorMax = new Vector2(1, 1);
-        contentRT.pivot = new Vector2(0.5f, 1);
-        contentRT.anchoredPosition = Vector2.zero;
-        contentRT.sizeDelta = new Vector2(0, 1000);
-
-        VerticalLayoutGroup vlg = content.AddComponent<VerticalLayoutGroup>();
-        vlg.spacing = 4;
-        vlg.childForceExpandWidth = true;
-        vlg.childForceExpandHeight = false;
-        vlg.childControlWidth = true;
-        vlg.childControlHeight = true;
-        vlg.padding = new RectOffset(4, 4, 4, 4);
-
-        ContentSizeFitter csf = content.AddComponent<ContentSizeFitter>();
-        csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-        scrollRect.content = contentRT;
-        racerScrollContent = contentRT;
-
-        int maxRacers = 12;
-        racerButtons = new Button[maxRacers];
-        racerTexts = new Text[maxRacers];
-        racerLabels = new Text[maxRacers];
-        racerBGs = new Image[maxRacers];
-        racerIcons = new Image[maxRacers];
-
-        float btnHeight = GameSettings.Instance.bettingButtonHeight;
-
-        for (int i = 0; i < maxRacers; i++)
+        if (gs.bettingPanelPrefab != null)
         {
-            GameObject btn = new GameObject("Btn_" + i);
-            btn.transform.SetParent(content.transform, false);
-
-            LayoutElement le = btn.AddComponent<LayoutElement>();
-            le.preferredHeight = btnHeight;
-            le.minHeight = btnHeight;
-
-            Image bg = btn.AddComponent<Image>();
-            bg.color = Color.white;
-            racerBGs[i] = bg;
-
-            Button b = btn.AddComponent<Button>();
-            ColorBlock cb = b.colors;
-            cb.normalColor = Color.white;
-            cb.highlightedColor = new Color(0.9f, 0.9f, 0.7f);
-            cb.pressedColor = new Color(0.8f, 0.8f, 0.5f);
-            cb.selectedColor = Color.white;
-            b.colors = cb;
-            racerButtons[i] = b;
-
-            // ★ 썸네일 컨테이너 (마스크)
-            float iconW = btnHeight * 0.95f;
-            GameObject iconContainer = new GameObject("IconContainer");
-            iconContainer.transform.SetParent(btn.transform, false);
-            RectTransform icrt = iconContainer.AddComponent<RectTransform>();
-            icrt.anchorMin = new Vector2(0, 0);
-            icrt.anchorMax = new Vector2(0, 1);
-            icrt.pivot = new Vector2(0, 0.5f);
-            icrt.anchoredPosition = new Vector2(2, 0);
-            icrt.sizeDelta = new Vector2(iconW, 0);
-            iconContainer.AddComponent<RectMask2D>();
-
-            // ★ 실제 이미지 (줌/오프셋은 RefreshRacerButtons에서 소스별 적용)
-            GameObject iconObj = new GameObject("Icon");
-            iconObj.transform.SetParent(iconContainer.transform, false);
-            RectTransform irt = iconObj.AddComponent<RectTransform>();
-            irt.anchorMin = Vector2.zero;
-            irt.anchorMax = Vector2.one;
-            irt.offsetMin = Vector2.zero;
-            irt.offsetMax = Vector2.zero;
-            Image iconImg = iconObj.AddComponent<Image>();
-            iconImg.color = Color.white;
-            iconImg.preserveAspect = true;
-            racerIcons[i] = iconImg;
-
-            // 이름
-            float nameLeft = iconW + 8;
-            GameObject nameObj = new GameObject("Name");
-            nameObj.transform.SetParent(btn.transform, false);
-            RectTransform nrt = nameObj.AddComponent<RectTransform>();
-            nrt.anchorMin = new Vector2(0, 0);
-            nrt.anchorMax = new Vector2(0.78f, 1);
-            nrt.offsetMin = new Vector2(nameLeft, 2);
-            nrt.offsetMax = new Vector2(0, -2);
-            Text nt = nameObj.AddComponent<Text>();
-            nt.font = font;
-            nt.text = "";
-            nt.fontSize = FontHelper.ScaledFontSize(26);
-            nt.color = Color.black;
-            nt.alignment = TextAnchor.MiddleLeft;
-            nt.resizeTextForBestFit = true;
-            nt.resizeTextMinSize = FontHelper.ScaledFontSize(16);
-            nt.resizeTextMaxSize = FontHelper.ScaledFontSize(26);
-            racerTexts[i] = nt;
-
-            // 선택 라벨 (우측)
-            GameObject lblObj = new GameObject("Lbl");
-            lblObj.transform.SetParent(btn.transform, false);
-            RectTransform lrt = lblObj.AddComponent<RectTransform>();
-            lrt.anchorMin = new Vector2(0.78f, 0);
-            lrt.anchorMax = new Vector2(1, 1);
-            lrt.offsetMin = new Vector2(0, 2);
-            lrt.offsetMax = new Vector2(-5, -2);
-            Text lt = lblObj.AddComponent<Text>();
-            lt.font = font;
-            lt.text = "";
-            lt.fontSize = FontHelper.ScaledFontSize(18);
-            lt.color = new Color(0.8f, 0.1f, 0.1f);
-            lt.alignment = TextAnchor.MiddleCenter;
-            lt.fontStyle = FontStyle.Bold;
-            racerLabels[i] = lt;
-
-            int idx = i;
-            b.onClick.AddListener(() => OnRacerClicked(idx));
+            // ── 프리팹 기반 ──
+            GameObject panel = Instantiate(gs.bettingPanelPrefab, parent);
+            bettingPanelRoot = panel.transform;
+            CacheBettingUIReferences(bettingPanelRoot);
+            InitBetTypeTabs();
+            InitCharacterList();
+            InitTrackInfo();
+            InitOddsDisplay();
+            InitHideInfoToggle();
+            InitCharacterInfoPopup();
+        }
+        else
+        {
+            // ── 프리팹 미생성 시 최소 fallback ──
+            Debug.LogWarning("[SceneBootstrapper] bettingPanelPrefab이 없습니다! " +
+                "Unity 메뉴 DopamineRace > Create Betting UI Prefabs 실행 후 GameSettings에 연결해주세요.");
+            BuildBettingUIFallback(parent);
         }
 
-        // === 우하단 Start 버튼 ===
-        GameObject startObj = new GameObject("StartBtn");
-        startObj.transform.SetParent(parent, false);
-        RectTransform srt = startObj.AddComponent<RectTransform>();
-        srt.anchorMin = new Vector2(1, 0);
-        srt.anchorMax = new Vector2(1, 0);
-        srt.pivot = new Vector2(1, 0);
-        srt.anchoredPosition = new Vector2(-30, 20);
-        srt.sizeDelta = new Vector2(200, 65);
-
-        startObj.AddComponent<Image>().color = new Color(0.95f, 0.85f, 0.15f);
-        startButton = startObj.AddComponent<Button>();
-        ColorBlock scb = startButton.colors;
-        scb.normalColor = new Color(0.95f, 0.85f, 0.15f);
-        scb.highlightedColor = new Color(1f, 0.95f, 0.4f);
-        scb.pressedColor = new Color(0.8f, 0.7f, 0.1f);
-        scb.disabledColor = new Color(0.5f, 0.5f, 0.5f);
-        startButton.colors = scb;
-        startButton.interactable = false;
-        startButton.onClick.AddListener(OnStartClicked);
-
-        MkText(startObj.transform, Loc.Get("str.btn.start"),
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-            Vector2.zero, new Vector2(200, 65), 30, TextAnchor.MiddleCenter, Color.black);
-
-        // === 우상단 정보 ===
+        // === 우상단 정보 (프리팹 밖 — 항상 표시) ===
         roundText = MkText(parent, Loc.Get("str.hud.round", 1, 7),
             new Vector2(1, 1), new Vector2(1, 1),
             new Vector2(-20, -10), new Vector2(250, 30), 22, TextAnchor.MiddleRight, Color.white);
@@ -229,102 +46,297 @@ public partial class SceneBootstrapper
         scoreText = MkText(parent, Loc.Get("str.hud.total_score", 0),
             new Vector2(1, 1), new Vector2(1, 1),
             new Vector2(-20, -62), new Vector2(250, 25), 20, TextAnchor.MiddleRight, Color.yellow);
-
-        // ★ Top 100 버튼
-        GameObject top100Obj = new GameObject("Top100Btn");
-        top100Obj.transform.SetParent(parent, false);
-        RectTransform t100rt = top100Obj.AddComponent<RectTransform>();
-        t100rt.anchorMin = new Vector2(1, 0);
-        t100rt.anchorMax = new Vector2(1, 0);
-        t100rt.pivot = new Vector2(1, 0);
-        t100rt.anchoredPosition = new Vector2(-30, 95);
-        t100rt.sizeDelta = new Vector2(200, 40);
-
-        top100Obj.AddComponent<Image>().color = new Color(0.3f, 0.3f, 0.5f);
-        Button top100Btn = top100Obj.AddComponent<Button>();
-        ColorBlock t100cb = top100Btn.colors;
-        t100cb.normalColor = new Color(0.3f, 0.3f, 0.5f);
-        t100cb.highlightedColor = new Color(0.4f, 0.4f, 0.65f);
-        t100cb.pressedColor = new Color(0.2f, 0.2f, 0.4f);
-        top100Btn.colors = t100cb;
-        top100Btn.onClick.AddListener(() => ShowLeaderboard());
-
-        MkText(top100Obj.transform, Loc.Get("str.btn.top100"),
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-            Vector2.zero, new Vector2(200, 40), 20, TextAnchor.MiddleCenter, Color.white);
     }
 
     // ══════════════════════════════════════
-    //  배팅 타입 탭 6개
+    //  프리팹 내부 참조 캐싱
     // ══════════════════════════════════════
-    private void BuildBetTypeTabs(Transform parent)
+    private void CacheBettingUIReferences(Transform root)
     {
-        BetType[] types = { BetType.Win, BetType.Place, BetType.Quinella, BetType.Exacta, BetType.Trio, BetType.Wide };
-        var gs = GameSettings.Instance;
-        string[] labels = {
-            Loc.Get("str.bet.win.name") + "\n" + gs.payoutWin + "pt",
-            Loc.Get("str.bet.place.name") + "\n" + gs.payoutPlace + "pt",
-            Loc.Get("str.bet.quinella.name") + "\n" + gs.payoutQuinella + "pt",
-            Loc.Get("str.bet.exacta.name") + "\n" + gs.payoutExacta + "pt",
-            Loc.Get("str.bet.trio.name") + "\n" + gs.payoutTrio + "pt",
-            Loc.Get("str.bet.wide.name") + "\n" + gs.payoutWide + "pt"
-        };
-
-        GameObject tabArea = new GameObject("TabArea");
-        tabArea.transform.SetParent(parent, false);
-        RectTransform tart = tabArea.AddComponent<RectTransform>();
-        tart.anchorMin = new Vector2(0.02f, 0.93f);
-        tart.anchorMax = new Vector2(0.98f, 1f);
-        tart.offsetMin = Vector2.zero;
-        tart.offsetMax = Vector2.zero;
-
-        HorizontalLayoutGroup hlg = tabArea.AddComponent<HorizontalLayoutGroup>();
-        hlg.spacing = 2;
-        hlg.childForceExpandWidth = true;
-        hlg.childForceExpandHeight = true;
-        hlg.childControlWidth = true;
-        hlg.childControlHeight = true;
-        hlg.padding = new RectOffset(2, 2, 2, 0);
-
-        betTypeBtns = new Button[types.Length];
-        betTypeBtnTexts = new Text[types.Length];
-        betTypeBtnBGs = new Image[types.Length];
-
-        for (int i = 0; i < types.Length; i++)
+        // TopArea
+        Transform topArea = root.Find("TopArea");
+        if (topArea != null)
         {
-            GameObject tab = new GameObject("Tab_" + types[i]);
-            tab.transform.SetParent(tabArea.transform, false);
+            betRoundText = FindText(topArea, "RoundText");
+            betTitleText = FindText(topArea, "TitleText");
+            betDescText  = FindText(topArea, "BetDescText");
 
-            Image bg = tab.AddComponent<Image>();
-            bg.color = new Color(0.85f, 0.75f, 0.1f);
-            betTypeBtnBGs[i] = bg;
+            Transform oddsArea = topArea.Find("OddsArea");
+            if (oddsArea != null)
+            {
+                oddsText          = FindText(oddsArea, "OddsText");
+                pointsLabelText   = FindText(oddsArea, "PointsLabel");
+                pointsFormulaText = FindText(oddsArea, "PointsFormula");
+            }
+        }
 
-            Button b = tab.AddComponent<Button>();
-            betTypeBtns[i] = b;
+        // TrackInfoPanel
+        Transform trackPanel = root.Find("TrackInfoPanel");
+        if (trackPanel != null)
+        {
+            trackRoundLabel = FindText(trackPanel, "TotalRoundLabel");
+            trackNameLabel  = FindText(trackPanel, "TrackNameLabel");
+            distanceLabel   = FindText(trackPanel, "DistanceLabel");
+            trackTypeLabel  = FindText(trackPanel, "TrackTypeLabel");
+        }
 
-            Text t = MkText(tab.transform, labels[i],
-                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                Vector2.zero, new Vector2(70, 60), 12, TextAnchor.MiddleCenter, Color.black);
-            t.resizeTextForBestFit = true;
-            t.resizeTextMinSize = 9;
-            t.resizeTextMaxSize = 14;
-            betTypeBtnTexts[i] = t;
+        // HideInfoToggle
+        Transform toggleObj = root.Find("HideInfoToggle");
+        if (toggleObj != null)
+            hideInfoToggle = toggleObj.GetComponent<Toggle>();
+
+        // CharacterInfoPopup
+        Transform popupObj = root.Find("CharacterInfoPopup");
+        if (popupObj != null)
+            charInfoPopup = popupObj.GetComponent<CharacterInfoPopup>();
+
+        // StartBtn
+        Transform startObj = root.Find("StartBtn");
+        if (startObj != null)
+        {
+            startButton = startObj.GetComponent<Button>();
+            if (startButton != null)
+            {
+                // targetGraphic 보정 (클릭 수신 보장)
+                Image startBg = startObj.GetComponent<Image>();
+                if (startBg != null)
+                {
+                    startBg.raycastTarget = true;
+                    startButton.targetGraphic = startBg;
+                }
+
+                startButton.interactable = false;
+                startButton.onClick.AddListener(OnStartClicked);
+            }
+
+            Text startText = FindText(startObj, "Text");
+            if (startText != null)
+                startText.text = Loc.Get("str.ui.btn.start");
+        }
+    }
+
+    // ══════════════════════════════════════
+    //  배팅 타입 탭 초기화
+    // ══════════════════════════════════════
+    private void InitBetTypeTabs()
+    {
+        Transform topArea = bettingPanelRoot.Find("TopArea");
+        if (topArea == null) return;
+
+        Transform tabArea = topArea.Find("BetTypeTabs");
+        if (tabArea == null) return;
+
+        // HorizontalLayoutGroup childControl 보정 (탭 크기 0 방지)
+        HorizontalLayoutGroup hlg = tabArea.GetComponent<HorizontalLayoutGroup>();
+        if (hlg != null)
+        {
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = true;
+            hlg.childForceExpandHeight = true;
+        }
+
+        BetType[] types = { BetType.Win, BetType.Place, BetType.Quinella,
+                            BetType.Exacta, BetType.Trio, BetType.Wide };
+
+        int tabCount = Mathf.Min(types.Length, tabArea.childCount);
+        betTypeBtns = new Button[tabCount];
+        betTypeBtnTexts = new Text[tabCount];
+        betTypeBtnBGs = new Image[tabCount];
+
+        for (int i = 0; i < tabCount; i++)
+        {
+            Transform tabObj = tabArea.GetChild(i);
+            betTypeBtnBGs[i] = tabObj.GetComponent<Image>();
+            betTypeBtns[i] = tabObj.GetComponent<Button>();
+
+            // targetGraphic 보정 (클릭 수신 보장)
+            if (betTypeBtns[i] != null && betTypeBtnBGs[i] != null)
+            {
+                betTypeBtnBGs[i].raycastTarget = true;
+                betTypeBtns[i].targetGraphic = betTypeBtnBGs[i];
+            }
+
+            Text tabText = FindText(tabObj, "Text");
+            if (tabText != null)
+            {
+                tabText.text = BettingCalculator.GetTypeName(types[i]);
+                betTypeBtnTexts[i] = tabText;
+            }
 
             int idx = i;
             BetType bt = types[i];
-            b.onClick.AddListener(() => OnBetTypeClicked(bt, idx));
+            if (betTypeBtns[i] != null)
+                betTypeBtns[i].onClick.AddListener(() => OnBetTypeClicked(bt, idx));
         }
 
-        UpdateTabVisuals(3); // 기본: 쌍승
+        UpdateTabVisuals(0); // 기본: 단승(Win)
     }
 
     // ══════════════════════════════════════
-    //  배팅 선택 로직
+    //  캐릭터 리스트 초기화
+    // ══════════════════════════════════════
+    private void InitCharacterList()
+    {
+        var gs = GameSettings.Instance;
+        if (gs.characterItemPrefab == null)
+        {
+            Debug.LogWarning("[SceneBootstrapper] characterItemPrefab이 없습니다!");
+            return;
+        }
+
+        Transform charListPanel = bettingPanelRoot.Find("CharacterListPanel");
+        if (charListPanel == null) return;
+        Transform scrollArea = charListPanel.Find("ScrollArea");
+        if (scrollArea == null) return;
+        Transform content = scrollArea.Find("Content");
+        if (content == null) return;
+
+        // VerticalLayoutGroup 보정 (childControl 누락 시 아이템 크기 0 → 클릭 불가 방지)
+        VerticalLayoutGroup vlg = content.GetComponent<VerticalLayoutGroup>();
+        if (vlg != null)
+        {
+            vlg.childControlWidth = true;
+            vlg.childControlHeight = true;
+            vlg.childForceExpandWidth = true;
+            vlg.childForceExpandHeight = false;
+        }
+
+        // ScrollRect에 raycast용 Image 보정
+        Image scrollBg = scrollArea.GetComponent<Image>();
+        if (scrollBg == null)
+        {
+            scrollBg = scrollArea.gameObject.AddComponent<Image>();
+            scrollBg.color = new Color(0, 0, 0, 0.01f); // 거의 투명, raycast용
+        }
+
+        // 기존 자식 제거
+        for (int i = content.childCount - 1; i >= 0; i--)
+            Destroy(content.GetChild(i).gameObject);
+
+        int maxRacers = 12;
+        characterItems = new CharacterItemUI[maxRacers];
+
+        for (int i = 0; i < maxRacers; i++)
+        {
+            GameObject itemObj = Instantiate(gs.characterItemPrefab, content);
+            itemObj.name = "CharItem_" + i;
+
+            CharacterItemUI itemUI = itemObj.GetComponent<CharacterItemUI>();
+            if (itemUI == null)
+                itemUI = itemObj.AddComponent<CharacterItemUI>();
+
+            itemUI.Init();
+            itemUI.RacerIndex = i;
+            characterItems[i] = itemUI;
+
+            // Button 설정 (클릭 + 시각 피드백)
+            Button btn = itemObj.GetComponent<Button>();
+            if (btn == null) btn = itemObj.AddComponent<Button>();
+
+            Image bg = itemObj.GetComponent<Image>();
+            if (bg != null)
+            {
+                bg.raycastTarget = true;
+                btn.targetGraphic = bg;
+            }
+
+            int idx = i;
+            btn.onClick.AddListener(() => OnRacerClicked(idx));
+        }
+    }
+
+    // ══════════════════════════════════════
+    //  배당률/포인트 표시 초기화
+    // ══════════════════════════════════════
+    private void InitOddsDisplay()
+    {
+        if (oddsText != null)
+            oddsText.text = Loc.Get("str.ui.betting.odds_empty");
+        if (pointsLabelText != null)
+            pointsLabelText.text = Loc.Get("str.ui.betting.points_empty");
+        if (pointsFormulaText != null)
+            pointsFormulaText.text = "";
+    }
+
+    // ══════════════════════════════════════
+    //  트랙 정보 초기화/갱신
+    // ══════════════════════════════════════
+    private void InitTrackInfo()
+    {
+        RefreshTrackInfo();
+    }
+
+    private void RefreshTrackInfo()
+    {
+        var gs = GameSettings.Instance;
+        var gm = GameManager.Instance;
+        if (gm == null) return;
+
+        var trackDB = TrackDatabase.Instance;
+        TrackInfo trackInfo = trackDB != null ? trackDB.CurrentTrackInfo : null;
+
+        if (trackRoundLabel != null)
+            trackRoundLabel.text = Loc.Get("str.ui.track.total_round", gs.TotalRounds);
+
+        if (trackNameLabel != null)
+            trackNameLabel.text = trackInfo != null ? trackInfo.DisplayName : "???";
+
+        int laps = gs.GetLapsForRound(gm.CurrentRound);
+        string distKey = gs.GetDistanceKey(laps);
+        if (distanceLabel != null)
+            distanceLabel.text = Loc.Get("str.ui.track.distance", Loc.Get(distKey), laps);
+
+        if (trackTypeLabel != null)
+        {
+            if (trackInfo != null && trackInfo.trackType == TrackType.E_Dirt)
+                trackTypeLabel.text = Loc.Get("str.ui.track.type_dirt");
+            else
+                trackTypeLabel.text = Loc.Get("str.ui.track.type_base");
+        }
+    }
+
+    // ══════════════════════════════════════
+    //  캐릭터 정보 안보기 토글
+    // ══════════════════════════════════════
+    private void InitHideInfoToggle()
+    {
+        if (hideInfoToggle == null) return;
+
+        Text toggleLabel = FindText(hideInfoToggle.transform, "Label");
+        if (toggleLabel != null)
+            toggleLabel.text = Loc.Get("str.ui.betting.hide_info");
+
+        bool saved = PlayerPrefs.GetInt("DR_HideCharInfo", 0) == 1;
+        hideInfoToggle.isOn = saved;
+
+        hideInfoToggle.onValueChanged.AddListener(v =>
+        {
+            PlayerPrefs.SetInt("DR_HideCharInfo", v ? 1 : 0);
+            // ON = 캐릭터 클릭 시 정보 팝업 안뜸
+            // 현재 팝업이 열려있으면 닫기
+            if (v && charInfoPopup != null)
+                charInfoPopup.Hide();
+        });
+    }
+
+    // ══════════════════════════════════════
+    //  캐릭터 정보 팝업 초기화
+    // ══════════════════════════════════════
+    private void InitCharacterInfoPopup()
+    {
+        if (charInfoPopup != null)
+            charInfoPopup.Init();
+    }
+
+    // ══════════════════════════════════════
+    //  배팅 탭 로직
     // ══════════════════════════════════════
     private void OnBetTypeClicked(BetType type, int tabIndex)
     {
         if (GameManager.Instance == null) return;
         currentTabType = type;
+        currentTabIndex = tabIndex;
         GameManager.Instance.SelectBetType(type);
         UpdateTabVisuals(tabIndex);
         UpdateButtonVisuals();
@@ -333,42 +345,79 @@ public partial class SceneBootstrapper
 
     private void UpdateTabVisuals(int activeIndex)
     {
-        Color activeColor = new Color(1f, 0.95f, 0.5f);
-        Color inactiveColor = new Color(0.7f, 0.63f, 0.1f);
+        if (betTypeBtnBGs == null) return;
+
+        Color activeColor = new Color(0.3f, 0.4f, 0.7f);
+        Color inactiveColor = new Color(0.2f, 0.2f, 0.3f, 0.9f);
 
         for (int i = 0; i < betTypeBtnBGs.Length; i++)
         {
-            betTypeBtnBGs[i].color = (i == activeIndex) ? activeColor : inactiveColor;
-            betTypeBtnTexts[i].fontStyle = (i == activeIndex) ? FontStyle.Bold : FontStyle.Normal;
-            betTypeBtnTexts[i].color = (i == activeIndex) ? Color.black : new Color(0.3f, 0.3f, 0.3f);
+            if (betTypeBtnBGs[i] != null)
+                betTypeBtnBGs[i].color = (i == activeIndex) ? activeColor : inactiveColor;
+            if (betTypeBtnTexts != null && i < betTypeBtnTexts.Length && betTypeBtnTexts[i] != null)
+            {
+                betTypeBtnTexts[i].fontStyle = (i == activeIndex) ? FontStyle.Bold : FontStyle.Normal;
+                betTypeBtnTexts[i].color = (i == activeIndex) ? Color.white : new Color(0.6f, 0.6f, 0.6f);
+            }
+        }
+
+        // 설명 텍스트 갱신
+        if (betDescText != null)
+        {
+            BetType[] types = { BetType.Win, BetType.Place, BetType.Quinella,
+                                BetType.Exacta, BetType.Trio, BetType.Wide };
+            if (activeIndex < types.Length)
+                betDescText.text = BettingCalculator.GetTypeDesc(types[activeIndex]);
         }
     }
 
-    private void OnRacerClicked(int index)
+    // ══════════════════════════════════════
+    //  캐릭터 선택 로직
+    // ══════════════════════════════════════
+    private void OnRacerClicked(int uiIndex)
     {
         if (GameManager.Instance == null) return;
         var bet = GameManager.Instance.CurrentBet;
         if (bet == null) return;
 
-        if (bet.selections.Contains(index))
+        // UI 위치 → 실제 레이서 인덱스 변환
+        int racerIdx = uiIndex;
+        if (characterItems != null && uiIndex < characterItems.Length && characterItems[uiIndex] != null)
+            racerIdx = characterItems[uiIndex].RacerIndex;
+
+        // 배팅 선택 로직
+        if (bet.selections.Contains(racerIdx))
         {
-            GameManager.Instance.RemoveSelection(index);
+            GameManager.Instance.RemoveSelection(racerIdx);
         }
         else
         {
             if (bet.IsComplete)
             {
                 GameManager.Instance.SelectBetType(bet.type);
-                GameManager.Instance.AddSelection(index);
+                GameManager.Instance.AddSelection(racerIdx);
             }
             else
             {
-                GameManager.Instance.AddSelection(index);
+                GameManager.Instance.AddSelection(racerIdx);
             }
         }
 
         UpdateButtonVisuals();
         UpdateBettingArrows();
+
+        // 캐릭터 정보 팝업 (hideInfoToggle OFF일 때만 표시)
+        bool hidePopup = hideInfoToggle != null && hideInfoToggle.isOn;
+        if (!hidePopup && charInfoPopup != null)
+        {
+            var db = CharacterDatabase.Instance;
+            if (db != null && racerIdx < db.SelectedCharacters.Count)
+            {
+                var charData = db.SelectedCharacters[racerIdx];
+                var oddsInfo = OddsCalculator.GetInfo(charData.charName);
+                charInfoPopup.Show(charData, oddsInfo);
+            }
+        }
     }
 
     private void UpdateButtonVisuals()
@@ -378,121 +427,179 @@ public partial class SceneBootstrapper
         var bet = gm.CurrentBet;
         if (bet == null) return;
 
-        Color[] selColors = {
-            new Color(1f, 0.7f, 0.7f),
-            new Color(0.7f, 0.7f, 1f),
-            new Color(0.7f, 1f, 0.7f),
-        };
-
-        for (int i = 0; i < GameConstants.RACER_COUNT; i++)
+        if (characterItems != null)
         {
-            int selIdx = bet.selections.IndexOf(i);
-            if (selIdx >= 0)
+            for (int i = 0; i < characterItems.Length; i++)
             {
-                racerBGs[i].color = selColors[Mathf.Min(selIdx, selColors.Length - 1)];
-                racerLabels[i].text = bet.GetSelectionLabel(selIdx);
-                racerLabels[i].color = selIdx == 0 ? Color.red : selIdx == 1 ? Color.blue : new Color(0, 0.6f, 0);
-            }
-            else
-            {
-                racerBGs[i].color = Color.white;
-                racerLabels[i].text = "";
+                if (characterItems[i] == null) continue;
+                // RacerIndex 기반으로 선택 상태 조회 (인기도 정렬 대응)
+                int racerIdx = characterItems[i].RacerIndex;
+                int selIdx = bet.selections.IndexOf(racerIdx);
+                characterItems[i].SetBetOrder(selIdx >= 0 ? selIdx + 1 : 0);
             }
         }
 
-        startButton.interactable = bet.IsComplete;
+        if (startButton != null)
+            startButton.interactable = bet.IsComplete;
 
-        if (infoText != null)
-            infoText.text = bet.GetSelectionGuide();
-        if (titleText != null)
-            titleText.text = Loc.Get("str.panel.bet_title");
+        UpdateOddsDisplay();
     }
 
+    // ══════════════════════════════════════
+    //  배당률/포인트 실시간 갱신
+    // ══════════════════════════════════════
+    private void UpdateOddsDisplay()
+    {
+        var bet = GameManager.Instance?.CurrentBet;
+        var racers = CharacterDatabase.Instance?.SelectedCharacters;
+
+        if (bet == null || bet.selections.Count == 0)
+        {
+            if (oddsText != null)
+                oddsText.text = Loc.Get("str.ui.betting.odds_empty");
+            if (pointsLabelText != null)
+                pointsLabelText.text = Loc.Get("str.ui.betting.points_empty");
+            if (pointsFormulaText != null)
+                pointsFormulaText.text = "";
+            return;
+        }
+
+        float odds = OddsCalculator.GetExpectedOdds(bet, racers);
+
+        if (oddsText != null)
+            oddsText.text = Loc.Get("str.ui.betting.odds", odds.ToString("F1"));
+
+        int basePt = BettingCalculator.GetPayout(bet.type);
+        int result = Mathf.RoundToInt(basePt * odds);
+
+        if (pointsLabelText != null)
+            pointsLabelText.text = Loc.Get("str.ui.betting.points_label",
+                BettingCalculator.GetTypeName(bet.type));
+
+        if (pointsFormulaText != null)
+            pointsFormulaText.text = Loc.Get("str.ui.betting.points_formula",
+                basePt, odds.ToString("F1"), result);
+    }
+
+    // ══════════════════════════════════════
+    //  Start 버튼
+    // ══════════════════════════════════════
     private void OnStartClicked()
     {
         GameManager.Instance?.StartRace();
     }
 
+    // ══════════════════════════════════════
+    //  배팅 리셋 (매 라운드)
+    // ══════════════════════════════════════
     private void ResetBetting()
     {
-        BetType[] types = { BetType.Win, BetType.Place, BetType.Quinella, BetType.Exacta, BetType.Trio, BetType.Wide };
-        for (int i = 0; i < types.Length; i++)
-        {
-            if (types[i] == currentTabType)
-            {
-                UpdateTabVisuals(i);
-                break;
-            }
-        }
-        RefreshRacerButtons();
+        // 배팅 타입 초기화 (CurrentBet 보장)
+        if (GameManager.Instance != null)
+            GameManager.Instance.SelectBetType(currentTabType);
+
+        UpdateTabVisuals(currentTabIndex);
+        RefreshCharacterItems();
         HideAllRaceLabels();
         DestroyArrows();
         UpdateButtonVisuals();
+        RefreshTrackInfo();
+
+        // 팝업 닫기
+        if (charInfoPopup != null)
+            charInfoPopup.Hide();
+
+        var gm = GameManager.Instance;
+        if (betRoundText != null && gm != null)
+            betRoundText.text = Loc.Get("str.ui.betting.round", gm.CurrentRound);
+        if (betTitleText != null)
+            betTitleText.text = Loc.Get("str.ui.betting.title");
     }
 
-    private void RefreshRacerButtons()
+    // ══════════════════════════════════════
+    //  캐릭터 아이템 갱신 (CharacterItemUI 위임)
+    // ══════════════════════════════════════
+    private void RefreshCharacterItems()
     {
+        if (characterItems == null) return;
+
         int activeCount = GameConstants.RACER_COUNT;
         var db = CharacterDatabase.Instance;
-        var gs = GameSettings.Instance;
+        var sm = ScoreManager.Instance;
+        if (db == null) return;
 
-        for (int i = 0; i < racerButtons.Length; i++)
+        // 인기도 순위로 정렬된 인덱스 배열 생성 (1등 → 맨 위)
+        int count = Mathf.Min(activeCount, db.SelectedCharacters.Count);
+        int[] sortedIndices = new int[count];
+        for (int i = 0; i < count; i++) sortedIndices[i] = i;
+
+        // OddsCalculator에서 인기순위 기준 정렬
+        System.Array.Sort(sortedIndices, (a, b) =>
         {
-            if (i < activeCount)
+            var infoA = OddsCalculator.GetInfo(db.SelectedCharacters[a].charName);
+            var infoB = OddsCalculator.GetInfo(db.SelectedCharacters[b].charName);
+            int rankA = infoA != null ? infoA.popularityRank : 999;
+            int rankB = infoB != null ? infoB.popularityRank : 999;
+            return rankA.CompareTo(rankB);
+        });
+
+        // 정렬 순서대로 UI 아이템에 데이터 할당
+        for (int ui = 0; ui < characterItems.Length; ui++)
+        {
+            if (characterItems[ui] == null) continue;
+
+            if (ui < count)
             {
-                racerButtons[i].gameObject.SetActive(true);
-                racerTexts[i].text = GameConstants.RACER_NAMES[i];
+                int racerIdx = sortedIndices[ui];
+                characterItems[ui].gameObject.SetActive(true);
 
-                if (racerIcons != null && i < racerIcons.Length && racerIcons[i] != null)
-                {
-                    Sprite icon = null;
-                    bool isIconFile = false;
+                var charData = db.SelectedCharacters[racerIdx];
+                var oddsInfo = OddsCalculator.GetInfo(charData.charName);
+                var record = sm != null ? sm.GetCharacterRecord(charData.charName) : null;
+                int popRank = oddsInfo != null ? oddsInfo.popularityRank : (racerIdx + 1);
 
-                    if (db != null && i < db.SelectedCharacters.Count)
-                    {
-                        var charData = db.SelectedCharacters[i];
-                        isIconFile = charData.HasIconFile();
-                        icon = charData.LoadIcon();
-                    }
-
-                    if (icon != null)
-                    {
-                        racerIcons[i].sprite = icon;
-                        racerIcons[i].color = Color.white;
-
-                        // ★ 소스별 줌/오프셋 적용
-                        float z, ox, oy;
-                        if (isIconFile)
-                        {
-                            z = gs.iconFileZoom;
-                            ox = gs.iconFileOffsetX;
-                            oy = gs.iconFileOffsetY;
-                        }
-                        else
-                        {
-                            z = gs.iconPrefabZoom;
-                            ox = gs.iconPrefabOffsetX;
-                            oy = gs.iconPrefabOffsetY;
-                        }
-                        float half = (z - 1f) / 2f;
-                        RectTransform irt = racerIcons[i].rectTransform;
-                        irt.anchorMin = new Vector2(-half + ox, -half + oy);
-                        irt.anchorMax = new Vector2(1 + half + ox, 1 + half + oy);
-                    }
-                    else
-                    {
-                        racerIcons[i].sprite = null;
-                        racerIcons[i].color = GameConstants.RACER_COLORS[i];
-                    }
-                }
+                characterItems[ui].SetData(charData, popRank, oddsInfo, record);
+                characterItems[ui].RacerIndex = racerIdx; // 실제 레이서 인덱스 보존
             }
             else
             {
-                racerButtons[i].gameObject.SetActive(false);
+                characterItems[ui].gameObject.SetActive(false);
             }
         }
+    }
 
-        if (racerScrollContent != null)
-            racerScrollContent.anchoredPosition = Vector2.zero;
+    // ══════════════════════════════════════
+    //  Fallback (프리팹 없을 때 최소 UI)
+    // ══════════════════════════════════════
+    private void BuildBettingUIFallback(Transform parent)
+    {
+        GameObject startObj = new GameObject("StartBtn");
+        startObj.transform.SetParent(parent, false);
+        RectTransform srt = startObj.AddComponent<RectTransform>();
+        srt.anchorMin = new Vector2(0.5f, 0.5f);
+        srt.anchorMax = new Vector2(0.5f, 0.5f);
+        srt.sizeDelta = new Vector2(300, 80);
+
+        startObj.AddComponent<Image>().color = new Color(0.95f, 0.85f, 0.15f);
+        startButton = startObj.AddComponent<Button>();
+        startButton.onClick.AddListener(OnStartClicked);
+        startButton.interactable = true;
+
+        MkText(startObj.transform, "프리팹 없음 - Start",
+            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+            Vector2.zero, new Vector2(300, 80), 24, TextAnchor.MiddleCenter, Color.black);
+
+        MkText(parent, "DopamineRace > Create Betting UI Prefabs 실행 필요",
+            new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f),
+            Vector2.zero, new Vector2(600, 40), 16, TextAnchor.MiddleCenter, Color.red);
+    }
+
+    // ══════════════════════════════════════
+    //  유틸리티
+    // ══════════════════════════════════════
+    private Text FindText(Transform parent, string childName)
+    {
+        Transform child = parent.Find(childName);
+        return child != null ? child.GetComponent<Text>() : null;
     }
 }

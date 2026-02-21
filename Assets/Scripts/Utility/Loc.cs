@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 /// <summary>
 /// CSV 기반 다국어 로컬라이제이션 모듈.
-/// 사용법: Loc.Get("str.btn.start"), Loc.Get("str.hud.lap", 5)
+/// 사용법: Loc.Get("str.ui.btn.start"), Loc.Get("str.hud.lap", 5)
 /// </summary>
 public static class Loc
 {

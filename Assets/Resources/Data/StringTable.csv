@@ -51,6 +51,7 @@ str.bet.trio.desc,1~3착 3마리 (순서무관),Top 3 horses (any order),1~3着3
 str.bet.wide.desc,3착 이내 2마리 (순서무관),2 horses in top 3 (any order),3着以内2頭
 str.bet.label.first,1착,1st,1着
 str.bet.label.second,2착,2nd,2着
+str.bet.label.third,3착,3rd,3着
 str.bet.label.place,입상,Place,入着
 str.bet.label.select,선택,Pick,選択
 str.bet.guide.win.empty,1착 예측 선택!,Pick your 1st place!,1着を予想！
@@ -65,14 +66,14 @@ str.bet.guide.trio.two,1마리 더 선택!,Pick 1 more!,あと1頭選択！
 str.bet.guide.wide.empty,3착 이내 들어올 말 2마리 선택!,Pick 2 horses for top 3!,3着以内の馬を2頭選択！
 str.bet.guide.wide.one,1마리 더 선택!,Pick 1 more!,あと1頭選択！
 str.bet.guide.complete,선택 완료!,Selection complete!,選択完了！
-str.btn.start,Start,Start,スタート
-str.btn.next_round,다음 라운드,Next Round,次のラウンド
-str.btn.new_game,새 게임,New Game,新しいゲーム
-str.btn.close,닫기,Close,閉じる
-str.btn.top100,Top 100,Top 100,Top 100
-str.btn.panel_close,◀ 닫기,◀ Close,◀ 閉じる
-str.btn.panel_open,열기 ▶,Open ▶,開く ▶
-str.panel.bet_title,배팅 선택,Place Your Bet,ベット選択
+str.ui.btn.start,Start,Start,スタート
+str.ui.btn.next_round,다음 라운드,Next Round,次のラウンド
+str.ui.btn.new_game,새 게임,New Game,新しいゲーム
+str.ui.btn.close,닫기,Close,閉じる
+str.ui.btn.top100,Top 100,Top 100,Top 100
+str.ui.btn.panel_close,◀ 닫기,◀ Close,◀ 閉じる
+str.ui.btn.panel_open,열기 ▶,Open ▶,開く ▶
+str.ui.panel.bet_title,배팅 선택,Place Your Bet,ベット選択
 str.leaderboard.title,Top 100 리더보드,Top 100 Leaderboard,Top 100リーダーボード
 str.leaderboard.header,순위    점수    적중    날짜              요약,"Rank    Score    Hits    Date              Summary",順位    点数    的中    日付              概要
 str.leaderboard.empty,"기록이 없습니다.\n게임을 완료하면 자동으로 기록됩니다.","No records yet.\nComplete a game to save your score.",記録がありません。
@@ -104,3 +105,27 @@ str.finish.score_plus,+{0}점,+{0} pts,+{0}点
 str.finish.score_zero,+0점,+0 pts,+0点
 str.finish.total,"총점: {0}점  ({1}/{2} 적중)","Total: {0} pts  ({1}/{2} hits)",合計: {0}点（{1}/{2}的中）
 str.leaderboard.row,"{0}위  {1}점  {2}R  {3}  {4}","{0}th  {1}pts  {2}R  {3}  {4}",{0}位  {1}点  {2}R  {3}  {4}
+str.ui.betting.round,{0}라운드,Round {0},{0}ラウンド
+str.ui.betting.title,배팅 선택!,Place Your Bet!,ベット選択！
+str.ui.betting.odds,배당률 : {0}배,Odds : {0}x,配当率 : {0}倍
+str.ui.betting.odds_empty,배당률 : - 배,Odds : -,配当率 : -
+str.ui.betting.points_label,{0} 획득 포인트,{0} Points,{0} 獲得ポイント
+str.ui.betting.points_formula,{0}x{1} = {2},{0}x{1} = {2},{0}x{1} = {2}
+str.ui.betting.points_empty,- 획득 포인트,- Points,- ポイント
+str.ui.betting.hide_info,캐릭터 정보 안보기,Hide Char Info,キャラ情報非表示
+str.ui.track.total_round,총 {0}라운드 레이스,Total {0} Round Race,全{0}ラウンドレース
+str.ui.track.distance,{0} : {1}바퀴,{0} : {1} Laps,{0} : {1}周
+str.ui.track.short,단거리,Short,短距離
+str.ui.track.mid,중거리,Middle,中距離
+str.ui.track.long,장거리,Long,長距離
+str.ui.track.type_base,기본,Base,基本
+str.ui.track.type_dirt,더트,Dirt,ダート
+str.ui.char.popularity,인기{0}.,Pop{0}.,人気{0}.
+str.ui.char.record,{0}전 {1}승,{0}R {1}W,{0}戦{1}勝
+str.ui.char.second,2위 {0}회,2nd {0}x,2位 {0}回
+str.ui.condition.best,컨디션 최상,Best,最高
+str.ui.condition.good,컨디션 상,Good,良好
+str.ui.condition.normal,컨디션 중,Normal,普通
+str.ui.condition.bad,컨디션 하,Bad,不調
+str.ui.condition.worst,컨디션 최하,Worst,最悪
+str.ui.charinfo.coming_soon,준비 중...,Coming Soon...,準備中...

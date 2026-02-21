@@ -173,6 +173,90 @@ public class GameSettingsEditor : Editor
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.Space(10);
+        EditorGUILayout.Separator();
+        EditorGUILayout.LabelField("═══ 배당 시스템 리셋 ═══", EditorStyles.boldLabel);
+
+        // ── 컨디션 확률/배수 ──
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField("컨디션 확률/배수", EditorStyles.boldLabel);
+        if (GUILayout.Button("기본값 복원", GUILayout.Width(100)))
+        {
+            Undo.RecordObject(gs, "Reset Condition");
+            gs.conditionRate_best = 0.12f; gs.conditionRate_good = 0.18f;
+            gs.conditionRate_normal = 0.40f; gs.conditionRate_bad = 0.18f;
+            gs.conditionRate_worst = 0.12f;
+            gs.conditionMul_best = 1.20f; gs.conditionMul_good = 1.10f;
+            gs.conditionMul_normal = 1.00f; gs.conditionMul_bad = 0.95f;
+            gs.conditionMul_worst = 0.90f;
+            EditorUtility.SetDirty(gs);
+            Debug.Log("✅ 컨디션 확률/배수 → 기본값 복원");
+        }
+        EditorGUILayout.EndHorizontal();
+
+        // ── 인기도 스탯 가중치 ──
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField("인기도 스탯 가중치", EditorStyles.boldLabel);
+        if (GUILayout.Button("기본값 복원", GUILayout.Width(100)))
+        {
+            Undo.RecordObject(gs, "Reset Odds Stat Weight");
+            gs.oddsStatWeight_speed = 0.35f; gs.oddsStatWeight_power = 0.15f;
+            gs.oddsStatWeight_luck = 0.20f; gs.oddsStatWeight_endurance = 0.15f;
+            gs.oddsStatWeight_brave = 0.10f; gs.oddsStatWeight_calm = 0.05f;
+            gs.oddsRecordWeight_win = 3.0f; gs.oddsRecordWeight_place = 1.5f;
+            gs.oddsRecordWeight_show = 0.8f;
+            gs.trackOddsWeight = 0.4f; gs.trackOddsMinRaces = 3;
+            gs.newCharOddsVariance = 0.3f; gs.newCharThreshold = 5;
+            EditorUtility.SetDirty(gs);
+            Debug.Log("✅ 인기도 스탯 가중치 → 기본값 복원");
+        }
+        EditorGUILayout.EndHorizontal();
+
+        // ── 배당 범위 ──
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField("배당 범위 (인기순위별)", EditorStyles.boldLabel);
+        if (GUILayout.Button("기본값 복원", GUILayout.Width(100)))
+        {
+            Undo.RecordObject(gs, "Reset Odds Range");
+            gs.oddsRangeMin = new float[] { 1.5f, 3.0f, 5.0f, 8.0f, 13f, 20f, 30f, 45f, 55f, 65f, 75f, 85f };
+            gs.oddsRangeMax = new float[] { 3.0f, 5.0f, 8.0f, 13f, 20f, 30f, 45f, 55f, 65f, 75f, 85f, 99f };
+            EditorUtility.SetDirty(gs);
+            Debug.Log("✅ 배당 범위 → 기본값 복원");
+        }
+        EditorGUILayout.EndHorizontal();
+
+        // ── 복합 승식 계수 ──
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField("복합 승식 계수/상하한", EditorStyles.boldLabel);
+        if (GUILayout.Button("기본값 복원", GUILayout.Width(100)))
+        {
+            Undo.RecordObject(gs, "Reset Combo Odds");
+            gs.oddsCoef_place = 0.35f; gs.oddsCoef_quinella = 0.55f;
+            gs.oddsCoef_exacta = 1.10f; gs.oddsCoef_wide = 0.45f;
+            gs.oddsCoef_trio = 0.20f;
+            gs.oddsMin_place = 1.0f; gs.oddsMax_place = 15f;
+            gs.oddsMin_quinella = 2.0f; gs.oddsMax_quinella = 200f;
+            gs.oddsMin_exacta = 3.0f; gs.oddsMax_exacta = 500f;
+            gs.oddsMin_wide = 1.5f; gs.oddsMax_wide = 100f;
+            gs.oddsMin_trio = 5.0f; gs.oddsMax_trio = 999f;
+            EditorUtility.SetDirty(gs);
+            Debug.Log("✅ 복합 승식 계수/상하한 → 기본값 복원");
+        }
+        EditorGUILayout.EndHorizontal();
+
+        // ── 거리 구분 설정 ──
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField("거리 구분 설정", EditorStyles.boldLabel);
+        if (GUILayout.Button("기본값 복원", GUILayout.Width(100)))
+        {
+            Undo.RecordObject(gs, "Reset Distance");
+            gs.shortDistanceMax = 2;
+            gs.midDistanceMax = 4;
+            EditorUtility.SetDirty(gs);
+            Debug.Log("✅ 거리 구분 설정 → 기본값 복원");
+        }
+        EditorGUILayout.EndHorizontal();
+
+        EditorGUILayout.Space(10);
 
         // ── 레이스 공식 전체 리셋 ──
         GUI.backgroundColor = new Color(1f, 0.6f, 0.6f);

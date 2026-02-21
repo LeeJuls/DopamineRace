@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
@@ -28,27 +29,34 @@ public partial class SceneBootstrapper : MonoBehaviour
     private GameObject finishUI;
     private GameObject leaderboardPopup;
 
-    // ── 배팅 UI ──
-    private Button[] racerButtons;
-    private Text[] racerTexts;
-    private Text[] racerLabels;
-    private Image[] racerBGs;
-    private Image[] racerIcons;
-    private RectTransform racerScrollContent;
+    // ── 배팅 UI (프리팹 기반) ──
+    private CharacterItemUI[] characterItems;
+    private Transform bettingPanelRoot;
     private Button startButton;
-    private Text titleText;
-    private Text infoText;
     private Text scoreText;
     private Text roundText;
     private Text lapText;
-    private GameObject leftPanelObj;
-    private Text toggleBtnText;
+
+    // 프리팹 UI 참조
+    private Text betTitleText;
+    private Text betRoundText;
+    private Text betDescText;
+    private Text oddsText;
+    private Text pointsLabelText;
+    private Text pointsFormulaText;
+    private Text trackRoundLabel;
+    private Text trackNameLabel;
+    private Text distanceLabel;
+    private Text trackTypeLabel;
+    private Toggle hideInfoToggle;
+    private CharacterInfoPopup charInfoPopup;
 
     // 배팅 타입 탭
     private Button[] betTypeBtns;
     private Text[] betTypeBtnTexts;
     private Image[] betTypeBtnBGs;
-    private BetType currentTabType = BetType.Exacta;
+    private BetType currentTabType = BetType.Win;
+    private int currentTabIndex = 0;
 
     // ── 레이싱 UI ──
     private Text countdownText;
@@ -253,10 +261,20 @@ public partial class SceneBootstrapper : MonoBehaviour
         switch (state)
         {
             case GameManager.GameState.Betting:
-                bettingUI.SetActive(true);
-                ResetBetting();
-                UpdateRoundInfo();
-                UpdateScore();
+                var gm = GameManager.Instance;
+                if (gm != null && gm.CurrentRound > 1)
+                {
+                    // 2라운드부터: 새 트랙 잠깐 보여준 후 배팅 UI 표시
+                    StartCoroutine(DelayedBettingUI());
+                }
+                else
+                {
+                    // 1라운드: 즉시 표시
+                    bettingUI.SetActive(true);
+                    ResetBetting();
+                    UpdateRoundInfo();
+                    UpdateScore();
+                }
                 break;
             case GameManager.GameState.Countdown:
                 countdownUI.SetActive(true);
@@ -282,6 +300,23 @@ public partial class SceneBootstrapper : MonoBehaviour
                 ShowFinish();
                 break;
         }
+    }
+
+    /// <summary>
+    /// 2라운드부터: 새 트랙을 잠깐 보여준 뒤 배팅 UI 표시
+    /// </summary>
+    private IEnumerator DelayedBettingUI()
+    {
+        // 레이싱 씬(새 트랙)이 잠깐 보이도록 UI를 숨긴 채 대기
+        UpdateRoundInfo();
+        UpdateScore();
+        yield return new WaitForSeconds(1.5f);
+
+        // 배팅 UI 표시
+        bettingUI.SetActive(true);
+        ResetBetting();
+        UpdateRoundInfo();
+        UpdateScore();
     }
 
     private void OnCountdownTick(int t)
