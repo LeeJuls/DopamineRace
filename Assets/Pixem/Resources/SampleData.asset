@@ -12,21 +12,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00753528b80def7448d9baec74b38dd1, type: 3}
   m_Name: SampleData
   m_EditorClassIdentifier: 
-  T_Cape: {fileID: 2800000, guid: 39cbc45e99672f742b3bb6523360f003, type: 3}
-  T_Body: {fileID: 2800000, guid: 6913a9cf1beab7245bfe7897a5346714, type: 3}
-  T_Face: {fileID: 2800000, guid: fb94ab1b8804bd44e9c434d8fce24ef2, type: 3}
-  T_FaceAcc_1: {fileID: 2800000, guid: 83150cd747593574d903c9cec4e08a8c, type: 3}
+  T_Cape: {fileID: 2800000, guid: 05c7f8531d3024f42910ed757834614c, type: 3}
+  T_Body: {fileID: 2800000, guid: df1b721855da1184b99f5b781dd9e018, type: 3}
+  T_Face: {fileID: 2800000, guid: cbe06159744d56f449b32b671dcec294, type: 3}
+  T_FaceAcc_1: {fileID: 2800000, guid: b343f69a7d341974b9a16566b6f74b8e, type: 3}
   T_FaceAcc_2: {fileID: 2800000, guid: 684244558bccf164fba82e8fd34f5ba3, type: 3}
   T_Hair: {fileID: 2800000, guid: 54602979f67217447b108da9eefc53d8, type: 3}
-  T_HairAcc: {fileID: 2800000, guid: c2955abab0b95b04f8f1f090d5da676b, type: 3}
+  T_HairAcc: {fileID: 2800000, guid: b4ab7ef33b441e24ab6fd728706256e3, type: 3}
   T_Helmet: {fileID: 2800000, guid: 3b1f17f2facff4542b9a038fd3801ada, type: 3}
-  T_Top: {fileID: 2800000, guid: 7c0c9f8c91b4ae84b937e720db994530, type: 3}
+  T_Top: {fileID: 2800000, guid: 872f2cfc344507442887fe4ecd6b47f7, type: 3}
   T_Pants: {fileID: 2800000, guid: 29420453428b35649bca2253830dae5d, type: 3}
   T_RightHandWeapon: {fileID: 2800000, guid: b451a246cbe270c47a15363804ea7a95, type: 3}
   T_Shield: {fileID: 2800000, guid: 4b41180e3a43c224d86ab18a0bd17d19, type: 3}
   T_LeftHandWeapon: {fileID: 2800000, guid: 8874984002083e1479c530990b3c89f2, type: 3}
   C_Body: {r: 0, g: 0, b: 0, a: 0}
-  C_Cape: {r: 1, g: 1, b: 1, a: 1}
+  C_Cape: {r: 0, g: 1, b: 0.29289532, a: 1}
   C_Face: {r: 1, g: 1, b: 1, a: 1}
   C_FaceAcc_1: {r: 1, g: 1, b: 1, a: 1}
   C_FaceAcc_2: {r: 1, g: 1, b: 1, a: 1}

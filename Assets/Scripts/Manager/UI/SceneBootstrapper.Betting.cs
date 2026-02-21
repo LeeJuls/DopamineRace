@@ -498,6 +498,10 @@ public partial class SceneBootstrapper
     // ══════════════════════════════════════
     private void OnStartClicked()
     {
+        // 팝업 열려있으면 닫기
+        if (charInfoPopup != null)
+            charInfoPopup.Hide();
+
         GameManager.Instance?.StartRace();
     }
 

@@ -28,6 +28,7 @@ public class CharacterInfoPopup : MonoBehaviour
 
     // ═══ 상태 ═══
     private bool isInitialized;
+    private bool chartsInitialized;
     private string currentCharName;
     private Coroutine slideCoroutine;
     private Vector2 targetPosition;
@@ -116,9 +117,7 @@ public class CharacterInfoPopup : MonoBehaviour
             skillDescLabel = FindText(layout3, "SkillDescLabel");
         }
 
-        // XCharts 초기화
-        InitRankChart();
-        InitRadarChart();
+        // XCharts는 Show()에서 레이아웃 확정 후 초기화 (RectTransform 0 방지)
 
         // 타겟 위치 저장 (슬라이드 애니메이션용)
         RectTransform rt = GetComponent<RectTransform>();
@@ -180,14 +179,25 @@ public class CharacterInfoPopup : MonoBehaviour
                 skillDescLabel.text = Loc.Get(data.charName.Replace(".name", ".ability"));
         }
 
-        // 5) 순위 그래프
+        // 5) 먼저 활성화 (레이아웃 확정 → RectTransform 크기 보장)
+        gameObject.SetActive(true);
+        Canvas.ForceUpdateCanvases();
+
+        // 6) XCharts 초기화 (최초 Show 시 1회, 활성화 후 rect 크기 확정)
+        if (!chartsInitialized)
+        {
+            InitRankChart();
+            InitRadarChart();
+            chartsInitialized = true;
+        }
+
+        // 7) 순위 그래프
         UpdateRankChart(record);
 
-        // 6) 레이더차트
+        // 8) 레이더차트
         UpdateRadarChart(data);
 
-        // 7) 표시 + 슬라이드인
-        gameObject.SetActive(true);
+        // 9) 슬라이드인
         if (slideCoroutine != null)
             StopCoroutine(slideCoroutine);
         slideCoroutine = StartCoroutine(SlideInAnimation());
@@ -211,19 +221,26 @@ public class CharacterInfoPopup : MonoBehaviour
 
     private void InitRankChart()
     {
-        if (rankChartArea == null) return;
+        if (rankChartArea == null)
+        {
+            Debug.LogWarning("[CharInfoPopup] rankChartArea is null — skip InitRankChart");
+            return;
+        }
 
         rankChart = rankChartArea.GetComponent<LineChart>();
         if (rankChart == null)
             rankChart = rankChartArea.AddComponent<LineChart>();
 
         rankChart.Init();
-        rankChart.SetSize(rankChartArea.GetComponent<RectTransform>().rect.width,
-                          rankChartArea.GetComponent<RectTransform>().rect.height);
+        // stretch 앵커 → SetSize() 불가, 차트가 RectTransform에 자동 맞춤
+        Debug.Log("[CharInfoPopup] InitRankChart initialized");
 
-        // 기본 설정
+        // 배경 투명 (theme.transparentBackground → DrawBackground 폴백도 투명)
+        rankChart.theme.transparentBackground = true;
+        rankChart.raycastTarget = false; // 클릭 이벤트 통과 (닫기 버튼 등)
+
+        // 시리즈만 제거 (ClearComponentData 호출 금지 — 필수 내부 좌표계 파괴)
         rankChart.RemoveData();
-        rankChart.ClearComponentData();
 
         // 제목 비활성
         var title = rankChart.EnsureChartComponent<Title>();
@@ -242,16 +259,18 @@ public class CharacterInfoPopup : MonoBehaviour
         yAxis.max = 12;
         yAxis.show = false;
 
-        // 그리드
+        // 그리드 (라벨 오버플로우 방지용 여백)
         var grid = rankChart.EnsureChartComponent<GridCoord>();
-        grid.left = 10;
-        grid.right = 10;
-        grid.top = 10;
+        grid.left = 50;
+        grid.right = 50;
+        grid.top = 25;
         grid.bottom = 10;
 
-        // 배경 투명
+        // Background 비활성
         var bg = rankChart.EnsureChartComponent<Background>();
         bg.show = false;
+
+        rankChart.RefreshChart();
     }
 
     private void UpdateRankChart(CharacterRecord record)
@@ -261,7 +280,7 @@ public class CharacterInfoPopup : MonoBehaviour
         bool hasData = record != null && record.recentRaceEntries != null
                        && record.recentRaceEntries.Count > 0;
 
-        rankChartArea.SetActive(hasData);
+        if (rankChartArea != null) rankChartArea.SetActive(hasData);
         if (noRecordLabel != null)
             noRecordLabel.text = hasData ? "" : Loc.Get("str.ui.char.no_record");
         if (noRecordLabel != null)
@@ -276,15 +295,15 @@ public class CharacterInfoPopup : MonoBehaviour
         if (xAxis != null)
             xAxis.data.Clear();
 
-        // 시리즈 추가
-        rankChart.AddSerie<Line>("rank");
-        var serie = rankChart.GetSerie(0);
+        // 시리즈 추가 (AddSerie 반환값 직접 사용)
+        var serie = rankChart.AddSerie<Line>("rank");
         if (serie != null)
         {
             serie.lineType = LineType.Normal;
             serie.symbol.show = true;
             serie.symbol.type = SymbolType.Circle;
             serie.symbol.size = 6;
+            serie.EnsureComponent<LabelStyle>();
             serie.itemStyle.color = new Color(1f, 0.3f, 0.3f);
             serie.lineStyle.color = new Color(0.8f, 0.8f, 0.8f);
             serie.lineStyle.width = 2f;
@@ -324,68 +343,91 @@ public class CharacterInfoPopup : MonoBehaviour
 
     private void InitRadarChart()
     {
-        if (radarChartArea == null) return;
+        if (radarChartArea == null)
+        {
+            Debug.LogWarning("[CharInfoPopup] radarChartArea is null — skip InitRadarChart");
+            return;
+        }
 
         radarChart = radarChartArea.GetComponent<RadarChart>();
         if (radarChart == null)
             radarChart = radarChartArea.AddComponent<RadarChart>();
 
         radarChart.Init();
-        radarChart.SetSize(radarChartArea.GetComponent<RectTransform>().rect.width,
-                           radarChartArea.GetComponent<RectTransform>().rect.height);
+        // stretch 앵커 → SetSize() 불가, 차트가 RectTransform에 자동 맞춤
 
-        radarChart.RemoveData();
-        radarChart.ClearComponentData();
+        // 배경 투명 (theme.transparentBackground → DrawBackground 폴백도 투명)
+        radarChart.theme.transparentBackground = true;
+        radarChart.raycastTarget = false; // 클릭 이벤트 통과
 
         // 제목 비활성
         var title = radarChart.EnsureChartComponent<Title>();
         title.show = false;
 
-        // 배경 투명
+        // Background 비활성
         var bg = radarChart.EnsureChartComponent<Background>();
         bg.show = false;
 
-        // RadarCoord 설정 (6각형)
+        // RadarCoord 기본 설정 (인디케이터는 UpdateRadarChart에서 매번 설정)
         var radar = radarChart.EnsureChartComponent<RadarCoord>();
         radar.shape = RadarCoord.Shape.Polygon;
         radar.splitNumber = 4; // 4구역 (5, 10, 15, 20)
+        radar.startAngle = 90; // 상단부터 시작
+        radar.center = new float[] { 0.5f, 0.5f }; // 차트 중앙
 
-        // 6개 축 정의
-        string[] statKeys = {
-            "str.ui.char.stat.speed", "str.ui.char.stat.power",
-            "str.ui.char.stat.brave", "str.ui.char.stat.calm",
-            "str.ui.char.stat.endurance", "str.ui.char.stat.luck"
-        };
-        foreach (string key in statKeys)
-        {
-            radar.AddIndicator(Loc.Get(key), 0, 20);
-        }
+        // 반지름: RectTransform 크기 기반 계산
+        RectTransform chartRt = radarChartArea.GetComponent<RectTransform>();
+        float w = chartRt.rect.width > 0 ? chartRt.rect.width : 250f;
+        float h = chartRt.rect.height > 0 ? chartRt.rect.height : 250f;
+        float minDim = Mathf.Min(w, h);
+        radar.radius = Mathf.Max((minDim - 120f) * 0.5f, 30f);
 
-        // 인디케이터 라벨 스타일은 RadarCoord의 기본 설정 사용
-        // (XCharts 최신 버전에서는 Indicator에 직접 textStyle 없음)
+        Debug.Log($"[CharInfoPopup] InitRadarChart rect={w}x{h}, radius={radar.radius}");
+
+        radarChart.RefreshChart();
     }
 
     private void UpdateRadarChart(CharacterData data)
     {
-        if (radarChart == null || data == null) return;
+        if (radarChart == null || data == null)
+        {
+            Debug.LogWarning($"[CharInfoPopup] UpdateRadarChart skip — chart={radarChart != null}, data={data != null}");
+            return;
+        }
 
         radarChart.RemoveData();
 
-        // 4색 배경 시리즈 (구역 표현)
+        // RemoveData()가 인디케이터도 삭제하므로 매번 재설정
+        var radar = radarChart.GetChartComponent<RadarCoord>();
+        if (radar != null)
+        {
+            radar.indicatorList.Clear();
+            string[] statKeys = {
+                "str.ui.char.stat.speed", "str.ui.char.stat.power",
+                "str.ui.char.stat.brave", "str.ui.char.stat.calm",
+                "str.ui.char.stat.endurance", "str.ui.char.stat.luck"
+            };
+            foreach (string key in statKeys)
+                radar.AddIndicator(Loc.Get(key), 0, 20);
+        }
+
+        // 4색 배경 시리즈 (구역 표현: 큰 값부터 → 작은 값 위에 겹침)
         Color[] zoneColors = {
-            new Color(0f, 0.8f, 0.27f, 0.4f),   // 16~20: #00CC44
-            new Color(0.67f, 0.8f, 0f, 0.4f),    // 11~15: #AACC00
-            new Color(1f, 0.53f, 0f, 0.3f),       // 6~10:  #FF8800
-            new Color(0.8f, 0.2f, 0.2f, 0.3f),    // 1~5:   #CC3333
+            new Color(0f, 0.8f, 0.27f, 0.5f),   // 16~20: #00CC44
+            new Color(0.67f, 0.8f, 0f, 0.5f),    // 11~15: #AACC00
+            new Color(1f, 0.53f, 0f, 0.4f),       // 6~10:  #FF8800
+            new Color(0.8f, 0.2f, 0.2f, 0.4f),    // 1~5:   #CC3333
         };
         float[] zoneValues = { 20f, 15f, 10f, 5f };
 
         for (int z = 0; z < 4; z++)
         {
-            radarChart.AddSerie<Radar>("zone_" + z);
-            var zoneSerie = radarChart.GetSerie(z);
+            // AddSerie 반환값 직접 사용 (GetSerie 인덱스 불일치 방지)
+            var zoneSerie = radarChart.AddSerie<Radar>("zone_" + z);
             if (zoneSerie != null)
             {
+                zoneSerie.EnsureComponent<AreaStyle>();
+                zoneSerie.EnsureComponent<LabelStyle>();
                 zoneSerie.areaStyle.show = true;
                 zoneSerie.areaStyle.color = zoneColors[z];
                 zoneSerie.lineStyle.show = false;
@@ -399,11 +441,12 @@ public class CharacterInfoPopup : MonoBehaviour
         }
 
         // 실제 스탯 시리즈
-        radarChart.AddSerie<Radar>("stats");
+        var statSerie = radarChart.AddSerie<Radar>("stats");
         int statIdx = 4;
-        var statSerie = radarChart.GetSerie(statIdx);
         if (statSerie != null)
         {
+            statSerie.EnsureComponent<AreaStyle>();
+            statSerie.EnsureComponent<LabelStyle>();
             statSerie.areaStyle.show = true;
             statSerie.areaStyle.color = new Color(1f, 1f, 1f, 0.3f);
             statSerie.lineStyle.show = true;
@@ -426,6 +469,7 @@ public class CharacterInfoPopup : MonoBehaviour
             data.charBaseLuck
         };
         radarChart.AddData(statIdx, statValues);
+        Debug.Log($"[CharInfoPopup] UpdateRadarChart: stats=[{string.Join(",", statValues)}], series={radarChart.series.Count}");
 
         radarChart.RefreshChart();
     }

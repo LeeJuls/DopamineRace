@@ -89,6 +89,10 @@ public class ScoreManager : MonoBehaviour
         // ★ DisplayName 키로 잘못 저장된 기록 자동 정리
         CleanupInvalidCharRecords();
 
+        // ★ 레거시 마이그레이션: recentRaceEntries 백필 (필드 추가 이전 세이브 호환)
+        foreach (var record in charRecordStore.records)
+            record.MigrateRaceEntriesIfNeeded();
+
         Debug.Log("[ScoreManager 로드] 캐릭터 기록: " + charRecordStore.records.Count + "명"
             + " | 배팅 기록: " + betRecordStore.records.Count + "건"
             + " | 누적: " + TotalScore + "점/" + TotalRounds + "라운드/" + TotalWins + "승");

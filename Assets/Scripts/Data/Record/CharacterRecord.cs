@@ -166,6 +166,28 @@ public class CharacterRecord
     }
 
     /// <summary>
+    /// 레거시 마이그레이션: recentRaceEntries 필드 추가 이전 세이브 호환.
+    /// recentOverallRanks에 데이터가 있지만 recentRaceEntries가 비어있으면 백필.
+    /// </summary>
+    public void MigrateRaceEntriesIfNeeded()
+    {
+        if (recentOverallRanks.Count > 0 && recentRaceEntries.Count == 0)
+        {
+            int count = recentOverallRanks.Count < MAX_RACE_ENTRIES
+                ? recentOverallRanks.Count : MAX_RACE_ENTRIES;
+            for (int i = 0; i < count; i++)
+            {
+                recentRaceEntries.Add(new RaceEntry
+                {
+                    rank = recentOverallRanks[i],
+                    trackName = "",
+                    laps = 0
+                });
+            }
+        }
+    }
+
+    /// <summary>
     /// 자동 감쇠: 트랙별 raceCount가 threshold 초과 시 절반 압축
     /// ScoreManager.ResetCharacterRecords("decay")에서 호출
     /// </summary>
