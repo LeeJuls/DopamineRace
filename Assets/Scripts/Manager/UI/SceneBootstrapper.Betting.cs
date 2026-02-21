@@ -414,8 +414,20 @@ public partial class SceneBootstrapper
             if (db != null && racerIdx < db.SelectedCharacters.Count)
             {
                 var charData = db.SelectedCharacters[racerIdx];
-                var oddsInfo = OddsCalculator.GetInfo(charData.charName);
-                charInfoPopup.Show(charData, oddsInfo);
+
+                // 동일 캐릭터 재클릭 → 토글 닫기
+                if (charInfoPopup.IsShowing && charInfoPopup.CurrentCharName == charData.charName)
+                {
+                    charInfoPopup.Hide();
+                }
+                else
+                {
+                    var oddsInfo = OddsCalculator.GetInfo(charData.charName);
+                    var record = ScoreManager.Instance != null
+                        ? ScoreManager.Instance.GetCharacterRecord(charData.charName)
+                        : null;
+                    charInfoPopup.Show(charData, oddsInfo, record);
+                }
             }
         }
     }
