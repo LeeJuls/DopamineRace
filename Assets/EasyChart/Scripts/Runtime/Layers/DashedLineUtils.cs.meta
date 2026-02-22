@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 5d5a77b83e0d1204a8367328f264b951
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Scripts/Runtime/Layers/DashedLineUtils.cs
+  uploadId: 857482

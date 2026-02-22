@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 4ce98ab3f7ab88143bf05de78e49c2dc
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/Manual/en/02_06-SeriesPanel.md
+  uploadId: 857482

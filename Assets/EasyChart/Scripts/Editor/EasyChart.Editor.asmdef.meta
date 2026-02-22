@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: a3ecc70f61506ea41828100f331be409
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Scripts/Editor/EasyChart.Editor.asmdef
+  uploadId: 857482

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: e7c8c89ebc3f7fe4bb6e66d6544a3760
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Scripts/Runtime/Internal/IChartInteractionStateConsumer.cs
+  uploadId: 857482

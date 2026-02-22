@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 814f646e1e0f0f24c9cde8784a0e6e9e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Scripts/Runtime/Internal/IChartGeometryModule.cs
+  uploadId: 857482

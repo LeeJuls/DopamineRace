@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: d1b8302779e3a464dbdb826e70b2da10
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Scripts/Runtime/Internal/ChartRefreshCallbacks.cs
+  uploadId: 857482

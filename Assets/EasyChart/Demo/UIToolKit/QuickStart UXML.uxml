@@ -1,0 +1,22 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Template name="PieDemo 1" src="project://database/Assets/EasyChart/LibraryUxml/EasyChartFreeDemo/Pie/PieDemo%201.uxml?fileID=9197481963319205126&amp;guid=b6893e9dfde1ca944bfc01b0f2a3fe66&amp;type=3#PieDemo 1" />
+    <ui:Template name="BarDemo 6" src="project://database/Assets/EasyChart/LibraryUxml/EasyChartFreeDemo/Bar/BarDemo%206.uxml?fileID=9197481963319205126&amp;guid=895de91df190ccb4297ff0fecb8598a1&amp;type=3#BarDemo 6" />
+    <ui:Template name="MixDemo 1" src="project://database/Assets/EasyChart/LibraryUxml/EasyChartFreeDemo/Mix/MixDemo%201.uxml?fileID=9197481963319205126&amp;guid=0ad11053c5a32264cb176122a8967343&amp;type=3#MixDemo 1" />
+    <ui:Template name="ScatterDemo 1" src="project://database/Assets/EasyChart/LibraryUxml/EasyChartFreeDemo/Scatter/ScatterDemo%201.uxml?fileID=9197481963319205126&amp;guid=bba1e4c05bce1564cb8c1964fd57689d&amp;type=3#ScatterDemo 1" />
+    <ui:Template name="Line 3" src="project://database/Assets/EasyChart/LibraryUxml/EasyChartFreeDemo/Line/Line%203.uxml?fileID=9197481963319205126&amp;guid=28985a4482c94004fb2c4a161021213f&amp;type=3#Line 3" />
+    <ui:Template name="MixDemo" src="project://database/Assets/EasyChart/LibraryUxml/EasyChartFreeDemo/Mix/MixDemo.uxml?fileID=9197481963319205126&amp;guid=2c00c8e081864ad489da071129432457&amp;type=3#MixDemo" />
+    <ui:Template name="PieDemo 5" src="project://database/Assets/EasyChart/LibraryUxml/EasyChartFreeDemo/Pie/PieDemo%205.uxml?fileID=9197481963319205126&amp;guid=9f95abc9f9a9e2143acd2fb1054a15a8&amp;type=3#PieDemo 5" />
+    <ui:Template name="ScatterDemo" src="project://database/Assets/EasyChart/LibraryUxml/EasyChartFreeDemo/Scatter/ScatterDemo.uxml?fileID=9197481963319205126&amp;guid=16da5bc8851b7064d909ca38cd2c30be&amp;type=3#ScatterDemo" />
+    <ui:VisualElement name="Left" style="flex-grow: 1; right: auto; position: absolute; top: auto; bottom: auto; justify-content: flex-start; align-self: flex-start; align-items: auto; height: 100%;">
+        <ui:Instance template="PieDemo 1" name="PieDemo 1" />
+        <ui:Instance template="BarDemo 6" name="BarDemo 6" />
+        <ui:Instance template="MixDemo 1" name="MixDemo 1" />
+        <ui:Instance template="ScatterDemo 1" name="ScatterDemo 1" />
+    </ui:VisualElement>
+    <ui:VisualElement name="Right" style="flex-grow: 1; position: absolute; align-items: auto; align-self: flex-end; justify-content: flex-start; flex-direction: column; flex-wrap: nowrap; height: 100%;">
+        <ui:Instance template="Line 3" name="Line 3" />
+        <ui:Instance template="MixDemo" name="MixDemo" />
+        <ui:Instance template="PieDemo 5" name="PieDemo 5" />
+        <ui:Instance template="ScatterDemo" name="ScatterDemo" />
+    </ui:VisualElement>
+</ui:UXML>

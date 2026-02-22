@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d0b4ea457ed63b4459175ed03ef70d2d
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/UGUI/Prefabs/EasyChartFreeDemo/Radar/RadarDemo 1.prefab
+  uploadId: 857482

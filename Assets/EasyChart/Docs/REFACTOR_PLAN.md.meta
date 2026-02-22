@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: b296ab1a42c728c42bf460b3a8a612bc
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/REFACTOR_PLAN.md
+  uploadId: 857482

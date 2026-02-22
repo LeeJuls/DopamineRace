@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 43e2bb9a9c3bd5a478d0e44c26b17428
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/Manual/10-LineChart.md
+  uploadId: 857482

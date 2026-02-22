@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f9cd0878be8f4f3478a0d1f8b33871b8
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/Manual/en/00_03-UGUIWorkflow.md
+  uploadId: 857482

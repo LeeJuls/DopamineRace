@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 6cc9d36e426feb043b577230c780a7aa
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/Manual/zh/03_07-RingChart.md
+  uploadId: 857482

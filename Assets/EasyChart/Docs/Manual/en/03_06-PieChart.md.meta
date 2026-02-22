@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 2bffa5abab7faa442b8f86f43817e37f
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/Manual/en/03_06-PieChart.md
+  uploadId: 857482

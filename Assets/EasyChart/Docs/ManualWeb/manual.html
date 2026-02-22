@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Unity Easy Chart</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title">Unity Easy Chart</div>
+          <div class="sidebar-sub" id="generatedAt"></div>
+        </div>
+
+        <div class="sidebar-lang">
+          <select id="lang" aria-label="Language">
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <div class="sidebar-search">
+          <input id="search" type="text" placeholder="Search chapters..." />
+        </div>
+
+        <nav class="nav" id="nav"></nav>
+      </aside>
+
+      <div class="main">
+        <div class="content-wrap">
+          <main class="content" id="content"></main>
+          <aside class="toc" id="toc"></aside>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var q = '?t=' + Date.now();
+
+        function getSavedLang(){
+          try{
+            var v = localStorage.getItem('easychart_manual_lang_v1');
+            return (v === 'en' || v === 'zh') ? v : 'zh';
+          }catch(e){
+            return 'zh';
+          }
+        }
+
+        function loadNavConfig(next){
+          var sNav = document.createElement('script');
+          sNav.src = './manual-nav.js' + q;
+          sNav.onload = next;
+          sNav.onerror = next;
+          document.body.appendChild(sNav);
+        }
+
+        function updateGeneratedAt(){
+          var el = document.getElementById('generatedAt');
+          if (!el) return;
+          var data = window.EASYCHART_MANUAL || {};
+          el.textContent = data.generatedAt ? ('Updated: ' + data.generatedAt) : '';
+        }
+
+        function loadApp(){
+          var sApp = document.createElement('script');
+          sApp.src = './app.js' + q;
+          sApp.onload = updateGeneratedAt;
+          document.body.appendChild(sApp);
+        }
+
+        function loadOpenRequest(){
+          var sOpen = document.createElement('script');
+          sOpen.src = './manual-open.js' + q;
+          sOpen.onload = loadApp;
+          sOpen.onerror = loadApp;
+          document.body.appendChild(sOpen);
+        }
+
+        function afterDataLoaded(){
+          var lang = getSavedLang();
+          if(lang === 'en' && window.EASYCHART_MANUAL_EN) window.EASYCHART_MANUAL = window.EASYCHART_MANUAL_EN;
+          if(lang === 'zh' && window.EASYCHART_MANUAL_ZH) window.EASYCHART_MANUAL = window.EASYCHART_MANUAL_ZH;
+          loadNavConfig(loadOpenRequest);
+        }
+
+        function loadDataWithFallback(){
+          var lang = getSavedLang();
+          var sData = document.createElement('script');
+          sData.src = './manual-data.' + lang + '.js' + q;
+          sData.onload = afterDataLoaded;
+          sData.onerror = function(){
+            var sLegacy = document.createElement('script');
+            sLegacy.src = './manual-data.js' + q;
+            sLegacy.onload = afterDataLoaded;
+            document.body.appendChild(sLegacy);
+          };
+          document.body.appendChild(sData);
+        }
+
+        loadDataWithFallback();
+      })();
+    </script>
+  </body>
+</html>

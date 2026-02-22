@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 9d7c3b2a1e0f4c8baf6d5e4c3b2a1f0e
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/Manual/zh/02_05-InspectorPanel.md
+  uploadId: 857482

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: b9b90bfac618c6c43855fa18d12700f0
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Demo/Scenes/EasyChart_UGUI_WorldSpace.unity
+  uploadId: 857482

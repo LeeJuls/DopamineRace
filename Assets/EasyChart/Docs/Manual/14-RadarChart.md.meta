@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 51eacb7284fc0844790aa4af3dcd70c8
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/Manual/14-RadarChart.md
+  uploadId: 857482

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ac1897d170ee5c44f9d74214761b89f2
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Demo/Scenes/EasyChart_UIToolKit.unity
+  uploadId: 857482

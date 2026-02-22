@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 4db790a6a53e3744594b3042b2fd200b
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Demo/Scenes/JsonInjection_UGUI.unity
+  uploadId: 857482

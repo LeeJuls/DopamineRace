@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5e521ae021b6df64291e68ec476be87b
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/Manual/zh/03_03-ScatterChart.md
+  uploadId: 857482

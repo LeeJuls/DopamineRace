@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 686fc001d6f84cd4391231b901e1d3c6
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/RegressionChecklist.md
+  uploadId: 857482

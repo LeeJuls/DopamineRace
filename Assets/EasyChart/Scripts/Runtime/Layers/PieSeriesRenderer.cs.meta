@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: d04d79a51c7a0404c880abefc93cded9
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Scripts/Runtime/Layers/PieSeriesRenderer.cs
+  uploadId: 857482

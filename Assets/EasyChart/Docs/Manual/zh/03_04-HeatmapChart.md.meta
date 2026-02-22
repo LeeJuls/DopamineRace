@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: a591ce4ec379e7e44a71dfef2e6cf681
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/Manual/zh/03_04-HeatmapChart.md
+  uploadId: 857482

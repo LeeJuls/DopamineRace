@@ -1,0 +1,32 @@
+/* EasyChart Demo Showcase Styles */
+/* Screen: 1950x1300, Demo: 450x300, Grid: 4x4 */
+
+.demo-group {
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    padding: 25px;
+}
+
+.demo-group.hidden {
+    display: none;
+}
+
+.demo-row {
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    flex-grow: 1;
+}
+
+.demo-slot {
+    width: 450px;
+    height: 300px;
+    background-color: rgba(30, 30, 30, 0.9);
+    border-width: 1px;
+    border-color: rgba(80, 80, 80, 0.5);
+    border-radius: 4px;
+}

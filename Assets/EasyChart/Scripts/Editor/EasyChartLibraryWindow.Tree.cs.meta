@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 5b249a3d736720f419a6f0ed482a0a73
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Scripts/Editor/EasyChartLibraryWindow.Tree.cs
+  uploadId: 857482

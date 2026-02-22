@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 9b5cedc13ea816948a0163432c6dafd9
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/Manual/en/00_05-RuntimeDataInjectionUGUI.md
+  uploadId: 857482

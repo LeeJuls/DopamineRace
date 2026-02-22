@@ -323,73 +323,80 @@ public static class BettingUIPrefabCreator
         // ════════════════════════════
         //  CharacterInfoPopup (기본 비활성, 4개 레이아웃)
         //  기획서 9번: 상단(순위그래프) / 중단좌(일러스트+승률) / 중단우(레이더) / 하단(스킬)
+        //  캐릭터 리스트(~0.30) 우측에 배치, 겹침 방지
         // ════════════════════════════
-        // 하단 0.10 → StartBtn(0.82,0.02) 겹침 방지 (StartBtn 높이 55px 고려)
         GameObject infoPopup = MkChild(root, "CharacterInfoPopup",
-            0.08f, 0.10f, 0.92f, 0.80f, Vector2.zero, Vector2.zero);
+            0.28f, 0.12f, 0.82f, 0.78f, Vector2.zero, Vector2.zero);
         Image popupBg = infoPopup.AddComponent<Image>();
-        popupBg.color = new Color(0.05f, 0.05f, 0.1f, 0.95f);
+        popupBg.color = new Color(0.06f, 0.06f, 0.10f, 0.96f);
+        popupBg.raycastTarget = true; // 팝업 뒤 클릭 차단
         infoPopup.AddComponent<CharacterInfoPopup>();
 
-        // ── Layout1_TopArea (상단 22% — 순위 변동 + 캐릭터 타입) ──
+        // Outline 효과 (시각적 경계선)
+        var popupOutline = infoPopup.AddComponent<Outline>();
+        popupOutline.effectColor = new Color(0.3f, 0.4f, 0.6f, 0.5f);
+        popupOutline.effectDistance = new Vector2(2, -2);
+
+        // ── Layout1_TopArea (상단 28% — 순위 변동 + 캐릭터 타입) ──
         GameObject layout1 = MkChild(infoPopup, "Layout1_TopArea",
-            0f, 0.78f, 1f, 1f, Vector2.zero, Vector2.zero);
+            0f, 0.72f, 1f, 1f, Vector2.zero, Vector2.zero);
         layout1.AddComponent<Image>().color = new Color(0.08f, 0.08f, 0.15f, 0.7f);
 
         // CharTypeLabel (좌상단)
         MkTextObj(layout1, "CharTypeLabel", font,
-            0.03f, 0.78f, 0.03f, 0.78f, Vector2.zero, new Vector2(150, 35),
-            22, TextAnchor.MiddleLeft, new Color(1f, 0.4f, 0.4f));
+            0.03f, 0.82f, 0.03f, 0.82f, Vector2.zero, new Vector2(120, 30),
+            20, TextAnchor.MiddleLeft, new Color(1f, 0.4f, 0.4f));
 
-        // RankChartArea (순위 그래프 컨테이너)
+        // RankChartArea (순위 그래프 컨테이너 — 넓게 확보)
         GameObject rankChartArea = MkChild(layout1, "RankChartArea",
-            0.03f, 0.05f, 0.97f, 0.68f, Vector2.zero, Vector2.zero);
+            0.02f, 0.02f, 0.98f, 0.75f, Vector2.zero, Vector2.zero);
 
         // NoRecordLabel (출전 기록 없음 — 차트 대신 표시)
         MkTextObj(layout1, "NoRecordLabel", font,
-            0.5f, 0.38f, 0.5f, 0.38f, Vector2.zero, new Vector2(300, 30),
-            16, TextAnchor.MiddleCenter, new Color(0.5f, 0.5f, 0.5f));
+            0.5f, 0.38f, 0.5f, 0.38f, Vector2.zero, new Vector2(250, 28),
+            14, TextAnchor.MiddleCenter, new Color(0.5f, 0.5f, 0.5f));
 
         // CloseBtn (우상단 X — 차트보다 위에 렌더링되도록 마지막 생성)
         GameObject popupCloseBtn = MkChild(layout1, "CloseBtn",
-            0.97f, 0.85f, 0.97f, 0.85f, Vector2.zero, new Vector2(35, 35));
+            0.97f, 0.88f, 0.97f, 0.88f, Vector2.zero, new Vector2(30, 30));
         Image closeBg = popupCloseBtn.AddComponent<Image>();
         closeBg.color = new Color(0.5f, 0.3f, 0.3f, 0.8f);
         closeBg.raycastTarget = true;
         Button closeBtnComp = popupCloseBtn.AddComponent<Button>();
         closeBtnComp.targetGraphic = closeBg;
         MkTextObj(popupCloseBtn, "Text", font,
-            0.5f, 0.5f, 0.5f, 0.5f, Vector2.zero, new Vector2(35, 35),
-            20, TextAnchor.MiddleCenter, Color.white);
+            0.5f, 0.5f, 0.5f, 0.5f, Vector2.zero, new Vector2(30, 30),
+            18, TextAnchor.MiddleCenter, Color.white);
 
-        // ── Layout2 (중단 63% — 좌우 분할) ──
-        // Layout2_Left (좌측 42% — 일러스트 + 승률)
+        // ── Layout2 (중단 57% — 좌우 분할) ──
+        // Layout2_Left (좌측 38% — 일러스트 + 승률)
         GameObject layout2Left = MkChild(infoPopup, "Layout2_Left",
-            0f, 0.13f, 0.42f, 0.78f, Vector2.zero, Vector2.zero);
+            0f, 0.13f, 0.38f, 0.72f, Vector2.zero, Vector2.zero);
         layout2Left.AddComponent<Image>().color = new Color(0.06f, 0.06f, 0.12f, 0.5f);
 
         // StoryIconBtn (book 아이콘, 좌상단, 비활성)
         GameObject storyBtn = MkChild(layout2Left, "StoryIconBtn",
-            0.08f, 0.93f, 0.08f, 0.93f, Vector2.zero, new Vector2(28, 28));
+            0.08f, 0.93f, 0.08f, 0.93f, Vector2.zero, new Vector2(24, 24));
         Image storyImg = storyBtn.AddComponent<Image>();
         storyImg.color = new Color(0.4f, 0.4f, 0.4f);
         storyBtn.AddComponent<Button>().interactable = false;
 
         // Illustration (캐릭터 일러스트 — 부모 영역에 반응형 stretch)
         GameObject illustObj = MkChild(layout2Left, "Illustration",
-            0.08f, 0.15f, 0.92f, 0.85f, Vector2.zero, Vector2.zero);
+            0.05f, 0.18f, 0.95f, 0.88f, Vector2.zero, Vector2.zero);
         Image illustImg = illustObj.AddComponent<Image>();
         illustImg.color = Color.white;
         illustImg.preserveAspect = true;
 
         // WinRateLabel (승률)
         MkTextObj(layout2Left, "WinRateLabel", font,
-            0.5f, 0.04f, 0.5f, 0.04f, Vector2.zero, new Vector2(180, 30),
-            18, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.2f));
+            0.5f, 0.06f, 0.5f, 0.06f, Vector2.zero, new Vector2(160, 28),
+            16, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.2f));
 
-        // Layout2_Right (우측 58% — 레이더차트)
+        // Layout2_Right (우측 62% — 레이더차트, RectMask2D로 오버플로 클리핑)
         GameObject layout2Right = MkChild(infoPopup, "Layout2_Right",
-            0.42f, 0.13f, 1f, 0.78f, Vector2.zero, Vector2.zero);
+            0.38f, 0.13f, 1f, 0.72f, Vector2.zero, Vector2.zero);
+        layout2Right.AddComponent<RectMask2D>();
 
         // RadarChartArea (레이더차트 컨테이너)
         GameObject radarChartArea = MkChild(layout2Right, "RadarChartArea",
@@ -398,19 +405,19 @@ public static class BettingUIPrefabCreator
         // ── Layout3_Bottom (하단 13% — 스킬) ──
         GameObject layout3 = MkChild(infoPopup, "Layout3_Bottom",
             0f, 0f, 1f, 0.13f, Vector2.zero, Vector2.zero);
-        layout3.AddComponent<Image>().color = new Color(0.08f, 0.06f, 0.04f, 0.7f);
+        layout3.AddComponent<Image>().color = new Color(0.10f, 0.08f, 0.06f, 0.8f);
 
         // SkillIcon (sword 아이콘)
         GameObject skillIconObj = MkChild(layout3, "SkillIcon",
-            0.04f, 0.5f, 0.04f, 0.5f, Vector2.zero, new Vector2(40, 40));
+            0.04f, 0.5f, 0.04f, 0.5f, Vector2.zero, new Vector2(32, 32));
         Image skillImg = skillIconObj.AddComponent<Image>();
         skillImg.color = Color.white;
         skillImg.preserveAspect = true;
 
         // SkillDescLabel (스킬 설명)
         MkTextObj(layout3, "SkillDescLabel", font,
-            0.12f, 0.5f, 0.12f, 0.5f, new Vector2(60, 0), new Vector2(500, 30),
-            16, TextAnchor.MiddleLeft, new Color(0.85f, 0.85f, 0.85f));
+            0.10f, 0.5f, 0.10f, 0.5f, new Vector2(40, 0), new Vector2(400, 26),
+            14, TextAnchor.MiddleLeft, new Color(0.85f, 0.85f, 0.85f));
 
         infoPopup.SetActive(false);
 

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 44fa988e007f0d1429ca6f0a65fa7d20
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/LICENSE.md
+  uploadId: 857482

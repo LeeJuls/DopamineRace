@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: b23266e9b3b0b274d9ed723cce0655d6
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Demo/Scenes/JsonInjection_UIToolKit.unity
+  uploadId: 857482

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 1626a55a59eb6c8419d1c2f1644ea79b
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Scripts/Runtime/Utils/ChartJsonUtils.cs
+  uploadId: 857482

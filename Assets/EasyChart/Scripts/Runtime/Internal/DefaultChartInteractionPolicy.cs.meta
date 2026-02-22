@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 61387fcca4df7c0439f3c85da0fb46d6
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Scripts/Runtime/Internal/DefaultChartInteractionPolicy.cs
+  uploadId: 857482

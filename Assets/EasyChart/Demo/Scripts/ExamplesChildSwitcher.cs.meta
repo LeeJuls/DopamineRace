@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 355f5a1487e0ad648a481ce49950d1b7
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Demo/Scripts/ExamplesChildSwitcher.cs
+  uploadId: 857482

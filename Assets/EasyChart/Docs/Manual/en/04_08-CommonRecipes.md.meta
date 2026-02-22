@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 3150243976518e347ac36c43af89f4fc
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Docs/Manual/en/04_08-CommonRecipes.md
+  uploadId: 857482

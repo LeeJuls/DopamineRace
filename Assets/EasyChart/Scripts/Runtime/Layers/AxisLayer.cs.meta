@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 0b949ca50968ffc4984c13c1cdd3d864
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Scripts/Runtime/Layers/AxisLayer.cs
+  uploadId: 857482

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 4311d99fefb31d24ebb2ea9f5e90011f
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Scripts/Editor/AxisConfigDrawer.cs
+  uploadId: 857482

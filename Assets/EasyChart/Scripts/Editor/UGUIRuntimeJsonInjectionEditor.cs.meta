@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 8e42abfa7e3f3cb47867a86d8c875691
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/Scripts/Editor/UGUIRuntimeJsonInjectionEditor.cs
+  uploadId: 857482

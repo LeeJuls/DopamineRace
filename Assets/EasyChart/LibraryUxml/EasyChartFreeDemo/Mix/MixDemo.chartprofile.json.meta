@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 08a5cc3224e4ff54ca2552d8eb471c4c
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 1.0
+  assetPath: Assets/EasyChart/LibraryUxml/EasyChartFreeDemo/Mix/MixDemo.chartprofile.json
+  uploadId: 857482
