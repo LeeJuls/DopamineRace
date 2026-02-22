@@ -89,8 +89,11 @@ public class CharacterData
             string path = charIllustration.Replace('\\', '/');
             if (path.EndsWith(".png"))
                 path = path.Substring(0, path.Length - 4);
-            Sprite spr = Resources.Load<Sprite>(path);
-            if (spr != null) return spr;
+            // Texture2D로 로드 → 전체 이미지를 Sprite로 생성 (spriteMode=Multiple 대응)
+            Texture2D tex = Resources.Load<Texture2D>(path);
+            if (tex != null)
+                return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                    new Vector2(0.5f, 0.5f));
         }
         return LoadIcon();
     }

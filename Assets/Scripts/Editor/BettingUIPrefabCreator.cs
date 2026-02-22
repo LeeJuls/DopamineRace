@@ -421,10 +421,17 @@ public static class BettingUIPrefabCreator
         illustImg.color = Color.white;
         illustImg.preserveAspect = true;
 
-        // WinRateLabel (승률)
-        MkTextObj(layout2Left, "WinRateLabel", font,
-            0.5f, 0.06f, 0.5f, 0.06f, Vector2.zero, new Vector2(160, 28),
-            16, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.2f));
+        // WinRateBg (승률 배경 — 검정 50% 반투명)
+        GameObject winRateBg = MkChild(layout2Left, "WinRateBg",
+            0.5f, 0.06f, 0.5f, 0.06f, Vector2.zero, new Vector2(160, 28));
+        Image winRateBgImg = winRateBg.AddComponent<Image>();
+        winRateBgImg.color = new Color(0f, 0f, 0f, 0.5f);
+
+        // WinRateLabel (승률 — WinRateBg 자식)
+        MkTextObj(winRateBg, "WinRateLabel", font,
+            0f, 0f, 1f, 1f, Vector2.zero, Vector2.zero,
+            16, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.2f),
+            true /* stretch */);
 
         // Layout2_Right (우측 62% — 레이더차트, RectMask2D로 오버플로 클리핑)
         GameObject layout2Right = MkChild(infoPopup, "Layout2_Right",
@@ -617,6 +624,42 @@ public static class BettingUIPrefabCreator
                 0.02f, 0.22f, 0.98f, 0.42f, font);
             changed |= PatchDistRow(layout1, "LongDistRow", "LongDistLabel", "LongDistRanks",
                 0.02f, 0.02f, 0.98f, 0.20f, font);
+
+            // ── WinRateBg (승률 배경 박스) ──
+            Transform layout2Left = infoPopup.Find("Layout2_Left");
+            if (layout2Left != null)
+            {
+                Transform winRateLabel = layout2Left.Find("WinRateLabel");
+                Transform winRateBg = layout2Left.Find("WinRateBg");
+
+                // WinRateLabel이 직접 자식이고 WinRateBg가 없으면 → 래핑
+                if (winRateLabel != null && winRateBg == null)
+                {
+                    // 기존 WinRateLabel의 위치/크기 복사
+                    RectTransform labelRt = winRateLabel.GetComponent<RectTransform>();
+                    GameObject bgObj = PatchMkChild(layout2Left, "WinRateBg",
+                        labelRt.anchorMin.x, labelRt.anchorMin.y,
+                        labelRt.anchorMax.x, labelRt.anchorMax.y);
+                    RectTransform bgRt = bgObj.GetComponent<RectTransform>();
+                    bgRt.anchoredPosition = labelRt.anchoredPosition;
+                    bgRt.sizeDelta = labelRt.sizeDelta;
+
+                    Image bgImg = bgObj.AddComponent<Image>();
+                    bgImg.color = new Color(0f, 0f, 0f, 0.5f);
+
+                    // WinRateLabel을 WinRateBg 자식으로 이동 + stretch
+                    winRateLabel.SetParent(bgObj.transform, false);
+                    labelRt.anchorMin = Vector2.zero;
+                    labelRt.anchorMax = Vector2.one;
+                    labelRt.anchoredPosition = Vector2.zero;
+                    labelRt.sizeDelta = Vector2.zero;
+                    labelRt.offsetMin = Vector2.zero;
+                    labelRt.offsetMax = Vector2.zero;
+
+                    changed = true;
+                    Debug.Log("[Patch] WinRateBg 추가 (승률 배경 박스)");
+                }
+            }
 
             if (!changed)
                 Debug.Log("[Patch] 변경 사항 없음 — 모든 요소가 이미 존재합니다.");

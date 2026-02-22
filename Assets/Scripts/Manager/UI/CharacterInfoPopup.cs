@@ -118,7 +118,12 @@ public class CharacterInfoPopup : MonoBehaviour
                     storyIcon.sprite = bookSpr;
             }
 
-            winRateLabel = FindText(layout2Left, "WinRateLabel");
+            // WinRateBg/WinRateLabel (패치 후) 또는 WinRateLabel (패치 전) 양쪽 호환
+            Transform winRateBg = layout2Left.Find("WinRateBg");
+            if (winRateBg != null)
+                winRateLabel = FindText(winRateBg, "WinRateLabel");
+            else
+                winRateLabel = FindText(layout2Left, "WinRateLabel");
         }
 
         // Layout2_Right → RadarChartArea
