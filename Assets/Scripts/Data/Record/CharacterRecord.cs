@@ -55,10 +55,10 @@ public class CharacterRecord
     public string charName;
     public List<CharacterTrackRecord> trackRecords = new List<CharacterTrackRecord>();
     public List<int> recentOverallRanks = new List<int>();  // 최근 10게임 순위 (맵 무관)
-    public List<RaceEntry> recentRaceEntries = new List<RaceEntry>();  // 최근 6게임 (순위 그래프용)
+    public List<RaceEntry> recentRaceEntries = new List<RaceEntry>();  // 최근 경기기록 (거리별 필터링용)
 
     private const int MAX_RECENT = 10;
-    private const int MAX_RACE_ENTRIES = 6;  // 순위 그래프 최대 표시 수
+    private const int MAX_RACE_ENTRIES = 30;  // 거리별 6개씩 표시하기 위해 충분한 버퍼
 
     /// <summary>레이스 결과 기록 (맵별 + 전체)</summary>
     public void AddResult(string trackName, int rank)

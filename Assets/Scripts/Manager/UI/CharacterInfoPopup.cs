@@ -19,6 +19,15 @@ public class CharacterInfoPopup : MonoBehaviour
     private Image storyIcon;
     private Button closeBtn;
 
+    // 최근 경기기록 텍스트 (Layout1_TopArea)
+    private Text recentRecordHeader;
+    private Text shortDistLabel;
+    private Text shortDistRanks;
+    private Text midDistLabel;
+    private Text midDistRanks;
+    private Text longDistLabel;
+    private Text longDistRanks;
+
     // 차트 영역
     private GameObject radarChartArea;
 
@@ -64,6 +73,30 @@ public class CharacterInfoPopup : MonoBehaviour
                 Text closeText = FindText(closeBtnObj, "Text");
                 if (closeText != null)
                     closeText.text = "X";
+            }
+
+            // 최근 경기기록 텍스트 (프리팹 Patch로 생성됨)
+            recentRecordHeader = FindText(layout1, "RecentRecordHeader");
+
+            Transform shortRow = layout1.Find("ShortDistRow");
+            if (shortRow != null)
+            {
+                shortDistLabel = FindText(shortRow, "ShortDistLabel");
+                shortDistRanks = FindText(shortRow, "ShortDistRanks");
+            }
+
+            Transform midRow = layout1.Find("MidDistRow");
+            if (midRow != null)
+            {
+                midDistLabel = FindText(midRow, "MidDistLabel");
+                midDistRanks = FindText(midRow, "MidDistRanks");
+            }
+
+            Transform longRow = layout1.Find("LongDistRow");
+            if (longRow != null)
+            {
+                longDistLabel = FindText(longRow, "LongDistLabel");
+                longDistRanks = FindText(longRow, "LongDistRanks");
             }
         }
 
@@ -219,6 +252,7 @@ public class CharacterInfoPopup : MonoBehaviour
 
         // ── 데이터 갱신 ──
         UpdateRadarChart(pendingData);
+        UpdateRecentRecords(pendingRecord);
 
         // ── 슬라이드인 애니메이션 ──
         RectTransform rt = GetComponent<RectTransform>();
@@ -379,6 +413,84 @@ public class CharacterInfoPopup : MonoBehaviour
         radarChart.RefreshChart();
     }
 
+    // ═══ 최근 경기기록 텍스트 ═══
+
+    private const int MAX_DIST_DISPLAY = 6;
+
+    /// <summary>
+    /// 최근 경기기록을 거리별(단/중/장)로 분류하여 텍스트 갱신
+    /// </summary>
+    private void UpdateRecentRecords(CharacterRecord record)
+    {
+        var gs = GameSettings.Instance;
+
+        // 헤더
+        if (recentRecordHeader != null)
+            recentRecordHeader.text = Loc.Get("str.ui.char.recent_record");
+
+        // 거리별 라벨
+        if (shortDistLabel != null)
+            shortDistLabel.text = Loc.Get("str.ui.track.short");
+        if (midDistLabel != null)
+            midDistLabel.text = Loc.Get("str.ui.track.mid");
+        if (longDistLabel != null)
+            longDistLabel.text = Loc.Get("str.ui.track.long");
+
+        // 거리별 순위 분류
+        List<int> shortRanks = new List<int>();
+        List<int> midRanks = new List<int>();
+        List<int> longRanks = new List<int>();
+
+        if (record != null && gs != null)
+        {
+            foreach (var entry in record.recentRaceEntries)
+            {
+                if (entry.laps <= 0) continue; // 레거시 마이그레이션 엔트리 스킵
+
+                string distKey = gs.GetDistanceKey(entry.laps);
+                if (distKey == "str.ui.track.short" && shortRanks.Count < MAX_DIST_DISPLAY)
+                    shortRanks.Add(entry.rank);
+                else if (distKey == "str.ui.track.mid" && midRanks.Count < MAX_DIST_DISPLAY)
+                    midRanks.Add(entry.rank);
+                else if (distKey == "str.ui.track.long" && longRanks.Count < MAX_DIST_DISPLAY)
+                    longRanks.Add(entry.rank);
+            }
+        }
+
+        // 텍스트 갱신
+        if (shortDistRanks != null)
+            shortDistRanks.text = FormatRankList(shortRanks);
+        if (midDistRanks != null)
+            midDistRanks.text = FormatRankList(midRanks);
+        if (longDistRanks != null)
+            longDistRanks.text = FormatRankList(longRanks);
+    }
+
+    /// <summary>순위 리스트를 rich text 색상 코딩 문자열로 변환</summary>
+    private string FormatRankList(List<int> ranks)
+    {
+        if (ranks.Count == 0)
+            return Loc.Get("str.ui.char.no_dist_record");
+
+        var parts = new List<string>();
+        foreach (int rank in ranks)
+            parts.Add(ColoredRank(rank));
+        return string.Join("  ", parts.ToArray());
+    }
+
+    /// <summary>순위에 따른 rich text 색상 적용</summary>
+    private string ColoredRank(int rank)
+    {
+        string rankText = Loc.Get("str.hud.rank", rank);
+        switch (rank)
+        {
+            case 1:  return "<color=#FFD700><b>" + rankText + "</b></color>";
+            case 2:  return "<color=#C0C0C0><b>" + rankText + "</b></color>";
+            case 3:  return "<color=#CD7F32><b>" + rankText + "</b></color>";
+            default: return "<color=#CCCCCC>" + rankText + "</color>";
+        }
+    }
+
     // ═══ 유틸 ═══
 
     private Text FindText(string path)
@@ -392,4 +504,5 @@ public class CharacterInfoPopup : MonoBehaviour
         Transform t = parent.Find(childName);
         return t != null ? t.GetComponent<Text>() : null;
     }
+
 }

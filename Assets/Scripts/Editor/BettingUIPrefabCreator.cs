@@ -326,7 +326,7 @@ public static class BettingUIPrefabCreator
         //  캐릭터 리스트(~0.30) 우측에 배치, 겹침 방지
         // ════════════════════════════
         GameObject infoPopup = MkChild(root, "CharacterInfoPopup",
-            0.28f, 0.12f, 0.82f, 0.78f, Vector2.zero, Vector2.zero);
+            0.31f, 0.12f, 0.85f, 0.78f, Vector2.zero, Vector2.zero);
         Image popupBg = infoPopup.AddComponent<Image>();
         popupBg.color = new Color(0.06f, 0.06f, 0.10f, 0.96f);
         popupBg.raycastTarget = true; // 팝업 뒤 클릭 차단
@@ -358,6 +358,48 @@ public static class BettingUIPrefabCreator
         MkTextObj(popupCloseBtn, "Text", font,
             0.5f, 0.5f, 0.5f, 0.5f, Vector2.zero, new Vector2(30, 30),
             18, TextAnchor.MiddleCenter, Color.white);
+
+        // ── RecentRecordHeader ("최근 경기기록", 노란색) ──
+        MkTextObj(layout1, "RecentRecordHeader", font,
+            0.03f, 0.66f, 0.97f, 0.78f, Vector2.zero, Vector2.zero,
+            18, TextAnchor.MiddleLeft, new Color(1f, 0.85f, 0.2f),
+            true /* stretch */);
+
+        // ── ShortDistRow (단거리) ──
+        GameObject shortRow = MkChild(layout1, "ShortDistRow",
+            0.02f, 0.44f, 0.98f, 0.64f, Vector2.zero, Vector2.zero);
+        MkTextObj(shortRow, "ShortDistLabel", font,
+            0f, 0f, 0.22f, 1f, Vector2.zero, Vector2.zero,
+            16, TextAnchor.MiddleLeft, new Color(0.6f, 0.8f, 1f),
+            true);
+        MkTextObj(shortRow, "ShortDistRanks", font,
+            0.22f, 0f, 1f, 1f, Vector2.zero, Vector2.zero,
+            18, TextAnchor.MiddleLeft, Color.white,
+            true);
+
+        // ── MidDistRow (중거리) ──
+        GameObject midRow = MkChild(layout1, "MidDistRow",
+            0.02f, 0.22f, 0.98f, 0.42f, Vector2.zero, Vector2.zero);
+        MkTextObj(midRow, "MidDistLabel", font,
+            0f, 0f, 0.22f, 1f, Vector2.zero, Vector2.zero,
+            16, TextAnchor.MiddleLeft, new Color(0.6f, 0.8f, 1f),
+            true);
+        MkTextObj(midRow, "MidDistRanks", font,
+            0.22f, 0f, 1f, 1f, Vector2.zero, Vector2.zero,
+            18, TextAnchor.MiddleLeft, Color.white,
+            true);
+
+        // ── LongDistRow (장거리) ──
+        GameObject longRow = MkChild(layout1, "LongDistRow",
+            0.02f, 0.02f, 0.98f, 0.20f, Vector2.zero, Vector2.zero);
+        MkTextObj(longRow, "LongDistLabel", font,
+            0f, 0f, 0.22f, 1f, Vector2.zero, Vector2.zero,
+            16, TextAnchor.MiddleLeft, new Color(0.6f, 0.8f, 1f),
+            true);
+        MkTextObj(longRow, "LongDistRanks", font,
+            0.22f, 0f, 1f, 1f, Vector2.zero, Vector2.zero,
+            18, TextAnchor.MiddleLeft, Color.white,
+            true);
 
         // ── Layout2 (중단 57% — 좌우 분할) ──
         // Layout2_Left (좌측 38% — 일러스트 + 승률)
@@ -507,6 +549,153 @@ public static class BettingUIPrefabCreator
 
         return obj;
     }
+
+    // ══════════════════════════════════════════════════════
+    //  C) 프리팹 패치 — 기존 값 유지, 없는 자식만 추가
+    // ══════════════════════════════════════════════════════
+
+    [MenuItem("DopamineRace/Patch Betting UI Prefabs (Safe)")]
+    public static void PatchPrefabs()
+    {
+        string prefabPath = PREFAB_DIR + "/BettingPanel.prefab";
+        if (!File.Exists(prefabPath.Replace("Assets/", Application.dataPath + "/")))
+        {
+            Debug.LogError("[Patch] BettingPanel.prefab이 없습니다. 먼저 'Create Betting UI Prefabs'를 실행하세요.");
+            return;
+        }
+
+        var gs = AssetDatabase.LoadAssetAtPath<GameSettings>("Assets/Resources/GameSettings.asset");
+        Font font = gs != null ? gs.mainFont : null;
+
+        using (var scope = new PrefabUtility.EditPrefabContentsScope(prefabPath))
+        {
+            GameObject root = scope.prefabContentsRoot;
+            Transform infoPopup = root.transform.Find("CharacterInfoPopup");
+            if (infoPopup == null)
+            {
+                Debug.LogError("[Patch] CharacterInfoPopup을 찾을 수 없습니다.");
+                return;
+            }
+
+            // ── 팝업 위치 조정 (좌측 캐릭터 목록과 겹침 방지) ──
+            RectTransform popupRt = infoPopup.GetComponent<RectTransform>();
+            if (popupRt != null && popupRt.anchorMin.x < 0.31f)
+            {
+                popupRt.anchorMin = new Vector2(0.31f, popupRt.anchorMin.y);
+                popupRt.anchorMax = new Vector2(0.85f, popupRt.anchorMax.y);
+                Debug.Log("[Patch] CharacterInfoPopup 위치 우측 이동 (0.28→0.31)");
+            }
+
+            Transform layout1 = infoPopup.Find("Layout1_TopArea");
+            if (layout1 == null)
+            {
+                Debug.LogError("[Patch] Layout1_TopArea를 찾을 수 없습니다.");
+                return;
+            }
+
+            bool changed = false;
+
+            // ── 레거시 제거 ──
+            Transform legacy1 = layout1.Find("RankChartArea");
+            if (legacy1 != null) { Object.DestroyImmediate(legacy1.gameObject); changed = true; Debug.Log("[Patch] RankChartArea 제거"); }
+
+            Transform legacy2 = layout1.Find("NoRecordLabel");
+            if (legacy2 != null) { Object.DestroyImmediate(legacy2.gameObject); changed = true; Debug.Log("[Patch] NoRecordLabel 제거"); }
+
+            // ── 새 요소 추가 (없을 때만) ──
+            if (layout1.Find("RecentRecordHeader") == null)
+            {
+                PatchMkText(layout1, "RecentRecordHeader", font,
+                    0.03f, 0.66f, 0.97f, 0.78f, 18, TextAnchor.MiddleLeft,
+                    new Color(1f, 0.85f, 0.2f));
+                changed = true; Debug.Log("[Patch] RecentRecordHeader 추가");
+            }
+
+            changed |= PatchDistRow(layout1, "ShortDistRow", "ShortDistLabel", "ShortDistRanks",
+                0.02f, 0.44f, 0.98f, 0.64f, font);
+            changed |= PatchDistRow(layout1, "MidDistRow", "MidDistLabel", "MidDistRanks",
+                0.02f, 0.22f, 0.98f, 0.42f, font);
+            changed |= PatchDistRow(layout1, "LongDistRow", "LongDistLabel", "LongDistRanks",
+                0.02f, 0.02f, 0.98f, 0.20f, font);
+
+            if (!changed)
+                Debug.Log("[Patch] 변경 사항 없음 — 모든 요소가 이미 존재합니다.");
+            else
+                Debug.Log("[Patch] BettingPanel 패치 완료! 기존 설정은 유지됩니다.");
+        }
+
+        AssetDatabase.Refresh();
+    }
+
+    /// <summary>거리 행 패치 (없으면 생성, 있으면 스킵)</summary>
+    private static bool PatchDistRow(Transform parent, string rowName,
+        string labelName, string ranksName,
+        float yMin, float yMinAnc, float yMax, float yMaxAnc, Font font)
+    {
+        bool added = false;
+        Transform row = parent.Find(rowName);
+        if (row == null)
+        {
+            GameObject rowObj = PatchMkChild(parent, rowName, 0.02f, yMinAnc, 0.98f, yMaxAnc);
+            row = rowObj.transform;
+            added = true;
+            Debug.Log($"[Patch] {rowName} 추가");
+        }
+
+        if (row.Find(labelName) == null)
+        {
+            PatchMkText(row, labelName, font,
+                0f, 0f, 0.22f, 1f, 16, TextAnchor.MiddleLeft,
+                new Color(0.6f, 0.8f, 1f));
+            added = true;
+        }
+
+        if (row.Find(ranksName) == null)
+        {
+            var ranksText = PatchMkText(row, ranksName, font,
+                0.22f, 0f, 1f, 1f, 18, TextAnchor.MiddleLeft, Color.white);
+            ranksText.supportRichText = true;
+            added = true;
+        }
+
+        return added;
+    }
+
+    /// <summary>패치용 자식 생성 (stretch 앵커)</summary>
+    private static GameObject PatchMkChild(Transform parent, string name,
+        float ancMinX, float ancMinY, float ancMaxX, float ancMaxY)
+    {
+        GameObject obj = new GameObject(name);
+        obj.transform.SetParent(parent, false);
+        RectTransform rt = obj.AddComponent<RectTransform>();
+        rt.anchorMin = new Vector2(ancMinX, ancMinY);
+        rt.anchorMax = new Vector2(ancMaxX, ancMaxY);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+        return obj;
+    }
+
+    /// <summary>패치용 Text 생성 (stretch 앵커)</summary>
+    private static Text PatchMkText(Transform parent, string name, Font font,
+        float ancMinX, float ancMinY, float ancMaxX, float ancMaxY,
+        int fontSize, TextAnchor alignment, Color color)
+    {
+        GameObject obj = PatchMkChild(parent, name, ancMinX, ancMinY, ancMaxX, ancMaxY);
+        Text text = obj.AddComponent<Text>();
+        text.fontSize = fontSize;
+        text.alignment = alignment;
+        text.color = color;
+        text.supportRichText = true;
+        text.horizontalOverflow = HorizontalWrapMode.Overflow;
+        text.verticalOverflow = VerticalWrapMode.Overflow;
+        if (font != null) text.font = font;
+        return text;
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  유틸리티 메서드
+    // ══════════════════════════════════════════════════════
 
     /// <summary>디렉토리 자동 생성</summary>
     private static void EnsureDirectory(string path)
