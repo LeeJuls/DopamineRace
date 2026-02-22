@@ -347,15 +347,6 @@ public static class BettingUIPrefabCreator
             0.03f, 0.82f, 0.03f, 0.82f, Vector2.zero, new Vector2(120, 30),
             20, TextAnchor.MiddleLeft, new Color(1f, 0.4f, 0.4f));
 
-        // RankChartArea (순위 그래프 컨테이너 — 넓게 확보)
-        GameObject rankChartArea = MkChild(layout1, "RankChartArea",
-            0.02f, 0.02f, 0.98f, 0.75f, Vector2.zero, Vector2.zero);
-
-        // NoRecordLabel (출전 기록 없음 — 차트 대신 표시)
-        MkTextObj(layout1, "NoRecordLabel", font,
-            0.5f, 0.38f, 0.5f, 0.38f, Vector2.zero, new Vector2(250, 28),
-            14, TextAnchor.MiddleCenter, new Color(0.5f, 0.5f, 0.5f));
-
         // CloseBtn (우상단 X — 차트보다 위에 렌더링되도록 마지막 생성)
         GameObject popupCloseBtn = MkChild(layout1, "CloseBtn",
             0.97f, 0.88f, 0.97f, 0.88f, Vector2.zero, new Vector2(30, 30));

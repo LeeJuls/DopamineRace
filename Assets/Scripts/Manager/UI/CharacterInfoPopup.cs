@@ -3,18 +3,15 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using XCharts.Runtime;
-using EasyChart;
-using EasyChart.UGUI;
 
 /// <summary>
 /// 캐릭터 상세 정보 팝업 (기획서 9번 영역).
-/// 4개 레이아웃: 순위 그래프 / 일러스트+승률 / 레이더차트 / 스킬
+/// 3개 레이아웃: 최근 경기기록(텍스트) / 일러스트+승률 / 레이더차트 / 스킬
 /// </summary>
 public class CharacterInfoPopup : MonoBehaviour
 {
     // ═══ UI 참조 (Init에서 캐싱) ═══
     private Text charTypeLabel;
-    private Text noRecordLabel;
     private Text winRateLabel;
     private Text skillDescLabel;
     private Image illustration;
@@ -23,11 +20,8 @@ public class CharacterInfoPopup : MonoBehaviour
     private Button closeBtn;
 
     // 차트 영역
-    private GameObject rankChartArea;
     private GameObject radarChartArea;
-    // EasyChart Lite — 순위 꺾은선 그래프
-    private UGUIChartBridge rankChartBridge;
-    private ChartProfile rankProfile;
+
     // XCharts — 레이더차트 (능력치)
     private RadarChart radarChart;
 
@@ -59,7 +53,6 @@ public class CharacterInfoPopup : MonoBehaviour
         if (layout1 != null)
         {
             charTypeLabel = FindText(layout1, "CharTypeLabel");
-            noRecordLabel = FindText(layout1, "NoRecordLabel");
 
             Transform closeBtnObj = layout1.Find("CloseBtn");
             if (closeBtnObj != null)
@@ -72,10 +65,6 @@ public class CharacterInfoPopup : MonoBehaviour
                 if (closeText != null)
                     closeText.text = "X";
             }
-
-            Transform chartObj = layout1.Find("RankChartArea");
-            if (chartObj != null)
-                rankChartArea = chartObj.gameObject;
         }
 
         // Layout2_Left
@@ -214,60 +203,22 @@ public class CharacterInfoPopup : MonoBehaviour
         }
         currentCharName = null;
         gameObject.SetActive(false);
-        // Bridge/Profile은 유지 — OnDisable이 ChartElement를 정리하고
-        // 다음 OnEnable + LateUpdate에서 자동 재생성됨
     }
 
     /// <summary>
     /// 차트 초기화 → 데이터 갱신 → 슬라이드인 통합 코루틴
-    /// EasyChart bridge는 UIDocument → rootVisualElement → ChartElement 순으로 초기화되며
-    /// 각 단계가 1프레임씩 필요하므로 ChartElement 가용성을 폴링합니다.
     /// </summary>
     private IEnumerator ShowSequence()
     {
         // ── 1프레임 대기: 중첩 stretch 앵커 RectTransform 크기 확정 ──
         yield return null;
 
-        // ── 차트 컴포넌트 생성 (최초 1회) ──
-        if (rankChartBridge == null)
-            InitRankChart();
+        // ── 레이더차트 생성 (최초 1회) ──
         if (radarChart == null)
             InitRadarChart();
 
-        // 차트 영역 활성화 보장 (이전 Show에서 no-data로 비활성됐을 수 있음)
-        // bridge의 OnEnable이 _isInitialized=false로 리셋 → LateUpdate에서 ChartElement 재생성
-        if (rankChartArea != null && !rankChartArea.activeSelf)
-            rankChartArea.SetActive(true);
-
-        // ── EasyChart bridge ChartElement 가용 대기 ──
-        // OnDisable→OnEnable 사이클 후 bridge.LateUpdate()가:
-        //   frame N: UIDocument + PanelSettings 생성
-        //   frame N+1: rootVisualElement 활성화 → ChartElement 생성
-        // 최대 8프레임 폴링 (여유있게)
-        int waitFrames = 0;
-        while (rankChartBridge != null && rankChartBridge.ChartElement == null && waitFrames < 8)
-        {
-            yield return null;
-            waitFrames++;
-        }
-
-        bool chartReady = rankChartBridge != null && rankChartBridge.ChartElement != null;
-        Debug.Log($"[CharInfoPopup] ShowSequence: bridge wait={waitFrames}f, " +
-                  $"chartReady={chartReady}, bridge={rankChartBridge != null}");
-
         // ── 데이터 갱신 ──
-        UpdateRankChart(pendingRecord);
         UpdateRadarChart(pendingData);
-
-        // ── EasyChart 강제 갱신 (ChartElement가 준비된 경우) ──
-        if (chartReady)
-        {
-            rankChartBridge.Refresh();
-            // UI Toolkit 레이아웃 계산 + 렌더 파이프라인 실행을 위해 추가 프레임 대기
-            yield return null;
-            if (rankChartBridge != null)
-                rankChartBridge.Refresh();
-        }
 
         // ── 슬라이드인 애니메이션 ──
         RectTransform rt = GetComponent<RectTransform>();
@@ -289,236 +240,6 @@ public class CharacterInfoPopup : MonoBehaviour
         }
 
         showCoroutine = null;
-    }
-
-    // ═══ EasyChart Lite: 순위 꺾은선 그래프 ═══
-    // 순위 뒤집기 상수: rank 1(최상위)을 차트 상단에, rank 12를 하단에 표시
-    // RANK_FLIP - rank → rank1=12(상단), rank12=1(하단)
-    private const int RANK_FLIP = 13;
-
-    private void InitRankChart()
-    {
-        if (rankChartArea == null)
-        {
-            Debug.LogWarning("[CharInfoPopup] rankChartArea is null — skip InitRankChart");
-            return;
-        }
-
-        // Layout1_TopArea에 RectMask2D 추가 (차트 오버플로 클리핑)
-        Transform layout1 = rankChartArea.transform.parent;
-        if (layout1 != null && layout1.GetComponent<RectMask2D>() == null)
-            layout1.gameObject.AddComponent<RectMask2D>();
-
-        // 기존 XCharts LineChart 컴포넌트 제거 (XCharts → EasyChart 전환 시)
-        var oldLineChart = rankChartArea.GetComponent<LineChart>();
-        if (oldLineChart != null) Destroy(oldLineChart);
-
-        // ── ChartProfile 생성 (런타임 전용) ──
-        rankProfile = ScriptableObject.CreateInstance<ChartProfile>();
-        rankProfile.hideFlags = HideFlags.DontSave;
-        rankProfile.chartName = "RankChart";
-
-        // 차트 크기: RectTransform 실제 크기 기반
-        RectTransform chartRt = rankChartArea.GetComponent<RectTransform>();
-        float w = chartRt.rect.width > 0 ? chartRt.rect.width : 300f;
-        float h = chartRt.rect.height > 0 ? chartRt.rect.height : 200f;
-        rankProfile.chartWidth = w;
-        rankProfile.chartHeight = h;
-
-        // 패딩 (Left, Right, Top, Bottom)
-        rankProfile.padding = new Vector4(15f, 15f, 30f, 10f);
-        rankProfile.paddingInitialized = true;
-
-        // 좌표계: Cartesian 2D
-        rankProfile.coordinateSystem = CoordinateSystemType.Cartesian2D;
-        rankProfile.xAxisId = AxisId.XBottom;
-        rankProfile.yAxisId = AxisId.YLeft;
-        rankProfile.axisSelectionInitialized = true;
-        rankProfile.axisTypeSelectionInitialized = true;
-
-        // 배경: 반투명 어두운 색 (차트 영역 확인용)
-        rankProfile.background = new BackgroundSettings
-        {
-            show = true,
-            textureFill = new TextureFillSettings
-            {
-                color = new Color(0.1f, 0.1f, 0.15f, 0.6f) // 반투명 다크블루
-            }
-        };
-
-        // 범례 비활성
-        rankProfile.legendSettings = new LegendSettings { enabled = false };
-
-        // 그리드: 미세한 라인 (디버깅용)
-        rankProfile.cartesianGrid = new CartesianGridSettings
-        {
-            xGridColor = new Color(0.5f, 0.5f, 0.5f, 0.15f),
-            yGridColor = new Color(0.5f, 0.5f, 0.5f, 0.15f)
-        };
-        rankProfile.gridSettingsInitialized = true;
-
-        // 애니메이션
-        rankProfile.animationDuration = 0.3f;
-
-        // ── 축 설정 ──
-        rankProfile.axes = new List<AxisConfig>();
-
-        // X축: Category (숨김 — 라벨은 시리즈 데이터 위에 표시)
-        var xAxis = new AxisConfig
-        {
-            id = AxisId.XBottom,
-            axisType = AxisType.Category,
-            visible = true,
-            showLabels = false,
-            labels = new List<string>()
-        };
-        rankProfile.axes.Add(xAxis);
-
-        // Y축: Value (숨김, 고정 범위 0~RANK_FLIP)
-        var yAxis = new AxisConfig
-        {
-            id = AxisId.YLeft,
-            axisType = AxisType.Value,
-            visible = true,
-            showLabels = false,
-            autoRangeMin = false,
-            autoRangeMax = false,
-            minValue = 0f,
-            maxValue = RANK_FLIP
-        };
-        rankProfile.axes.Add(yAxis);
-
-        // ── Line 시리즈 (초기 더미 데이터 포함 — 빈 시리즈는 렌더러 미생성) ──
-        var serie = new EasyChart.Serie
-        {
-            name = "rank",
-            type = SerieType.Line,
-            settings = new LineSettings
-            {
-                stroke = new LineStrokeSettings
-                {
-                    lineType = EasyChart.LineType.Straight,
-                    width = 3f,
-                    color = new Color(0.7f, 0.7f, 0.7f) // 회색 연결선
-                },
-                point = new PointSettings
-                {
-                    show = true,
-                    size = 8f,
-                    textureFill = new TextureFillSettings
-                    {
-                        color = new Color(1f, 0.3f, 0.3f) // 빨간 꼭지점
-                    }
-                },
-                area = new AreaFillSettings { show = false }
-            },
-            labelSettings = new SerieLabelSettings
-            {
-                enabled = true,
-                showName = true,
-                color = new Color(1f, 0.3f, 0.3f), // 빨간 라벨
-                fontSize = 13,
-                position = LabelPosition.Outside,
-                offset = new Vector2(0, 5f)
-            }
-        };
-
-        // 초기 더미 데이터 2포인트 (빈 시리즈는 라인 렌더러를 생성하지 않을 수 있음)
-        serie.seriesData = new List<SeriesData>
-        {
-            new SeriesData { x = 0, value = 6 },
-            new SeriesData { x = 1, value = 6 }
-        };
-        xAxis.labels.Add("A");
-        xAxis.labels.Add("B");
-
-        rankProfile.series.Add(serie);
-
-        // Profile 무결성 검증
-        rankProfile.EnsureRuntimeData();
-
-        // ── UGUIChartBridge 컴포넌트 추가 (매 Show마다 새로 생성) ──
-        rankChartBridge = rankChartArea.AddComponent<UGUIChartBridge>();
-
-        // WorldSpace 모드: RenderTexture → RawImage로 UGUI 안에서 직접 렌더링
-        rankChartBridge.RenderMode = ChartRenderMode.WorldSpace;
-        rankChartBridge.Profile = rankProfile;
-
-        Debug.Log($"[CharInfoPopup] InitRankChart EasyChart rect={w:F0}x{h:F0}, " +
-                  $"seriesData={serie.seriesData.Count}pts, axes={rankProfile.axes.Count}");
-    }
-
-    private void UpdateRankChart(CharacterRecord record)
-    {
-        if (rankProfile == null) return;
-
-        bool hasData = record != null && record.recentRaceEntries != null
-                       && record.recentRaceEntries.Count > 0;
-
-        if (rankChartArea != null) rankChartArea.SetActive(hasData);
-        if (noRecordLabel != null)
-            noRecordLabel.text = hasData ? "" : Loc.Get("str.ui.char.no_record");
-        if (noRecordLabel != null)
-            noRecordLabel.gameObject.SetActive(!hasData);
-
-        if (!hasData) return;
-
-        // X축 카테고리 라벨 초기화
-        AxisConfig xAxis = null;
-        if (rankProfile.axes != null)
-        {
-            for (int a = 0; a < rankProfile.axes.Count; a++)
-            {
-                if (rankProfile.axes[a] != null && rankProfile.axes[a].id == AxisId.XBottom)
-                {
-                    xAxis = rankProfile.axes[a];
-                    break;
-                }
-            }
-        }
-        if (xAxis != null)
-            xAxis.labels.Clear();
-
-        // 시리즈 데이터 초기화
-        if (rankProfile.series.Count > 0 && rankProfile.series[0].seriesData != null)
-            rankProfile.series[0].seriesData.Clear();
-
-        // 데이터 추가 (역순 = 오래된→최신)
-        var entries = record.recentRaceEntries;
-        var gs = GameSettings.Instance;
-        int dataIdx = 0;
-        for (int i = entries.Count - 1; i >= 0; i--)
-        {
-            var e = entries[i];
-            string distStr = "";
-            if (e.laps > 0 && gs != null)
-                distStr = Loc.Get(gs.GetDistanceKey(e.laps));
-            string label = Loc.Get("str.ui.char.rank_label", e.rank, distStr);
-
-            // X축 카테고리 라벨 추가
-            if (xAxis != null)
-                xAxis.labels.Add(label);
-
-            // 시리즈 데이터 추가: RANK_FLIP - rank → rank1=12(상단), rank12=1(하단)
-            if (rankProfile.series.Count > 0)
-            {
-                rankProfile.series[0].seriesData.Add(new SeriesData
-                {
-                    x = dataIdx,
-                    value = RANK_FLIP - e.rank,
-                    name = label // 라벨 텍스트 (showName=true 시 표시)
-                });
-            }
-            dataIdx++;
-        }
-
-        Debug.Log($"[CharInfoPopup] UpdateRankChart: {entries.Count} entries, " +
-                  $"ranks=[{string.Join(",", entries.ConvertAll(e => e.rank))}], " +
-                  $"flipped=[{string.Join(",", entries.ConvertAll(e => RANK_FLIP - e.rank))}]");
-
-        // 차트 갱신
-        if (rankChartBridge != null)
-            rankChartBridge.Refresh();
     }
 
     // ═══ XCharts: 능력치 레이더차트 ═══
