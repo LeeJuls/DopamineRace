@@ -58,6 +58,9 @@ crashlytics-build.properties
 # Claude Code 설정
 .claude/
 
+# MCP 브릿지 로그
+unity_code_mcp_bridge.log
+
 # 메모/문서 파일 (선택)
 *.txt
 !Assets/**/*.txt
