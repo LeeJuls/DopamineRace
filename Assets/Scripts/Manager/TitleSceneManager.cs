@@ -56,8 +56,9 @@ public class TitleSceneManager : MonoBehaviour
             cam.clearFlags = CameraClearFlags.SolidColor;
         }
 
-        // 캐릭터 DB 초기화 (TitleScene에서 필요)
+        // 매니저 초기화
         EnsureCharacterDatabase();
+        EnsureSceneTransitionManager();
 
         // 비주얼 구성
         CreateBackground();
@@ -290,6 +291,13 @@ public class TitleSceneManager : MonoBehaviour
         dbObj.AddComponent<CharacterDatabase>();
     }
 
+    private void EnsureSceneTransitionManager()
+    {
+        if (SceneTransitionManager.Instance != null) return;
+        GameObject stmObj = new GameObject("SceneTransitionManager");
+        stmObj.AddComponent<SceneTransitionManager>();
+    }
+
     // ══════════════════════════════════════
     //  캐릭터 달리기
     // ══════════════════════════════════════
@@ -342,17 +350,24 @@ public class TitleSceneManager : MonoBehaviour
             characterRunner.StopAll();
 
         Debug.Log("[TitleScene] 전환 시작 → SampleScene");
-        StartCoroutine(LoadSampleScene());
+
+        // 블록 디졸브 전환 사용
+        if (SceneTransitionManager.Instance != null)
+        {
+            SceneTransitionManager.Instance.TransitionToScene("SampleScene");
+        }
+        else
+        {
+            // 폴백: 직접 로드
+            StartCoroutine(LoadSampleSceneDirect());
+        }
     }
 
-    private IEnumerator LoadSampleScene()
+    private IEnumerator LoadSampleSceneDirect()
     {
         AsyncOperation op = SceneManager.LoadSceneAsync("SampleScene");
         op.allowSceneActivation = true;
-
         while (!op.isDone)
             yield return null;
-
-        Debug.Log("[TitleScene] SampleScene 로드 완료");
     }
 }
