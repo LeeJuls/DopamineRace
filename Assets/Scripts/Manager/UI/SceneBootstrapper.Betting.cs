@@ -61,6 +61,10 @@ public partial class SceneBootstrapper
             betTitleText = FindText(topArea, "TitleText");
             betDescText  = FindText(topArea, "BetDescText");
 
+            // Best Fit: 다국어 텍스트 오버플로 방지
+            if (betRoundText != null) { betRoundText.resizeTextForBestFit = true; betRoundText.resizeTextMinSize = 12; betRoundText.resizeTextMaxSize = 18; }
+            if (betTitleText != null) { betTitleText.resizeTextForBestFit = true; betTitleText.resizeTextMinSize = 16; betTitleText.resizeTextMaxSize = 26; }
+
             Transform oddsArea = topArea.Find("OddsArea");
             if (oddsArea != null)
             {

@@ -17,8 +17,8 @@ public class SceneTransitionManager : MonoBehaviour
     // ══════════════════════════════════════
     //  설정
     // ══════════════════════════════════════
-    private const int GRID_COLS = 16;
-    private const int GRID_ROWS = 10;
+    private const int GRID_COLS = 20; // 화면 전환 가로 블록
+    private const int GRID_ROWS = 12; // 화면 전환 세로 블록
     private const int TOTAL_BLOCKS = GRID_COLS * GRID_ROWS; // 160
     private const float DISSOLVE_DURATION = 1.2f;
     private const float BUILDUP_DURATION = 1.2f;

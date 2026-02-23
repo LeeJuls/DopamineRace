@@ -1,155 +1,155 @@
-UID,ko,en,jp
-str.char.001.name,번개,Thunder,雷
-str.char.001.ability,전력질주,Sprint,全力疾走
-str.char.002.name,태풍,Typhoon,台風
-str.char.002.ability,전력질주,Sprint,全力疾走
-str.char.003.name,혜성,Comet,彗星
-str.char.003.ability,전력질주,Sprint,全力疾走
-str.char.004.name,로켓,Rocket,ロケット
-str.char.004.ability,전력질주,Sprint,全力疾走
-str.char.005.name,불꽃,Flame,炎
-str.char.005.ability,전력질주,Sprint,全力疾走
-str.char.006.name,질풍,Gale,疾風
-str.char.006.ability,전력질주,Sprint,全力疾走
-str.char.007.name,천둥,Lightning,雷鳴
-str.char.007.ability,전력질주,Sprint,全力疾走
-str.char.008.name,유성,Meteor,流星
-str.char.008.ability,전력질주,Sprint,全力疾走
-str.char.009.name,폭풍,Storm,嵐
-str.char.009.ability,전력질주,Sprint,全力疾走
-str.char.010.name,섬광,Flash,閃光
-str.char.010.ability,전력질주,Sprint,全力疾走
-str.char.011.name,해일,Tsunami,津波
-str.char.011.ability,전력질주,Sprint,全力疾走
-str.char.012.name,선녀,Fairy,仙女
-str.char.012.ability,전력질주,Sprint,全力疾走
-str.chartype.runner,도주,Runner,逃げ
-str.chartype.leader,선행,Leader,先行
-str.chartype.chaser,선입,Chaser,差し
-str.chartype.reckoner,추입,Reckoner,追込
-str.track.normal.name,일반,Normal,通常
-str.track.normal.desc,표준 트랙. 순수 스탯 경쟁!,Standard track. Pure stat competition!,標準トラック
-str.track.rainy.name,비,Rainy,雨
-str.track.rainy.desc,미끄러운 노면. calm 유리!,Slippery surface. Calm stat advantage!,滑りやすい路面
-str.track.snow.name,설산,Snow,雪山
-str.track.snow.desc,"빙판+체력소모. endurance 유리!","Ice + stamina drain. Endurance advantage!",氷上+スタミナ消耗
-str.track.desert.name,사막,Desert,砂漠
-str.track.desert.desc,"모래 저항+열사병. power 유리!","Sand resistance + heat. Power advantage!",砂の抵抗+熱中症
-str.track.highland.name,고산지대,Highland,高山地帯
-str.track.highland.desc,"산소부족+오르막. brave 유리!","Oxygen depletion + slope. Brave advantage!",酸素不足+上り坂
-str.bet.win.name,단승,Win,単勝
-str.bet.place.name,연승,Place,複勝
-str.bet.quinella.name,복승,Quinella,馬連
-str.bet.exacta.name,쌍승,Exacta,馬単
-str.bet.trio.name,삼복승,Trio,3連複
-str.bet.wide.name,복연승,Wide,ワイド
-str.bet.win.desc,1착 맞추기,Predict 1st place,1着予想
-str.bet.place.desc,"3착 이내 1마리 (7두↓ 2착)","1 horse in top 3 (top 2 if ≤7)",3着以内1頭
-str.bet.quinella.desc,1~2착 2마리 (순서무관),Top 2 horses (any order),1~2着2頭
-str.bet.exacta.desc,1착+2착 순서 정확히,1st+2nd in exact order,1着+2着順番通り
-str.bet.trio.desc,1~3착 3마리 (순서무관),Top 3 horses (any order),1~3着3頭
-str.bet.wide.desc,3착 이내 2마리 (순서무관),2 horses in top 3 (any order),3着以内2頭
-str.bet.label.first,1착,1st,1着
-str.bet.label.second,2착,2nd,2着
-str.bet.label.third,3착,3rd,3着
-str.bet.label.place,입상,Place,入着
-str.bet.label.select,선택,Pick,選択
-str.bet.guide.win.empty,1착 예측 선택!,Pick your 1st place!,1着を予想！
-str.bet.guide.place.empty,3착 이내 들어올 말 선택!,Pick a horse for top 3!,3着以内の馬を選択！
-str.bet.guide.quinella.empty,1~2착 할 말 2마리 선택!,Pick 2 horses for top 2!,1~2着の馬を2頭選択！
-str.bet.guide.quinella.one,1마리 더 선택!,Pick 1 more!,あと1頭選択！
-str.bet.guide.exacta.empty,1착 예측 선택!,Pick your 1st place!,1着を予想！
-str.bet.guide.exacta.one,2착 예측 선택!,Pick your 2nd place!,2着を予想！
-str.bet.guide.trio.empty,1~3착 할 말 3마리 선택!,Pick 3 horses for top 3!,1~3着の馬を3頭選択！
-str.bet.guide.trio.one,2마리 더 선택!,Pick 2 more!,あと2頭選択！
-str.bet.guide.trio.two,1마리 더 선택!,Pick 1 more!,あと1頭選択！
-str.bet.guide.wide.empty,3착 이내 들어올 말 2마리 선택!,Pick 2 horses for top 3!,3着以内の馬を2頭選択！
-str.bet.guide.wide.one,1마리 더 선택!,Pick 1 more!,あと1頭選択！
-str.bet.guide.complete,선택 완료!,Selection complete!,選択完了！
-str.ui.btn.start,Start,Start,スタート
-str.ui.btn.next_round,다음 라운드,Next Round,次のラウンド
-str.ui.btn.new_game,새 게임,New Game,新しいゲーム
-str.ui.btn.close,닫기,Close,閉じる
-str.ui.btn.top100,Top 100,Top 100,Top 100
-str.ui.btn.panel_close,◀ 닫기,◀ Close,◀ 閉じる
-str.ui.btn.panel_open,열기 ▶,Open ▶,開く ▶
-str.ui.panel.bet_title,배팅 선택,Place Your Bet,ベット選択
-str.leaderboard.title,Top 100 리더보드,Top 100 Leaderboard,Top 100リーダーボード
-str.leaderboard.header,순위    점수    적중    날짜              요약,"Rank    Score    Hits    Date              Summary",順位    点数    的中    日付              概要
-str.leaderboard.empty,"기록이 없습니다.\n게임을 완료하면 자동으로 기록됩니다.","No records yet.\nComplete a game to save your score.",記録がありません。
-str.hud.round,Round {0}/{1},Round {0}/{1},ラウンド{0}/{1}
-str.hud.lap,{0}바퀴,{0} Laps,{0}周
-str.hud.this_race,이번 경기: {0}바퀴,This Race: {0} Laps,このレース: {0}周
-str.hud.total_score,총점: {0},Total: {0},合計: {0}
-str.hud.timer,{0}초,{0}s,{0}秒
-str.hud.rank,{0}위,{0}th,{0}位
-str.hud.lap_progress,{0}/{1}바퀴,{0}/{1} Laps,{0}/{1}周
-str.hud.finished,완주,Finished,完走
-str.hud.my_bet,내 배팅 ▶ {0} | {1},My Bet ▶ {0} | {1},マイベット ▶ {0} | {1}
-str.hud.race_info,"Round {0}/{1}  |  {2}바퀴","Round {0}/{1}  |  {2} Laps",ラウンド{0}/{1}  |  {2}周
-str.result.title,레이스 결과,Race Result,レース結果
-str.result.win,적중!,Hit!,的中！
-str.result.lose,아쉽네요...,So close...,残念...
-str.result.rank1,1착: {0},1st: {0},1着: {0}
-str.result.rank2,2착: {0},2nd: {0},2着: {0}
-str.result.rank3,3착: {0},3rd: {0},3着: {0}
-str.result.bet_type,배팅: {0} ({1}),Bet: {0} ({1}),ベット: {0}（{1}）
-str.result.my_pick,내 {0} 예측: {1} → 실제 {2}착,My {0}: {1} → Actual {2}nd,マイ{0}: {1} → 実際{2}着
-str.result.score_win,+{0}점 획득!  (총점: {1}),+{0} pts!  (Total: {1}),+{0}点獲得！（合計: {1}）
-str.result.score_lose,0점  (총점: {0}),0 pts  (Total: {0}),0点（合計: {0}）
-str.finish.title,Finish!!,Finish!!,フィニッシュ！！
-str.finish.round_header,라운드별 결과,Round Results,ラウンド別結果
-str.finish.hit,적중!,Hit!,的中！
-str.finish.miss,실패,Miss,失敗
-str.finish.score_plus,+{0}점,+{0} pts,+{0}点
-str.finish.score_zero,+0점,+0 pts,+0点
-str.finish.total,"총점: {0}점  ({1}/{2} 적중)","Total: {0} pts  ({1}/{2} hits)",合計: {0}点（{1}/{2}的中）
-str.leaderboard.row,"{0}위  {1}점  {2}R  {3}  {4}","{0}th  {1}pts  {2}R  {3}  {4}",{0}位  {1}点  {2}R  {3}  {4}
-str.ui.betting.round,{0}라운드,Round {0},{0}ラウンド
-str.ui.betting.title,배팅 선택!,Place Your Bet!,ベット選択！
-str.ui.betting.odds,배당률 : {0}배,Odds : {0}x,配当率 : {0}倍
-str.ui.betting.odds_empty,배당률 : - 배,Odds : -,配当率 : -
-str.ui.betting.points_label,{0} 획득 포인트,{0} Points,{0} 獲得ポイント
-str.ui.betting.points_formula,{0}x{1} = {2},{0}x{1} = {2},{0}x{1} = {2}
-str.ui.betting.points_empty,- 획득 포인트,- Points,- ポイント
-str.ui.betting.hide_info,캐릭터 정보 안보기,Hide Char Info,キャラ情報非表示
-str.ui.track.total_round,총 {0}라운드 레이스,Total {0} Round Race,全{0}ラウンドレース
-str.ui.track.distance,{0} : {1}바퀴,{0} : {1} Laps,{0} : {1}周
-str.ui.track.short,단거리,Short,短距離
-str.ui.track.mid,중거리,Middle,中距離
-str.ui.track.long,장거리,Long,長距離
-str.ui.track.type_base,기본,Base,基本
-str.ui.track.type_dirt,더트,Dirt,ダート
-str.ui.char.popularity,인기{0}.,Pop{0}.,人気{0}.
-str.ui.char.record,{0}전 {1}승,{0}R {1}W,{0}戦{1}勝
-str.ui.char.second,2위 {0}회,2nd {0}x,2位 {0}回
-str.ui.condition.best,컨디션 최상,Best,最高
-str.ui.condition.good,컨디션 상,Good,良好
-str.ui.condition.normal,컨디션 중,Normal,普通
-str.ui.condition.bad,컨디션 하,Bad,不調
-str.ui.condition.worst,컨디션 최하,Worst,最悪
-str.ui.charinfo.coming_soon,준비 중...,Coming Soon...,準備中...
-str.char.001.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動
-str.char.002.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動
-str.char.003.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動
-str.char.004.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動
-str.char.005.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動
-str.char.006.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動
-str.char.007.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動
-str.char.008.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動
-str.char.009.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動
-str.char.010.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動
-str.char.011.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動
-str.char.012.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動
-str.ui.char.winrate,승률 : {0}%,Win Rate : {0}%,勝率 : {0}%
-str.ui.char.rank_label,{0}위{1},{0}{1},{0}位{1}
-str.ui.char.no_record,출전 기록 없음,No race record,出走記録なし
-str.ui.char.stat.speed,Speed,Speed,Speed
-str.ui.char.stat.power,Power,Power,Power
-str.ui.char.stat.brave,Brave,Brave,Brave
-str.ui.char.stat.calm,Calm,Calm,Calm
-str.ui.char.stat.endurance,Endurance,Endurance,Endurance
-str.ui.char.stat.luck,Luck,Luck,Luck
-str.ui.char.recent_record,최근 경기기록,Recent Records,最近のレース記録
-str.ui.char.no_dist_record,- 경기 기록 없음 -,- No record -,- 記録なし -
-str.ui.press_start,아무 곳이나 눌러 시작,Press to Start,タッチしてスタート
+UID,ko,en,jp,cn,de,es,br
+str.char.001.name,번개,Thunder,雷,闪电,Blitz,Trueno,Trovão
+str.char.001.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
+str.char.002.name,태풍,Typhoon,台風,台风,Taifun,Tifón,Tufão
+str.char.002.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
+str.char.003.name,혜성,Comet,彗星,彗星,Komet,Cometa,Cometa
+str.char.003.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
+str.char.004.name,로켓,Rocket,ロケット,火箭,Rakete,Cohete,Foguete
+str.char.004.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
+str.char.005.name,불꽃,Flame,炎,烈焰,Flamme,Llama,Chama
+str.char.005.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
+str.char.006.name,질풍,Gale,疾風,疾风,Sturm,Vendaval,Vendaval
+str.char.006.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
+str.char.007.name,천둥,Lightning,雷鳴,雷鸣,Donner,Relámpago,Relâmpago
+str.char.007.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
+str.char.008.name,유성,Meteor,流星,流星,Meteor,Meteoro,Meteoro
+str.char.008.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
+str.char.009.name,폭풍,Storm,嵐,暴风,Gewitter,Tormenta,Tempestade
+str.char.009.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
+str.char.010.name,섬광,Flash,閃光,闪光,Blitzlicht,Destello,Clarão
+str.char.010.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
+str.char.011.name,해일,Tsunami,津波,海啸,Tsunami,Tsunami,Tsunami
+str.char.011.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
+str.char.012.name,선녀,Fairy,仙女,仙女,Fee,Hada,Fada
+str.char.012.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
+str.chartype.runner,도주,Runner,逃げ,逃跑,Sprinter,Escapista,Escapista
+str.chartype.leader,선행,Leader,先行,领先,Anführer,Líder,Líder
+str.chartype.chaser,선입,Chaser,差し,追赶,Verfolger,Perseguidor,Perseguidor
+str.chartype.reckoner,추입,Reckoner,追込,后追,Nachzügler,Remontador,Remontador
+str.track.normal.name,일반,Normal,通常,普通,Normal,Normal,Normal
+str.track.normal.desc,표준 트랙. 순수 스탯 경쟁!,Standard track. Pure stat competition!,標準トラック,标准赛道。纯属性竞争！,Standardstrecke. Reiner Stat-Wettbewerb!,Pista estándar. ¡Competencia de stats!,Pista padrão. Competição de stats!
+str.track.rainy.name,비,Rainy,雨,雨天,Regen,Lluvioso,Chuvoso
+str.track.rainy.desc,미끄러운 노면. calm 유리!,Slippery surface. Calm stat advantage!,滑りやすい路面,湿滑路面。冷静属性有利！,Rutschiger Boden. Calm-Vorteil!,Superficie resbaladiza. ¡Ventaja Calm!,Superfície escorregadia. Vantagem Calm!
+str.track.snow.name,설산,Snow,雪山,雪山,Schnee,Nieve,Neve
+str.track.snow.desc,"빙판+체력소모. endurance 유리!","Ice + stamina drain. Endurance advantage!",氷上+スタミナ消耗,冰面+体力消耗。耐力有利！,Eis + Ausdauerverbrauch. Endurance-Vorteil!,Hielo + desgaste. ¡Ventaja Endurance!,Gelo + desgaste. Vantagem Endurance!
+str.track.desert.name,사막,Desert,砂漠,沙漠,Wüste,Desierto,Deserto
+str.track.desert.desc,"모래 저항+열사병. power 유리!","Sand resistance + heat. Power advantage!",砂の抵抗+熱中症,沙地阻力+中暑。力量有利！,Sandwiderstand + Hitze. Power-Vorteil!,Arena + calor. ¡Ventaja Power!,Areia + calor. Vantagem Power!
+str.track.highland.name,고산지대,Highland,高山地帯,高山,Hochland,Montaña,Montanha
+str.track.highland.desc,"산소부족+오르막. brave 유리!","Oxygen depletion + slope. Brave advantage!",酸素不足+上り坂,缺氧+上坡。勇气有利！,Sauerstoffmangel + Anstieg. Brave-Vorteil!,Falta de oxígeno + subida. ¡Ventaja Brave!,Falta de oxigênio + subida. Vantagem Brave!
+str.bet.win.name,단승,Win,単勝,独赢,Sieg,Ganador,Vencedor
+str.bet.place.name,연승,Place,複勝,位置,Platz,Colocado,Colocado
+str.bet.quinella.name,복승,Quinella,馬連,连赢,Quinella,Quinella,Quinella
+str.bet.exacta.name,쌍승,Exacta,馬単,精确,Exacta,Exacta,Exata
+str.bet.trio.name,삼복승,Trio,3連複,三连,Trio,Trío,Trio
+str.bet.wide.name,복연승,Wide,ワイド,宽赢,Wide,Wide,Wide
+str.bet.win.desc,1착 맞추기,Predict 1st place,1着予想,预测第1名,1. Platz vorhersagen,Predecir el 1er lugar,Prever o 1º lugar
+str.bet.place.desc,"3착 이내 1마리 (7두↓ 2착)","1 horse in top 3 (top 2 if ≤7)",3着以内1頭,"前3名中1匹（7匹以下前2名）","1 Pferd in Top 3 (Top 2 bei ≤7)","1 caballo en Top 3 (Top 2 si ≤7)","1 cavalo no Top 3 (Top 2 se ≤7)"
+str.bet.quinella.desc,1~2착 2마리 (순서무관),Top 2 horses (any order),1~2着2頭,前2名（顺序不限）,Top 2 (beliebige Reihenfolge),Top 2 (cualquier orden),Top 2 (qualquer ordem)
+str.bet.exacta.desc,1착+2착 순서 정확히,1st+2nd in exact order,1着+2着順番通り,精确预测第1名+第2名,1.+2. in exakter Reihenfolge,1º+2º en orden exacto,1º+2º na ordem exata
+str.bet.trio.desc,1~3착 3마리 (순서무관),Top 3 horses (any order),1~3着3頭,前3名（顺序不限）,Top 3 (beliebige Reihenfolge),Top 3 (cualquier orden),Top 3 (qualquer ordem)
+str.bet.wide.desc,3착 이내 2마리 (순서무관),2 horses in top 3 (any order),3着以内2頭,前3名中2匹（顺序不限）,2 Pferde in Top 3 (beliebig),2 caballos en Top 3 (cualquier orden),2 cavalos no Top 3 (qualquer ordem)
+str.bet.label.first,1착,1st,1着,第1名,1.,1º,1º
+str.bet.label.second,2착,2nd,2着,第2名,2.,2º,2º
+str.bet.label.third,3착,3rd,3着,第3名,3.,3º,3º
+str.bet.label.place,입상,Place,入着,入围,Platz,Puesto,Posto
+str.bet.label.select,선택,Pick,選択,选择,Wahl,Elegir,Escolher
+str.bet.guide.win.empty,1착 예측 선택!,Pick your 1st place!,1着を予想！,选择第1名预测！,Wähle den 1. Platz!,¡Elige el 1er lugar!,Escolha o 1º lugar!
+str.bet.guide.place.empty,3착 이내 들어올 말 선택!,Pick a horse for top 3!,3着以内の馬を選択！,选择进入前3名的马！,Wähle ein Pferd für Top 3!,¡Elige un caballo para el Top 3!,Escolha um cavalo para o Top 3!
+str.bet.guide.quinella.empty,1~2착 할 말 2마리 선택!,Pick 2 horses for top 2!,1~2着の馬を2頭選択！,选择前2名的2匹马！,Wähle 2 Pferde für Top 2!,¡Elige 2 caballos para el Top 2!,Escolha 2 cavalos para o Top 2!
+str.bet.guide.quinella.one,1마리 더 선택!,Pick 1 more!,あと1頭選択！,再选1匹！,Noch 1 wählen!,¡Elige 1 más!,Escolha mais 1!
+str.bet.guide.exacta.empty,1착 예측 선택!,Pick your 1st place!,1着を予想！,选择第1名预测！,Wähle den 1. Platz!,¡Elige el 1er lugar!,Escolha o 1º lugar!
+str.bet.guide.exacta.one,2착 예측 선택!,Pick your 2nd place!,2着を予想！,选择第2名预测！,Wähle den 2. Platz!,¡Elige el 2º lugar!,Escolha o 2º lugar!
+str.bet.guide.trio.empty,1~3착 할 말 3마리 선택!,Pick 3 horses for top 3!,1~3着の馬を3頭選択！,选择前3名的3匹马！,Wähle 3 Pferde für Top 3!,¡Elige 3 caballos para el Top 3!,Escolha 3 cavalos para o Top 3!
+str.bet.guide.trio.one,2마리 더 선택!,Pick 2 more!,あと2頭選択！,再选2匹！,Noch 2 wählen!,¡Elige 2 más!,Escolha mais 2!
+str.bet.guide.trio.two,1마리 더 선택!,Pick 1 more!,あと1頭選択！,再选1匹！,Noch 1 wählen!,¡Elige 1 más!,Escolha mais 1!
+str.bet.guide.wide.empty,3착 이내 들어올 말 2마리 선택!,Pick 2 horses for top 3!,3着以内の馬を2頭選択！,选择前3名中的2匹马！,Wähle 2 Pferde für Top 3!,¡Elige 2 caballos para el Top 3!,Escolha 2 cavalos para o Top 3!
+str.bet.guide.wide.one,1마리 더 선택!,Pick 1 more!,あと1頭選択！,再选1匹！,Noch 1 wählen!,¡Elige 1 más!,Escolha mais 1!
+str.bet.guide.complete,선택 완료!,Selection complete!,選択完了！,选择完成！,Auswahl fertig!,¡Selección completa!,Seleção completa!
+str.ui.btn.start,Start,Start,スタート,开始,Start,Iniciar,Iniciar
+str.ui.btn.next_round,다음 라운드,Next Round,次のラウンド,下一轮,Nächste Runde,Siguiente Ronda,Próxima Rodada
+str.ui.btn.new_game,새 게임,New Game,新しいゲーム,新游戏,Neues Spiel,Nuevo Juego,Novo Jogo
+str.ui.btn.close,닫기,Close,閉じる,关闭,Schließen,Cerrar,Fechar
+str.ui.btn.top100,Top 100,Top 100,Top 100,Top 100,Top 100,Top 100,Top 100
+str.ui.btn.panel_close,◀ 닫기,◀ Close,◀ 閉じる,◀ 关闭,◀ Schließen,◀ Cerrar,◀ Fechar
+str.ui.btn.panel_open,열기 ▶,Open ▶,開く ▶,打开 ▶,Öffnen ▶,Abrir ▶,Abrir ▶
+str.ui.panel.bet_title,배팅 선택,Place Your Bet,ベット選択,下注选择,Wette platzieren,Apostar,Apostar
+str.leaderboard.title,Top 100 리더보드,Top 100 Leaderboard,Top 100リーダーボード,Top 100 排行榜,Top 100 Rangliste,Top 100 Clasificación,Top 100 Classificação
+str.leaderboard.header,순위    점수    적중    날짜              요약,"Rank    Score    Hits    Date              Summary",順位    点数    的中    日付              概要,排名    分数    命中    日期              摘要,Rang    Punkte    Treffer    Datum              Übersicht,Rango    Puntos    Aciertos    Fecha              Resumen,Posição    Pontos    Acertos    Data              Resumo
+str.leaderboard.empty,"기록이 없습니다.\n게임을 완료하면 자동으로 기록됩니다.","No records yet.\nComplete a game to save your score.",記録がありません。,"暂无记录。\n完成游戏后自动保存。","Noch keine Einträge.\nBeende ein Spiel zum Speichern.","Sin registros.\nCompleta un juego para guardar.","Sem registros.\nComplete um jogo para salvar."
+str.hud.round,Round {0}/{1},Round {0}/{1},ラウンド{0}/{1},第{0}/{1}轮,Runde {0}/{1},Ronda {0}/{1},Rodada {0}/{1}
+str.hud.lap,{0}바퀴,{0} Laps,{0}周,{0}圈,{0} Runden,{0} Vueltas,{0} Voltas
+str.hud.this_race,이번 경기: {0}바퀴,This Race: {0} Laps,このレース: {0}周,本场比赛: {0}圈,Dieses Rennen: {0} Runden,Esta Carrera: {0} Vueltas,Esta Corrida: {0} Voltas
+str.hud.total_score,총점: {0},Total: {0},合計: {0},总分: {0},Gesamt: {0},Total: {0},Total: {0}
+str.hud.timer,{0}초,{0}s,{0}秒,{0}秒,{0}s,{0}s,{0}s
+str.hud.rank,{0}위,{0}th,{0}位,第{0}名,{0}.,{0}º,{0}º
+str.hud.lap_progress,{0}/{1}바퀴,{0}/{1} Laps,{0}/{1}周,{0}/{1}圈,{0}/{1} Runden,{0}/{1} Vueltas,{0}/{1} Voltas
+str.hud.finished,완주,Finished,完走,完赛,Ziel,Meta,Chegada
+str.hud.my_bet,내 배팅 ▶ {0} | {1},My Bet ▶ {0} | {1},マイベット ▶ {0} | {1},我的投注 ▶ {0} | {1},Meine Wette ▶ {0} | {1},Mi Apuesta ▶ {0} | {1},Minha Aposta ▶ {0} | {1}
+str.hud.race_info,"Round {0}/{1}  |  {2}바퀴","Round {0}/{1}  |  {2} Laps",ラウンド{0}/{1}  |  {2}周,"第{0}/{1}轮  |  {2}圈","Runde {0}/{1}  |  {2} Runden","Ronda {0}/{1}  |  {2} Vueltas","Rodada {0}/{1}  |  {2} Voltas"
+str.result.title,레이스 결과,Race Result,レース結果,比赛结果,Rennergebnis,Resultado,Resultado
+str.result.win,적중!,Hit!,的中！,命中！,Treffer!,¡Acierto!,Acertou!
+str.result.lose,아쉽네요...,So close...,残念...,可惜...,Knapp daneben...,Casi...,Quase...
+str.result.rank1,1착: {0},1st: {0},1着: {0},第1名: {0},1.: {0},1º: {0},1º: {0}
+str.result.rank2,2착: {0},2nd: {0},2着: {0},第2名: {0},2.: {0},2º: {0},2º: {0}
+str.result.rank3,3착: {0},3rd: {0},3着: {0},第3名: {0},3.: {0},3º: {0},3º: {0}
+str.result.bet_type,"배팅: {0} ({1})","Bet: {0} ({1})","ベット: {0}（{1}）","投注: {0}（{1}）","Wette: {0} ({1})","Apuesta: {0} ({1})","Aposta: {0} ({1})"
+str.result.my_pick,내 {0} 예측: {1} → 실제 {2}착,My {0}: {1} → Actual {2}nd,マイ{0}: {1} → 実際{2}着,我的{0}预测: {1} → 实际第{2}名,Mein {0}: {1} → Tatsächlich {2}.,Mi {0}: {1} → Real {2}º,Meu {0}: {1} → Real {2}º
+str.result.score_win,"+{0}점 획득!  (총점: {1})","+{0} pts!  (Total: {1})","+{0}点獲得！（合計: {1}）","+{0}分！（总分: {1}）","+{0} Pkt!  (Gesamt: {1})","+{0} pts  (Total: {1})","+{0} pts  (Total: {1})"
+str.result.score_lose,"0점  (총점: {0})","0 pts  (Total: {0})","0点（合計: {0}）","0分（总分: {0}）","0 Pkt  (Gesamt: {0})","0 pts  (Total: {0})","0 pts  (Total: {0})"
+str.finish.title,Finish!!,Finish!!,フィニッシュ！！,终点！！,Ziel!!,¡¡Meta!!,Chegada!!
+str.finish.round_header,라운드별 결과,Round Results,ラウンド別結果,各轮结果,Rundenergebnisse,Resultados por Ronda,Resultados por Rodada
+str.finish.hit,적중!,Hit!,的中！,命中！,Treffer!,¡Acierto!,Acertou!
+str.finish.miss,실패,Miss,失敗,失败,Daneben,Fallo,Errou
+str.finish.score_plus,+{0}점,+{0} pts,+{0}点,+{0}分,+{0} Pkt,+{0} pts,+{0} pts
+str.finish.score_zero,+0점,+0 pts,+0点,+0分,+0 Pkt,+0 pts,+0 pts
+str.finish.total,"총점: {0}점  ({1}/{2} 적중)","Total: {0} pts  ({1}/{2} hits)","合計: {0}点（{1}/{2}的中）","总分: {0}分（{1}/{2}命中）","Gesamt: {0} Pkt  ({1}/{2} Treffer)","Total: {0} pts  ({1}/{2} aciertos)","Total: {0} pts  ({1}/{2} acertos)"
+str.leaderboard.row,"{0}위  {1}점  {2}R  {3}  {4}","{0}th  {1}pts  {2}R  {3}  {4}",{0}位  {1}点  {2}R  {3}  {4},{0}名  {1}分  {2}轮  {3}  {4},{0}.  {1}Pkt  {2}R  {3}  {4},{0}º  {1}pts  {2}R  {3}  {4},{0}º  {1}pts  {2}R  {3}  {4}
+str.ui.betting.round,{0}라운드,Round {0},{0}ラウンド,第{0}轮,Runde {0},Ronda {0},Rodada {0}
+str.ui.betting.title,배팅 선택!,Place Your Bet!,ベット選択！,下注选择！,Wette platzieren!,¡Apostar!,Apostar!
+str.ui.betting.odds,배당률 : {0}배,Odds : {0}x,配当率 : {0}倍,赔率: {0}倍,Quote: {0}x,Cuota: {0}x,Cota: {0}x
+str.ui.betting.odds_empty,배당률 : - 배,Odds : -,配当率 : -,赔率: -,Quote: -,Cuota: -,Cota: -
+str.ui.betting.points_label,{0} 획득 포인트,{0} Points,{0} 獲得ポイント,{0} 获得积分,{0} Punkte,{0} Puntos,{0} Pontos
+str.ui.betting.points_formula,{0}x{1} = {2},{0}x{1} = {2},{0}x{1} = {2},{0}x{1} = {2},{0}x{1} = {2},{0}x{1} = {2},{0}x{1} = {2}
+str.ui.betting.points_empty,- 획득 포인트,- Points,- ポイント,- 获得积分,- Punkte,- Puntos,- Pontos
+str.ui.betting.hide_info,캐릭터 정보 안보기,Hide Char Info,キャラ情報非表示,隐藏角色信息,Char-Info ausblenden,Ocultar Info,Ocultar Info
+str.ui.track.total_round,총 {0}라운드 레이스,Total {0} Round Race,全{0}ラウンドレース,共{0}轮比赛,Gesamt {0} Runden Rennen,Total {0} Rondas,Total {0} Rodadas
+str.ui.track.distance,{0} : {1}바퀴,{0} : {1} Laps,{0} : {1}周,{0}: {1}圈,{0}: {1} Runden,{0}: {1} Vueltas,{0}: {1} Voltas
+str.ui.track.short,단거리,Short,短距離,短距离,Kurz,Corta,Curta
+str.ui.track.mid,중거리,Middle,中距離,中距离,Mittel,Media,Média
+str.ui.track.long,장거리,Long,長距離,长距离,Lang,Larga,Longa
+str.ui.track.type_base,기본,Base,基本,基本,Basis,Base,Base
+str.ui.track.type_dirt,더트,Dirt,ダート,泥地,Dirt,Tierra,Terra
+str.ui.char.popularity,인기{0}.,Pop{0}.,人気{0}.,人气{0}.,Pop{0}.,Pop{0}.,Pop{0}.
+str.ui.char.record,{0}전 {1}승,{0}R {1}W,{0}戦{1}勝,{0}战{1}胜,{0}R {1}S,{0}C {1}V,{0}C {1}V
+str.ui.char.second,2위 {0}회,2nd {0}x,2位 {0}回,第2名 {0}次,2. {0}x,2º {0}x,2º {0}x
+str.ui.condition.best,컨디션 최상,Best,最高,状态最佳,Bestform,Óptima,Ótima
+str.ui.condition.good,컨디션 상,Good,良好,状态良好,Gut,Buena,Boa
+str.ui.condition.normal,컨디션 중,Normal,普通,状态一般,Normal,Normal,Normal
+str.ui.condition.bad,컨디션 하,Bad,不調,状态不佳,Schlecht,Mala,Ruim
+str.ui.condition.worst,컨디션 최하,Worst,最悪,状态最差,Miserabel,Pésima,Péssima
+str.ui.charinfo.coming_soon,준비 중...,Coming Soon...,準備中...,准备中...,Kommt bald...,Próximamente...,Em breve...
+str.char.001.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
+str.char.002.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
+str.char.003.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
+str.char.004.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
+str.char.005.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
+str.char.006.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
+str.char.007.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
+str.char.008.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
+str.char.009.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
+str.char.010.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
+str.char.011.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
+str.char.012.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
+str.ui.char.winrate,승률 : {0}%,Win Rate : {0}%,勝率 : {0}%,胜率: {0}%,Siegquote: {0}%,% Victoria: {0}%,% Vitória: {0}%
+str.ui.char.rank_label,{0}위{1},{0}{1},{0}位{1},{0}名{1},{0}.{1},{0}º{1},{0}º{1}
+str.ui.char.no_record,출전 기록 없음,No race record,出走記録なし,无出赛记录,Kein Rennrekord,Sin historial,Sem histórico
+str.ui.char.stat.speed,Speed,Speed,Speed,Speed,Speed,Speed,Speed
+str.ui.char.stat.power,Power,Power,Power,Power,Power,Power,Power
+str.ui.char.stat.brave,Brave,Brave,Brave,Brave,Brave,Brave,Brave
+str.ui.char.stat.calm,Calm,Calm,Calm,Calm,Calm,Calm,Calm
+str.ui.char.stat.endurance,Endurance,Endurance,Endurance,Endurance,Endurance,Endurance,Endurance
+str.ui.char.stat.luck,Luck,Luck,Luck,Luck,Luck,Luck,Luck
+str.ui.char.recent_record,최근 경기기록,Recent Records,最近のレース記録,最近比赛记录,Letzte Rennen,Carreras Recientes,Corridas Recentes
+str.ui.char.no_dist_record,- 경기 기록 없음 -,- No record -,- 記録なし -,- 无比赛记录 -,- Kein Rekord -,- Sin registro -,- Sem registro -
+str.ui.press_start,아무 곳이나 눌러 시작,Press to Start,タッチしてスタート,点击任意处开始,Zum Starten tippen,Toca para empezar,Toque para começar

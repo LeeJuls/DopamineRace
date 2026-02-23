@@ -405,7 +405,7 @@ public class CharacterInfoPopup : MonoBehaviour
 
         var statValues = new List<double>
         {
-            data.charBaseSpeed * 10f, // speed는 0.9~1.2 범위이므로 ×10 스케일링
+            data.charBaseSpeed, // 모든 스탯 1~20 통일 스케일
             data.charBasePower,
             data.charBaseBrave,
             data.charBaseCalm,

@@ -29,16 +29,21 @@ public class TitleSceneManager : MonoBehaviour
     private float blinkTimer = 0f;
     private TitleCharacterRunner characterRunner;
 
-    // 언어 버튼
-    private Button[] langButtons;
-    private Image[] langBtnImages;
-    private string[] langCodes = { "ko", "en", "jp" };
-    private string[] langLabels = { "한국어", "EN", "日本語" };
+    // 언어 드롭다운
+    private string[] langCodes = { "br", "es", "de", "cn", "en", "jp", "ko" };
+    private string[] langDisplayCodes = { "BR", "ES", "DE", "CN", "EN", "JP", "KR" };
+    private GameObject langOverlay;
+    private GameObject langDropdownPanel;
+    private Text langMainText;
+    private Image[] langDropdownImages;
+    private bool isLangDropdownOpen = false;
 
     // ══════════════════════════════════════
     //  상수
     // ══════════════════════════════════════
     private const float BG_PPU = 70f;
+    private const float LOGO_SCALE = 0.75f; // ★ 타이틀 로고 크기 (1.0 = 기본, 1.5 = 150%, 0.8 = 80%)
+    private const float LOGO_Y = 0.65f;     // ★ 타이틀 로고 Y 위치 (뷰포트 비율: 0=하단, 1=상단)
     private const float BLINK_SPEED = 3.5f; // 약 1.1초 주기
 
     private void Start()
@@ -55,6 +60,10 @@ public class TitleSceneManager : MonoBehaviour
             cam.transform.position = new Vector3(0, 0, -10);
             cam.backgroundColor = Color.black;
             cam.clearFlags = CameraClearFlags.SolidColor;
+
+            // AudioListener 확보 (BGM 재생에 필수)
+            if (cam.GetComponent<AudioListener>() == null)
+                cam.gameObject.AddComponent<AudioListener>();
         }
 
         // 매니저 초기화
@@ -153,10 +162,13 @@ public class TitleSceneManager : MonoBehaviour
             new Vector2(0.5f, 0.5f), BG_PPU);
         sr.sortingOrder = 5;
 
-        // 화면 상단~중앙 (뷰포트 y=0.65)
+        // 로고 크기 조절 (LOGO_SCALE 값 수정으로 조절)
+        logoObj.transform.localScale = new Vector3(LOGO_SCALE, LOGO_SCALE, 1f);
+
+        // 화면 위치 (LOGO_Y 값 수정으로 조절)
         if (cam != null)
         {
-            Vector3 pos = cam.ViewportToWorldPoint(new Vector3(0.5f, 0.65f, 10f));
+            Vector3 pos = cam.ViewportToWorldPoint(new Vector3(0.5f, LOGO_Y, 10f));
             logoObj.transform.position = new Vector3(pos.x, pos.y, 0f);
         }
     }
@@ -187,7 +199,7 @@ public class TitleSceneManager : MonoBehaviour
     }
 
     // ══════════════════════════════════════
-    //  언어 선택 UI
+    //  언어 선택 UI (드롭다운 방식)
     // ══════════════════════════════════════
     private void CreateLanguageUI()
     {
@@ -204,65 +216,126 @@ public class TitleSceneManager : MonoBehaviour
 
         canvasObj.AddComponent<GraphicRaycaster>();
 
-        // 우하단 앵커 컨테이너
-        GameObject container = new GameObject("LangContainer");
-        container.transform.SetParent(canvasObj.transform, false);
-        RectTransform crt = container.AddComponent<RectTransform>();
-        crt.anchorMin = new Vector2(1f, 0f);
-        crt.anchorMax = new Vector2(1f, 0f);
-        crt.pivot = new Vector2(1f, 0f);
-        crt.anchoredPosition = new Vector2(-30f, 30f);
-        crt.sizeDelta = new Vector2(300f, 50f);
-
-        HorizontalLayoutGroup hlg = container.AddComponent<HorizontalLayoutGroup>();
-        hlg.spacing = 10f;
-        hlg.childAlignment = TextAnchor.MiddleRight;
-        hlg.childForceExpandWidth = false;
-        hlg.childForceExpandHeight = true;
-
         Font font = FontHelper.GetUIFontWithFallback();
 
-        langButtons = new Button[langCodes.Length];
-        langBtnImages = new Image[langCodes.Length];
+        // ── 전체화면 오버레이 (외부 클릭 시 드롭다운 닫기) ──
+        langOverlay = new GameObject("LangOverlay");
+        langOverlay.transform.SetParent(canvasObj.transform, false);
+        Image overlayImg = langOverlay.AddComponent<Image>();
+        overlayImg.color = new Color(0, 0, 0, 0.01f); // 거의 투명하지만 레이캐스트 수신
+        RectTransform ort = overlayImg.rectTransform;
+        ort.anchorMin = Vector2.zero;
+        ort.anchorMax = Vector2.one;
+        ort.offsetMin = Vector2.zero;
+        ort.offsetMax = Vector2.zero;
+        Button overlayBtn = langOverlay.AddComponent<Button>();
+        overlayBtn.transition = Selectable.Transition.None;
+        overlayBtn.onClick.AddListener(CloseLangDropdown);
+        langOverlay.SetActive(false);
 
+        // ── 드롭다운 패널 (언어 목록) ──
+        langDropdownPanel = new GameObject("LangDropdown");
+        langDropdownPanel.transform.SetParent(canvasObj.transform, false);
+        RectTransform drt = langDropdownPanel.AddComponent<RectTransform>();
+        drt.anchorMin = new Vector2(1f, 0f);
+        drt.anchorMax = new Vector2(1f, 0f);
+        drt.pivot = new Vector2(1f, 0f);
+        drt.anchoredPosition = new Vector2(-30f, 110f); // 드롭다운 버튼 위치 메인 버튼 바로 위
+
+        // 배경
+        Image dropBg = langDropdownPanel.AddComponent<Image>();
+        dropBg.color = new Color(0.1f, 0.1f, 0.1f, 0.9f);
+
+        // 레이아웃
+        VerticalLayoutGroup vlg = langDropdownPanel.AddComponent<VerticalLayoutGroup>();
+        vlg.spacing = 6f; // 버튼 간격
+        vlg.padding = new RectOffset(8, 8, 8, 8);
+        vlg.childAlignment = TextAnchor.MiddleCenter;
+        vlg.childForceExpandWidth = true;
+        vlg.childForceExpandHeight = false;
+
+        ContentSizeFitter csf = langDropdownPanel.AddComponent<ContentSizeFitter>();
+        csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        csf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        // 드롭다운 버튼 생성 (위→아래: BR, ES, DE, CN, EN, JP, KR)
+        langDropdownImages = new Image[langCodes.Length];
         for (int i = 0; i < langCodes.Length; i++)
         {
-            GameObject btnObj = new GameObject("Btn_" + langCodes[i]);
-            btnObj.transform.SetParent(container.transform, false);
-
-            Image btnImg = btnObj.AddComponent<Image>();
-            btnImg.color = new Color(0.2f, 0.2f, 0.2f, 0.7f);
-            langBtnImages[i] = btnImg;
-
-            Button btn = btnObj.AddComponent<Button>();
-            langButtons[i] = btn;
-
-            LayoutElement le = btnObj.AddComponent<LayoutElement>();
-            le.preferredWidth = 90f;
-            le.preferredHeight = 40f;
-
-            // 텍스트
-            GameObject txtObj = new GameObject("Text");
-            txtObj.transform.SetParent(btnObj.transform, false);
-            Text txt = txtObj.AddComponent<Text>();
-            txt.text = langLabels[i];
-            txt.font = font;
-            txt.fontSize = 22;
-            txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = Color.white;
-
-            RectTransform trt = txt.rectTransform;
-            trt.anchorMin = Vector2.zero;
-            trt.anchorMax = Vector2.one;
-            trt.offsetMin = Vector2.zero;
-            trt.offsetMax = Vector2.zero;
-
-            // 클릭 이벤트
-            int idx = i;
-            btn.onClick.AddListener(() => OnLanguageClick(idx));
+            CreateDropdownButton(langDropdownPanel.transform, i, font);
         }
 
+        langDropdownPanel.SetActive(false);
+
+        // ── 메인 버튼 (현재 언어 코드 표시) ──
+        GameObject mainBtnObj = new GameObject("LangMainBtn");
+        mainBtnObj.transform.SetParent(canvasObj.transform, false);
+
+        Image mainBtnImg = mainBtnObj.AddComponent<Image>();
+        mainBtnImg.color = new Color(0.2f, 0.2f, 0.2f, 0.85f); // 번역 버튼 배경색
+
+        Button mainBtn = mainBtnObj.AddComponent<Button>();
+        mainBtn.onClick.AddListener(ToggleLangDropdown);
+
+        RectTransform mrt = mainBtnImg.rectTransform;
+        mrt.anchorMin = new Vector2(1f, 0f);
+        mrt.anchorMax = new Vector2(1f, 0f);
+        mrt.pivot = new Vector2(1f, 0f);
+        mrt.anchoredPosition = new Vector2(-30f, 30f); // 번역 버튼 위치
+        mrt.sizeDelta = new Vector2(120f, 72f); // 번역 버튼 크기
+
+        // 메인 버튼 텍스트
+        GameObject mainTxtObj = new GameObject("Text");
+        mainTxtObj.transform.SetParent(mainBtnObj.transform, false);
+        langMainText = mainTxtObj.AddComponent<Text>();
+        langMainText.font = font;
+        langMainText.fontSize = 48; // 번역 메인 버튼 크기
+        langMainText.alignment = TextAnchor.MiddleCenter;
+        langMainText.color = Color.white;
+        // langMainText.fontStyle = FontStyle.Bold;
+
+        RectTransform trt = langMainText.rectTransform;
+        trt.anchorMin = Vector2.zero;
+        trt.anchorMax = Vector2.one;
+        trt.offsetMin = Vector2.zero;
+        trt.offsetMax = Vector2.zero;
+
+        UpdateLangMainBtnText();
         UpdateLanguageHighlight();
+    }
+
+    private void CreateDropdownButton(Transform parent, int langIdx, Font font)
+    {
+        GameObject btnObj = new GameObject("Btn_" + langCodes[langIdx]);
+        btnObj.transform.SetParent(parent, false);
+
+        Image btnImg = btnObj.AddComponent<Image>();
+        btnImg.color = new Color(0.25f, 0.25f, 0.25f, 0.9f);
+        langDropdownImages[langIdx] = btnImg;
+
+        Button btn = btnObj.AddComponent<Button>();
+        int idx = langIdx;
+        btn.onClick.AddListener(() => OnLanguageClick(idx));
+
+        LayoutElement le = btnObj.AddComponent<LayoutElement>();
+        le.preferredWidth = 100f; // 언어 버튼 너비
+        le.preferredHeight = 60f; // 언어 버튼 높이
+
+        // 텍스트
+        GameObject txtObj = new GameObject("Text");
+        txtObj.transform.SetParent(btnObj.transform, false);
+        Text txt = txtObj.AddComponent<Text>();
+        txt.text = langDisplayCodes[langIdx];
+        txt.font = font;
+        txt.fontSize = 40; // ★ 언어 버튼 텍스트 크기
+        txt.alignment = TextAnchor.MiddleCenter;
+        txt.color = Color.white;
+
+        RectTransform trt = txt.rectTransform;
+        trt.anchorMin = Vector2.zero;
+        trt.anchorMax = Vector2.one;
+        trt.offsetMin = Vector2.zero;
+        trt.offsetMax = Vector2.zero;
     }
 
     private void OnLanguageClick(int idx)
@@ -270,22 +343,53 @@ public class TitleSceneManager : MonoBehaviour
         if (idx < 0 || idx >= langCodes.Length) return;
         Loc.SetLang(langCodes[idx]);
         UpdateLanguageHighlight();
+        UpdateLangMainBtnText();
         RefreshTexts();
+        CloseLangDropdown();
         Debug.Log("[TitleScene] 언어 변경: " + langCodes[idx]);
+    }
+
+    private void ToggleLangDropdown()
+    {
+        if (isLangDropdownOpen)
+            CloseLangDropdown();
+        else
+            OpenLangDropdown();
+    }
+
+    private void OpenLangDropdown()
+    {
+        isLangDropdownOpen = true;
+        langOverlay.SetActive(true);
+        langDropdownPanel.SetActive(true);
+        UpdateLanguageHighlight();
+    }
+
+    private void CloseLangDropdown()
+    {
+        isLangDropdownOpen = false;
+        if (langOverlay != null) langOverlay.SetActive(false);
+        if (langDropdownPanel != null) langDropdownPanel.SetActive(false);
     }
 
     private void UpdateLanguageHighlight()
     {
+        if (langDropdownImages == null) return;
         for (int i = 0; i < langCodes.Length; i++)
         {
+            if (langDropdownImages[i] == null) continue;
             bool selected = (langCodes[i] == Loc.CurrentLang);
-            if (langBtnImages[i] != null)
-            {
-                langBtnImages[i].color = selected
-                    ? new Color(0.9f, 0.6f, 0.1f, 0.9f)   // 선택: 주황
-                    : new Color(0.2f, 0.2f, 0.2f, 0.7f);   // 미선택: 어두운 회색
-            }
+            langDropdownImages[i].color = selected
+                ? new Color(0.9f, 0.6f, 0.1f, 0.95f)   // 선택: 주황
+                : new Color(0.25f, 0.25f, 0.25f, 0.9f); // 미선택: 어두운 회색
         }
+    }
+
+    private void UpdateLangMainBtnText()
+    {
+        if (langMainText == null) return;
+        int idx = System.Array.IndexOf(langCodes, Loc.CurrentLang);
+        langMainText.text = idx >= 0 ? langDisplayCodes[idx] : Loc.CurrentLang.ToUpper();
     }
 
     private void RefreshTexts()
@@ -378,6 +482,9 @@ public class TitleSceneManager : MonoBehaviour
     private void StartTransition()
     {
         isTransitioning = true;
+
+        // 언어 드롭다운 닫기
+        CloseLangDropdown();
 
         // Press to Start 숨기기
         if (pressText != null)

@@ -157,13 +157,29 @@ public class RacerController : MonoBehaviour
     {
         isRacing = false; isFinished = false; headingToFinish = false; FinishOrder = -1;
         currentSpeed = 0f; currentWP = 0; currentLap = 0;
+
+        // noise/luck 타이머 (StartRacing 전 깨끗한 상태 보장)
+        noiseValue = 0f;
+        noiseTimer = 0f;
+        luckTimer = 0f;
+
+        // 흔들림
         deviationOffset = 0f;
+        deviationTarget = 0f;
+        deviationTimer = 0f;
+
+        // 충돌/슬링샷
         collisionPenalty = 0f; collisionPenaltyTimer = 0f;
         slingshotBoost = 0f; slingshotTimer = 0f;
+
+        // 크리티컬/공격
         critBoostRemaining = 0f; isCritActive = false;
         attackCooldown = 0f; attackAnimChecked = false;
+
+        // 스킬
         skillCollisionCount = 0; skillActive = false; skillRemainingTime = 0f;
         DeactivateSkill();
+
         transform.position = pos;
         lastPosition = pos;
         if (animator != null) animator.SetTrigger("Idle");
@@ -241,6 +257,7 @@ public class RacerController : MonoBehaviour
 
         // ── 컨디션 배수 (스탯 보너스 계열에 적용) ──
         float condMul = OddsCalculator.GetConditionMultiplier(charData.charName);
+        condMul = Mathf.Max(condMul, 0.3f);  // 안전 가드: 0 근처 나눗셈 방지
 
         float speed = GetBaseTrackSpeed(gs, track);
         speed *= (1f + (GetTypeBonus(gs, track) + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
@@ -250,14 +267,21 @@ public class RacerController : MonoBehaviour
         speed *= GetLuckCritMultiplier(gs, track);
         speed *= GetCollisionMultiplier();
 
-        return Mathf.Max(speed, 0.1f); // 최소 속도 보장
+        // 최소 속도 보장 + 디버그 경고
+        if (speed < 0.15f)
+        {
+            Debug.LogWarning(string.Format("[RacerController] {0} 속도 바닥! speed={1:F3} condMul={2:F2} progress={3:F2}",
+                charData.DisplayName, speed, condMul, OverallProgress));
+        }
+        return Mathf.Max(speed, 0.1f);
     }
 
     // ── 기본 속도 (캐릭터 스피드 × 글로벌 × 트랙) ──
+    // charBaseSpeed는 1~20 스케일, /20f로 0.05~1.0 배속 변환
     private float GetBaseTrackSpeed(GameSettings gs, TrackData track)
     {
         float trackSpeedMul = track != null ? track.speedMultiplier : 1f;
-        return charData.charBaseSpeed * gs.globalSpeedMultiplier * trackSpeedMul;
+        return (charData.charBaseSpeed / 20f) * gs.globalSpeedMultiplier * trackSpeedMul;
     }
 
     // ── 타입 보너스 (구간별 + 트랙 배율) ──
@@ -663,7 +687,7 @@ public class RacerController : MonoBehaviour
         {
             float trackMul = GameSettings.Instance.currentTrack != null
                 ? GameSettings.Instance.currentTrack.speedMultiplier : 1f;
-            return charData.charBaseSpeed * GameSettings.Instance.globalSpeedMultiplier * trackMul;
+            return (charData.charBaseSpeed / 20f) * GameSettings.Instance.globalSpeedMultiplier * trackMul;
         }
         return GameSettings.Instance.racerMinSpeed;
     }
