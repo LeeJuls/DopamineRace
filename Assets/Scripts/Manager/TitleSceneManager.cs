@@ -59,6 +59,7 @@ public class TitleSceneManager : MonoBehaviour
         // 매니저 초기화
         EnsureCharacterDatabase();
         EnsureSceneTransitionManager();
+        EnsureBGMManager();
 
         // 비주얼 구성
         CreateBackground();
@@ -68,6 +69,15 @@ public class TitleSceneManager : MonoBehaviour
 
         // 캐릭터 달리기
         StartCharacterRunner();
+
+        // 타이틀 BGM 재생
+        if (BGMManager.Instance != null)
+        {
+            BGMManager.Instance.PlayBGM("Audio/Title_Bgm");
+            BGMManager.Instance.SetVolume(0f);
+            float bgmVol = GameSettings.Instance != null ? GameSettings.Instance.bgmVolume : 0.5f;
+            BGMManager.Instance.FadeIn(bgmVol, 1.5f);
+        }
 
         Debug.Log("[TitleScene] 타이틀 씬 시작");
     }
@@ -298,6 +308,13 @@ public class TitleSceneManager : MonoBehaviour
         stmObj.AddComponent<SceneTransitionManager>();
     }
 
+    private void EnsureBGMManager()
+    {
+        if (BGMManager.Instance != null) return;
+        GameObject bgmObj = new GameObject("BGMManager");
+        bgmObj.AddComponent<BGMManager>();
+    }
+
     // ══════════════════════════════════════
     //  캐릭터 달리기
     // ══════════════════════════════════════
@@ -348,6 +365,10 @@ public class TitleSceneManager : MonoBehaviour
         // 캐릭터 달리기 정지
         if (characterRunner != null)
             characterRunner.StopAll();
+
+        // BGM 페이드아웃
+        if (BGMManager.Instance != null)
+            BGMManager.Instance.FadeOut(1.5f);
 
         Debug.Log("[TitleScene] 전환 시작 → SampleScene");
 

@@ -130,7 +130,15 @@ public class SceneTransitionManager : MonoBehaviour
         // ⑤ 블록 빌드업 인 (새 화면이 블록 단위로 드러남)
         yield return StartCoroutine(BuildupIn());
 
-        // ⑥ 완료
+        // ⑥ 완료 후 게임 BGM 시작
+        if (BGMManager.Instance != null)
+        {
+            BGMManager.Instance.PlayBGM("Audio/BGM");
+            BGMManager.Instance.SetVolume(0f);
+            float bgmVol = GameSettings.Instance != null ? GameSettings.Instance.bgmVolume : 0.5f;
+            BGMManager.Instance.FadeIn(bgmVol, 1.5f);
+        }
+
         canvas.gameObject.SetActive(false);
         isTransitioning = false;
 
