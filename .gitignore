@@ -61,6 +61,9 @@ crashlytics-build.properties
 # MCP 브릿지 로그
 unity_code_mcp_bridge.log
 
+# 백테스팅 로그 (Docs/logs/)
+Docs/logs/
+
 # 메모/문서 파일 (선택)
 *.txt
 !Assets/**/*.txt
