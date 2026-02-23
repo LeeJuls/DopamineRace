@@ -7,7 +7,7 @@ using System.Collections;
 /// 타이틀 씬 전체 관리
 /// Phase 1: 씬 전환 기반
 /// Phase 2: 배경/로고/PressToStart/언어선택
-/// Phase 3+: 캐릭터 달리기, 전환 연출, BGM
+/// Phase 3: 캐릭터 달리기 (TitleCharacterRunner)
 /// </summary>
 public class TitleSceneManager : MonoBehaviour
 {
@@ -26,6 +26,7 @@ public class TitleSceneManager : MonoBehaviour
     private GameObject logoObj;
     private TextMesh pressText;
     private float blinkTimer = 0f;
+    private TitleCharacterRunner characterRunner;
 
     // 언어 버튼
     private Button[] langButtons;
@@ -55,11 +56,17 @@ public class TitleSceneManager : MonoBehaviour
             cam.clearFlags = CameraClearFlags.SolidColor;
         }
 
+        // 캐릭터 DB 초기화 (TitleScene에서 필요)
+        EnsureCharacterDatabase();
+
         // 비주얼 구성
         CreateBackground();
         CreateTitleLogo();
         CreatePressToStart();
         CreateLanguageUI();
+
+        // 캐릭터 달리기
+        StartCharacterRunner();
 
         Debug.Log("[TitleScene] 타이틀 씬 시작");
     }
@@ -274,6 +281,26 @@ public class TitleSceneManager : MonoBehaviour
     }
 
     // ══════════════════════════════════════
+    //  DB 초기화
+    // ══════════════════════════════════════
+    private void EnsureCharacterDatabase()
+    {
+        if (CharacterDatabase.Instance != null) return;
+        GameObject dbObj = new GameObject("CharacterDatabase");
+        dbObj.AddComponent<CharacterDatabase>();
+    }
+
+    // ══════════════════════════════════════
+    //  캐릭터 달리기
+    // ══════════════════════════════════════
+    private void StartCharacterRunner()
+    {
+        GameObject runnerObj = new GameObject("CharacterRunner");
+        characterRunner = runnerObj.AddComponent<TitleCharacterRunner>();
+        characterRunner.Begin(cam);
+    }
+
+    // ══════════════════════════════════════
     //  유틸리티
     // ══════════════════════════════════════
 
@@ -309,6 +336,10 @@ public class TitleSceneManager : MonoBehaviour
         // Press to Start 숨기기
         if (pressText != null)
             pressText.gameObject.SetActive(false);
+
+        // 캐릭터 달리기 정지
+        if (characterRunner != null)
+            characterRunner.StopAll();
 
         Debug.Log("[TitleScene] 전환 시작 → SampleScene");
         StartCoroutine(LoadSampleScene());
