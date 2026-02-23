@@ -277,11 +277,11 @@ public class RacerController : MonoBehaviour
     }
 
     // ── 기본 속도 (캐릭터 스피드 × 글로벌 × 트랙) ──
-    // charBaseSpeed는 1~20 스케일, /20f로 0.05~1.0 배속 변환
+    // SpeedMultiplier: 0.8 + charBaseSpeed*0.01  (20=1.0, 15=0.95, 10=0.90)
     private float GetBaseTrackSpeed(GameSettings gs, TrackData track)
     {
         float trackSpeedMul = track != null ? track.speedMultiplier : 1f;
-        return (charData.charBaseSpeed / 20f) * gs.globalSpeedMultiplier * trackSpeedMul;
+        return charData.SpeedMultiplier * gs.globalSpeedMultiplier * trackSpeedMul;
     }
 
     // ── 타입 보너스 (구간별 + 트랙 배율) ──
@@ -687,7 +687,7 @@ public class RacerController : MonoBehaviour
         {
             float trackMul = GameSettings.Instance.currentTrack != null
                 ? GameSettings.Instance.currentTrack.speedMultiplier : 1f;
-            return (charData.charBaseSpeed / 20f) * GameSettings.Instance.globalSpeedMultiplier * trackMul;
+            return charData.SpeedMultiplier * GameSettings.Instance.globalSpeedMultiplier * trackMul;
         }
         return GameSettings.Instance.racerMinSpeed;
     }

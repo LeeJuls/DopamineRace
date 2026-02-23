@@ -395,7 +395,7 @@ public class RaceDebugOverlay : MonoBehaviour
             string phaseName = phase == 0 ? "전반" : phase == 1 ? "중반" : "후반";
             float typeBonus = gs.GetTypeBonus(cd.charType, phase);
             float trackSpd = track != null ? track.speedMultiplier : 1f;
-            float baseSpd = (cd.charBaseSpeed / 20f) * gs.globalSpeedMultiplier * trackSpd;
+            float baseSpd = cd.SpeedMultiplier * gs.globalSpeedMultiplier * trackSpd;
             float endurance = Mathf.Max(cd.charBaseEndurance, 1f);
             float trackFat = track != null ? track.fatigueMultiplier : 1f;
             float fatigue = progress * (1f / endurance) * gs.fatigueFactor * trackFat;

@@ -656,7 +656,7 @@ public class RaceBacktestWindow : EditorWindow
         TrackData track = selectedTrack;
 
         float trackSpeedMul = track != null ? track.speedMultiplier : 1f;
-        float baseSpeed = (cd.charBaseSpeed / 20f) * gs.globalSpeedMultiplier * trackSpeedMul;
+        float baseSpeed = cd.SpeedMultiplier * gs.globalSpeedMultiplier * trackSpeedMul;
 
         // noise (calm)
         r.noiseTimer -= simTimeStep;
@@ -737,7 +737,7 @@ public class RaceBacktestWindow : EditorWindow
     private float GetBaseSpeed(CharacterData cd)
     {
         float trackMul = selectedTrack != null ? selectedTrack.speedMultiplier : 1f;
-        return (cd.charBaseSpeed / 20f) * gameSettings.globalSpeedMultiplier * trackMul;
+        return cd.SpeedMultiplier * gameSettings.globalSpeedMultiplier * trackMul;
     }
 }
 #endif

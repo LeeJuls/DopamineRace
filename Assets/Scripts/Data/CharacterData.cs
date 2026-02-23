@@ -37,6 +37,13 @@ public class CharacterData
 {
     public string charName;
     public float charBaseSpeed;
+
+    /// <summary>
+    /// charBaseSpeed(1~20) → 실제 속도 배율
+    /// 20 = 1.0배속(최대), 15 = 0.95, 10 = 0.90
+    /// 공식: 0.8 + charBaseSpeed * 0.01
+    /// </summary>
+    public float SpeedMultiplier => 0.8f + charBaseSpeed * 0.01f;
     public float charBasePower;
     public float charBaseBrave;
     public float charBaseCalm;
