@@ -152,3 +152,4 @@ str.ui.char.stat.endurance,Endurance,Endurance,Endurance
 str.ui.char.stat.luck,Luck,Luck,Luck
 str.ui.char.recent_record,최근 경기기록,Recent Records,最近のレース記録
 str.ui.char.no_dist_record,- 경기 기록 없음 -,- No record -,- 記録なし -
+str.ui.press_start,아무 곳이나 눌러 시작,Press to Start,タッチしてスタート
