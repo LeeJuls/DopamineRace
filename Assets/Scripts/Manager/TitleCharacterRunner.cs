@@ -21,8 +21,7 @@ public class TitleCharacterRunner : MonoBehaviour
     private const float SPEED_VARIATION = 1.0f;
     private const float SPAWN_X_OFFSET = -2.0f;    // 화면 왼쪽 밖
     private const float DESPAWN_X_OFFSET = 2.0f;    // 화면 오른쪽 밖
-    private const float Y_MIN = -4.0f;
-    private const float Y_MAX = -2.5f;
+    private const float RUNNER_Y = -3.5f;            // ★ 캐릭터 Y좌표 (이 값만 수정하면 됨)
     private const int SORT_ORDER_MIN = 0;
     private const int SORT_ORDER_MAX = 3;
 
@@ -138,10 +137,8 @@ public class TitleCharacterRunner : MonoBehaviour
             return;
         }
 
-        // Y 위치: 인덱스 기반 + 약간의 랜덤
-        float yPos = Mathf.Lerp(Y_MIN, Y_MAX, (float)index / MAX_CHARACTERS)
-                     + Random.Range(-0.15f, 0.15f);
-        Vector3 spawnPos = new Vector3(screenLeftX + SPAWN_X_OFFSET, yPos, 0f);
+        // Y 위치: 전원 동일 (RUNNER_Y 값 수정으로 조절)
+        Vector3 spawnPos = new Vector3(screenLeftX + SPAWN_X_OFFSET, RUNNER_Y, 0f);
 
         GameObject instance = Instantiate(prefab, spawnPos, Quaternion.identity, transform);
         instance.name = $"TitleRunner_{charData.charName}";
@@ -149,6 +146,10 @@ public class TitleCharacterRunner : MonoBehaviour
         // RacerController 비활성화
         var rc = instance.GetComponent<RacerController>();
         if (rc != null) rc.enabled = false;
+
+        // 좌우 반전 (프리팹이 왼쪽을 바라보므로 오른쪽으로 뒤집기)
+        Vector3 ls = instance.transform.localScale;
+        instance.transform.localScale = new Vector3(-Mathf.Abs(ls.x), ls.y, ls.z);
 
         // Animator "Run" 트리거
         var anim = instance.GetComponentInChildren<Animator>();
@@ -181,8 +182,7 @@ public class TitleCharacterRunner : MonoBehaviour
     // ══════════════════════════════════════
     private void ResetPosition(RunnerInfo r)
     {
-        float yPos = Random.Range(Y_MIN, Y_MAX);
-        r.go.transform.position = new Vector3(screenLeftX + SPAWN_X_OFFSET, yPos, 0f);
+        r.go.transform.position = new Vector3(screenLeftX + SPAWN_X_OFFSET, RUNNER_Y, 0f);
         r.speed = BASE_SPEED + Random.Range(-SPEED_VARIATION, SPEED_VARIATION);
     }
 

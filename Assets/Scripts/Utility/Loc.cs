@@ -34,13 +34,37 @@ public static class Loc
     }
 
     /// <summary>
-    /// 저장된 언어 로드. SceneBootstrapper.Awake()에서 호출.
+    /// 저장된 언어 로드. 최초 실행 시 시스템 언어 감지.
     /// </summary>
     public static void Init()
     {
-        string saved = PlayerPrefs.GetString("DR_Lang", "ko");
+        string saved = PlayerPrefs.GetString("DR_Lang", "");
+        if (string.IsNullOrEmpty(saved))
+        {
+            // 최초 실행: 시스템 언어 감지
+            saved = DetectSystemLanguage();
+            PlayerPrefs.SetString("DR_Lang", saved);
+            Debug.Log($"[Loc] 시스템 언어 감지: {Application.systemLanguage} → {saved}");
+        }
         CurrentLang = saved;
         Load();
+    }
+
+    /// <summary>
+    /// Application.systemLanguage → 지원 언어 코드 매핑
+    /// </summary>
+    private static string DetectSystemLanguage()
+    {
+        switch (Application.systemLanguage)
+        {
+            case SystemLanguage.Korean:
+                return "ko";
+            case SystemLanguage.Japanese:
+                return "jp";
+            case SystemLanguage.English:
+            default:
+                return "en";
+        }
     }
 
     /// <summary>

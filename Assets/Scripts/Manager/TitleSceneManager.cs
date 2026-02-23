@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
@@ -97,7 +98,9 @@ public class TitleSceneManager : MonoBehaviour
         elapsedTime += Time.deltaTime;
         if (elapsedTime < inputDelay) return;
 
-        // 아무 입력 감지
+        // 아무 입력 감지 (UI 버튼 위 클릭은 무시)
+        if (IsPointerOverUI()) return;
+
         if (Input.anyKeyDown || Input.GetMouseButtonDown(0) || HasTouchBegan())
         {
             StartTransition();
@@ -352,6 +355,24 @@ public class TitleSceneManager : MonoBehaviour
     private bool HasTouchBegan()
     {
         return Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began;
+    }
+
+    /// <summary>
+    /// 마우스/터치가 UI 위에 있는지 확인 (언어 버튼 등)
+    /// </summary>
+    private bool IsPointerOverUI()
+    {
+        if (EventSystem.current == null) return false;
+
+        // 마우스
+        if (EventSystem.current.IsPointerOverGameObject())
+            return true;
+
+        // 터치
+        if (Input.touchCount > 0 && EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId))
+            return true;
+
+        return false;
     }
 
     private void StartTransition()
