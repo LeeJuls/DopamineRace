@@ -7,8 +7,8 @@ using System.Linq;
 using System.IO;
 
 /// <summary>
-/// 레이스 백테스팅 에디터 윈도우 (v3)
-/// 충돌/슬링샷/회피 시뮬레이션 + 스탯 기여 분석 + 전체 트랙 비교 + 로그 저장
+/// 레이스 백테스팅 에디터 윈도우 (v3.1 — HP 시스템 미러)
+/// 충돌/슬링샷/회피 시뮬레이션 + HP 부스트 + 스탯 기여 분석 + 전체 트랙 비교 + 로그 저장
 /// </summary>
 public class RaceBacktestWindow : EditorWindow
 {
@@ -117,12 +117,18 @@ public class RaceBacktestWindow : EditorWindow
 
         // ★ 스탯별 기여 거리 (양수=이득, 음수=손해)
         public float contrib_speed;       // SpeedMultiplier 기여 (기준 0.8배속 대비)
-        public float contrib_type;        // 타입 보너스 기여
-        public float contrib_endurance;   // 피로 누적 (음수)
+        public float contrib_type;        // 타입 보너스 기여 (HP시스템: hpBoost 기여)
+        public float contrib_endurance;   // 피로 누적 (HP시스템: 미사용)
         public float contrib_calm;        // 노이즈 누적
         public float contrib_luck;        // 크리티컬 거리 이득
         public float contrib_power;       // 충돌에서 덜 잃은 거리
         public float contrib_brave;       // 슬링샷 거리 이득
+
+        // ★ HP 시스템 (SPEC-006)
+        public float enduranceHP;
+        public float maxHP;
+        public float totalConsumedHP;
+        public float hpBoostValue;
     }
 
     private struct SlingshotReserve
@@ -371,7 +377,7 @@ public class RaceBacktestWindow : EditorWindow
             List<SimRacer> racers = new List<SimRacer>();
             foreach (var cd in selected)
             {
-                racers.Add(new SimRacer
+                var racer = new SimRacer
                 {
                     data = cd, position = 0f,
                     currentSpeed = GetBaseSpeed(cd) * 0.5f,
@@ -380,7 +386,18 @@ public class RaceBacktestWindow : EditorWindow
                     collisionPenalty = 0f, collisionTimer = 0f,
                     slingshotBoost = 0f, slingshotTimer = 0f,
                     finished = false, finishOrder = 0
-                });
+                };
+
+                // HP 시스템 초기화
+                if (gs.useHPSystem)
+                {
+                    racer.maxHP = gs.CalcMaxHP(cd.charBaseEndurance);
+                    racer.enduranceHP = racer.maxHP;
+                    racer.totalConsumedHP = 0f;
+                    racer.hpBoostValue = 0f;
+                }
+
+                racers.Add(racer);
                 stats[cd.charName].raceCount++;
             }
 
@@ -658,24 +675,37 @@ public class RaceBacktestWindow : EditorWindow
         // ★ calm 기여
         r.contrib_calm += r.noiseValue * simTimeStep;
 
-        // fatigue (endurance)
-        float trackFatMul = track != null ? track.fatigueMultiplier : 1f;
-        float endurance = Mathf.Max(cd.charBaseEndurance, 1f);
-        float fatigue = progress * (1f / endurance) * gs.fatigueFactor * trackFatMul;
-        // ★ endurance 기여 (항상 음수)
-        r.contrib_endurance -= fatigue * simTimeStep;
+        // ── HP vs 레거시 분기 ──
+        float typeBonus = 0f;
+        float fatigue = 0f;
 
-        // type bonus
-        int phase = progress < 0.35f ? 0 : progress < 0.70f ? 1 : 2;
-        float typeBonus = gs.GetTypeBonus(cd.charType, phase);
-        if (track != null)
+        if (gs.useHPSystem)
         {
-            float phaseMul = phase == 0 ? track.earlyBonusMultiplier :
-                             phase == 1 ? track.midBonusMultiplier : track.lateBonusMultiplier;
-            typeBonus *= phaseMul;
+            // ═══ HP 시스템 (SPEC-006) ═══
+            SimConsumeHP(r, gs, progress);
+            float hpBoost = SimCalcHPBoost(r, gs);
+            typeBonus = hpBoost;
+            // ★ HP 부스트 기여 (type + endurance를 통합 대체)
+            r.contrib_type += baseSpeed * hpBoost * simTimeStep;
         }
-        // ★ type 기여
-        r.contrib_type += baseSpeed * typeBonus * simTimeStep;
+        else
+        {
+            // ═══ 레거시 시스템 ═══
+            float trackFatMul = track != null ? track.fatigueMultiplier : 1f;
+            float endurance = Mathf.Max(cd.charBaseEndurance, 1f);
+            fatigue = progress * (1f / endurance) * gs.fatigueFactor * trackFatMul;
+            r.contrib_endurance -= fatigue * simTimeStep;
+
+            int phase = progress < 0.35f ? 0 : progress < 0.70f ? 1 : 2;
+            typeBonus = gs.GetTypeBonus(cd.charType, phase);
+            if (track != null)
+            {
+                float phaseMul = phase == 0 ? track.earlyBonusMultiplier :
+                                 phase == 1 ? track.midBonusMultiplier : track.lateBonusMultiplier;
+                typeBonus *= phaseMul;
+            }
+            r.contrib_type += baseSpeed * typeBonus * simTimeStep;
+        }
 
         float powerBonus = 0f, braveBonus = 0f;
         if (track != null)
@@ -722,9 +752,68 @@ public class RaceBacktestWindow : EditorWindow
 
         float speed = baseSpeed * (1f + typeBonus + powerBonus + braveBonus);
         speed += r.noiseValue;
-        speed -= fatigue;
+        if (!gs.useHPSystem) speed -= fatigue; // HP 시스템: fatigue 내장
         speed *= slowMul * critMul;
         return Mathf.Max(speed, 0.1f);
+    }
+
+    // ══════════════════════════════════════
+    //  HP 시스템 미러 (SPEC-006)
+    // ══════════════════════════════════════
+
+    /// <summary>HP 소모 (RacerController.ConsumeHP 미러)</summary>
+    private void SimConsumeHP(SimRacer r, GameSettings gs, float progress)
+    {
+        if (r.enduranceHP <= 0f) return;
+
+        gs.GetHPParams(r.data.charType,
+            out float spurtStart, out float activeRate, out _,
+            out _, out _, out _);
+
+        float effectiveActiveRate = progress >= spurtStart ? activeRate : 0f;
+
+        float trackSpeedMul = selectedTrack != null ? selectedTrack.speedMultiplier : 1f;
+        float baseTrackSpeed = r.data.SpeedMultiplier * gs.globalSpeedMultiplier * trackSpeedMul;
+        float speedRatio = baseTrackSpeed > 0.01f ? r.currentSpeed / baseTrackSpeed : 1f;
+        speedRatio = Mathf.Clamp(speedRatio, 0.1f, 2f);
+
+        float consumption = (gs.basicConsumptionRate + effectiveActiveRate) * Mathf.Sqrt(speedRatio) * simTimeStep;
+        consumption = Mathf.Min(consumption, r.enduranceHP);
+
+        r.enduranceHP -= consumption;
+        r.totalConsumedHP += consumption;
+    }
+
+    /// <summary>HP 부스트 계산 (RacerController.CalcHPBoost 미러)</summary>
+    private float SimCalcHPBoost(SimRacer r, GameSettings gs)
+    {
+        gs.GetHPParams(r.data.charType,
+            out _, out _, out float peakBoost,
+            out float accelExp, out float decelExp, out float exhaustionFloor);
+
+        float consumedRatio = r.maxHP > 0f ? r.totalConsumedHP / r.maxHP : 0f;
+        float threshold = gs.boostThreshold;
+
+        float boost;
+        if (consumedRatio <= threshold)
+        {
+            float t = threshold > 0f ? consumedRatio / threshold : 0f;
+            boost = peakBoost * Mathf.Pow(t, accelExp);
+        }
+        else if (r.enduranceHP > 0f)
+        {
+            float remain = 1f - threshold;
+            float t = remain > 0f ? (consumedRatio - threshold) / remain : 1f;
+            t = Mathf.Clamp01(t);
+            boost = peakBoost * Mathf.Pow(1f - t, decelExp);
+        }
+        else
+        {
+            boost = exhaustionFloor;
+        }
+
+        r.hpBoostValue = boost;
+        return boost;
     }
 
     private float GetBaseSpeed(CharacterData cd)
@@ -802,12 +891,15 @@ public class RaceBacktestWindow : EditorWindow
             md.AppendLine();
 
             // ── 스탯 기여 분석 ──
-            display.AppendFormat("\n──── [{0}] 스탯별 기여 (레이스당 평균 거리) ────\n", tn);
-            display.AppendLine("  이름   속도    타입    피로     노이즈   럭      파워    용감    합계");
+            bool hpOn = gameSettings.useHPSystem;
+            string typeColName = hpOn ? "HP부스트" : "타입(TYPE)";
+            string endColName = hpOn ? "(내장)" : "피로(END)";
+            display.AppendFormat("\n──── [{0}] 스탯별 기여 (레이스당 평균 거리) {1} ────\n", tn, hpOn ? "[HP시스템]" : "[레거시]");
+            display.AppendLine("  이름   속도    " + (hpOn ? "HP부스트" : "타입  ") + "  피로     노이즈   럭      파워    용감    합계");
 
-            md.AppendLine("### 스탯별 기여 (레이스당 평균 거리)");
+            md.AppendFormat("### 스탯별 기여 (레이스당 평균 거리) {0}\n", hpOn ? "— HP시스템" : "— 레거시");
             md.AppendLine();
-            md.AppendLine("| 이름 | 속도(SPD) | 타입(TYPE) | 피로(END) | 노이즈(CALM) | 럭(LUCK) | 파워(POW) | 용감(BRV) | 합계 |");
+            md.AppendFormat("| 이름 | 속도(SPD) | {0} | {1} | 노이즈(CALM) | 럭(LUCK) | 파워(POW) | 용감(BRV) | 합계 |\n", typeColName, endColName);
             md.AppendLine("|------|-----------|------------|-----------|--------------|----------|-----------|-----------|------|");
 
             var sortedByTotal = sorted.OrderByDescending(s => s.AvgContrib_total).ToList();
@@ -996,14 +1088,43 @@ public class RaceBacktestWindow : EditorWindow
         md.AppendFormat("| luckCritDuration | {0:F1}s | 크리 지속 시간 |\n", g.luckCritDuration);
         md.AppendFormat("| luckCheckInterval | {0:F1}s | 크리 판정 주기 |\n", g.luckCheckInterval);
         md.AppendLine();
-        md.AppendLine("### 타입 보너스");
-        md.AppendLine();
-        md.AppendLine("| 타입 | 전반 | 중반 | 후반 |");
-        md.AppendLine("|------|------|------|------|");
-        md.AppendFormat("| Runner | {0} | {1} | {2} |\n", SF(g.earlyBonus_Runner), SF(g.midBonus_Runner), SF(g.lateBonus_Runner));
-        md.AppendFormat("| Leader | {0} | {1} | {2} |\n", SF(g.earlyBonus_Leader), SF(g.midBonus_Leader), SF(g.lateBonus_Leader));
-        md.AppendFormat("| Chaser | {0} | {1} | {2} |\n", SF(g.earlyBonus_Chaser), SF(g.midBonus_Chaser), SF(g.lateBonus_Chaser));
-        md.AppendFormat("| Reckoner | {0} | {1} | {2} |\n", SF(g.earlyBonus_Reckoner), SF(g.midBonus_Reckoner), SF(g.lateBonus_Reckoner));
+        if (g.useHPSystem)
+        {
+            md.AppendLine("### HP 시스템 (SPEC-006) ✅ ON");
+            md.AppendLine();
+            md.AppendLine("| 설정 | 값 |");
+            md.AppendLine("|------|----|");
+            md.AppendFormat("| hpBase | {0} |\n", g.hpBase);
+            md.AppendFormat("| hpPerEndurance | {0} |\n", g.hpPerEndurance);
+            md.AppendFormat("| basicConsumptionRate | {0} |\n", g.basicConsumptionRate);
+            md.AppendFormat("| boostThreshold | {0} |\n", g.boostThreshold);
+            md.AppendLine();
+            md.AppendLine("| 타입 | spurtStart | activeRate | peakBoost | accelExp | decelExp | exhaustionFloor |");
+            md.AppendLine("|------|------------|-----------|-----------|----------|----------|-----------------|");
+            md.AppendFormat("| Runner | {0} | {1} | {2} | {3} | {4} | {5} |\n",
+                g.runner_spurtStart, g.runner_activeRate, g.runner_peakBoost,
+                g.runner_accelExp, g.runner_decelExp, g.runner_exhaustionFloor);
+            md.AppendFormat("| Leader | {0} | {1} | {2} | {3} | {4} | {5} |\n",
+                g.leader_spurtStart, g.leader_activeRate, g.leader_peakBoost,
+                g.leader_accelExp, g.leader_decelExp, g.leader_exhaustionFloor);
+            md.AppendFormat("| Chaser | {0} | {1} | {2} | {3} | {4} | {5} |\n",
+                g.chaser_spurtStart, g.chaser_activeRate, g.chaser_peakBoost,
+                g.chaser_accelExp, g.chaser_decelExp, g.chaser_exhaustionFloor);
+            md.AppendFormat("| Reckoner | {0} | {1} | {2} | {3} | {4} | {5} |\n",
+                g.reckoner_spurtStart, g.reckoner_activeRate, g.reckoner_peakBoost,
+                g.reckoner_accelExp, g.reckoner_decelExp, g.reckoner_exhaustionFloor);
+        }
+        else
+        {
+            md.AppendLine("### 타입 보너스 (레거시)");
+            md.AppendLine();
+            md.AppendLine("| 타입 | 전반 | 중반 | 후반 |");
+            md.AppendLine("|------|------|------|------|");
+            md.AppendFormat("| Runner | {0} | {1} | {2} |\n", SF(g.earlyBonus_Runner), SF(g.midBonus_Runner), SF(g.lateBonus_Runner));
+            md.AppendFormat("| Leader | {0} | {1} | {2} |\n", SF(g.earlyBonus_Leader), SF(g.midBonus_Leader), SF(g.lateBonus_Leader));
+            md.AppendFormat("| Chaser | {0} | {1} | {2} |\n", SF(g.earlyBonus_Chaser), SF(g.midBonus_Chaser), SF(g.lateBonus_Chaser));
+            md.AppendFormat("| Reckoner | {0} | {1} | {2} |\n", SF(g.earlyBonus_Reckoner), SF(g.midBonus_Reckoner), SF(g.lateBonus_Reckoner));
+        }
         md.AppendLine();
 
         display.AppendLine("═══════════════════════════════════════════════════════════════════");
