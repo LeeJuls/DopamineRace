@@ -49,6 +49,14 @@ public class RacerController : MonoBehaviour
     private Animator normalAnimator;           // 맨몸 Animator
     private Animator attackAnimator;           // 무기 Animator
 
+    // ── ★ HP 시스템 (SPEC-006) ──
+    private float enduranceHP;                 // 현재 HP (maxHP에서 시작, 0까지 감소)
+    private float maxHP;                       // 50 + charEndurance × 2.5
+    private float totalConsumedHP;             // 누적 소모량 (부스트 비율 계산용)
+    private float hpBoostValue;                // 현재 프레임의 HP 부스트 값 (디버그용)
+    private float slipstreamBlend;             // Slipstream 페이드 0~1 (Phase 4)
+    private int currentRank;                   // 현재 순위 1~12 (Phase 4)
+
     // ── 외부 접근 ──
     public int RacerIndex => racerIndex;
     public bool IsFinished => isFinished;
@@ -61,6 +69,13 @@ public class RacerController : MonoBehaviour
     public int SkillCollisionCount => skillCollisionCount;
     public float CollisionPenalty => collisionPenalty;
     public float SlingshotBoost => slingshotBoost;
+
+    // ── HP 시스템 외부 접근 ──
+    public float EnduranceHP => enduranceHP;
+    public float MaxHP => maxHP;
+    public float TotalConsumedHP => totalConsumedHP;
+    public float HPBoostValue => hpBoostValue;
+    public int CurrentRank { get => currentRank; set => currentRank = value; }
 
     public float TotalProgress => isFinished ? float.MaxValue :
         (waypoints == null || waypoints.Count == 0) ? 0 :
@@ -150,6 +165,17 @@ public class RacerController : MonoBehaviour
         deviationTarget = 0f;
         deviationTimer = 0f;
 
+        // HP 시스템 초기화
+        if (charData != null && GameSettings.Instance.useHPSystem)
+        {
+            maxHP = GameSettings.Instance.CalcMaxHP(charData.charBaseEndurance);
+            enduranceHP = maxHP;
+            totalConsumedHP = 0f;
+            hpBoostValue = 0f;
+            slipstreamBlend = 0f;
+            currentRank = racerIndex + 1;
+        }
+
         if (animator != null) animator.SetTrigger("Run");
     }
 
@@ -179,6 +205,10 @@ public class RacerController : MonoBehaviour
         // 스킬
         skillCollisionCount = 0; skillActive = false; skillRemainingTime = 0f;
         DeactivateSkill();
+
+        // HP 시스템
+        enduranceHP = 0f; maxHP = 0f; totalConsumedHP = 0f;
+        hpBoostValue = 0f; slipstreamBlend = 0f; currentRank = 0;
 
         transform.position = pos;
         lastPosition = pos;
@@ -260,9 +290,23 @@ public class RacerController : MonoBehaviour
         condMul = Mathf.Max(condMul, 0.3f);  // 안전 가드: 0 근처 나눗셈 방지
 
         float speed = GetBaseTrackSpeed(gs, track);
-        speed *= (1f + (GetTypeBonus(gs, track) + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
-        speed += GetNoiseValue(gs, track) * condMul;
-        speed -= GetFatigue(gs, track) / condMul;   // 컨디션 좋으면 피로 감소
+
+        if (gs.useHPSystem)
+        {
+            // ═══ HP 시스템 (SPEC-006) ═══
+            ConsumeHP(gs, track, Time.deltaTime);
+            float hpBoost = CalcHPBoost(gs);
+            speed *= (1f + (hpBoost + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
+            speed += GetNoiseValue(gs, track) * condMul;
+        }
+        else
+        {
+            // ═══ 레거시 시스템 ═══
+            speed *= (1f + (GetTypeBonus(gs, track) + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
+            speed += GetNoiseValue(gs, track) * condMul;
+            speed -= GetFatigue(gs, track) / condMul;
+        }
+
         speed *= GetSlowZoneMultiplier(track);
         speed *= GetLuckCritMultiplier(gs, track);
         speed *= GetCollisionMultiplier();
@@ -330,6 +374,81 @@ public class RacerController : MonoBehaviour
         float progress = OverallProgress;
         float endurance = Mathf.Max(charData.charBaseEndurance, 1f);
         return progress * (1f / endurance) * gs.fatigueFactor * trackFatigueMul;
+    }
+
+    // ══════════════════════════════════════
+    //  ★ HP 시스템 코어 (SPEC-006)
+    // ══════════════════════════════════════
+
+    /// <summary>
+    /// HP 소모 처리 (매 프레임 호출).
+    /// consumption = (basicRate + activeRate) × √(speedRatio) × deltaTime
+    /// </summary>
+    private void ConsumeHP(GameSettings gs, TrackData track, float deltaTime)
+    {
+        if (enduranceHP <= 0f) return; // 이미 탈진
+
+        float progress = OverallProgress;
+
+        // 타입별 파라미터 가져오기
+        gs.GetHPParams(charData.charType,
+            out float spurtStart, out float activeRate, out _,
+            out _, out _, out _);
+
+        // 적극 소모율: spurtStart 이후에만 적용
+        float effectiveActiveRate = progress >= spurtStart ? activeRate : 0f;
+
+        // 속도 비율 (댐핑 팩터: √ 사용으로 양성 피드백 방지)
+        float baseTrackSpeed = GetBaseTrackSpeed(gs, track);
+        float speedRatio = baseTrackSpeed > 0.01f ? currentSpeed / baseTrackSpeed : 1f;
+        speedRatio = Mathf.Clamp(speedRatio, 0.1f, 2f);
+
+        // HP 소모량 계산
+        float consumption = (gs.basicConsumptionRate + effectiveActiveRate) * Mathf.Sqrt(speedRatio) * deltaTime;
+        consumption = Mathf.Min(consumption, enduranceHP); // HP 이하로 내려가지 않음
+
+        enduranceHP -= consumption;
+        totalConsumedHP += consumption;
+    }
+
+    /// <summary>
+    /// HP 소모 비율 기반 속도 부스트 계산.
+    /// 가속구간(0~60%): peakBoost × t^accelExp
+    /// 감속구간(60~100%): peakBoost × (1-t)^decelExp
+    /// 탈진(HP=0): exhaustionFloor (음수)
+    /// </summary>
+    private float CalcHPBoost(GameSettings gs)
+    {
+        gs.GetHPParams(charData.charType,
+            out _, out _, out float peakBoost,
+            out float accelExp, out float decelExp, out float exhaustionFloor);
+
+        float consumedRatio = maxHP > 0f ? totalConsumedHP / maxHP : 0f;
+        float threshold = gs.boostThreshold; // 0.6
+
+        float boost;
+        if (consumedRatio <= threshold)
+        {
+            // ── 가속 구간: 0% ~ 60% 소모 ──
+            float t = threshold > 0f ? consumedRatio / threshold : 0f;
+            boost = peakBoost * Mathf.Pow(t, accelExp);
+        }
+        else if (enduranceHP > 0f)
+        {
+            // ── 감속 구간: 60% ~ 100% 소모 ──
+            float remain = 1f - threshold;
+            float t = remain > 0f ? (consumedRatio - threshold) / remain : 1f;
+            t = Mathf.Clamp01(t);
+            boost = peakBoost * Mathf.Pow(1f - t, decelExp);
+        }
+        else
+        {
+            // ── 탈진: HP = 0 ──
+            boost = exhaustionFloor; // 음수값 (예: -0.05)
+        }
+
+        hpBoostValue = boost;
+        return boost;
     }
 
     // ── 트랙 중반 감속 구간 ──
