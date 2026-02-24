@@ -267,17 +267,20 @@ public class GameSettings : ScriptableObject
     [Tooltip("내구력 1당 추가 HP")]
     public float hpPerEndurance = 2.5f;
     [Tooltip("기본 소모율 (전 타입 공통, 달리는 내내 적용)")]
-    [Range(0.05f, 1.0f)]
-    public float basicConsumptionRate = 0.2f;
+    [Range(0.05f, 2.0f)]
+    public float basicConsumptionRate = 0.8f;
     [Tooltip("가속→감속 전환 임계점 (consumed% 기준)")]
-    [Range(0.3f, 0.8f)]
-    public float boostThreshold = 0.6f;
+    [Range(0.2f, 0.8f)]
+    public float boostThreshold = 0.4f;
+    [Tooltip("속도 차이 압축 (0=압축 없음, 1=전원 동일 속도). HP 시스템에서만 적용")]
+    [Range(0f, 0.95f)]
+    public float hpSpeedCompress = 0.85f;
 
     [Header("═══ HP: 도주 (Runner) ═══")]
     [Tooltip("적극 소모 시작 시점 (OverallProgress)")]
     [Range(0f, 0.9f)]  public float runner_spurtStart = 0.00f;
     [Tooltip("적극 소모율")]
-    [Range(0.5f, 5.0f)] public float runner_activeRate = 2.5f;
+    [Range(0.5f, 5.0f)] public float runner_activeRate = 3.5f;
     [Tooltip("60% 소모 시 최대 부스트")]
     [Range(0.01f, 0.2f)] public float runner_peakBoost = 0.12f;
     [Tooltip("가속 곡선 지수 (높을수록 후반 급격)")]
@@ -285,7 +288,7 @@ public class GameSettings : ScriptableObject
     [Tooltip("감속 곡선 지수 (높을수록 완만)")]
     [Range(0.3f, 3.0f)] public float runner_decelExp = 0.8f;
     [Tooltip("탈진 페널티 (음수)")]
-    [Range(-0.15f, 0f)] public float runner_exhaustionFloor = -0.05f;
+    [Range(-0.15f, 0f)] public float runner_exhaustionFloor = -0.10f;
 
     [Header("═══ HP: 선행 (Leader) ═══")]
     [Range(0f, 0.9f)]  public float leader_spurtStart = 0.10f;

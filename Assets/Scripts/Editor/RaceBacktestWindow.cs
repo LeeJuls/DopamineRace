@@ -712,6 +712,13 @@ public class RaceBacktestWindow : EditorWindow
         if (gs.useHPSystem)
         {
             // ═══ HP 시스템 (SPEC-006) ═══
+            // 속도 압축: 캐릭터 간 속도 차이를 줄여 HP 부스트가 역전 가능하게
+            // 중간점 = 0.905 (SpeedMultiplier 범위 0.81~1.0의 중앙값)
+            if (gs.hpSpeedCompress > 0f)
+            {
+                float midSpeed = 0.905f * globalMul * trackSpeedMul;
+                baseSpeed = Mathf.Lerp(baseSpeed, midSpeed, gs.hpSpeedCompress);
+            }
             SimConsumeHP(r, gs, progress);
             float hpBoost = SimCalcHPBoost(r, gs);
             typeBonus = hpBoost;

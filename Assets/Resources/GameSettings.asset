@@ -112,6 +112,44 @@ MonoBehaviour:
   noiseFactor: 0.1
   fatigueFactor: 0.15
   raceSpeedLerp: 3
+  useHPSystem: 1
+  hpBase: 50
+  hpPerEndurance: 2.5
+  basicConsumptionRate: 0.8
+  boostThreshold: 0.4
+  hpSpeedCompress: 0.85
+  runner_spurtStart: 0
+  runner_activeRate: 3.5
+  runner_peakBoost: 0.12
+  runner_accelExp: 1.5
+  runner_decelExp: 0.8
+  runner_exhaustionFloor: -0.1
+  leader_spurtStart: 0.1
+  leader_activeRate: 1.5
+  leader_peakBoost: 0.09
+  leader_accelExp: 1.2
+  leader_decelExp: 1.8
+  leader_exhaustionFloor: -0.03
+  chaser_spurtStart: 0.45
+  chaser_activeRate: 2
+  chaser_peakBoost: 0.11
+  chaser_accelExp: 1.3
+  chaser_decelExp: 1.5
+  chaser_exhaustionFloor: -0.04
+  reckoner_spurtStart: 0.72
+  reckoner_activeRate: 3
+  reckoner_peakBoost: 0.12
+  reckoner_accelExp: 2
+  reckoner_decelExp: 0.5
+  reckoner_exhaustionFloor: -0.05
+  paceLeadReduction: 0.15
+  paceLeadFadeStart: 0.7
+  paceLeadMaxRank: 3
+  slipstreamReduction: 0.2
+  slipstreamMinRank: 3
+  slipstreamMaxRank: 7
+  slipstreamFadeTime: 2
+  conservationAmpCoeff: 0.6
   earlyBonus_Runner: 0.15
   earlyBonus_Leader: 0.08
   earlyBonus_Chaser: 0

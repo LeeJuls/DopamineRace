@@ -301,6 +301,14 @@ public class RacerController : MonoBehaviour
         if (gs.useHPSystem)
         {
             // ═══ HP 시스템 (SPEC-006) ═══
+            // 속도 압축: 캐릭터 간 속도 차이를 줄여 HP 부스트가 역전 가능하게
+            // 중간점 = 0.905 (SpeedMultiplier 범위 0.81~1.0의 중앙값)
+            if (gs.hpSpeedCompress > 0f)
+            {
+                float trackSpeedMul = track != null ? track.speedMultiplier : 1f;
+                float midSpeed = 0.905f * gs.globalSpeedMultiplier * trackSpeedMul;
+                speed = Mathf.Lerp(speed, midSpeed, gs.hpSpeedCompress);
+            }
             ConsumeHP(gs, track, Time.deltaTime);
             float hpBoost = CalcHPBoost(gs);
             speed *= (1f + (hpBoost + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
