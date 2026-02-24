@@ -228,6 +228,13 @@ public class RacerController : MonoBehaviour
 
         var gs = GameSettings.Instance;
 
+        // ── 0) HP 시스템: 실시간 순위 + 슬립스트림 블렌드 갱신 ──
+        if (gs.useHPSystem && charData != null)
+        {
+            UpdateRank();
+            UpdateSlipstreamBlend(Time.deltaTime);
+        }
+
         // ── 1) 스탯 기반 속도 계산 ──
         float finalSpeed = CalculateSpeed(gs);
         currentSpeed = Mathf.Lerp(currentSpeed, finalSpeed, Time.deltaTime * gs.raceSpeedLerp);
@@ -397,6 +404,40 @@ public class RacerController : MonoBehaviour
 
         // 적극 소모율: spurtStart 이후에만 적용
         float effectiveActiveRate = progress >= spurtStart ? activeRate : 0f;
+        float effectiveBasicRate = gs.basicConsumptionRate;
+
+        // ═══ Phase 4: 포지션 보정 (SPEC-006 §5) ═══
+        switch (charData.charType)
+        {
+            case CharacterType.Leader:
+                // 5.1 Pace Lead: 1~3위에서 activeRate 절감, progress > 0.7 후반 약화
+                if (currentRank >= 1 && currentRank <= 3)
+                {
+                    float paceLeadEffect = gs.paceLeadReduction; // 0.15
+                    if (progress > 0.7f)
+                    {
+                        float fade = 1f - (progress - 0.7f) / 0.3f;
+                        paceLeadEffect *= Mathf.Max(0f, fade);
+                    }
+                    effectiveActiveRate *= (1f - paceLeadEffect);
+                }
+                break;
+
+            case CharacterType.Chaser:
+                // 5.2 Slipstream: 3~7위에서 basicRate 절감 (슬립스트림 블렌드 적용)
+                effectiveBasicRate *= (1f - gs.slipstreamReduction * slipstreamBlend);
+                break;
+
+            case CharacterType.Reckoner:
+                // 5.3 Conservation Amp: 잔여 HP 많을수록 activeRate 증폭
+                if (effectiveActiveRate > 0f && maxHP > 0f)
+                {
+                    float remainingRatio = enduranceHP / maxHP;
+                    float amplifier = 1f + Mathf.Max(0f, remainingRatio - 0.5f) * gs.conservationAmpCoeff;
+                    effectiveActiveRate *= amplifier;
+                }
+                break;
+        }
 
         // 속도 비율 (댐핑 팩터: √ 사용으로 양성 피드백 방지)
         float baseTrackSpeed = GetBaseTrackSpeed(gs, track);
@@ -404,7 +445,7 @@ public class RacerController : MonoBehaviour
         speedRatio = Mathf.Clamp(speedRatio, 0.1f, 2f);
 
         // HP 소모량 계산
-        float consumption = (gs.basicConsumptionRate + effectiveActiveRate) * Mathf.Sqrt(speedRatio) * deltaTime;
+        float consumption = (effectiveBasicRate + effectiveActiveRate) * Mathf.Sqrt(speedRatio) * deltaTime;
         consumption = Mathf.Min(consumption, enduranceHP); // HP 이하로 내려가지 않음
 
         enduranceHP -= consumption;
@@ -449,6 +490,34 @@ public class RacerController : MonoBehaviour
 
         hpBoostValue = boost;
         return boost;
+    }
+
+    // ═══ Phase 4: 실시간 순위 갱신 (SPEC-006 §5) ═══
+    private void UpdateRank()
+    {
+        if (RaceManager.Instance == null) return;
+        var racers = RaceManager.Instance.Racers;
+        int rank = 1;
+        float myProgress = TotalProgress;
+        for (int i = 0; i < racers.Count; i++)
+        {
+            if (racers[i] != this && racers[i].TotalProgress > myProgress)
+                rank++;
+        }
+        currentRank = rank;
+    }
+
+    // ═══ Phase 4: Slipstream 블렌드 (Chaser 전용) ═══
+    private void UpdateSlipstreamBlend(float deltaTime)
+    {
+        if (charData.charType != CharacterType.Chaser)
+        {
+            slipstreamBlend = 0f;
+            return;
+        }
+        // 3~7위 = 슬립스트림 범위 (SPEC-006 §5.2)
+        float target = (currentRank >= 3 && currentRank <= 7) ? 1f : 0f;
+        slipstreamBlend = Mathf.MoveTowards(slipstreamBlend, target, deltaTime / 2f);
     }
 
     // ── 트랙 중반 감속 구간 ──
