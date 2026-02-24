@@ -254,7 +254,129 @@ public class GameSettings : ScriptableObject
     [Range(1f, 10f)]
     public float raceSpeedLerp = 3f;
 
-    [Header("═══ 타입 보너스 (전반 0~35%) ═══")]
+    [Tooltip("HP 시스템 사용 여부 (false면 레거시 타입보너스+피로 사용)")]
+    public bool useHPSystem = true;
+
+    // ══════════════════════════════════════
+    //  지구력 HP 시스템 (SPEC-006)
+    // ══════════════════════════════════════
+
+    [Header("═══ HP 시스템 공통 ═══")]
+    [Tooltip("maxHP = hpBase + endurance × hpPerEndurance")]
+    public float hpBase = 50f;
+    [Tooltip("내구력 1당 추가 HP")]
+    public float hpPerEndurance = 2.5f;
+    [Tooltip("기본 소모율 (전 타입 공통, 달리는 내내 적용)")]
+    [Range(0.05f, 1.0f)]
+    public float basicConsumptionRate = 0.2f;
+    [Tooltip("가속→감속 전환 임계점 (consumed% 기준)")]
+    [Range(0.3f, 0.8f)]
+    public float boostThreshold = 0.6f;
+
+    [Header("═══ HP: 도주 (Runner) ═══")]
+    [Tooltip("적극 소모 시작 시점 (OverallProgress)")]
+    [Range(0f, 0.9f)]  public float runner_spurtStart = 0.00f;
+    [Tooltip("적극 소모율")]
+    [Range(0.5f, 5.0f)] public float runner_activeRate = 2.5f;
+    [Tooltip("60% 소모 시 최대 부스트")]
+    [Range(0.01f, 0.2f)] public float runner_peakBoost = 0.12f;
+    [Tooltip("가속 곡선 지수 (높을수록 후반 급격)")]
+    [Range(0.5f, 3.0f)] public float runner_accelExp = 1.5f;
+    [Tooltip("감속 곡선 지수 (높을수록 완만)")]
+    [Range(0.3f, 3.0f)] public float runner_decelExp = 0.8f;
+    [Tooltip("탈진 페널티 (음수)")]
+    [Range(-0.15f, 0f)] public float runner_exhaustionFloor = -0.05f;
+
+    [Header("═══ HP: 선행 (Leader) ═══")]
+    [Range(0f, 0.9f)]  public float leader_spurtStart = 0.10f;
+    [Range(0.5f, 5.0f)] public float leader_activeRate = 1.5f;
+    [Range(0.01f, 0.2f)] public float leader_peakBoost = 0.09f;
+    [Range(0.5f, 3.0f)] public float leader_accelExp = 1.2f;
+    [Range(0.3f, 3.0f)] public float leader_decelExp = 1.8f;
+    [Range(-0.15f, 0f)] public float leader_exhaustionFloor = -0.03f;
+
+    [Header("═══ HP: 선입 (Chaser) ═══")]
+    [Range(0f, 0.9f)]  public float chaser_spurtStart = 0.45f;
+    [Range(0.5f, 5.0f)] public float chaser_activeRate = 2.0f;
+    [Range(0.01f, 0.2f)] public float chaser_peakBoost = 0.11f;
+    [Range(0.5f, 3.0f)] public float chaser_accelExp = 1.3f;
+    [Range(0.3f, 3.0f)] public float chaser_decelExp = 1.5f;
+    [Range(-0.15f, 0f)] public float chaser_exhaustionFloor = -0.04f;
+
+    [Header("═══ HP: 추행 (Reckoner) ═══")]
+    [Range(0f, 0.9f)]  public float reckoner_spurtStart = 0.72f;
+    [Range(0.5f, 5.0f)] public float reckoner_activeRate = 3.0f;
+    [Range(0.01f, 0.2f)] public float reckoner_peakBoost = 0.12f;
+    [Range(0.5f, 3.0f)] public float reckoner_accelExp = 2.0f;
+    [Range(0.3f, 3.0f)] public float reckoner_decelExp = 0.5f;
+    [Range(-0.15f, 0f)] public float reckoner_exhaustionFloor = -0.05f;
+
+    [Header("═══ HP: 포지션 보정 ═══")]
+    [Tooltip("Pace Lead: 선행이 상위 순위일 때 activeRate 감소율")]
+    [Range(0f, 0.4f)] public float paceLeadReduction = 0.15f;
+    [Tooltip("Pace Lead 효과 감소 시작 시점")]
+    [Range(0.5f, 0.9f)] public float paceLeadFadeStart = 0.7f;
+    [Tooltip("Pace Lead 발동 최대 순위")]
+    [Range(1, 6)] public int paceLeadMaxRank = 3;
+
+    [Tooltip("Slipstream: 선입이 중간 순위일 때 basicRate 감소율")]
+    [Range(0f, 0.4f)] public float slipstreamReduction = 0.20f;
+    [Tooltip("Slipstream 발동 최소 순위")]
+    [Range(1, 12)] public int slipstreamMinRank = 3;
+    [Tooltip("Slipstream 발동 최대 순위")]
+    [Range(1, 12)] public int slipstreamMaxRank = 7;
+    [Tooltip("Slipstream 페이드 시간 (초)")]
+    [Range(0.5f, 5f)] public float slipstreamFadeTime = 2.0f;
+
+    [Tooltip("Conservation Amplifier 계수 (추행 전용)")]
+    [Range(0f, 1.5f)] public float conservationAmpCoeff = 0.6f;
+
+    // ══════════════════════════════════════
+    //  HP 헬퍼 메서드
+    // ══════════════════════════════════════
+
+    /// <summary>
+    /// 캐릭터 타입에 맞는 HP 파라미터 반환
+    /// </summary>
+    public void GetHPParams(CharacterType type,
+        out float spurtStart, out float activeRate, out float peakBoost,
+        out float accelExp, out float decelExp, out float exhaustionFloor)
+    {
+        switch (type)
+        {
+            case CharacterType.Runner:
+                spurtStart = runner_spurtStart; activeRate = runner_activeRate;
+                peakBoost = runner_peakBoost; accelExp = runner_accelExp;
+                decelExp = runner_decelExp; exhaustionFloor = runner_exhaustionFloor;
+                return;
+            case CharacterType.Leader:
+                spurtStart = leader_spurtStart; activeRate = leader_activeRate;
+                peakBoost = leader_peakBoost; accelExp = leader_accelExp;
+                decelExp = leader_decelExp; exhaustionFloor = leader_exhaustionFloor;
+                return;
+            case CharacterType.Chaser:
+                spurtStart = chaser_spurtStart; activeRate = chaser_activeRate;
+                peakBoost = chaser_peakBoost; accelExp = chaser_accelExp;
+                decelExp = chaser_decelExp; exhaustionFloor = chaser_exhaustionFloor;
+                return;
+            default: // Reckoner
+                spurtStart = reckoner_spurtStart; activeRate = reckoner_activeRate;
+                peakBoost = reckoner_peakBoost; accelExp = reckoner_accelExp;
+                decelExp = reckoner_decelExp; exhaustionFloor = reckoner_exhaustionFloor;
+                return;
+        }
+    }
+
+    /// <summary>
+    /// charEndurance → maxHP 계산
+    /// </summary>
+    public float CalcMaxHP(float endurance)
+    {
+        return hpBase + endurance * hpPerEndurance;
+    }
+
+    [Header("═══ 타입 보너스 (레거시 — HP 시스템 OFF 시 사용) ═══")]
+    [Header("전반 0~35%")]
     [Range(-0.3f, 0.3f)] public float earlyBonus_Runner = 0.15f;
     [Range(-0.3f, 0.3f)] public float earlyBonus_Leader = 0.08f;
     [Range(-0.3f, 0.3f)] public float earlyBonus_Chaser = 0.0f;
