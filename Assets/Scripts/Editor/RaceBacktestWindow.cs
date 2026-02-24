@@ -129,6 +129,10 @@ public class RaceBacktestWindow : EditorWindow
         public float maxHP;
         public float totalConsumedHP;
         public float hpBoostValue;
+
+        // ★ Phase 4: 포지션 보정
+        public int currentRank;           // 실시간 순위 (1~N)
+        public float slipstreamBlend;     // Chaser 슬립스트림 페이드 (0~1)
     }
 
     private struct SlingshotReserve
@@ -395,6 +399,8 @@ public class RaceBacktestWindow : EditorWindow
                     racer.enduranceHP = racer.maxHP;
                     racer.totalConsumedHP = 0f;
                     racer.hpBoostValue = 0f;
+                    racer.currentRank = 0;
+                    racer.slipstreamBlend = 0f;
                 }
 
                 racers.Add(racer);
@@ -410,6 +416,30 @@ public class RaceBacktestWindow : EditorWindow
             while (finishedCount < racerCount && simTime < 300f)
             {
                 simTime += simTimeStep;
+
+                // ═══ Phase 4: 순위 + 슬립스트림 갱신 ═══
+                if (gs.useHPSystem)
+                {
+                    for (int ri = 0; ri < racers.Count; ri++)
+                    {
+                        if (racers[ri].finished) continue;
+                        int rank = 1;
+                        for (int rj = 0; rj < racers.Count; rj++)
+                        {
+                            if (ri != rj && racers[rj].position > racers[ri].position)
+                                rank++;
+                        }
+                        racers[ri].currentRank = rank;
+
+                        // Slipstream 블렌드 (Chaser 전용)
+                        if (racers[ri].data.charType == CharacterType.Chaser)
+                        {
+                            float target = (rank >= 3 && rank <= 7) ? 1f : 0f;
+                            racers[ri].slipstreamBlend = Mathf.MoveTowards(
+                                racers[ri].slipstreamBlend, target, simTimeStep / 2f);
+                        }
+                    }
+                }
 
                 foreach (var r in racers)
                 {
@@ -771,13 +801,47 @@ public class RaceBacktestWindow : EditorWindow
             out _, out _, out _);
 
         float effectiveActiveRate = progress >= spurtStart ? activeRate : 0f;
+        float effectiveBasicRate = gs.basicConsumptionRate;
+
+        // ═══ Phase 4: 포지션 보정 (SPEC-006 §5) ═══
+        switch (r.data.charType)
+        {
+            case CharacterType.Leader:
+                // Pace Lead: 1~3위에서 activeRate 절감, 후반 약화
+                if (r.currentRank >= 1 && r.currentRank <= 3)
+                {
+                    float paceLeadEffect = gs.paceLeadReduction;
+                    if (progress > 0.7f)
+                    {
+                        float fade = 1f - (progress - 0.7f) / 0.3f;
+                        paceLeadEffect *= Mathf.Max(0f, fade);
+                    }
+                    effectiveActiveRate *= (1f - paceLeadEffect);
+                }
+                break;
+
+            case CharacterType.Chaser:
+                // Slipstream: 3~7위에서 basicRate 절감
+                effectiveBasicRate *= (1f - gs.slipstreamReduction * r.slipstreamBlend);
+                break;
+
+            case CharacterType.Reckoner:
+                // Conservation Amp: 잔여 HP 많을수록 activeRate 증폭
+                if (effectiveActiveRate > 0f && r.maxHP > 0f)
+                {
+                    float remainingRatio = r.enduranceHP / r.maxHP;
+                    float amplifier = 1f + Mathf.Max(0f, remainingRatio - 0.5f) * gs.conservationAmpCoeff;
+                    effectiveActiveRate *= amplifier;
+                }
+                break;
+        }
 
         float trackSpeedMul = selectedTrack != null ? selectedTrack.speedMultiplier : 1f;
         float baseTrackSpeed = r.data.SpeedMultiplier * gs.globalSpeedMultiplier * trackSpeedMul;
         float speedRatio = baseTrackSpeed > 0.01f ? r.currentSpeed / baseTrackSpeed : 1f;
         speedRatio = Mathf.Clamp(speedRatio, 0.1f, 2f);
 
-        float consumption = (gs.basicConsumptionRate + effectiveActiveRate) * Mathf.Sqrt(speedRatio) * simTimeStep;
+        float consumption = (effectiveBasicRate + effectiveActiveRate) * Mathf.Sqrt(speedRatio) * simTimeStep;
         consumption = Mathf.Min(consumption, r.enduranceHP);
 
         r.enduranceHP -= consumption;
