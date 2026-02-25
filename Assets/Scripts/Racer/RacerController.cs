@@ -54,8 +54,12 @@ public class RacerController : MonoBehaviour
     private float maxHP;                       // 50 + charEndurance × 2.5
     private float totalConsumedHP;             // 누적 소모량 (부스트 비율 계산용)
     private float hpBoostValue;                // 현재 프레임의 HP 부스트 값 (디버그용)
-    private float slipstreamBlend;             // Slipstream 페이드 0~1 (Phase 4)
+    private float slipstreamBlend;             // 슬립스트림 페이드 0~1 (전체 타입, 거리 기반)
     private int currentRank;                   // 현재 순위 1~12 (Phase 4)
+
+    // ── CP 시스템 (Calm Points) ──
+    private float calmPoints;                  // 현재 CP
+    private float maxCP;                       // 최대 CP (calm × cpMultiplier)
 
     // ── 외부 접근 ──
     public int RacerIndex => racerIndex;
@@ -76,6 +80,11 @@ public class RacerController : MonoBehaviour
     public float TotalConsumedHP => totalConsumedHP;
     public float HPBoostValue => hpBoostValue;
     public int CurrentRank { get => currentRank; set => currentRank = value; }
+
+    // ── CP 시스템 외부 접근 ──
+    public float CalmPoints => calmPoints;
+    public float MaxCPValue => maxCP;
+    public float CPRatio => maxCP > 0f ? calmPoints / maxCP : 0f;
 
     public float TotalProgress => isFinished ? float.MaxValue :
         (waypoints == null || waypoints.Count == 0) ? 0 :
@@ -174,6 +183,11 @@ public class RacerController : MonoBehaviour
             hpBoostValue = 0f;
             slipstreamBlend = 0f;
             currentRank = racerIndex + 1;
+
+            // CP 시스템 초기화
+            var gs = GameSettings.Instance;
+            maxCP = charData.charBaseCalm * gs.cpMultiplier;
+            calmPoints = maxCP;
         }
 
         if (animator != null) animator.SetTrigger("Run");
@@ -210,6 +224,9 @@ public class RacerController : MonoBehaviour
         enduranceHP = 0f; maxHP = 0f; totalConsumedHP = 0f;
         hpBoostValue = 0f; slipstreamBlend = 0f; currentRank = 0;
 
+        // CP 시스템
+        calmPoints = 0f; maxCP = 0f;
+
         transform.position = pos;
         lastPosition = pos;
         if (animator != null) animator.SetTrigger("Idle");
@@ -228,11 +245,12 @@ public class RacerController : MonoBehaviour
 
         var gs = GameSettings.Instance;
 
-        // ── 0) HP 시스템: 실시간 순위 + 슬립스트림 블렌드 갱신 ──
+        // ── 0) HP 시스템: 실시간 순위 + 슬립스트림 블렌드 + CP 소모 ──
         if (gs.useHPSystem && charData != null)
         {
             UpdateRank();
             UpdateSlipstreamBlend(Time.deltaTime);
+            ConsumeCP(gs, Time.deltaTime);
         }
 
         // ── 1) 스탯 기반 속도 계산 ──
@@ -312,8 +330,9 @@ public class RacerController : MonoBehaviour
             ConsumeHP(gs, track, Time.deltaTime);
             float hpBoost = CalcHPBoost(gs);
             float earlyBonus = gs.GetHPEarlyBonus(charData.charType, OverallProgress);
-            float trailingBonus = gs.GetTrailingBonus(currentRank);
-            speed *= (1f + (hpBoost + earlyBonus + trailingBonus + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
+            float cpEff = gs.GetCPEfficiency(CPRatio);
+            float ssBonus = gs.GetSlipstreamBonus(charData.charType, slipstreamBlend, cpEff);
+            speed *= (1f + (hpBoost + earlyBonus + ssBonus + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
             speed += GetNoiseValue(gs, track) * condMul;
         }
         else
@@ -434,8 +453,7 @@ public class RacerController : MonoBehaviour
                 break;
 
             case CharacterType.Chaser:
-                // 5.2 Slipstream: 3~7위에서 basicRate 절감 (슬립스트림 블렌드 적용)
-                effectiveBasicRate *= (1f - gs.slipstreamReduction * slipstreamBlend);
+                // CP 시스템으로 이전 — HP basicRate 절감 제거
                 break;
 
             case CharacterType.Reckoner:
@@ -517,21 +535,36 @@ public class RacerController : MonoBehaviour
         currentRank = rank;
     }
 
-    // ═══ Phase 4: Slipstream 블렌드 (Chaser 전용) ═══
+    // ═══ 개선 슬립스트림 (전체 타입, 거리 기반) ═══
     private void UpdateSlipstreamBlend(float deltaTime)
     {
-        if (charData.charType != CharacterType.Chaser)
-        {
-            slipstreamBlend = 0f;
-            return;
-        }
-        // slipstreamMinRank~MaxRank 범위 (GameSettings 조절 가능)
         var gs = GameSettings.Instance;
-        int minR = gs != null ? gs.slipstreamMinRank : 3;
-        int maxR = gs != null ? gs.slipstreamMaxRank : 7;
-        float fadeTime = gs != null ? Mathf.Max(gs.slipstreamFadeTime, 0.01f) : 2f;
-        float target = (currentRank >= minR && currentRank <= maxR) ? 1f : 0f;
+        if (gs == null || RaceManager.Instance == null) { slipstreamBlend = 0f; return; }
+
+        float myProgress = TotalProgress;
+        float closestGap = float.MaxValue;
+        foreach (var r in RaceManager.Instance.Racers)
+        {
+            if (r == this || r.IsFinished) continue;
+            float gap = r.TotalProgress - myProgress;
+            if (gap > 0f && gap < closestGap) closestGap = gap;
+        }
+
+        float target = (closestGap < gs.universalSlipstreamRange)
+            ? 1f - (closestGap / gs.universalSlipstreamRange)
+            : 0f;
+        float fadeTime = Mathf.Max(gs.slipstreamFadeTime, 0.01f);
         slipstreamBlend = Mathf.MoveTowards(slipstreamBlend, target, deltaTime / fadeTime);
+    }
+
+    // ═══ CP 소모 ═══
+    private void ConsumeCP(GameSettings gs, float deltaTime)
+    {
+        if (calmPoints <= 0f) return;
+        float drain = gs.cpBasicDrain;
+        if (slipstreamBlend > 0f)
+            drain += gs.cpSlipstreamDrain * slipstreamBlend;
+        calmPoints = Mathf.Max(0f, calmPoints - drain * deltaTime);
     }
 
     // ── 트랙 중반 감속 구간 ──
@@ -565,6 +598,12 @@ public class RacerController : MonoBehaviour
         {
             float calm = Mathf.Max(charData.charBaseCalm, 1f);
             float maxNoise = (1f / calm) * gs.noiseFactor * trackNoiseMul * gs.globalSpeedMultiplier;
+
+            // CP/HP 불안정 배율 적용 (곱연산)
+            float cpNoiseMul = gs.GetCPNoiseMul(CPRatio);
+            float hpNoiseMul = gs.GetHPNoiseMul(maxHP > 0 ? enduranceHP / maxHP : 1f);
+            maxNoise *= cpNoiseMul * hpNoiseMul;
+
             noiseValue = UnityEngine.Random.Range(-maxNoise, maxNoise);
             noiseTimer = UnityEngine.Random.Range(0.5f, 1.5f);
         }

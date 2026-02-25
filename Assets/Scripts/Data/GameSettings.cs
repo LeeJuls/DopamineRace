@@ -322,13 +322,7 @@ public class GameSettings : ScriptableObject
     [Tooltip("Pace Lead 발동 최대 순위")]
     [Range(1, 6)] public int paceLeadMaxRank = 3;
 
-    [Tooltip("Slipstream: 선입이 중간 순위일 때 basicRate 감소율")]
-    [Range(0f, 0.4f)] public float slipstreamReduction = 0.20f;
-    [Tooltip("Slipstream 발동 최소 순위")]
-    [Range(1, 12)] public int slipstreamMinRank = 3;
-    [Tooltip("Slipstream 발동 최대 순위")]
-    [Range(1, 12)] public int slipstreamMaxRank = 7;
-    [Tooltip("Slipstream 페이드 시간 (초)")]
+    [Tooltip("슬립스트림 블렌드 페이드 시간 (초)")]
     [Range(0.5f, 5f)] public float slipstreamFadeTime = 2.0f;
 
     [Tooltip("Conservation Amplifier 계수 (추행 전용)")]
@@ -367,22 +361,65 @@ public class GameSettings : ScriptableObject
         return bonus * fade;
     }
 
-    [Header("═══ HP: 하위권 추월 부스트 ═══")]
-    [Tooltip("추월 부스트 시작 순위 (이 순위 이하부터 보너스, 기본 8위)")]
-    [Range(1, 12)] public int trailingBonusStartRank = 8;
-    [Tooltip("순위 1계단당 추가 속도 보너스 (8위: ×1, 9위: ×2, ...)")]
-    [Range(0f, 0.05f)] public float trailingBonusStep = 0.025f;
+    [Header("═══ CP 시스템 (Calm Points) ═══")]
+    [Tooltip("CP 최대치 = charBaseCalm × 이 값")]
+    [Range(1f, 30f)] public float cpMultiplier = 10f;
+    [Tooltip("기본 CP 소모율 (/초, 레이스 중 항상 소모)")]
+    [Range(0f, 2f)] public float cpBasicDrain = 0.3f;
+    [Tooltip("슬립스트림 활성 시 추가 CP 소모율 (/초)")]
+    [Range(0f, 5f)] public float cpSlipstreamDrain = 1.5f;
 
-    /// <summary>
-    /// HP 시스템용 하위권 추월 부스트.
-    /// trailingBonusStartRank 이하 순위에서 계단식 속도 보너스 부여.
-    /// 8위(+2.5%), 9위(+5%), 10위(+7.5%), 11위(+10%), 12위(+12.5%)
-    /// </summary>
-    public float GetTrailingBonus(int rank)
+    [Header("═══ 개선 슬립스트림 (전체 타입, 거리 기반) ═══")]
+    [Tooltip("슬립스트림 유효 거리 (TotalProgress 단위)")]
+    [Range(0.01f, 0.3f)] public float universalSlipstreamRange = 0.08f;
+    [Tooltip("기본 최대 속도 보너스")]
+    [Range(0f, 0.1f)] public float universalSlipstreamBonus = 0.04f;
+    [Tooltip("Chaser 슬립스트림 효율 배율 (타입 특성)")]
+    [Range(1f, 3f)] public float chaserSlipstreamMult = 1.3f;
+
+    [Header("═══ CP/HP 불안정 ═══")]
+    [Tooltip("CP 잔량 이하 시 슬립스트림 효과 감소 시작")]
+    [Range(0.2f, 0.8f)] public float cpWeakThreshold = 0.5f;
+    [Tooltip("CP 바닥 시 슬립스트림 최소 효율 (0.5 = 50%)")]
+    [Range(0f, 1f)] public float cpMinEfficiency = 0.5f;
+    [Tooltip("CP 바닥 시 노이즈 배율")]
+    [Range(1f, 4f)] public float cpLowNoiseMul = 2.0f;
+    [Tooltip("HP 불안정 시작 잔량 비율")]
+    [Range(0.2f, 0.6f)] public float hpUnstableThreshold = 0.4f;
+    [Tooltip("HP 바닥 시 노이즈 배율")]
+    [Range(1f, 5f)] public float hpLowNoiseMul = 2.5f;
+
+    /// CP 잔량비 → 슬립스트림 효율 (1.0~cpMinEfficiency)
+    public float GetCPEfficiency(float cpRatio)
     {
-        if (rank < trailingBonusStartRank) return 0f;
-        float depth = (float)(rank - trailingBonusStartRank + 1);
-        return Mathf.Min(depth * trailingBonusStep, 0.30f);
+        if (cpRatio >= cpWeakThreshold) return 1f;
+        float t = cpRatio / cpWeakThreshold;  // 0~1
+        return Mathf.Lerp(cpMinEfficiency, 1f, t);
+    }
+
+    /// CP 잔량비 → 노이즈 배율 (1.0~cpLowNoiseMul)
+    public float GetCPNoiseMul(float cpRatio)
+    {
+        if (cpRatio >= cpWeakThreshold) return 1f;
+        float t = cpRatio / cpWeakThreshold;
+        return Mathf.Lerp(cpLowNoiseMul, 1f, t);
+    }
+
+    /// HP 잔량비 → 노이즈 배율 (1.0~hpLowNoiseMul)
+    public float GetHPNoiseMul(float hpRatio)
+    {
+        if (hpRatio >= hpUnstableThreshold) return 1f;
+        float t = hpRatio / hpUnstableThreshold;
+        return Mathf.Lerp(hpLowNoiseMul, 1f, t);
+    }
+
+    /// 슬립스트림 속도 보너스 (blend 0~1, CP 효율 적용)
+    public float GetSlipstreamBonus(CharacterType type, float blend, float cpEfficiency)
+    {
+        if (blend <= 0f) return 0f;
+        float bonus = universalSlipstreamBonus * blend * cpEfficiency;
+        if (type == CharacterType.Chaser) bonus *= chaserSlipstreamMult;
+        return bonus;
     }
 
     // ══════════════════════════════════════

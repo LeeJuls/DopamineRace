@@ -132,7 +132,11 @@ public class RaceBacktestWindow : EditorWindow
 
         // ★ Phase 4: 포지션 보정
         public int currentRank;           // 실시간 순위 (1~N)
-        public float slipstreamBlend;     // Chaser 슬립스트림 페이드 (0~1)
+        public float slipstreamBlend;     // 슬립스트림 페이드 (0~1, 전체 타입)
+
+        // ★ CP 시스템
+        public float calmPoints;          // 현재 CP
+        public float maxCP;               // 최대 CP
     }
 
     private struct SlingshotReserve
@@ -401,6 +405,10 @@ public class RaceBacktestWindow : EditorWindow
                     racer.hpBoostValue = 0f;
                     racer.currentRank = 0;
                     racer.slipstreamBlend = 0f;
+
+                    // CP 시스템 초기화
+                    racer.maxCP = cd.charBaseCalm * gs.cpMultiplier;
+                    racer.calmPoints = racer.maxCP;
                 }
 
                 racers.Add(racer);
@@ -417,27 +425,41 @@ public class RaceBacktestWindow : EditorWindow
             {
                 simTime += simTimeStep;
 
-                // ═══ Phase 4: 순위 + 슬립스트림 갱신 ═══
+                // ═══ Phase 4: 순위 + 슬립스트림 + CP 소모 갱신 ═══
                 if (gs.useHPSystem)
                 {
                     for (int ri = 0; ri < racers.Count; ri++)
                     {
                         if (racers[ri].finished) continue;
+
+                        // 순위 계산
                         int rank = 1;
+                        float myPos = racers[ri].position;
+                        float closestGap = float.MaxValue;
                         for (int rj = 0; rj < racers.Count; rj++)
                         {
-                            if (ri != rj && racers[rj].position > racers[ri].position)
-                                rank++;
+                            if (ri == rj || racers[rj].finished) continue;
+                            if (racers[rj].position > myPos) rank++;
+                            float gap = (racers[rj].position - myPos) / finishDistance;
+                            if (gap > 0f && gap < closestGap) closestGap = gap;
                         }
                         racers[ri].currentRank = rank;
 
-                        // Slipstream 블렌드 (Chaser 전용, GameSettings 값 반영)
-                        if (racers[ri].data.charType == CharacterType.Chaser)
+                        // 슬립스트림 블렌드 (전체 타입, 거리 기반)
+                        float ssTarget = (closestGap < gs.universalSlipstreamRange)
+                            ? 1f - (closestGap / gs.universalSlipstreamRange) : 0f;
+                        float fadeTime = Mathf.Max(gs.slipstreamFadeTime, 0.01f);
+                        racers[ri].slipstreamBlend = Mathf.MoveTowards(
+                            racers[ri].slipstreamBlend, ssTarget, simTimeStep / fadeTime);
+
+                        // CP 소모
+                        if (racers[ri].calmPoints > 0f)
                         {
-                            float target = (rank >= gs.slipstreamMinRank && rank <= gs.slipstreamMaxRank) ? 1f : 0f;
-                            float fadeTime = Mathf.Max(gs.slipstreamFadeTime, 0.01f);
-                            racers[ri].slipstreamBlend = Mathf.MoveTowards(
-                                racers[ri].slipstreamBlend, target, simTimeStep / fadeTime);
+                            float drain = gs.cpBasicDrain;
+                            if (racers[ri].slipstreamBlend > 0f)
+                                drain += gs.cpSlipstreamDrain * racers[ri].slipstreamBlend;
+                            racers[ri].calmPoints = Mathf.Max(0f,
+                                racers[ri].calmPoints - drain * simTimeStep);
                         }
                     }
                 }
@@ -693,13 +715,19 @@ public class RaceBacktestWindow : EditorWindow
         float speedContrib = (cd.SpeedMultiplier - 0.8f) * globalMul * trackSpeedMul * simTimeStep;
         r.contrib_speed += speedContrib;
 
-        // noise (calm)
+        // noise (calm) + CP/HP 불안정 배율
         r.noiseTimer -= simTimeStep;
         if (r.noiseTimer <= 0f)
         {
             float calm = Mathf.Max(cd.charBaseCalm, 1f);
             float trackNoiseMul = track != null ? track.noiseMultiplier : 1f;
             float maxNoise = (1f / calm) * gs.noiseFactor * trackNoiseMul * globalMul;
+
+            // CP/HP 불안정 배율 (곱연산)
+            float cpRatio = r.maxCP > 0f ? r.calmPoints / r.maxCP : 0f;
+            float hpRatio = r.maxHP > 0f ? r.enduranceHP / r.maxHP : 1f;
+            maxNoise *= gs.GetCPNoiseMul(cpRatio) * gs.GetHPNoiseMul(hpRatio);
+
             r.noiseValue = Random.Range(-maxNoise, maxNoise);
             r.noiseTimer = Random.Range(0.5f, 1.5f);
         }
@@ -723,9 +751,11 @@ public class RaceBacktestWindow : EditorWindow
             SimConsumeHP(r, gs, progress);
             float hpBoost = SimCalcHPBoost(r, gs);
             float earlyBonus = gs.GetHPEarlyBonus(cd.charType, progress);
-            float trailingBonus = gs.GetTrailingBonus(r.currentRank);
-            typeBonus = hpBoost + earlyBonus + trailingBonus;
-            // ★ HP 부스트 + 초반 타입 보너스 + 하위권 추월 부스트 기여
+            float cpRatioCalc = r.maxCP > 0f ? r.calmPoints / r.maxCP : 0f;
+            float cpEff = gs.GetCPEfficiency(cpRatioCalc);
+            float ssBonus = gs.GetSlipstreamBonus(cd.charType, r.slipstreamBlend, cpEff);
+            typeBonus = hpBoost + earlyBonus + ssBonus;
+            // ★ HP 부스트 + 초반 타입 보너스 + 슬립스트림 보너스 기여
             r.contrib_type += baseSpeed * typeBonus * simTimeStep;
         }
         else
@@ -831,8 +861,7 @@ public class RaceBacktestWindow : EditorWindow
                 break;
 
             case CharacterType.Chaser:
-                // Slipstream: 3~7위에서 basicRate 절감
-                effectiveBasicRate *= (1f - gs.slipstreamReduction * r.slipstreamBlend);
+                // CP 시스템으로 이전 — HP basicRate 절감 제거
                 break;
 
             case CharacterType.Reckoner:
