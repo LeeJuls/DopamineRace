@@ -580,6 +580,7 @@ public class RaceBacktestWindow : EditorWindow
 
     private void SimCollisions(List<SimRacer> racers, GameSettings gs, float simTime)
     {
+        if (simTime < gs.collisionSettlingTime) return;
         float range = gs.collisionRange;
         TrackData track = selectedTrack;
         if (track != null) range *= track.collisionRangeMultiplier;
@@ -957,8 +958,9 @@ public class RaceBacktestWindow : EditorWindow
         bool multiTrack = results.Count > 1;
 
         // ── 헤더 ──
+        string settlingInfo = simCollision ? string.Format("ON(settling:{0:F1}s)", GameSettings.Instance.collisionSettlingTime) : "OFF";
         string header = string.Format("백테스팅 v3  |  {0}회 × {1}바퀴 × {2}명  |  충돌:{3}  |  트랙:{4}",
-            simCount, simLaps, simRacers, simCollision ? "ON" : "OFF",
+            simCount, simLaps, simRacers, settlingInfo,
             multiTrack ? "전체 " + results.Count + "종" : results[0].trackName);
 
         display.AppendLine("═══════════════════════════════════════════════════════════════════");
@@ -969,7 +971,7 @@ public class RaceBacktestWindow : EditorWindow
         md.AppendLine();
         md.AppendFormat("> **날짜**: {0}  \n", System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
         md.AppendFormat("> **설정**: {0}회 × {1}바퀴 × {2}명 | 충돌:{3}  \n",
-            simCount, simLaps, simRacers, simCollision ? "ON" : "OFF");
+            simCount, simLaps, simRacers, settlingInfo);
         md.AppendFormat("> **트랙**: {0}  \n", multiTrack ? "전체 " + results.Count + "종" : results[0].trackName);
         md.AppendFormat("> **SpeedMultiplier 수식**: `0.8 + charBaseSpeed × 0.01`  \n");
         md.AppendLine();

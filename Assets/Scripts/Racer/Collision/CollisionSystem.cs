@@ -25,6 +25,9 @@ public class CollisionSystem : MonoBehaviour
     private float globalCooldown = 0f;
     private const float GLOBAL_COLLISION_INTERVAL = 0.5f;
 
+    // ── 초반 대열 정리 타이머 ──
+    private float raceElapsed = 0f;
+
     // ── 슬링샷 예약 (감속 종료 후 발동) ──
     private List<SlingshotReservation> slingshotQueue = new List<SlingshotReservation>();
 
@@ -48,6 +51,8 @@ public class CollisionSystem : MonoBehaviour
         var racers = rm.Racers;
         if (racers == null || racers.Count < 2) return;
 
+        raceElapsed += Time.deltaTime;
+
         UpdateCooldowns();
         CheckCollisions(racers, gs);
         ProcessSlingshotQueue(gs);
@@ -59,6 +64,7 @@ public class CollisionSystem : MonoBehaviour
 
     private void CheckCollisions(List<RacerController> racers, GameSettings gs)
     {
+        if (raceElapsed < gs.collisionSettlingTime) return;
         if (globalCooldown > 0f) return;
 
         TrackData track = gs.currentTrack;
@@ -380,5 +386,6 @@ public class CollisionSystem : MonoBehaviour
         racerCooldowns.Clear();
         slingshotQueue.Clear();
         globalCooldown = 0f;
+        raceElapsed = 0f;
     }
 }

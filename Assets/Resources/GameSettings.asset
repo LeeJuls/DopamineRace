@@ -190,6 +190,7 @@ MonoBehaviour:
   loserPenaltyDuration: 0.5
   crowdThreshold: 3
   crowdDampen: 0.5
+  collisionSettlingTime: 2
   vfxIconScale: 0.35
   vfxLabelSize: 0.06
   vfxHeight: 0.5

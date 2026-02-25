@@ -560,6 +560,10 @@ public class GameSettings : ScriptableObject
     [Range(0.1f, 1.0f)]
     public float crowdDampen = 0.5f;
 
+    [Tooltip("레이스 시작 후 충돌 억제 시간 (초). 이 시간 동안 충돌 판정 OFF → 속도 기반 대열 정리")]
+    [Range(0f, 5f)]
+    public float collisionSettlingTime = 2.0f;
+
     [Header("═══ 충돌 VFX 크기 설정 ═══")]
     [Tooltip("VFX 아이콘 크기 (배경 원 크기)\n기본값 0.5, 작게 하려면 0.2~0.3")]
     [Range(0.1f, 1.5f)]
