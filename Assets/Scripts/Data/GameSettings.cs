@@ -282,37 +282,37 @@ public class GameSettings : ScriptableObject
     [Tooltip("적극 소모율")]
     [Range(0.5f, 5.0f)] public float runner_activeRate = 3.5f;
     [Tooltip("60% 소모 시 최대 부스트")]
-    [Range(0.01f, 0.2f)] public float runner_peakBoost = 0.12f;
+    [Range(0.01f, 0.2f)] public float runner_peakBoost = 0.10f;
     [Tooltip("가속 곡선 지수 (높을수록 후반 급격)")]
     [Range(0.5f, 3.0f)] public float runner_accelExp = 1.5f;
     [Tooltip("감속 곡선 지수 (높을수록 완만)")]
-    [Range(0.3f, 3.0f)] public float runner_decelExp = 0.8f;
+    [Range(0.3f, 3.0f)] public float runner_decelExp = 0.7f;
     [Tooltip("탈진 페널티 (음수)")]
-    [Range(-0.15f, 0f)] public float runner_exhaustionFloor = -0.10f;
+    [Range(-0.15f, 0f)] public float runner_exhaustionFloor = -0.08f;
 
     [Header("═══ HP: 선행 (Leader) ═══")]
-    [Range(0f, 0.9f)]  public float leader_spurtStart = 0.10f;
-    [Range(0.5f, 5.0f)] public float leader_activeRate = 1.5f;
-    [Range(0.01f, 0.2f)] public float leader_peakBoost = 0.09f;
+    [Range(0f, 0.9f)]  public float leader_spurtStart = 0.05f;
+    [Range(0.5f, 5.0f)] public float leader_activeRate = 3.0f;
+    [Range(0.01f, 0.2f)] public float leader_peakBoost = 0.10f;
     [Range(0.5f, 3.0f)] public float leader_accelExp = 1.2f;
-    [Range(0.3f, 3.0f)] public float leader_decelExp = 1.8f;
-    [Range(-0.15f, 0f)] public float leader_exhaustionFloor = -0.03f;
+    [Range(0.3f, 3.0f)] public float leader_decelExp = 1.0f;
+    [Range(-0.15f, 0f)] public float leader_exhaustionFloor = -0.02f;
 
     [Header("═══ HP: 선입 (Chaser) ═══")]
-    [Range(0f, 0.9f)]  public float chaser_spurtStart = 0.45f;
-    [Range(0.5f, 5.0f)] public float chaser_activeRate = 2.0f;
-    [Range(0.01f, 0.2f)] public float chaser_peakBoost = 0.11f;
+    [Range(0f, 0.9f)]  public float chaser_spurtStart = 0.15f;
+    [Range(0.5f, 5.0f)] public float chaser_activeRate = 3.5f;
+    [Range(0.01f, 0.2f)] public float chaser_peakBoost = 0.12f;
     [Range(0.5f, 3.0f)] public float chaser_accelExp = 1.3f;
-    [Range(0.3f, 3.0f)] public float chaser_decelExp = 1.5f;
-    [Range(-0.15f, 0f)] public float chaser_exhaustionFloor = -0.04f;
+    [Range(0.3f, 3.0f)] public float chaser_decelExp = 0.8f;
+    [Range(-0.15f, 0f)] public float chaser_exhaustionFloor = -0.03f;
 
     [Header("═══ HP: 추행 (Reckoner) ═══")]
-    [Range(0f, 0.9f)]  public float reckoner_spurtStart = 0.72f;
-    [Range(0.5f, 5.0f)] public float reckoner_activeRate = 3.0f;
-    [Range(0.01f, 0.2f)] public float reckoner_peakBoost = 0.12f;
-    [Range(0.5f, 3.0f)] public float reckoner_accelExp = 2.0f;
-    [Range(0.3f, 3.0f)] public float reckoner_decelExp = 0.5f;
-    [Range(-0.15f, 0f)] public float reckoner_exhaustionFloor = -0.05f;
+    [Range(0f, 0.9f)]  public float reckoner_spurtStart = 0.30f;
+    [Range(0.5f, 5.0f)] public float reckoner_activeRate = 4.5f;
+    [Range(0.01f, 0.2f)] public float reckoner_peakBoost = 0.16f;
+    [Range(0.5f, 3.0f)] public float reckoner_accelExp = 1.8f;
+    [Range(0.3f, 3.0f)] public float reckoner_decelExp = 0.4f;
+    [Range(-0.15f, 0f)] public float reckoner_exhaustionFloor = -0.01f;
 
     [Header("═══ HP: 포지션 보정 ═══")]
     [Tooltip("Pace Lead: 선행이 상위 순위일 때 activeRate 감소율")]
@@ -330,15 +330,15 @@ public class GameSettings : ScriptableObject
 
     [Header("═══ HP: 초반 타입 보너스 ═══")]
     [Tooltip("도주(Runner) 초반 속도 보너스")]
-    [Range(0f, 0.3f)] public float hp_earlyBonus_Runner = 0.10f;
+    [Range(0f, 0.3f)] public float hp_earlyBonus_Runner = 0.06f;
     [Tooltip("선행(Leader) 초반 속도 보너스")]
-    [Range(0f, 0.3f)] public float hp_earlyBonus_Leader = 0.05f;
+    [Range(0f, 0.3f)] public float hp_earlyBonus_Leader = 0.04f;
     [Tooltip("선입(Chaser) 초반 속도 보너스")]
-    [Range(0f, 0.3f)] public float hp_earlyBonus_Chaser = 0f;
+    [Range(0f, 0.3f)] public float hp_earlyBonus_Chaser = 0.02f;
     [Tooltip("추행(Reckoner) 초반 속도 보너스")]
     [Range(0f, 0.3f)] public float hp_earlyBonus_Reckoner = 0f;
     [Tooltip("초반 보너스가 0으로 사라지는 진행률")]
-    [Range(0.1f, 0.5f)] public float hp_earlyBonusFadeEnd = 0.35f;
+    [Range(0.1f, 0.5f)] public float hp_earlyBonusFadeEnd = 0.40f;
 
     /// <summary>
     /// HP 시스템용 초반 타입 보너스.
@@ -365,17 +365,17 @@ public class GameSettings : ScriptableObject
     [Tooltip("CP 최대치 = charBaseCalm × 이 값")]
     [Range(1f, 30f)] public float cpMultiplier = 10f;
     [Tooltip("기본 CP 소모율 (/초, 레이스 중 항상 소모)")]
-    [Range(0f, 2f)] public float cpBasicDrain = 0.3f;
+    [Range(0f, 2f)] public float cpBasicDrain = 0.5f;
     [Tooltip("슬립스트림 활성 시 추가 CP 소모율 (/초)")]
-    [Range(0f, 5f)] public float cpSlipstreamDrain = 1.5f;
+    [Range(0f, 5f)] public float cpSlipstreamDrain = 2.5f;
 
     [Header("═══ 개선 슬립스트림 (전체 타입, 거리 기반) ═══")]
     [Tooltip("슬립스트림 유효 거리 (TotalProgress 단위)")]
     [Range(0.01f, 0.3f)] public float universalSlipstreamRange = 0.08f;
     [Tooltip("기본 최대 속도 보너스")]
-    [Range(0f, 0.1f)] public float universalSlipstreamBonus = 0.04f;
+    [Range(0f, 0.1f)] public float universalSlipstreamBonus = 0.015f;
     [Tooltip("Chaser 슬립스트림 효율 배율 (타입 특성)")]
-    [Range(1f, 3f)] public float chaserSlipstreamMult = 1.3f;
+    [Range(1f, 3f)] public float chaserSlipstreamMult = 1.1f;
 
     [Header("═══ CP/HP 불안정 ═══")]
     [Tooltip("CP 잔량 이하 시 슬립스트림 효과 감소 시작")]

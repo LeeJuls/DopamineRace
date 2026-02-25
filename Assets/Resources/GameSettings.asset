@@ -120,38 +120,38 @@ MonoBehaviour:
   hpSpeedCompress: 0.85
   runner_spurtStart: 0
   runner_activeRate: 3.5
-  runner_peakBoost: 0.12
+  runner_peakBoost: 0.1
   runner_accelExp: 1.5
-  runner_decelExp: 0.8
-  runner_exhaustionFloor: -0.1
-  leader_spurtStart: 0.1
-  leader_activeRate: 1.5
-  leader_peakBoost: 0.09
+  runner_decelExp: 0.7
+  runner_exhaustionFloor: -0.08
+  leader_spurtStart: 0.05
+  leader_activeRate: 3
+  leader_peakBoost: 0.1
   leader_accelExp: 1.2
-  leader_decelExp: 1.8
-  leader_exhaustionFloor: -0.03
-  chaser_spurtStart: 0.45
-  chaser_activeRate: 2
-  chaser_peakBoost: 0.11
+  leader_decelExp: 1
+  leader_exhaustionFloor: -0.02
+  chaser_spurtStart: 0.15
+  chaser_activeRate: 3.5
+  chaser_peakBoost: 0.12
   chaser_accelExp: 1.3
-  chaser_decelExp: 1.5
-  chaser_exhaustionFloor: -0.04
-  reckoner_spurtStart: 0.72
-  reckoner_activeRate: 3
-  reckoner_peakBoost: 0.12
-  reckoner_accelExp: 2
-  reckoner_decelExp: 0.5
-  reckoner_exhaustionFloor: -0.05
+  chaser_decelExp: 0.8
+  chaser_exhaustionFloor: -0.03
+  reckoner_spurtStart: 0.3
+  reckoner_activeRate: 4.5
+  reckoner_peakBoost: 0.16
+  reckoner_accelExp: 1.8
+  reckoner_decelExp: 0.4
+  reckoner_exhaustionFloor: -0.01
   paceLeadReduction: 0.15
   paceLeadFadeStart: 0.7
   paceLeadMaxRank: 3
   slipstreamFadeTime: 2
   conservationAmpCoeff: 0.6
-  hp_earlyBonus_Runner: 0.2
-  hp_earlyBonus_Leader: 0.12
-  hp_earlyBonus_Chaser: 0
+  hp_earlyBonus_Runner: 0.06
+  hp_earlyBonus_Leader: 0.04
+  hp_earlyBonus_Chaser: 0.02
   hp_earlyBonus_Reckoner: 0
-  hp_earlyBonusFadeEnd: 0.65
+  hp_earlyBonusFadeEnd: 0.4
   cpMultiplier: 10
   cpBasicDrain: 0.5
   cpSlipstreamDrain: 2.5
