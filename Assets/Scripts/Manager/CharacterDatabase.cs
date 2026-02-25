@@ -111,7 +111,15 @@ public class CharacterDatabase : MonoBehaviour
     }
 
     /// <summary>
-    /// 이름으로 캐릭터 검색
+    /// charId(UID)로 캐릭터 검색
+    /// </summary>
+    public CharacterData FindById(string charId)
+    {
+        return allCharacters.Find(c => c.charId == charId);
+    }
+
+    /// <summary>
+    /// charName(Loc 키)으로 캐릭터 검색
     /// </summary>
     public CharacterData FindByName(string name)
     {

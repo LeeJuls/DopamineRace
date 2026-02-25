@@ -212,20 +212,20 @@ public class GameManager : MonoBehaviour
             + BettingCalculator.GetTypeName(CurrentBet.type) + " → "
             + (score > 0 ? "적중! +" + score + "점" : "실패 +0점"));
 
-        // ── 순위 데이터 구성 (charName = UID 사용, DisplayName 혼용 금지) ──
+        // ── 순위 데이터 구성 (charId = UID 사용, DisplayName 혼용 금지) ──
         var racerResults = new List<RoundRacerResult>();
         var allRacers = RaceManager.Instance?.Racers;
         Debug.Log("[CalcScore] allRacers count=" + (allRacers != null ? allRacers.Count : 0));
         foreach (var r in rankings)
         {
-            // racerIndex로 CharData에서 charName(UID) 획득
+            // racerIndex로 CharData에서 charId(UID) 획득
             string uid = r.racerName; // fallback: DisplayName
             if (allRacers != null && r.racerIndex >= 0 && r.racerIndex < allRacers.Count)
             {
                 var cd = allRacers[r.racerIndex].CharData;
-                if (cd != null) uid = cd.charName;
+                if (cd != null) uid = cd.charId;
 
-                // 진단 로그: racerIndex ↔ charName 매핑 검증
+                // 진단 로그: racerIndex ↔ charId 매핑 검증
                 Debug.Log(string.Format("[CalcScore] rank={0} racerIdx={1} DisplayName={2} → UID={3}",
                     r.rank, r.racerIndex, r.racerName, uid));
             }
@@ -237,7 +237,7 @@ public class GameManager : MonoBehaviour
 
             racerResults.Add(new RoundRacerResult
             {
-                charName = uid,
+                charId = uid,
                 rank = r.rank
             });
         }
@@ -247,20 +247,20 @@ public class GameManager : MonoBehaviour
         if (TrackDatabase.Instance?.CurrentTrackInfo != null)
             trackName = TrackDatabase.Instance.CurrentTrackInfo.DisplayName;
 
-        // ── 내가 선택한 캐릭터 이름들 ──
-        var selectedNames = new List<string>();
+        // ── 내가 선택한 캐릭터 ID들 ──
+        var selectedIds = new List<string>();
         if (CurrentBet != null && RaceManager.Instance?.Racers != null)
         {
             var racers = RaceManager.Instance.Racers;
             foreach (int idx in CurrentBet.selections)
             {
                 if (idx >= 0 && idx < racers.Count && racers[idx].CharData != null)
-                    selectedNames.Add(racers[idx].CharData.DisplayName);
+                    selectedIds.Add(racers[idx].CharData.charId);
             }
         }
 
         // ScoreManager에 라운드 결과 기록
-        ScoreManager.Instance?.RecordRound(CurrentBet.type, score, trackName, racerResults, selectedNames);
+        ScoreManager.Instance?.RecordRound(CurrentBet.type, score, trackName, racerResults, selectedIds);
     }
 
     // ═══ 다음 라운드 ═══

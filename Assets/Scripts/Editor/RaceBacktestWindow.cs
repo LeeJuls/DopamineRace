@@ -365,7 +365,7 @@ public class RaceBacktestWindow : EditorWindow
 
         Dictionary<string, CharStats> stats = new Dictionary<string, CharStats>();
         foreach (var c in allChars)
-            stats[c.charName] = new CharStats { name = c.charName, type = c.GetTypeName() };
+            stats[c.charId] = new CharStats { name = c.charId, type = c.GetTypeName() };
 
         int globalCollisions = 0, globalDodges = 0, globalSlingshots = 0, globalCrits = 0;
         float totalTrackLength = 17f;
@@ -404,7 +404,7 @@ public class RaceBacktestWindow : EditorWindow
                 }
 
                 racers.Add(racer);
-                stats[cd.charName].raceCount++;
+                stats[cd.charId].raceCount++;
             }
 
             pairCooldowns.Clear();
@@ -431,12 +431,13 @@ public class RaceBacktestWindow : EditorWindow
                         }
                         racers[ri].currentRank = rank;
 
-                        // Slipstream 블렌드 (Chaser 전용)
+                        // Slipstream 블렌드 (Chaser 전용, GameSettings 값 반영)
                         if (racers[ri].data.charType == CharacterType.Chaser)
                         {
-                            float target = (rank >= 3 && rank <= 7) ? 1f : 0f;
+                            float target = (rank >= gs.slipstreamMinRank && rank <= gs.slipstreamMaxRank) ? 1f : 0f;
+                            float fadeTime = Mathf.Max(gs.slipstreamFadeTime, 0.01f);
                             racers[ri].slipstreamBlend = Mathf.MoveTowards(
-                                racers[ri].slipstreamBlend, target, simTimeStep / 2f);
+                                racers[ri].slipstreamBlend, target, simTimeStep / fadeTime);
                         }
                     }
                 }
@@ -501,7 +502,7 @@ public class RaceBacktestWindow : EditorWindow
             // 통계 수집
             foreach (var r in racers)
             {
-                var s = stats[r.data.charName];
+                var s = stats[r.data.charId];
                 s.totalRank += r.finishOrder;
                 s.totalCrits += r.critCount;
                 s.totalCollisionWins += r.collisionWins;
@@ -721,9 +722,11 @@ public class RaceBacktestWindow : EditorWindow
             }
             SimConsumeHP(r, gs, progress);
             float hpBoost = SimCalcHPBoost(r, gs);
-            typeBonus = hpBoost;
-            // ★ HP 부스트 기여 (type + endurance를 통합 대체)
-            r.contrib_type += baseSpeed * hpBoost * simTimeStep;
+            float earlyBonus = gs.GetHPEarlyBonus(cd.charType, progress);
+            float trailingBonus = gs.GetTrailingBonus(r.currentRank);
+            typeBonus = hpBoost + earlyBonus + trailingBonus;
+            // ★ HP 부스트 + 초반 타입 보너스 + 하위권 추월 부스트 기여
+            r.contrib_type += baseSpeed * typeBonus * simTimeStep;
         }
         else
         {
@@ -904,7 +907,7 @@ public class RaceBacktestWindow : EditorWindow
         if (prevLang != "ko") Loc.SetLang("ko");
         Dictionary<string, string> koNames = new Dictionary<string, string>();
         foreach (var c in allChars)
-            koNames[c.charName] = Loc.Get(c.charName);
+            koNames[c.charId] = Loc.Get(c.charName);
         if (prevLang != "ko") Loc.SetLang(prevLang);
         // koName 헬퍼 — UID → ko 이름, 실패 시 UID 그대로
         System.Func<string, string> KN = (uid) =>
@@ -1040,8 +1043,8 @@ public class RaceBacktestWindow : EditorWindow
             md.AppendLine(mdSep.ToString());
 
             // 캐릭별 행
-            var charNames = results[0].stats.Keys.Where(k => results[0].stats[k].raceCount > 0).ToList();
-            foreach (var cn in charNames)
+            var charIds = results[0].stats.Keys.Where(k => results[0].stats[k].raceCount > 0).ToList();
+            foreach (var cn in charIds)
             {
                 var cd = FindCharData(cn);
                 string typeName = cd != null ? cd.GetTypeName() : "?";
@@ -1238,7 +1241,7 @@ public class RaceBacktestWindow : EditorWindow
     // ══════════════════════════════════════
 
     private Dictionary<string, CharacterData> charDataCache;
-    private CharacterData FindCharData(string name)
+    private CharacterData FindCharData(string charId)
     {
         if (charDataCache == null)
         {
@@ -1249,13 +1252,13 @@ public class RaceBacktestWindow : EditorWindow
                 foreach (var line in csv.text.Split('\n'))
                 {
                     var trimmed = line.Trim();
-                    if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("char_name")) continue;
+                    if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("char_id")) continue;
                     var cd = CharacterData.ParseCSVLine(trimmed);
-                    if (cd != null) charDataCache[cd.charName] = cd;
+                    if (cd != null) charDataCache[cd.charId] = cd;
                 }
             }
         }
-        return charDataCache.ContainsKey(name) ? charDataCache[name] : null;
+        return charDataCache.ContainsKey(charId) ? charDataCache[charId] : null;
     }
 
     private static string SF(float v) // Signed Format: +1.23 / -0.45

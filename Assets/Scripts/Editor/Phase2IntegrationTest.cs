@@ -128,7 +128,8 @@ public class Phase2IntegrationTest : EditorWindow
             Assert(first != null, "첫 번째 행 파싱 성공");
             if (first != null)
             {
-                Assert(!string.IsNullOrEmpty(first.charName), "이름 비어있지 않음: " + first.charName);
+                Assert(!string.IsNullOrEmpty(first.charId), "charId 비어있지 않음: " + first.charId);
+                Assert(!string.IsNullOrEmpty(first.charName), "charName 비어있지 않음: " + first.charName);
                 Assert(first.charBaseSpeed > 0, "속도 > 0: " + first.charBaseSpeed);
             }
         }
@@ -165,11 +166,11 @@ public class Phase2IntegrationTest : EditorWindow
             "선발 수 일치: 기대 " + expected + " / 실제 " + db.SelectedCharacters.Count);
 
         // 중복 체크
-        HashSet<string> names = new HashSet<string>();
+        HashSet<string> ids = new HashSet<string>();
         bool hasDuplicate = false;
         foreach (var c in db.SelectedCharacters)
         {
-            if (!names.Add(c.charName)) hasDuplicate = true;
+            if (!ids.Add(c.charId)) hasDuplicate = true;
         }
         Assert(!hasDuplicate, "선발 캐릭터 중복 없음");
     }
@@ -191,10 +192,10 @@ public class Phase2IntegrationTest : EditorWindow
         Assert(GameConstants.RACER_COLORS.Length == db.SelectedCharacters.Count,
             "RACER_COLORS 길이 일치: " + GameConstants.RACER_COLORS.Length);
 
-        // 이름 매칭
+        // DisplayName 매칭 (RACER_NAMES = DisplayName 기반)
         for (int i = 0; i < db.SelectedCharacters.Count; i++)
         {
-            Assert(GameConstants.RACER_NAMES[i] == db.SelectedCharacters[i].charName,
+            Assert(GameConstants.RACER_NAMES[i] == db.SelectedCharacters[i].DisplayName,
                 "이름[" + i + "] 일치: " + GameConstants.RACER_NAMES[i]);
         }
     }
@@ -252,9 +253,9 @@ public class Phase2IntegrationTest : EditorWindow
             Color typeColor = c.GetTypeColor();
             string typeName = c.GetTypeName();
             Assert(!string.IsNullOrEmpty(typeName),
-                c.charName + " 타입: " + typeName + " (" + c.charType + ")");
+                c.charId + " 타입: " + typeName + " (" + c.charType + ")");
             Assert(typeColor != Color.clear,
-                c.charName + " 색상: R" + typeColor.r.ToString("F1")
+                c.charId + " 색상: R" + typeColor.r.ToString("F1")
                 + " G" + typeColor.g.ToString("F1")
                 + " B" + typeColor.b.ToString("F1"));
         }
@@ -272,15 +273,15 @@ public class Phase2IntegrationTest : EditorWindow
         {
             if (string.IsNullOrEmpty(c.charResourcePrefabs))
             {
-                Log("  ⚠ " + c.charName + ": 프리팹 경로 비어있음 (허용)");
+                Log("  ⚠ " + c.charId + ": 프리팹 경로 비어있음 (허용)");
                 continue;
             }
 
             GameObject prefab = c.LoadPrefab();
             if (prefab != null)
-                Pass(c.charName + " 프리팹 로드 성공");
+                Pass(c.charId + " 프리팹 로드 성공");
             else
-                Log("  ⚠ " + c.charName + " 프리팹 미발견 (경로: " + c.charResourcePrefabs + ") — 프리팹 미배치면 정상");
+                Log("  ⚠ " + c.charId + " 프리팹 미발견 (경로: " + c.charResourcePrefabs + ") — 프리팹 미배치면 정상");
         }
     }
 
@@ -296,15 +297,15 @@ public class Phase2IntegrationTest : EditorWindow
         {
             if (string.IsNullOrEmpty(c.charIcon))
             {
-                Log("  ⚠ " + c.charName + ": 아이콘 경로 비어있음 (허용)");
+                Log("  ⚠ " + c.charId + ": 아이콘 경로 비어있음 (허용)");
                 continue;
             }
 
             Sprite icon = c.LoadIcon();
             if (icon != null)
-                Pass(c.charName + " 아이콘 로드 성공 (128x128)");
+                Pass(c.charId + " 아이콘 로드 성공 (128x128)");
             else
-                Log("  ⚠ " + c.charName + " 아이콘 미발견 (경로: " + c.charIcon + ") — 아이콘 미배치면 정상");
+                Log("  ⚠ " + c.charId + " 아이콘 미발견 (경로: " + c.charIcon + ") — 아이콘 미배치면 정상");
         }
     }
 
@@ -325,7 +326,7 @@ public class Phase2IntegrationTest : EditorWindow
         for (int t = 0; t < 10; t++)
         {
             db.SelectRandom(GameSettings.Instance.racerCount);
-            string order = string.Join(",", db.SelectedCharacters.ConvertAll(c => c.charName));
+            string order = string.Join(",", db.SelectedCharacters.ConvertAll(c => c.charId));
             orders.Add(order);
         }
 

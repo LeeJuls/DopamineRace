@@ -11,7 +11,7 @@ public class BetRecord
     public string trackName;                 // 트랙명
     public string betTypeName;               // 배팅 타입명 (단승, 쌍승 등)
     public BetType betType;                  // 배팅 타입 enum
-    public List<string> selectedCharNames = new List<string>();  // 내가 선택한 캐릭터들
+    public List<string> selectedCharIds = new List<string>();  // 내가 선택한 캐릭터들
     public List<string> resultRanking = new List<string>();      // 실제 결과 (1착, 2착, 3착...)
     public int score;                        // 획득 점수
     public bool isWin => score > 0;

@@ -334,6 +334,57 @@ public class GameSettings : ScriptableObject
     [Tooltip("Conservation Amplifier 계수 (추행 전용)")]
     [Range(0f, 1.5f)] public float conservationAmpCoeff = 0.6f;
 
+    [Header("═══ HP: 초반 타입 보너스 ═══")]
+    [Tooltip("도주(Runner) 초반 속도 보너스")]
+    [Range(0f, 0.3f)] public float hp_earlyBonus_Runner = 0.10f;
+    [Tooltip("선행(Leader) 초반 속도 보너스")]
+    [Range(0f, 0.3f)] public float hp_earlyBonus_Leader = 0.05f;
+    [Tooltip("선입(Chaser) 초반 속도 보너스")]
+    [Range(0f, 0.3f)] public float hp_earlyBonus_Chaser = 0f;
+    [Tooltip("추행(Reckoner) 초반 속도 보너스")]
+    [Range(0f, 0.3f)] public float hp_earlyBonus_Reckoner = 0f;
+    [Tooltip("초반 보너스가 0으로 사라지는 진행률")]
+    [Range(0.1f, 0.5f)] public float hp_earlyBonusFadeEnd = 0.35f;
+
+    /// <summary>
+    /// HP 시스템용 초반 타입 보너스.
+    /// progress 0 → 최대값, hp_earlyBonusFadeEnd → 0 (선형 페이드아웃)
+    /// </summary>
+    public float GetHPEarlyBonus(CharacterType type, float progress)
+    {
+        if (progress >= hp_earlyBonusFadeEnd) return 0f;
+
+        float bonus = type switch
+        {
+            CharacterType.Runner   => hp_earlyBonus_Runner,
+            CharacterType.Leader   => hp_earlyBonus_Leader,
+            CharacterType.Chaser   => hp_earlyBonus_Chaser,
+            _                      => hp_earlyBonus_Reckoner
+        };
+        if (bonus <= 0f) return 0f;
+
+        float fade = 1f - (progress / hp_earlyBonusFadeEnd);
+        return bonus * fade;
+    }
+
+    [Header("═══ HP: 하위권 추월 부스트 ═══")]
+    [Tooltip("추월 부스트 시작 순위 (이 순위 이하부터 보너스, 기본 8위)")]
+    [Range(1, 12)] public int trailingBonusStartRank = 8;
+    [Tooltip("순위 1계단당 추가 속도 보너스 (8위: ×1, 9위: ×2, ...)")]
+    [Range(0f, 0.05f)] public float trailingBonusStep = 0.025f;
+
+    /// <summary>
+    /// HP 시스템용 하위권 추월 부스트.
+    /// trailingBonusStartRank 이하 순위에서 계단식 속도 보너스 부여.
+    /// 8위(+2.5%), 9위(+5%), 10위(+7.5%), 11위(+10%), 12위(+12.5%)
+    /// </summary>
+    public float GetTrailingBonus(int rank)
+    {
+        if (rank < trailingBonusStartRank) return 0f;
+        float depth = (float)(rank - trailingBonusStartRank + 1);
+        return Mathf.Min(depth * trailingBonusStep, 0.30f);
+    }
+
     // ══════════════════════════════════════
     //  HP 헬퍼 메서드
     // ══════════════════════════════════════

@@ -1,28 +1,28 @@
 UID,ko,en,jp,cn,de,es,br
-str.char.001.name,번개,Thunder,雷,闪电,Blitz,Trueno,Trovão
+str.char.000.name,번개,Thunder,雷,闪电,Blitz,Trueno,Trovão
+str.char.000.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
+str.char.001.name,태풍,Typhoon,台風,台风,Taifun,Tifón,Tufão
 str.char.001.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.002.name,태풍,Typhoon,台風,台风,Taifun,Tifón,Tufão
+str.char.002.name,혜성,Comet,彗星,彗星,Komet,Cometa,Cometa
 str.char.002.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.003.name,혜성,Comet,彗星,彗星,Komet,Cometa,Cometa
+str.char.003.name,로켓,Rocket,ロケット,火箭,Rakete,Cohete,Foguete
 str.char.003.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.004.name,로켓,Rocket,ロケット,火箭,Rakete,Cohete,Foguete
+str.char.004.name,불꽃,Flame,炎,烈焰,Flamme,Llama,Chama
 str.char.004.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.005.name,불꽃,Flame,炎,烈焰,Flamme,Llama,Chama
+str.char.005.name,질풍,Gale,疾風,疾风,Sturm,Vendaval,Vendaval
 str.char.005.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.006.name,질풍,Gale,疾風,疾风,Sturm,Vendaval,Vendaval
+str.char.006.name,천둥,Lightning,雷鳴,雷鸣,Donner,Relámpago,Relâmpago
 str.char.006.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.007.name,천둥,Lightning,雷鳴,雷鸣,Donner,Relámpago,Relâmpago
+str.char.007.name,유성,Meteor,流星,流星,Meteor,Meteoro,Meteoro
 str.char.007.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.008.name,유성,Meteor,流星,流星,Meteor,Meteoro,Meteoro
+str.char.008.name,폭풍,Storm,嵐,暴风,Gewitter,Tormenta,Tempestade
 str.char.008.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.009.name,폭풍,Storm,嵐,暴风,Gewitter,Tormenta,Tempestade
+str.char.009.name,섬광,Flash,閃光,闪光,Blitzlicht,Destello,Clarão
 str.char.009.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.010.name,섬광,Flash,閃光,闪光,Blitzlicht,Destello,Clarão
+str.char.010.name,해일,Tsunami,津波,海啸,Tsunami,Tsunami,Tsunami
 str.char.010.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.011.name,해일,Tsunami,津波,海啸,Tsunami,Tsunami,Tsunami
+str.char.011.name,선녀,Fairy,仙女,仙女,Fee,Hada,Fada
 str.char.011.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.012.name,선녀,Fairy,仙女,仙女,Fee,Hada,Fada
-str.char.012.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
 str.chartype.runner,도주,Runner,逃げ,逃跑,Sprinter,Escapista,Escapista
 str.chartype.leader,선행,Leader,先行,领先,Anführer,Líder,Líder
 str.chartype.chaser,선입,Chaser,差し,追赶,Verfolger,Perseguidor,Perseguidor
@@ -129,6 +129,7 @@ str.ui.condition.normal,컨디션 중,Normal,普通,状态一般,Normal,Normal,N
 str.ui.condition.bad,컨디션 하,Bad,不調,状态不佳,Schlecht,Mala,Ruim
 str.ui.condition.worst,컨디션 최하,Worst,最悪,状态最差,Miserabel,Pésima,Péssima
 str.ui.charinfo.coming_soon,준비 중...,Coming Soon...,準備中...,准备中...,Kommt bald...,Próximamente...,Em breve...
+str.char.000.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
 str.char.001.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
 str.char.002.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
 str.char.003.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
@@ -140,7 +141,6 @@ str.char.008.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 col
 str.char.009.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
 str.char.010.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
 str.char.011.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
-str.char.012.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 collisions,5回衝突でスキル発動,碰撞5次后发动技能,Skill nach 5 Kollisionen,Habilidad tras 5 colisiones,Habilidade após 5 colisões
 str.ui.char.winrate,승률 : {0}%,Win Rate : {0}%,勝率 : {0}%,胜率: {0}%,Siegquote: {0}%,% Victoria: {0}%,% Vitória: {0}%
 str.ui.char.rank_label,{0}위{1},{0}{1},{0}位{1},{0}名{1},{0}.{1},{0}º{1},{0}º{1}
 str.ui.char.no_record,출전 기록 없음,No race record,出走記録なし,无出赛记录,Kein Rennrekord,Sin historial,Sem histórico

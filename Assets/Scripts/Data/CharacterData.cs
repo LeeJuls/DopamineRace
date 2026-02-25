@@ -27,15 +27,16 @@ public enum WeaponHand
 /// 캐릭터 1명의 전체 데이터 (CSV 1행)
 ///
 /// CSV 컬럼 순서:
-///   0:char_name, 1:speed, 2:power, 3:brave, 4:calm, 5:endurance, 6:luck,
-///   7:type, 8:char_ability, 9:char_ability_time_sec,
-///   10:char_resource_prefabs, 11:char_attack_resource_prefabs,
-///   12:char_icon, 13:char_weapon, 14:char_skill_desc, 15:char_illustration
+///   0:char_id, 1:char_name, 2:speed, 3:power, 4:brave, 5:calm, 6:endurance, 7:luck,
+///   8:type, 9:char_ability, 10:char_ability_time_sec,
+///   11:char_resource_prefabs, 12:char_attack_resource_prefabs,
+///   13:char_icon, 14:char_weapon, 15:char_skill_desc, 16:char_illustration
 /// </summary>
 [System.Serializable]
 public class CharacterData
 {
-    public string charName;
+    public string charId;       // UID: "char.leader.thunder.000"
+    public string charName;     // Loc 키: "str.char.000.name"
     public float charBaseSpeed;
 
     /// <summary>
@@ -140,52 +141,53 @@ public class CharacterData
     /// CSV 1행 파싱
     ///
     /// 컬럼 순서:
-    ///   0:char_name, 1:speed, 2:power, 3:brave, 4:calm, 5:endurance, 6:luck,
-    ///   7:type, 8:char_ability, 9:char_ability_time_sec,
-    ///   10:char_resource_prefabs, 11:char_attack_resource_prefabs,
-    ///   12:char_icon, 13:char_weapon, 14:char_skill_desc, 15:char_illustration
+    ///   0:char_id, 1:char_name, 2:speed, 3:power, 4:brave, 5:calm, 6:endurance, 7:luck,
+    ///   8:type, 9:char_ability, 10:char_ability_time_sec,
+    ///   11:char_resource_prefabs, 12:char_attack_resource_prefabs,
+    ///   13:char_icon, 14:char_weapon, 15:char_skill_desc, 16:char_illustration
     /// </summary>
     public static CharacterData ParseCSVLine(string line)
     {
         char separator = line.Contains('\t') ? '\t' : ',';
         string[] cols = line.Split(separator);
-        if (cols.Length < 11) return null;
+        if (cols.Length < 12) return null;
 
         CharacterData d = new CharacterData();
-        d.charName = cols[0].Trim();
-        float.TryParse(cols[1].Trim(), out d.charBaseSpeed);
-        float.TryParse(cols[2].Trim(), out d.charBasePower);
-        float.TryParse(cols[3].Trim(), out d.charBaseBrave);
-        float.TryParse(cols[4].Trim(), out d.charBaseCalm);
-        float.TryParse(cols[5].Trim(), out d.charBaseEndurance);
-        float.TryParse(cols[6].Trim(), out d.charBaseLuck);
-        d.charType = ParseType(cols[7].Trim());
-        d.charAbility = cols[8].Trim();
+        d.charId = cols[0].Trim();
+        d.charName = cols[1].Trim();
+        float.TryParse(cols[2].Trim(), out d.charBaseSpeed);
+        float.TryParse(cols[3].Trim(), out d.charBasePower);
+        float.TryParse(cols[4].Trim(), out d.charBaseBrave);
+        float.TryParse(cols[5].Trim(), out d.charBaseCalm);
+        float.TryParse(cols[6].Trim(), out d.charBaseEndurance);
+        float.TryParse(cols[7].Trim(), out d.charBaseLuck);
+        d.charType = ParseType(cols[8].Trim());
+        d.charAbility = cols[9].Trim();
 
-        // char_ability_time_sec (9번)
+        // char_ability_time_sec (10번)
         d.charAbilityTimeSec = 5f; // 기본값
-        if (cols.Length > 9)
-            float.TryParse(cols[9].Trim(), out d.charAbilityTimeSec);
+        if (cols.Length > 10)
+            float.TryParse(cols[10].Trim(), out d.charAbilityTimeSec);
 
-        // char_resource_prefabs (10번)
-        d.charResourcePrefabs = cols.Length > 10 ? cols[10].Trim() : "";
+        // char_resource_prefabs (11번)
+        d.charResourcePrefabs = cols.Length > 11 ? cols[11].Trim() : "";
 
-        // char_attack_resource_prefabs (11번)
-        d.charAttackResourcePrefabs = cols.Length > 11 ? cols[11].Trim() : "";
+        // char_attack_resource_prefabs (12번)
+        d.charAttackResourcePrefabs = cols.Length > 12 ? cols[12].Trim() : "";
 
-        // char_icon (12번)
-        d.charIcon = cols.Length > 12 ? cols[12].Trim() : "";
+        // char_icon (13번)
+        d.charIcon = cols.Length > 13 ? cols[13].Trim() : "";
 
-        // char_weapon (13번)
+        // char_weapon (14번)
         d.charWeapon = WeaponHand.None;
-        if (cols.Length > 13)
-            d.charWeapon = ParseWeapon(cols[13].Trim());
+        if (cols.Length > 14)
+            d.charWeapon = ParseWeapon(cols[14].Trim());
 
-        // char_skill_desc (14번)
-        d.charSkillDesc = cols.Length > 14 ? cols[14].Trim() : "";
+        // char_skill_desc (15번)
+        d.charSkillDesc = cols.Length > 15 ? cols[15].Trim() : "";
 
-        // char_illustration (15번)
-        d.charIllustration = cols.Length > 15 ? cols[15].Trim() : "";
+        // char_illustration (16번)
+        d.charIllustration = cols.Length > 16 ? cols[16].Trim() : "";
 
         // ★ 스킬 데이터 파싱
         d.skillData = SkillData.Parse(d.charAbility, d.charAbilityTimeSec);

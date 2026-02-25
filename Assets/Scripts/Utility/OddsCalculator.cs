@@ -33,13 +33,13 @@ public static class OddsCalculator
         // ── Step 1: 각 캐릭터 PopScore + 컨디션 계산 ──
         foreach (var racer in racers)
         {
-            var record   = sm != null ? sm.GetCharacterRecord(racer.charName) : null;
+            var record   = sm != null ? sm.GetCharacterRecord(racer.charId) : null;
             float popScore = CalcPopScore(racer, record, currentTrackId);
             Condition cond = ConditionHelper.Roll();
 
             var info = new PopularityInfo
             {
-                charName       = racer.charName,
+                charId         = racer.charId,
                 popScore       = popScore,
                 totalRaces     = record != null ? record.TotalRaces : 0,
                 isNew          = (record == null || record.TotalRaces < gs.newCharThreshold),
@@ -78,7 +78,7 @@ public static class OddsCalculator
         {
             Debug.Log(string.Format(
                 "  {0,-4}: 인기{1,2}위 | 단승{2,5:F1}x | 컨디션:{3}({4:F2}x) | PopScore:{5:F3} | 출전:{6}{7}",
-                info.charName, info.popularityRank, info.winOdds,
+                info.charId, info.popularityRank, info.winOdds,
                 ConditionHelper.GetDisplayName(info.condition), info.conditionMul,
                 info.popScore, info.totalRaces, info.isNew ? " [신규]" : ""));
         }
@@ -89,25 +89,25 @@ public static class OddsCalculator
     // ══════════════════════════════════════════
 
     /// <summary>특정 캐릭터의 단승 배당 반환 (없으면 기본값)</summary>
-    public static float GetWinOdds(string charName)
+    public static float GetWinOdds(string charId)
     {
         foreach (var info in CurrentOdds)
-            if (info.charName == charName) return info.winOdds;
+            if (info.charId == charId) return info.winOdds;
         return GameSettings.Instance != null ? GameSettings.Instance.payoutWin : 3f;
     }
 
     /// <summary>특정 캐릭터의 PopularityInfo 반환 (없으면 null)</summary>
-    public static PopularityInfo GetInfo(string charName)
+    public static PopularityInfo GetInfo(string charId)
     {
         foreach (var info in CurrentOdds)
-            if (info.charName == charName) return info;
+            if (info.charId == charId) return info;
         return null;
     }
 
     /// <summary>특정 캐릭터의 컨디션 배수 반환 (RacerController에서 사용)</summary>
-    public static float GetConditionMultiplier(string charName)
+    public static float GetConditionMultiplier(string charId)
     {
-        var info = GetInfo(charName);
+        var info = GetInfo(charId);
         return info != null ? info.conditionMul : 1.0f;
     }
 
@@ -123,7 +123,7 @@ public static class OddsCalculator
         foreach (int sel in bet.selections)
         {
             if (sel < racers.Count)
-                selectedOdds.Add(GetWinOdds(racers[sel].charName));
+                selectedOdds.Add(GetWinOdds(racers[sel].charId));
         }
 
         return CalcComboOdds(bet.type, selectedOdds);
@@ -141,7 +141,7 @@ public static class OddsCalculator
         foreach (int sel in bet.selections)
         {
             if (sel < racers.Count)
-                selectedOdds.Add(GetWinOdds(racers[sel].charName));
+                selectedOdds.Add(GetWinOdds(racers[sel].charId));
         }
 
         return CalcComboOdds(bet.type, selectedOdds);

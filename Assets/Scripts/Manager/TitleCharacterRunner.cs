@@ -148,13 +148,13 @@ public class TitleCharacterRunner : MonoBehaviour
         GameObject prefab = charData.LoadPrefab();
         if (prefab == null)
         {
-            Debug.LogWarning($"[TitleRunner] 프리팹 없음: {charData.charName}");
+            Debug.LogWarning($"[TitleRunner] 프리팹 없음: {charData.charId}");
             return null;
         }
 
         Vector3 hidePos = new Vector3(screenLeftX + SPAWN_X_OFFSET, RUNNER_Y, 0f);
         GameObject instance = Instantiate(prefab, hidePos, Quaternion.identity, transform);
-        instance.name = $"TitleRunner_{charData.charName}";
+        instance.name = $"TitleRunner_{charData.charId}";
 
         // RacerController 비활성화
         var rc = instance.GetComponent<RacerController>();

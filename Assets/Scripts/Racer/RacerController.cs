@@ -293,7 +293,7 @@ public class RacerController : MonoBehaviour
         TrackData track = gs.currentTrack; // null이면 일반 트랙
 
         // ── 컨디션 배수 (스탯 보너스 계열에 적용) ──
-        float condMul = OddsCalculator.GetConditionMultiplier(charData.charName);
+        float condMul = OddsCalculator.GetConditionMultiplier(charData.charId);
         condMul = Mathf.Max(condMul, 0.3f);  // 안전 가드: 0 근처 나눗셈 방지
 
         float speed = GetBaseTrackSpeed(gs, track);
@@ -311,7 +311,9 @@ public class RacerController : MonoBehaviour
             }
             ConsumeHP(gs, track, Time.deltaTime);
             float hpBoost = CalcHPBoost(gs);
-            speed *= (1f + (hpBoost + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
+            float earlyBonus = gs.GetHPEarlyBonus(charData.charType, OverallProgress);
+            float trailingBonus = gs.GetTrailingBonus(currentRank);
+            speed *= (1f + (hpBoost + earlyBonus + trailingBonus + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
             speed += GetNoiseValue(gs, track) * condMul;
         }
         else
@@ -523,9 +525,13 @@ public class RacerController : MonoBehaviour
             slipstreamBlend = 0f;
             return;
         }
-        // 3~7위 = 슬립스트림 범위 (SPEC-006 §5.2)
-        float target = (currentRank >= 3 && currentRank <= 7) ? 1f : 0f;
-        slipstreamBlend = Mathf.MoveTowards(slipstreamBlend, target, deltaTime / 2f);
+        // slipstreamMinRank~MaxRank 범위 (GameSettings 조절 가능)
+        var gs = GameSettings.Instance;
+        int minR = gs != null ? gs.slipstreamMinRank : 3;
+        int maxR = gs != null ? gs.slipstreamMaxRank : 7;
+        float fadeTime = gs != null ? Mathf.Max(gs.slipstreamFadeTime, 0.01f) : 2f;
+        float target = (currentRank >= minR && currentRank <= maxR) ? 1f : 0f;
+        slipstreamBlend = Mathf.MoveTowards(slipstreamBlend, target, deltaTime / fadeTime);
     }
 
     // ── 트랙 중반 감속 구간 ──

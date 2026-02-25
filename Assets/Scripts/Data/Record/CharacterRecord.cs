@@ -52,7 +52,7 @@ public class CharacterTrackRecord
 [System.Serializable]
 public class CharacterRecord
 {
-    public string charName;
+    public string charId;       // UID: "char.leader.thunder.000"
     public List<CharacterTrackRecord> trackRecords = new List<CharacterTrackRecord>();
     public List<int> recentOverallRanks = new List<int>();  // 최근 10게임 순위 (맵 무관)
     public List<RaceEntry> recentRaceEntries = new List<RaceEntry>();  // 최근 경기기록 (거리별 필터링용)
@@ -210,20 +210,20 @@ public class CharacterRecordStore
 {
     public List<CharacterRecord> records = new List<CharacterRecord>();
 
-    public CharacterRecord GetOrCreate(string charName)
+    public CharacterRecord GetOrCreate(string charId)
     {
         foreach (var r in records)
-            if (r.charName == charName) return r;
+            if (r.charId == charId) return r;
 
-        var newRecord = new CharacterRecord { charName = charName };
+        var newRecord = new CharacterRecord { charId = charId };
         records.Add(newRecord);
         return newRecord;
     }
 
-    public CharacterRecord Find(string charName)
+    public CharacterRecord Find(string charId)
     {
         foreach (var r in records)
-            if (r.charName == charName) return r;
+            if (r.charId == charId) return r;
         return null;
     }
 }

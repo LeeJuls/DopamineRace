@@ -420,15 +420,15 @@ public partial class SceneBootstrapper
                 var charData = db.SelectedCharacters[racerIdx];
 
                 // 동일 캐릭터 재클릭 → 토글 닫기
-                if (charInfoPopup.IsShowing && charInfoPopup.CurrentCharName == charData.charName)
+                if (charInfoPopup.IsShowing && charInfoPopup.CurrentCharId == charData.charId)
                 {
                     charInfoPopup.Hide();
                 }
                 else
                 {
-                    var oddsInfo = OddsCalculator.GetInfo(charData.charName);
+                    var oddsInfo = OddsCalculator.GetInfo(charData.charId);
                     var record = ScoreManager.Instance != null
-                        ? ScoreManager.Instance.GetCharacterRecord(charData.charName)
+                        ? ScoreManager.Instance.GetCharacterRecord(charData.charId)
                         : null;
                     charInfoPopup.Show(charData, oddsInfo, record);
                 }
@@ -556,8 +556,8 @@ public partial class SceneBootstrapper
         // OddsCalculator에서 인기순위 기준 정렬
         System.Array.Sort(sortedIndices, (a, b) =>
         {
-            var infoA = OddsCalculator.GetInfo(db.SelectedCharacters[a].charName);
-            var infoB = OddsCalculator.GetInfo(db.SelectedCharacters[b].charName);
+            var infoA = OddsCalculator.GetInfo(db.SelectedCharacters[a].charId);
+            var infoB = OddsCalculator.GetInfo(db.SelectedCharacters[b].charId);
             int rankA = infoA != null ? infoA.popularityRank : 999;
             int rankB = infoB != null ? infoB.popularityRank : 999;
             return rankA.CompareTo(rankB);
@@ -574,8 +574,8 @@ public partial class SceneBootstrapper
                 characterItems[ui].gameObject.SetActive(true);
 
                 var charData = db.SelectedCharacters[racerIdx];
-                var oddsInfo = OddsCalculator.GetInfo(charData.charName);
-                var record = sm != null ? sm.GetCharacterRecord(charData.charName) : null;
+                var oddsInfo = OddsCalculator.GetInfo(charData.charId);
+                var record = sm != null ? sm.GetCharacterRecord(charData.charId) : null;
                 int popRank = oddsInfo != null ? oddsInfo.popularityRank : (racerIdx + 1);
 
                 characterItems[ui].SetData(charData, popRank, oddsInfo, record);

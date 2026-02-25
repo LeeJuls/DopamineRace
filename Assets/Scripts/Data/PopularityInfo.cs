@@ -5,8 +5,8 @@
 [System.Serializable]
 public class PopularityInfo
 {
-    /// <summary>캐릭터 UID (charName, Loc 키)</summary>
-    public string charName;
+    /// <summary>캐릭터 UID</summary>
+    public string charId;
 
     /// <summary>인기순위 (1=최강 → N=언더독)</summary>
     public int popularityRank;

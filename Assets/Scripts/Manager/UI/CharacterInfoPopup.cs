@@ -36,7 +36,7 @@ public class CharacterInfoPopup : MonoBehaviour
 
     // ═══ 상태 ═══
     private bool isInitialized;
-    private string currentCharName;
+    private string currentCharId;
     private Coroutine showCoroutine;
     private Vector2 targetPosition;
 
@@ -45,7 +45,7 @@ public class CharacterInfoPopup : MonoBehaviour
     private CharacterRecord pendingRecord;
 
     /// <summary>현재 표시 중인 캐릭터 UID</summary>
-    public string CurrentCharName => currentCharName;
+    public string CurrentCharId => currentCharId;
 
     /// <summary>팝업이 열려있는지</summary>
     public bool IsShowing => gameObject.activeSelf;
@@ -173,7 +173,7 @@ public class CharacterInfoPopup : MonoBehaviour
         if (!isInitialized) Init();
         if (data == null) return;
 
-        currentCharName = data.charName;
+        currentCharId = data.charId;
 
         // 1) 캐릭터 타입 라벨 + 컬러
         if (charTypeLabel != null)
@@ -239,7 +239,7 @@ public class CharacterInfoPopup : MonoBehaviour
             StopCoroutine(showCoroutine);
             showCoroutine = null;
         }
-        currentCharName = null;
+        currentCharId = null;
         gameObject.SetActive(false);
     }
 

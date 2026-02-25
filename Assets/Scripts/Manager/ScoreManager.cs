@@ -22,7 +22,7 @@ public class RoundRecord
 [System.Serializable]
 public class RoundRacerResult
 {
-    public string charName;
+    public string charId;
     public int rank;
 }
 
@@ -76,6 +76,18 @@ public class ScoreManager : MonoBehaviour
         TotalRounds = PlayerPrefs.GetInt("DopamineRace_TotalRounds", 0);
         TotalWins = PlayerPrefs.GetInt("DopamineRace_TotalWins", 0);
 
+        // ★ 세이브 버전 체크 (charName→charId 마이그레이션)
+        const int SAVE_VERSION = 2;
+        int savedVersion = PlayerPrefs.GetInt("DopamineRace_SaveVersion", 1);
+        if (savedVersion < SAVE_VERSION)
+        {
+            Debug.LogWarning("[ScoreManager] 세이브 버전 업그레이드: v" + savedVersion + " → v" + SAVE_VERSION + " (기존 기록 초기화)");
+            PlayerPrefs.DeleteKey("DopamineRace_CharRecords");
+            PlayerPrefs.DeleteKey("DopamineRace_BetRecords");
+            PlayerPrefs.SetInt("DopamineRace_SaveVersion", SAVE_VERSION);
+            PlayerPrefs.Save();
+        }
+
         // 캐릭터 기록 로드
         string charJson = PlayerPrefs.GetString("DopamineRace_CharRecords", "");
         if (!string.IsNullOrEmpty(charJson))
@@ -86,7 +98,7 @@ public class ScoreManager : MonoBehaviour
         if (!string.IsNullOrEmpty(betJson))
             betRecordStore = JsonUtility.FromJson<BetRecordStore>(betJson);
 
-        // ★ DisplayName 키로 잘못 저장된 기록 자동 정리
+        // ★ 잘못된 형식의 기록 자동 정리
         CleanupInvalidCharRecords();
 
         // ★ 레거시 마이그레이션: recentRaceEntries 백필 (필드 추가 이전 세이브 호환)
@@ -99,15 +111,15 @@ public class ScoreManager : MonoBehaviour
     }
 
     /// <summary>
-    /// charName이 Loc 키 형식(str.char.*)이 아닌 기록을 제거 (이전 버전 호환)
+    /// charId 형식(char.*)이 아닌 기록을 제거 (이전 버전 호환)
     /// </summary>
     private void CleanupInvalidCharRecords()
     {
         int removed = charRecordStore.records.RemoveAll(r =>
-            r.charName != null && !r.charName.StartsWith("str."));
+            r.charId != null && !r.charId.StartsWith("char."));
         if (removed > 0)
         {
-            Debug.LogWarning("[ScoreManager] DisplayName 기반 잘못된 기록 " + removed + "건 제거");
+            Debug.LogWarning("[ScoreManager] 잘못된 형식의 기록 " + removed + "건 제거");
             SaveCharRecords();
         }
     }
@@ -120,7 +132,7 @@ public class ScoreManager : MonoBehaviour
     /// 레이스 종료 후 호출. 순위 + 배팅 결과를 모두 기록.
     /// </summary>
     public void RecordRound(BetType betType, int score, string trackName,
-        List<RoundRacerResult> racerResults, List<string> selectedCharNames)
+        List<RoundRacerResult> racerResults, List<string> selectedCharIds)
     {
         int roundNum = GameManager.Instance != null ? GameManager.Instance.CurrentRound : RoundHistory.Count + 1;
 
@@ -138,10 +150,10 @@ public class ScoreManager : MonoBehaviour
         // 현재 게임 출현 횟수 갱신
         foreach (var rr in racerResults)
         {
-            if (currentGameAppearances.ContainsKey(rr.charName))
-                currentGameAppearances[rr.charName]++;
+            if (currentGameAppearances.ContainsKey(rr.charId))
+                currentGameAppearances[rr.charId]++;
             else
-                currentGameAppearances[rr.charName] = 1;
+                currentGameAppearances[rr.charId] = 1;
         }
 
         // ── 1계층: 누적 통계 갱신 ──
@@ -155,18 +167,18 @@ public class ScoreManager : MonoBehaviour
         int currentLaps = GameSettings.Instance.GetLapsForRound(roundNum);
         foreach (var rr in racerResults)
         {
-            var charRecord = charRecordStore.GetOrCreate(rr.charName);
+            var charRecord = charRecordStore.GetOrCreate(rr.charId);
             charRecord.AddResult(trackName, rr.rank, currentLaps);
-            Debug.Log(string.Format("[ScoreManager] 기록저장: {0}({1}) rank={2} → TotalRaces={3} recentRanks=[{4}]",
-                rr.charName, Loc.Get(rr.charName), rr.rank,
+            Debug.Log(string.Format("[ScoreManager] 기록저장: {0} rank={1} → TotalRaces={2} recentRanks=[{3}]",
+                rr.charId, rr.rank,
                 charRecord.TotalRaces, charRecord.GetOverallRankString()));
         }
         SaveCharRecords();
 
         // ── 배팅 영구 기록 ──
-        var resultNames = new List<string>();
+        var resultIds = new List<string>();
         foreach (var rr in racerResults)
-            resultNames.Add(rr.charName);
+            resultIds.Add(rr.charId);
 
         BetRecord betRecord = new BetRecord
         {
@@ -174,8 +186,8 @@ public class ScoreManager : MonoBehaviour
             trackName = trackName,
             betType = betType,
             betTypeName = BettingCalculator.GetTypeName(betType),
-            selectedCharNames = selectedCharNames ?? new List<string>(),
-            resultRanking = resultNames,
+            selectedCharIds = selectedCharIds ?? new List<string>(),
+            resultRanking = resultIds,
             score = score
         };
         betRecordStore.AddRecord(betRecord);
@@ -275,9 +287,9 @@ public class ScoreManager : MonoBehaviour
     }
 
     /// <summary>현재 게임에서 특정 캐릭터의 출현 횟수</summary>
-    public int GetAppearanceCount(string charName)
+    public int GetAppearanceCount(string charId)
     {
-        return currentGameAppearances.ContainsKey(charName) ? currentGameAppearances[charName] : 0;
+        return currentGameAppearances.ContainsKey(charId) ? currentGameAppearances[charId] : 0;
     }
 
     /// <summary>라운드 결과 요약 문자열 (결과 화면용)</summary>
@@ -299,9 +311,9 @@ public class ScoreManager : MonoBehaviour
     // ═══════════════════════════════════════
 
     /// <summary>캐릭터 기록 조회 (없으면 null)</summary>
-    public CharacterRecord GetCharacterRecord(string charName)
+    public CharacterRecord GetCharacterRecord(string charId)
     {
-        return charRecordStore.Find(charName);
+        return charRecordStore.Find(charId);
     }
 
     /// <summary>전체 캐릭터 기록 목록</summary>

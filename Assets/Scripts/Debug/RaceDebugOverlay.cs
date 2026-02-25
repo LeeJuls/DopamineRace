@@ -428,6 +428,18 @@ public class RaceDebugOverlay : MonoBehaviour
     private bool showOddsSection = true;
     private Vector2 oddsScrollPos;
 
+    /// <summary>charId → DisplayName 변환 (디버그 오버레이용)</summary>
+    private string GetCharDisplayName(string charId)
+    {
+        var db = CharacterDatabase.Instance;
+        if (db != null)
+        {
+            var cd = db.FindById(charId);
+            if (cd != null) return cd.DisplayName;
+        }
+        return charId; // fallback
+    }
+
     private void DrawOddsSection()
     {
         var odds = OddsCalculator.CurrentOdds;
@@ -488,7 +500,7 @@ public class RaceDebugOverlay : MonoBehaviour
                 "<color={0}>{1,2}위{2}</color>  {3,-4}  <color={4}>{5,5:F1}x</color>  " +
                 "<color={6}>{7}({8:F2}x)</color>  {9,-10}  {10}판{11}",
                 rankColor, info.popularityRank, rankStar,
-                Loc.Get(info.charName),
+                GetCharDisplayName(info.charId),
                 oddsColor, info.winOdds,
                 condColor, condName, condMul,
                 info.recentRankStr,

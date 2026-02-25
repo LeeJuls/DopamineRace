@@ -103,6 +103,7 @@ public class PixemManager : MonoBehaviour
     public Texture2D Empty_LeftHandWeapon;
 
     private int _saveNumber = 0;
+    private string _currentPrefabName; // 현재 저장 중인 프리팹 이름 (커스텀 또는 기본)
     private string _sheetSavePath;
     private string _assetSaveFolder;
 
@@ -150,7 +151,12 @@ public class PixemManager : MonoBehaviour
     public void LoadPrefabList()
     {
         CharacterPrefabList = Resources.LoadAll<PixemSaveCharacter>("CharacterPrefabs")
-            .OrderBy(prefab => ExtractTrailingNumber(prefab.name))
+            .OrderBy(prefab =>
+            {
+                int num = ExtractTrailingNumber(prefab.name);
+                return num >= 0 ? num : 99999; // 숫자 없는 커스텀 이름은 뒤에 배치
+            })
+            .ThenBy(prefab => prefab.name)
             .ToList();
     }
 
@@ -680,14 +686,42 @@ public class PixemManager : MonoBehaviour
             existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Pixem/Resources/CharacterPrefabs/Character_" + _saveNumber + ".prefab");
         }
 
-        PixemUIManager.GetInstance.CharacterPrefabName.text = "Character_" + _saveNumber;
+        // UI 표시용 (읽기 전용)
+        var nameText = PixemUIManager.GetInstance.CharacterPrefabName;
+        if (nameText != null)
+            nameText.text = "Character_" + _saveNumber;
     }
 
+    /// <summary>
+    /// Save 버튼 클릭 시 호출. 이름 입력 다이얼로그를 표시.
+    /// </summary>
     public void CreateCharacterPrefab()
     {
+        string defaultName = "Character_" + _saveNumber;
+        PixemSaveDialog.Show(defaultName, DoSaveCharacterPrefab);
+    }
+
+    /// <summary>
+    /// 다이얼로그에서 이름 확정 후 실제 저장 수행.
+    /// </summary>
+    private void DoSaveCharacterPrefab(string customName)
+    {
+        _currentPrefabName = customName;
+
+        // 중복 체크
+        string checkPath = $"Assets/Pixem/Resources/CharacterPrefabs/{customName}.prefab";
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(checkPath) != null)
+        {
+            bool overwrite = EditorUtility.DisplayDialog(
+                "Duplicate Name",
+                $"'{customName}' already exists.\nOverwrite the existing prefab?",
+                "Overwrite", "Cancel");
+            if (!overwrite) return;
+        }
+
         ProcessAll();
 
-        string newDataPath = GetCharacterFolderPath() + "/CharacterData_" + _saveNumber + ".asset";
+        string newDataPath = GetCharacterFolderPath(customName) + "/CharacterData_" + customName + ".asset";
 
         PixemCharacterData_SO asset = ScriptableObject.CreateInstance<PixemCharacterData_SO>();
         EditorUtility.CopySerialized(SampleCharacter.CharacterData, asset);
@@ -705,7 +739,7 @@ public class PixemManager : MonoBehaviour
         }
         saveInstance.SetActive(true);
 
-        string prefabName = $"Character_{_saveNumber}.prefab";
+        string prefabName = $"{customName}.prefab";
         string prefabPath = $"Assets/Pixem/Resources/CharacterPrefabs/{prefabName}";
         string folderPath = System.IO.Path.GetDirectoryName(prefabPath);
 
@@ -726,7 +760,13 @@ public class PixemManager : MonoBehaviour
 
     public string GetCharacterFolderPath()
     {
-        return $"Assets/Pixem/Resources/CharacterResources/Character_{_saveNumber}";
+        string name = !string.IsNullOrEmpty(_currentPrefabName) ? _currentPrefabName : "Character_" + _saveNumber;
+        return GetCharacterFolderPath(name);
+    }
+
+    public string GetCharacterFolderPath(string name)
+    {
+        return $"Assets/Pixem/Resources/CharacterResources/{name}";
     }
 
     public void ProcessAll()
@@ -737,7 +777,8 @@ public class PixemManager : MonoBehaviour
             Directory.CreateDirectory(characterFolder);
 
         // 경로를 Character 폴더로 변경
-        _sheetSavePath = Path.Combine(characterFolder, "Character_" + _saveNumber + "_Sheet.png");
+        string sheetName = !string.IsNullOrEmpty(_currentPrefabName) ? _currentPrefabName : "Character_" + _saveNumber;
+        _sheetSavePath = Path.Combine(characterFolder, sheetName + "_Sheet.png");
         _assetSaveFolder = characterFolder + "/Animations";
         Directory.CreateDirectory(_assetSaveFolder);
 
