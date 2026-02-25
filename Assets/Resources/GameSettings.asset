@@ -17,7 +17,7 @@ MonoBehaviour:
   racerMaxSpeed: 4
   speedChangeInterval: 3
   speedLerpRate: 3
-  roundLaps: 0100000002000000030000000400000005000000
+  roundLaps: 02000000020000000300000005000000030000000200000004000000
   payoutWin: 8
   payoutPlace: 3
   payoutQuinella: 31
@@ -118,6 +118,7 @@ MonoBehaviour:
   basicConsumptionRate: 0.8
   boostThreshold: 0.4
   hpSpeedCompress: 0.85
+  hpLapReference: 3
   runner_spurtStart: 0
   runner_activeRate: 3.5
   runner_peakBoost: 0.1
@@ -142,16 +143,17 @@ MonoBehaviour:
   reckoner_accelExp: 1.8
   reckoner_decelExp: 0.4
   reckoner_exhaustionFloor: -0.01
+  longRaceLateBoostAmp: 0.15
   paceLeadReduction: 0.15
   paceLeadFadeStart: 0.7
   paceLeadMaxRank: 3
   slipstreamFadeTime: 2
   conservationAmpCoeff: 0.6
-  hp_earlyBonus_Runner: 0.06
+  hp_earlyBonus_Runner: 0.12
   hp_earlyBonus_Leader: 0.04
   hp_earlyBonus_Chaser: 0.02
   hp_earlyBonus_Reckoner: 0
-  hp_earlyBonusFadeEnd: 0.4
+  hp_earlyBonusFadeEnd: 0.25
   cpMultiplier: 10
   cpBasicDrain: 0.5
   cpSlipstreamDrain: 2.5

@@ -26,7 +26,7 @@ public class GameSettings : ScriptableObject
 
     [Header("═══ 라운드 설정 ═══")]
     [Tooltip("라운드별 바퀴 수 (배열 길이 = 총 라운드 수)\n예: [1,2,1,5,3,1,4] → 7라운드")]
-    public int[] roundLaps = new int[] { 1, 2, 1, 5, 3, 1, 4 };
+    public int[] roundLaps = new int[] { 2, 2, 3, 5, 3, 2, 4 };
 
     /// <summary>
     /// 총 라운드 수 (roundLaps 배열 길이)
@@ -276,6 +276,9 @@ public class GameSettings : ScriptableObject
     [Range(0f, 0.95f)]
     public float hpSpeedCompress = 0.85f;
 
+    [Tooltip("HP 기준 바퀴 수. 이 바퀴 수 이하 레이스는 HP 풀 변동 없음, 초과 시 비례 증가")]
+    [Range(1, 5)] public int hpLapReference = 3;
+
     [Header("═══ HP: 도주 (Runner) ═══")]
     [Tooltip("적극 소모 시작 시점 (OverallProgress)")]
     [Range(0f, 0.9f)]  public float runner_spurtStart = 0.00f;
@@ -314,6 +317,10 @@ public class GameSettings : ScriptableObject
     [Range(0.3f, 3.0f)] public float reckoner_decelExp = 0.4f;
     [Range(-0.15f, 0f)] public float reckoner_exhaustionFloor = -0.01f;
 
+    [Header("═══ HP: 장거리 보정 ═══")]
+    [Tooltip("hpLapReference 초과 시 Chaser/Reckoner peakBoost 증폭 계수")]
+    [Range(0f, 0.5f)] public float longRaceLateBoostAmp = 0.15f;
+
     [Header("═══ HP: 포지션 보정 ═══")]
     [Tooltip("Pace Lead: 선행이 상위 순위일 때 activeRate 감소율")]
     [Range(0f, 0.4f)] public float paceLeadReduction = 0.15f;
@@ -330,7 +337,7 @@ public class GameSettings : ScriptableObject
 
     [Header("═══ HP: 초반 타입 보너스 ═══")]
     [Tooltip("도주(Runner) 초반 속도 보너스")]
-    [Range(0f, 0.3f)] public float hp_earlyBonus_Runner = 0.06f;
+    [Range(0f, 0.3f)] public float hp_earlyBonus_Runner = 0.12f;
     [Tooltip("선행(Leader) 초반 속도 보너스")]
     [Range(0f, 0.3f)] public float hp_earlyBonus_Leader = 0.04f;
     [Tooltip("선입(Chaser) 초반 속도 보너스")]
@@ -338,7 +345,7 @@ public class GameSettings : ScriptableObject
     [Tooltip("추행(Reckoner) 초반 속도 보너스")]
     [Range(0f, 0.3f)] public float hp_earlyBonus_Reckoner = 0f;
     [Tooltip("초반 보너스가 0으로 사라지는 진행률")]
-    [Range(0.1f, 0.5f)] public float hp_earlyBonusFadeEnd = 0.40f;
+    [Range(0.1f, 0.5f)] public float hp_earlyBonusFadeEnd = 0.25f;
 
     /// <summary>
     /// HP 시스템용 초반 타입 보너스.
@@ -459,11 +466,29 @@ public class GameSettings : ScriptableObject
     }
 
     /// <summary>
-    /// charEndurance → maxHP 계산
+    /// charEndurance → maxHP 계산 (기본)
     /// </summary>
     public float CalcMaxHP(float endurance)
     {
         return hpBase + endurance * hpPerEndurance;
+    }
+
+    /// <summary>
+    /// charEndurance + 바퀴 수 → maxHP 계산 (랩 스케일링 적용)
+    /// </summary>
+    public float CalcMaxHP(float endurance, int laps)
+    {
+        float baseHP = hpBase + endurance * hpPerEndurance;
+        return baseHP * GetHPLapScale(laps);
+    }
+
+    /// <summary>
+    /// 바퀴 수에 따른 HP 스케일 팩터. hpLapReference 이하 → 1.0, 초과 → 비례 증가.
+    /// </summary>
+    public float GetHPLapScale(int laps)
+    {
+        if (laps <= hpLapReference) return 1f;
+        return (float)laps / hpLapReference;
     }
 
     [Header("═══ 타입 보너스 (레거시 — HP 시스템 OFF 시 사용) ═══")]

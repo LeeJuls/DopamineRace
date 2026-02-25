@@ -399,7 +399,7 @@ public class RaceBacktestWindow : EditorWindow
                 // HP 시스템 초기화
                 if (gs.useHPSystem)
                 {
-                    racer.maxHP = gs.CalcMaxHP(cd.charBaseEndurance);
+                    racer.maxHP = gs.CalcMaxHP(cd.charBaseEndurance, simLaps);
                     racer.enduranceHP = racer.maxHP;
                     racer.totalConsumedHP = 0f;
                     racer.hpBoostValue = 0f;
@@ -894,6 +894,16 @@ public class RaceBacktestWindow : EditorWindow
             out _, out _, out float peakBoost,
             out float accelExp, out float decelExp, out float exhaustionFloor);
 
+        // 장거리 보정: Chaser/Reckoner peakBoost 증폭
+        if (simLaps > gs.hpLapReference)
+        {
+            if (r.data.charType == CharacterType.Chaser || r.data.charType == CharacterType.Reckoner)
+            {
+                float lapExcess = (float)(simLaps - gs.hpLapReference) / gs.hpLapReference;
+                peakBoost *= (1f + lapExcess * gs.longRaceLateBoostAmp);
+            }
+        }
+
         float consumedRatio = r.maxHP > 0f ? r.totalConsumedHP / r.maxHP : 0f;
         float threshold = gs.boostThreshold;
 
@@ -1201,6 +1211,10 @@ public class RaceBacktestWindow : EditorWindow
             md.AppendFormat("| hpPerEndurance | {0} |\n", g.hpPerEndurance);
             md.AppendFormat("| basicConsumptionRate | {0} |\n", g.basicConsumptionRate);
             md.AppendFormat("| boostThreshold | {0} |\n", g.boostThreshold);
+            md.AppendFormat("| hpLapReference | {0} |\n", g.hpLapReference);
+            md.AppendFormat("| longRaceLateBoostAmp | {0} |\n", g.longRaceLateBoostAmp);
+            md.AppendFormat("| hp_earlyBonus_Runner | {0} |\n", g.hp_earlyBonus_Runner);
+            md.AppendFormat("| hp_earlyBonusFadeEnd | {0} |\n", g.hp_earlyBonusFadeEnd);
             md.AppendLine();
             md.AppendLine("| 타입 | spurtStart | activeRate | peakBoost | accelExp | decelExp | exhaustionFloor |");
             md.AppendLine("|------|------------|-----------|-----------|----------|----------|-----------------|");

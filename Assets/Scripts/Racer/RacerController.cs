@@ -177,7 +177,8 @@ public class RacerController : MonoBehaviour
         // HP 시스템 초기화
         if (charData != null && GameSettings.Instance.useHPSystem)
         {
-            maxHP = GameSettings.Instance.CalcMaxHP(charData.charBaseEndurance);
+            int totalLaps = GetTotalLaps();
+            maxHP = GameSettings.Instance.CalcMaxHP(charData.charBaseEndurance, totalLaps);
             enduranceHP = maxHP;
             totalConsumedHP = 0f;
             hpBoostValue = 0f;
@@ -492,8 +493,19 @@ public class RacerController : MonoBehaviour
             out _, out _, out float peakBoost,
             out float accelExp, out float decelExp, out float exhaustionFloor);
 
+        // 장거리 보정: Chaser/Reckoner peakBoost 증폭
+        int totalLapsForBoost = GetTotalLaps();
+        if (totalLapsForBoost > gs.hpLapReference)
+        {
+            if (charData.charType == CharacterType.Chaser || charData.charType == CharacterType.Reckoner)
+            {
+                float lapExcess = (float)(totalLapsForBoost - gs.hpLapReference) / gs.hpLapReference;
+                peakBoost *= (1f + lapExcess * gs.longRaceLateBoostAmp);
+            }
+        }
+
         float consumedRatio = maxHP > 0f ? totalConsumedHP / maxHP : 0f;
-        float threshold = gs.boostThreshold; // 0.6
+        float threshold = gs.boostThreshold;
 
         float boost;
         if (consumedRatio <= threshold)
