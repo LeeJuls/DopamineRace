@@ -145,11 +145,24 @@ MonoBehaviour:
   paceLeadReduction: 0.15
   paceLeadFadeStart: 0.7
   paceLeadMaxRank: 3
-  slipstreamReduction: 0.2
-  slipstreamMinRank: 3
-  slipstreamMaxRank: 7
   slipstreamFadeTime: 2
   conservationAmpCoeff: 0.6
+  hp_earlyBonus_Runner: 0.2
+  hp_earlyBonus_Leader: 0.12
+  hp_earlyBonus_Chaser: 0
+  hp_earlyBonus_Reckoner: 0
+  hp_earlyBonusFadeEnd: 0.65
+  cpMultiplier: 10
+  cpBasicDrain: 0.5
+  cpSlipstreamDrain: 2.5
+  universalSlipstreamRange: 0.08
+  universalSlipstreamBonus: 0.015
+  chaserSlipstreamMult: 1.1
+  cpWeakThreshold: 0.5
+  cpMinEfficiency: 0.5
+  cpLowNoiseMul: 2
+  hpUnstableThreshold: 0.4
+  hpLowNoiseMul: 2.5
   earlyBonus_Runner: 0.15
   earlyBonus_Leader: 0.08
   earlyBonus_Chaser: 0
