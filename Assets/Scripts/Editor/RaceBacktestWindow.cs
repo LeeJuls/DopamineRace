@@ -22,11 +22,16 @@ public class RaceBacktestWindow : EditorWindow
     private bool showPerRace = false;
     private bool runAllTracks = false;
     private bool saveLog = true;
+    private bool equalStats = false;
+    private int equalStatValue = 20;
     private Vector2 scrollPos;
     private string resultText = "";
     private string lastLogPath = "";
     private bool isRunning = false;
     private bool cancelRequested = false;
+
+    // ★ 구간별 포지션 추적 체크포인트
+    private static readonly float[] segCheckpoints = { 0.10f, 0.20f, 0.35f, 0.50f, 0.65f, 0.80f, 0.90f };
 
     [MenuItem("DopamineRace/백테스팅")]
     public static void ShowWindow()
@@ -59,6 +64,12 @@ public class RaceBacktestWindow : EditorWindow
         simCollision = EditorGUILayout.Toggle("충돌 시뮬레이션", simCollision);
         showPerRace = EditorGUILayout.Toggle("개별 레이스 결과 표시", showPerRace);
         saveLog = EditorGUILayout.Toggle("📄 로그 파일 저장", saveLog);
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("━━━ 밸런스 테스트 옵션 ━━━");
+        equalStats = EditorGUILayout.Toggle("균등 스탯 테스트", equalStats);
+        if (equalStats)
+            equalStatValue = EditorGUILayout.IntSlider("스탯 값", equalStatValue, 1, 20);
 
         EditorGUILayout.Space();
 
@@ -137,6 +148,9 @@ public class RaceBacktestWindow : EditorWindow
         // ★ CP 시스템
         public float calmPoints;          // 현재 CP
         public float maxCP;               // 최대 CP
+
+        // ★ 구간별 포지션 추적
+        public bool[] segRecorded;        // 각 체크포인트 통과 여부
     }
 
     private struct SlingshotReserve
@@ -220,6 +234,10 @@ public class RaceBacktestWindow : EditorWindow
         public string trackId;
         public Dictionary<string, CharStats> stats;
         public int globalCrits, globalCollisions, globalDodges, globalSlingshots;
+
+        // ★ 구간별 타입 순위 추적
+        public Dictionary<string, float[]> typeSegRankSum;
+        public Dictionary<string, int[]> typeSegRankCount;
     }
 
     // ══════════════════════════════════════
@@ -375,12 +393,36 @@ public class RaceBacktestWindow : EditorWindow
         float totalTrackLength = 17f;
         float finishDistance = totalTrackLength * simLaps;
 
+        // ★ 구간별 포지션 추적 초기화
+        int segCount = segCheckpoints.Length + 1; // +1 for 결승
+        Dictionary<string, float[]> typeSegRankSum = new Dictionary<string, float[]>();
+        Dictionary<string, int[]> typeSegRankCount = new Dictionary<string, int[]>();
+        foreach (string typeName in new[] { "도주", "선행", "선입", "추입" })
+        {
+            typeSegRankSum[typeName] = new float[segCount];
+            typeSegRankCount[typeName] = new int[segCount];
+        }
+
         for (int race = 0; race < simCount; race++)
         {
             // 랜덤 선발
             List<CharacterData> selected = new List<CharacterData>(allChars);
             while (selected.Count > racerCount)
                 selected.RemoveAt(Random.Range(0, selected.Count));
+
+            // 균등 스탯 오버라이드
+            if (equalStats)
+            {
+                foreach (var cd in selected)
+                {
+                    cd.charBaseSpeed = equalStatValue;
+                    cd.charBasePower = equalStatValue;
+                    cd.charBaseBrave = equalStatValue;
+                    cd.charBaseCalm = equalStatValue;
+                    cd.charBaseEndurance = equalStatValue;
+                    cd.charBaseLuck = equalStatValue;
+                }
+            }
 
             List<SimRacer> racers = new List<SimRacer>();
             foreach (var cd in selected)
@@ -410,6 +452,9 @@ public class RaceBacktestWindow : EditorWindow
                     racer.maxCP = cd.charBaseCalm * gs.cpMultiplier;
                     racer.calmPoints = racer.maxCP;
                 }
+
+                // 구간 추적 초기화
+                racer.segRecorded = new bool[segCheckpoints.Length];
 
                 racers.Add(racer);
                 stats[cd.charId].raceCount++;
@@ -499,11 +544,35 @@ public class RaceBacktestWindow : EditorWindow
                     r.currentSpeed = Mathf.Lerp(r.currentSpeed, targetSpeed, simTimeStep * gs.raceSpeedLerp);
                     r.position += r.currentSpeed * simTimeStep;
 
+                    // ★ 구간별 포지션 기록
+                    float prog = Mathf.Clamp01(r.position / finishDistance);
+                    for (int si = 0; si < segCheckpoints.Length; si++)
+                    {
+                        if (!r.segRecorded[si] && prog >= segCheckpoints[si])
+                        {
+                            r.segRecorded[si] = true;
+                            string segType = r.data.GetTypeName();
+                            if (typeSegRankSum.ContainsKey(segType))
+                            {
+                                typeSegRankSum[segType][si] += r.currentRank;
+                                typeSegRankCount[segType][si]++;
+                            }
+                        }
+                    }
+
                     if (r.position >= finishDistance)
                     {
                         r.finished = true;
                         finishedCount++;
                         r.finishOrder = finishedCount;
+
+                        // ★ 결승 순위 기록
+                        string finType = r.data.GetTypeName();
+                        if (typeSegRankSum.ContainsKey(finType))
+                        {
+                            typeSegRankSum[finType][segCheckpoints.Length] += r.finishOrder;
+                            typeSegRankCount[finType][segCheckpoints.Length]++;
+                        }
                     }
                 }
 
@@ -570,7 +639,9 @@ public class RaceBacktestWindow : EditorWindow
             globalCrits = globalCrits,
             globalCollisions = globalCollisions,
             globalDodges = globalDodges,
-            globalSlingshots = globalSlingshots
+            globalSlingshots = globalSlingshots,
+            typeSegRankSum = typeSegRankSum,
+            typeSegRankCount = typeSegRankCount
         };
     }
 
@@ -824,6 +895,12 @@ public class RaceBacktestWindow : EditorWindow
         float speed = baseSpeed * (1f + typeBonus + powerBonus + braveBonus);
         speed += r.noiseValue;
         if (!gs.useHPSystem) speed -= fatigue; // HP 시스템: fatigue 내장
+
+        // ═══ 초반 대형: 타입별 포지션 정렬 ═══
+        float formationMod = gs.GetFormationModifier(
+            cd.charType, progress, r.currentRank, simRacers);
+        speed *= (1f + formationMod);
+
         speed *= slowMul * critMul;
         return Mathf.Max(speed, 0.1f);
     }
@@ -832,7 +909,7 @@ public class RaceBacktestWindow : EditorWindow
     //  HP 시스템 미러 (SPEC-006)
     // ══════════════════════════════════════
 
-    /// <summary>HP 소모 (RacerController.ConsumeHP 미러)</summary>
+    /// <summary>HP 소모 (RacerController.ConsumeHP 미러) — 존 기반 소모율</summary>
     private void SimConsumeHP(SimRacer r, GameSettings gs, float progress)
     {
         if (r.enduranceHP <= 0f) return;
@@ -841,39 +918,43 @@ public class RaceBacktestWindow : EditorWindow
             out float spurtStart, out float activeRate, out _,
             out _, out _, out _);
 
-        float effectiveActiveRate = progress >= spurtStart ? activeRate : 0f;
-        float effectiveBasicRate = gs.basicConsumptionRate;
+        gs.GetZoneParams(r.data.charType,
+            out float targetZonePct, out float inZoneRate, out float outZoneRate);
 
-        // ═══ Phase 4: 포지션 보정 (SPEC-006 §5) ═══
-        switch (r.data.charType)
+        // 스퍼트 판정 (spurtStart = 남은 진행률)
+        bool inSpurt = spurtStart > 0f && progress >= (1f - spurtStart);
+
+        // Leader 조건부 스퍼트: HP 잔량 미달이면 스퍼트 포기
+        if (inSpurt && r.data.charType == CharacterType.Leader
+            && r.maxHP > 0f && r.enduranceHP / r.maxHP < gs.leaderSpurtMinHP)
+            inSpurt = false;
+
+        // 기본 소모율 결정 (존 기반 / Reckoner 보존)
+        float normalRate;
+        if (targetZonePct <= 0f)
         {
-            case CharacterType.Leader:
-                // Pace Lead: 1~3위에서 activeRate 절감, 후반 약화
-                if (r.currentRank >= 1 && r.currentRank <= 3)
-                {
-                    float paceLeadEffect = gs.paceLeadReduction;
-                    if (progress > 0.7f)
-                    {
-                        float fade = 1f - (progress - 0.7f) / 0.3f;
-                        paceLeadEffect *= Mathf.Max(0f, fade);
-                    }
-                    effectiveActiveRate *= (1f - paceLeadEffect);
-                }
-                break;
+            // Reckoner: 타겟 존 없음, 항상 보존 모드
+            normalRate = inZoneRate;
+        }
+        else
+        {
+            // Runner / Leader / Chaser: 존 기반 소모율
+            int total = simRacers;
+            int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(total * targetZonePct));
+            normalRate = (r.currentRank <= targetMaxRank) ? inZoneRate : outZoneRate;
+        }
 
-            case CharacterType.Chaser:
-                // CP 시스템으로 이전 — HP basicRate 절감 제거
-                break;
-
-            case CharacterType.Reckoner:
-                // Conservation Amp: 잔여 HP 많을수록 activeRate 증폭
-                if (effectiveActiveRate > 0f && r.maxHP > 0f)
-                {
-                    float remainingRatio = r.enduranceHP / r.maxHP;
-                    float amplifier = 1f + Mathf.Max(0f, remainingRatio - 0.5f) * gs.conservationAmpCoeff;
-                    effectiveActiveRate *= amplifier;
-                }
-                break;
+        // 스퍼트 점진 램프: normalRate → activeRate 선형 보간
+        float rate;
+        if (inSpurt)
+        {
+            float spurtThreshold = 1f - spurtStart;
+            float spurtProgress = Mathf.Clamp01((progress - spurtThreshold) / spurtStart);
+            rate = Mathf.Lerp(normalRate, activeRate, spurtProgress);
+        }
+        else
+        {
+            rate = normalRate;
         }
 
         float trackSpeedMul = selectedTrack != null ? selectedTrack.speedMultiplier : 1f;
@@ -881,11 +962,24 @@ public class RaceBacktestWindow : EditorWindow
         float speedRatio = baseTrackSpeed > 0.01f ? r.currentSpeed / baseTrackSpeed : 1f;
         speedRatio = Mathf.Clamp(speedRatio, 0.1f, 2f);
 
-        float consumption = (effectiveBasicRate + effectiveActiveRate) * Mathf.Sqrt(speedRatio) * simTimeStep;
+        float effectiveRate = Mathf.Max(gs.basicConsumptionRate, rate);
+
+        // ═══ 부스트 피드백: 부스트가 높을수록 HP 소모 증가 ═══
+        float boostAmp = 1f + gs.boostHPDrainCoeff * Mathf.Max(0f, r.hpBoostValue);
+        effectiveRate *= boostAmp;
+
+        float consumption = effectiveRate * Mathf.Sqrt(speedRatio) * simTimeStep;
         consumption = Mathf.Min(consumption, r.enduranceHP);
 
         r.enduranceHP -= consumption;
         r.totalConsumedHP += consumption;
+
+        // 선두 페이스 택스: 바람막이 HP 추가 소모 (부스트에 기여 X → 순수 탈진 가속)
+        if (r.currentRank <= gs.leadPaceTaxRank && r.enduranceHP > 0f)
+        {
+            float paceTax = gs.leadPaceTaxRate * Mathf.Sqrt(speedRatio) * simTimeStep;
+            r.enduranceHP = Mathf.Max(0f, r.enduranceHP - paceTax);
+        }
     }
 
     /// <summary>HP 부스트 계산 (RacerController.CalcHPBoost 미러)</summary>
@@ -908,11 +1002,15 @@ public class RaceBacktestWindow : EditorWindow
         float consumedRatio = r.maxHP > 0f ? r.totalConsumedHP / r.maxHP : 0f;
         float threshold = gs.boostThreshold;
 
+        // ═══ Power 기반 가속 강화: power 높을수록 부스트 곡선이 가파름 ═══
+        float powerFactor = 1f + (r.data.charBasePower / 20f) * gs.powerAccelCoeff;
+        float effectiveAccelExp = accelExp / Mathf.Max(powerFactor, 0.1f);
+
         float boost;
         if (consumedRatio <= threshold)
         {
             float t = threshold > 0f ? consumedRatio / threshold : 0f;
-            boost = peakBoost * Mathf.Pow(t, accelExp);
+            boost = peakBoost * Mathf.Pow(t, effectiveAccelExp);
         }
         else if (r.enduranceHP > 0f)
         {
@@ -1058,6 +1156,43 @@ public class RaceBacktestWindow : EditorWindow
                         KN(s.name), pow, brv, lck,
                         s.AvgCollWins, s.AvgCollLosses, s.AvgDodges, s.AvgSlingshots,
                         s.AvgDistLost, s.AvgDistGained, SF(s.AvgNetGain));
+                }
+                md.AppendLine();
+            }
+
+            // ── 구간별 타입 평균 순위 ──
+            if (tr.typeSegRankSum != null)
+            {
+                string[] segTypeOrder = { "도주", "선행", "선입", "추입" };
+
+                display.AppendFormat("\n──── [{0}] 구간별 타입 평균 순위 ────\n", tn);
+                display.Append("  구간  ");
+                foreach (var stn in segTypeOrder) display.AppendFormat(" {0,-6}", stn);
+                display.AppendLine();
+
+                md.AppendLine("### 구간별 타입 평균 순위");
+                md.AppendLine();
+                md.AppendLine("| 구간 | 도주 | 선행 | 선입 | 추입 |");
+                md.AppendLine("|------|------|------|------|------|");
+
+                int totalSeg = segCheckpoints.Length + 1;
+                for (int si = 0; si < totalSeg; si++)
+                {
+                    string segLabel = si < segCheckpoints.Length
+                        ? string.Format("{0:F0}%", segCheckpoints[si] * 100)
+                        : "결승";
+                    display.AppendFormat("  {0,-6}", segLabel);
+                    md.AppendFormat("| {0} |", segLabel);
+
+                    foreach (var stn in segTypeOrder)
+                    {
+                        int cnt = tr.typeSegRankCount.ContainsKey(stn) ? tr.typeSegRankCount[stn][si] : 0;
+                        float avg = cnt > 0 ? tr.typeSegRankSum[stn][si] / cnt : 0;
+                        display.AppendFormat(" {0,5:F2} ", avg);
+                        md.AppendFormat(" {0:F2} |", avg);
+                    }
+                    display.AppendLine();
+                    md.AppendLine();
                 }
                 md.AppendLine();
             }
@@ -1232,6 +1367,22 @@ public class RaceBacktestWindow : EditorWindow
             md.AppendFormat("| Reckoner | {0} | {1} | {2} | {3} | {4} | {5} |\n",
                 g.reckoner_spurtStart, g.reckoner_activeRate, g.reckoner_peakBoost,
                 g.reckoner_accelExp, g.reckoner_decelExp, g.reckoner_exhaustionFloor);
+
+            md.AppendLine();
+            md.AppendLine("### 포지션 타겟팅 파라미터");
+            md.AppendLine();
+            md.AppendLine("| 타입 | targetZone | inZoneRate | outZoneRate |");
+            md.AppendLine("|------|------------|-----------|-------------|");
+            md.AppendFormat("| Runner | {0:P0} | {1} | {2} |\n", g.runner_targetZone, g.runner_inZoneRate, g.runner_outZoneRate);
+            md.AppendFormat("| Leader | {0:P0} | {1} | {2} |\n", g.leader_targetZone, g.leader_inZoneRate, g.leader_outZoneRate);
+            md.AppendFormat("| Chaser | {0:P0} | {1} | {2} |\n", g.chaser_targetZone, g.chaser_inZoneRate, g.chaser_outZoneRate);
+            md.AppendFormat("| Reckoner | 없음 | {0} (base) | - |\n", g.reckoner_baseRate);
+
+            if (equalStats)
+            {
+                md.AppendLine();
+                md.AppendFormat("### ⚖️ 균등 스탯 모드: 모든 스탯 = {0}\n", equalStatValue);
+            }
         }
         else
         {

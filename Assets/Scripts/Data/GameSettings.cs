@@ -265,10 +265,9 @@ public class GameSettings : ScriptableObject
     [Tooltip("maxHP = hpBase + endurance × hpPerEndurance")]
     public float hpBase = 50f;
     [Tooltip("내구력 1당 추가 HP")]
-    public float hpPerEndurance = 2.5f;
-    [Tooltip("기본 소모율 (전 타입 공통, 달리는 내내 적용)")]
-    [Range(0.05f, 2.0f)]
-    public float basicConsumptionRate = 0.8f;
+    public float hpPerEndurance = 3f;
+    [Tooltip("달리기 기본 HP 소모율 (/초). max(이 값, 존Rate) 중 큰 값 적용 — 최소 소모 바닥")]
+    [Range(0.1f, 3f)] public float basicConsumptionRate = 0.5f;
     [Tooltip("가속→감속 전환 임계점 (consumed% 기준)")]
     [Range(0.2f, 0.8f)]
     public float boostThreshold = 0.4f;
@@ -279,13 +278,19 @@ public class GameSettings : ScriptableObject
     [Tooltip("HP 기준 바퀴 수. 이 바퀴 수 이하 레이스는 HP 풀 변동 없음, 초과 시 비례 증가")]
     [Range(1, 5)] public int hpLapReference = 3;
 
+    [Header("═══ HP: 부스트 피드백 시스템 ═══")]
+    [Tooltip("부스트가 HP 소모를 증폭하는 계수 (2.0 = 16% 부스트 시 소모 +32%). 가속할수록 HP가 빨리 닳음")]
+    [Range(0f, 10f)] public float boostHPDrainCoeff = 3.0f;
+    [Tooltip("Power 스탯이 가속 곡선을 가파르게 만드는 계수. power 20 + coeff 0.5 → accelExp ÷1.5")]
+    [Range(0f, 2f)] public float powerAccelCoeff = 0.5f;
+
     [Header("═══ HP: 도주 (Runner) ═══")]
     [Tooltip("적극 소모 시작 시점 (OverallProgress)")]
     [Range(0f, 0.9f)]  public float runner_spurtStart = 0.00f;
     [Tooltip("적극 소모율")]
     [Range(0.5f, 5.0f)] public float runner_activeRate = 3.5f;
     [Tooltip("60% 소모 시 최대 부스트")]
-    [Range(0.01f, 0.2f)] public float runner_peakBoost = 0.10f;
+    [Range(0.01f, 0.5f)] public float runner_peakBoost = 0.10f;
     [Tooltip("가속 곡선 지수 (높을수록 후반 급격)")]
     [Range(0.5f, 3.0f)] public float runner_accelExp = 1.5f;
     [Tooltip("감속 곡선 지수 (높을수록 완만)")]
@@ -296,7 +301,7 @@ public class GameSettings : ScriptableObject
     [Header("═══ HP: 선행 (Leader) ═══")]
     [Range(0f, 0.9f)]  public float leader_spurtStart = 0.05f;
     [Range(0.5f, 5.0f)] public float leader_activeRate = 3.0f;
-    [Range(0.01f, 0.2f)] public float leader_peakBoost = 0.10f;
+    [Range(0.01f, 0.5f)] public float leader_peakBoost = 0.10f;
     [Range(0.5f, 3.0f)] public float leader_accelExp = 1.2f;
     [Range(0.3f, 3.0f)] public float leader_decelExp = 1.0f;
     [Range(-0.15f, 0f)] public float leader_exhaustionFloor = -0.02f;
@@ -304,7 +309,7 @@ public class GameSettings : ScriptableObject
     [Header("═══ HP: 선입 (Chaser) ═══")]
     [Range(0f, 0.9f)]  public float chaser_spurtStart = 0.15f;
     [Range(0.5f, 5.0f)] public float chaser_activeRate = 3.5f;
-    [Range(0.01f, 0.2f)] public float chaser_peakBoost = 0.12f;
+    [Range(0.01f, 0.5f)] public float chaser_peakBoost = 0.12f;
     [Range(0.5f, 3.0f)] public float chaser_accelExp = 1.3f;
     [Range(0.3f, 3.0f)] public float chaser_decelExp = 0.8f;
     [Range(-0.15f, 0f)] public float chaser_exhaustionFloor = -0.03f;
@@ -312,7 +317,7 @@ public class GameSettings : ScriptableObject
     [Header("═══ HP: 추행 (Reckoner) ═══")]
     [Range(0f, 0.9f)]  public float reckoner_spurtStart = 0.30f;
     [Range(0.5f, 5.0f)] public float reckoner_activeRate = 4.5f;
-    [Range(0.01f, 0.2f)] public float reckoner_peakBoost = 0.16f;
+    [Range(0.01f, 0.5f)] public float reckoner_peakBoost = 0.16f;
     [Range(0.5f, 3.0f)] public float reckoner_accelExp = 1.8f;
     [Range(0.3f, 3.0f)] public float reckoner_decelExp = 0.4f;
     [Range(-0.15f, 0f)] public float reckoner_exhaustionFloor = -0.01f;
@@ -321,19 +326,42 @@ public class GameSettings : ScriptableObject
     [Tooltip("hpLapReference 초과 시 Chaser/Reckoner peakBoost 증폭 계수")]
     [Range(0f, 0.5f)] public float longRaceLateBoostAmp = 0.15f;
 
-    [Header("═══ HP: 포지션 보정 ═══")]
-    [Tooltip("Pace Lead: 선행이 상위 순위일 때 activeRate 감소율")]
-    [Range(0f, 0.4f)] public float paceLeadReduction = 0.15f;
-    [Tooltip("Pace Lead 효과 감소 시작 시점")]
-    [Range(0.5f, 0.9f)] public float paceLeadFadeStart = 0.7f;
-    [Tooltip("Pace Lead 발동 최대 순위")]
-    [Range(1, 6)] public int paceLeadMaxRank = 3;
+    // ── 레거시 포지션 보정 (deprecated, 시리얼 유지) ──
+    [HideInInspector] public float paceLeadReduction = 0.15f;
+    [HideInInspector] public float paceLeadFadeStart = 0.7f;
+    [HideInInspector] public int paceLeadMaxRank = 3;
+    [HideInInspector] public float conservationAmpCoeff = 0.6f;
 
     [Tooltip("슬립스트림 블렌드 페이드 시간 (초)")]
     [Range(0.5f, 5f)] public float slipstreamFadeTime = 2.0f;
 
-    [Tooltip("Conservation Amplifier 계수 (추행 전용)")]
-    [Range(0f, 1.5f)] public float conservationAmpCoeff = 0.6f;
+    [Header("═══ HP: 포지션 타겟팅 (1차 타입 밸런스) ═══")]
+    [Tooltip("도주 타겟 순위 비율 (0.25 = 상위 25%, 12명 중 top 3)")]
+    [Range(0f, 1f)] public float runner_targetZone = 0.25f;
+    [Tooltip("도주 존 내 소모율 (/초)")]
+    [Range(0.1f, 5f)] public float runner_inZoneRate = 1.0f;
+    [Tooltip("도주 존 밖 소모율 (/초) — 패닉 모드")]
+    [Range(0.1f, 5f)] public float runner_outZoneRate = 2.0f;
+
+    [Tooltip("선행 타겟 순위 비율 (0.30 = 상위 30%, 12명 중 top 4)")]
+    [Range(0f, 1f)] public float leader_targetZone = 0.30f;
+    [Tooltip("선행 존 내 소모율")]
+    [Range(0.1f, 5f)] public float leader_inZoneRate = 1.2f;
+    [Tooltip("선행 존 밖 소모율")]
+    [Range(0.1f, 5f)] public float leader_outZoneRate = 1.8f;
+
+    [Tooltip("선입 타겟 순위 비율 (0.70 = 상위 70%, 12명 중 top 9)")]
+    [Range(0f, 1f)] public float chaser_targetZone = 0.70f;
+    [Tooltip("선입 존 내 소모율 — 극 절약")]
+    [Range(0.1f, 5f)] public float chaser_inZoneRate = 0.5f;
+    [Tooltip("선입 존 밖 소모율")]
+    [Range(0.1f, 5f)] public float chaser_outZoneRate = 1.5f;
+
+    [Tooltip("추입 스퍼트 전 기본 소모율 — 타겟 존 없음, 항상 보존")]
+    [Range(0.1f, 5f)] public float reckoner_baseRate = 0.3f;
+
+    [Tooltip("Leader 조건부 스퍼트 최소 HP 잔량 비율 (이하면 스퍼트 포기)")]
+    [Range(0f, 0.5f)] public float leaderSpurtMinHP = 0.3f;
 
     [Header("═══ HP: 초반 타입 보너스 ═══")]
     [Tooltip("도주(Runner) 초반 속도 보너스")]
@@ -367,6 +395,50 @@ public class GameSettings : ScriptableObject
         float fade = 1f - (progress / hp_earlyBonusFadeEnd);
         return bonus * fade;
     }
+
+    [Header("═══ 초반 대형 (Formation Phase) ═══")]
+    [Tooltip("대형 유지 구간 종료 진행률 (0.2 = 처음 20%)")]
+    [Range(0.05f, 0.5f)] public float formationPhaseEnd = 0.20f;
+    [Tooltip("대형 이탈 시 속도 보정 강도 (순위 편차 × 이 값)")]
+    [Range(0.01f, 0.5f)] public float formationCorrectionStrength = 0.15f;
+    [Tooltip("도주 목표 포지션 (0=선두, 1=꼴찌)")]
+    [Range(0f, 1f)] public float formationTarget_Runner = 0.15f;
+    [Tooltip("선행 목표 포지션")]
+    [Range(0f, 1f)] public float formationTarget_Leader = 0.35f;
+    [Tooltip("선입 목표 포지션")]
+    [Range(0f, 1f)] public float formationTarget_Chaser = 0.65f;
+    [Tooltip("추입 목표 포지션")]
+    [Range(0f, 1f)] public float formationTarget_Reckoner = 0.85f;
+
+    /// <summary>
+    /// 초반 대형 속도 보정값.
+    /// 현재 순위가 목표보다 뒤(높은 번호)면 양수(가속), 앞(낮은 번호)면 음수(감속).
+    /// formationPhaseEnd까지 선형 페이드아웃.
+    /// </summary>
+    public float GetFormationModifier(CharacterType type, float progress, int currentRank, int totalRacers)
+    {
+        if (progress >= formationPhaseEnd) return 0f;
+
+        float targetPct = type switch
+        {
+            CharacterType.Runner   => formationTarget_Runner,
+            CharacterType.Leader   => formationTarget_Leader,
+            CharacterType.Chaser   => formationTarget_Chaser,
+            _                      => formationTarget_Reckoner
+        };
+
+        float currentPct = (currentRank - 1f) / Mathf.Max(totalRacers - 1f, 1f);
+        float deviation = currentPct - targetPct; // +면 뒤처짐, -면 앞서감
+
+        float fade = 1f - (progress / formationPhaseEnd);
+        return deviation * formationCorrectionStrength * fade;
+    }
+
+    [Header("═══ 선두 페이스 택스 (Lead Pace Tax) ═══")]
+    [Tooltip("HP 추가 소모 적용 순위 (2 = 1~2위가 바람막이 세금)")]
+    [Range(1, 6)] public int leadPaceTaxRank = 2;
+    [Tooltip("선두 HP 추가 소모율 (/초). totalConsumedHP에 미포함 → 순수 탈진 가속")]
+    [Range(0f, 3f)] public float leadPaceTaxRate = 0.8f;
 
     [Header("═══ CP 시스템 (Calm Points) ═══")]
     [Tooltip("CP 최대치 = charBaseCalm × 이 값")]
@@ -461,6 +533,38 @@ public class GameSettings : ScriptableObject
                 spurtStart = reckoner_spurtStart; activeRate = reckoner_activeRate;
                 peakBoost = reckoner_peakBoost; accelExp = reckoner_accelExp;
                 decelExp = reckoner_decelExp; exhaustionFloor = reckoner_exhaustionFloor;
+                return;
+        }
+    }
+
+    /// <summary>
+    /// 타입별 포지션 존 파라미터 반환.
+    /// targetZonePct: 0 = 타겟 없음 (Reckoner), 0.25 = 상위 25%, etc.
+    /// </summary>
+    public void GetZoneParams(CharacterType type,
+        out float targetZonePct, out float inZoneRate, out float outZoneRate)
+    {
+        switch (type)
+        {
+            case CharacterType.Runner:
+                targetZonePct = runner_targetZone;
+                inZoneRate = runner_inZoneRate;
+                outZoneRate = runner_outZoneRate;
+                return;
+            case CharacterType.Leader:
+                targetZonePct = leader_targetZone;
+                inZoneRate = leader_inZoneRate;
+                outZoneRate = leader_outZoneRate;
+                return;
+            case CharacterType.Chaser:
+                targetZonePct = chaser_targetZone;
+                inZoneRate = chaser_inZoneRate;
+                outZoneRate = chaser_outZoneRate;
+                return;
+            default: // Reckoner — 타겟 존 없음
+                targetZonePct = 0f;
+                inZoneRate = reckoner_baseRate;
+                outZoneRate = reckoner_baseRate;
                 return;
         }
     }

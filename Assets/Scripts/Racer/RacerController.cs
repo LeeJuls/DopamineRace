@@ -344,6 +344,15 @@ public class RacerController : MonoBehaviour
             speed -= GetFatigue(gs, track) / condMul;
         }
 
+        // ═══ 초반 대형: 타입별 포지션 정렬 ═══
+        {
+            int totalRacers = RaceManager.Instance != null
+                ? RaceManager.Instance.Racers.Count : 12;
+            float formationMod = gs.GetFormationModifier(
+                charData.charType, OverallProgress, currentRank, totalRacers);
+            speed *= (1f + formationMod);
+        }
+
         speed *= GetSlowZoneMultiplier(track);
         speed *= GetLuckCritMultiplier(gs, track);
         speed *= GetCollisionMultiplier();
@@ -419,7 +428,9 @@ public class RacerController : MonoBehaviour
 
     /// <summary>
     /// HP 소모 처리 (매 프레임 호출).
-    /// consumption = (basicRate + activeRate) × √(speedRatio) × deltaTime
+    /// 존 기반 소모율: 타겟 존 안/밖 + 스퍼트 구간으로 차등 적용
+    /// effectiveRate = max(basicConsumptionRate, zoneRate)
+    /// consumption = effectiveRate × √(speedRatio) × deltaTime
     /// </summary>
     private void ConsumeHP(GameSettings gs, TrackData track, float deltaTime)
     {
@@ -427,45 +438,53 @@ public class RacerController : MonoBehaviour
 
         float progress = OverallProgress;
 
-        // 타입별 파라미터 가져오기
+        // 타입별 HP 파라미터 (spurtStart, activeRate)
         gs.GetHPParams(charData.charType,
             out float spurtStart, out float activeRate, out _,
             out _, out _, out _);
 
-        // 적극 소모율: spurtStart 이후에만 적용
-        float effectiveActiveRate = progress >= spurtStart ? activeRate : 0f;
-        float effectiveBasicRate = gs.basicConsumptionRate;
+        // 타입별 존 파라미터 (targetZone, inZoneRate, outZoneRate)
+        gs.GetZoneParams(charData.charType,
+            out float targetZonePct, out float inZoneRate, out float outZoneRate);
 
-        // ═══ Phase 4: 포지션 보정 (SPEC-006 §5) ═══
-        switch (charData.charType)
+        // ═══ 스퍼트 판정 ═══
+        // spurtStart = 남은 진행률 (0.25 = 마지막 25%)
+        // Runner: spurtStart=0.00 → 스퍼트 없음
+        bool inSpurt = spurtStart > 0f && progress >= (1f - spurtStart);
+
+        // Leader 조건부 스퍼트: HP 잔량 미달이면 스퍼트 포기 → 존 유지
+        if (inSpurt && charData.charType == CharacterType.Leader
+            && maxHP > 0f && enduranceHP / maxHP < gs.leaderSpurtMinHP)
+            inSpurt = false;
+
+        // ═══ 기본 소모율 결정 (존 기반 / Reckoner 보존) ═══
+        float normalRate;
+        if (targetZonePct <= 0f)
         {
-            case CharacterType.Leader:
-                // 5.1 Pace Lead: 1~3위에서 activeRate 절감, progress > 0.7 후반 약화
-                if (currentRank >= 1 && currentRank <= 3)
-                {
-                    float paceLeadEffect = gs.paceLeadReduction; // 0.15
-                    if (progress > 0.7f)
-                    {
-                        float fade = 1f - (progress - 0.7f) / 0.3f;
-                        paceLeadEffect *= Mathf.Max(0f, fade);
-                    }
-                    effectiveActiveRate *= (1f - paceLeadEffect);
-                }
-                break;
+            // Reckoner: 타겟 존 없음, 항상 보존 모드
+            normalRate = inZoneRate; // = reckoner_baseRate
+        }
+        else
+        {
+            // Runner / Leader / Chaser: 존 기반 소모율
+            int total = RaceManager.Instance != null
+                ? RaceManager.Instance.Racers.Count : 12;
+            int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(total * targetZonePct));
 
-            case CharacterType.Chaser:
-                // CP 시스템으로 이전 — HP basicRate 절감 제거
-                break;
+            normalRate = (currentRank <= targetMaxRank) ? inZoneRate : outZoneRate;
+        }
 
-            case CharacterType.Reckoner:
-                // 5.3 Conservation Amp: 잔여 HP 많을수록 activeRate 증폭
-                if (effectiveActiveRate > 0f && maxHP > 0f)
-                {
-                    float remainingRatio = enduranceHP / maxHP;
-                    float amplifier = 1f + Mathf.Max(0f, remainingRatio - 0.5f) * gs.conservationAmpCoeff;
-                    effectiveActiveRate *= amplifier;
-                }
-                break;
+        // ═══ 스퍼트 점진 램프: normalRate → activeRate 선형 보간 ═══
+        float rate;
+        if (inSpurt)
+        {
+            float spurtThreshold = 1f - spurtStart;
+            float spurtProgress = Mathf.Clamp01((progress - spurtThreshold) / spurtStart);
+            rate = Mathf.Lerp(normalRate, activeRate, spurtProgress);
+        }
+        else
+        {
+            rate = normalRate;
         }
 
         // 속도 비율 (댐핑 팩터: √ 사용으로 양성 피드백 방지)
@@ -473,12 +492,26 @@ public class RacerController : MonoBehaviour
         float speedRatio = baseTrackSpeed > 0.01f ? currentSpeed / baseTrackSpeed : 1f;
         speedRatio = Mathf.Clamp(speedRatio, 0.1f, 2f);
 
-        // HP 소모량 계산
-        float consumption = (effectiveBasicRate + effectiveActiveRate) * Mathf.Sqrt(speedRatio) * deltaTime;
-        consumption = Mathf.Min(consumption, enduranceHP); // HP 이하로 내려가지 않음
+        // HP 소모량 계산: max(기본달리기, 존/스퍼트) — 달리는 것 자체의 최소 소모 보장
+        float effectiveRate = Mathf.Max(gs.basicConsumptionRate, rate);
+
+        // ═══ 부스트 피드백: 부스트가 높을수록 HP 소모 증가 ═══
+        // 가속할수록 HP가 빨리 닳음 → 추입은 아껴둔 HP로 버티고, 도주는 빨리 바닥
+        float boostAmp = 1f + gs.boostHPDrainCoeff * Mathf.Max(0f, hpBoostValue);
+        effectiveRate *= boostAmp;
+
+        float consumption = effectiveRate * Mathf.Sqrt(speedRatio) * deltaTime;
+        consumption = Mathf.Min(consumption, enduranceHP);
 
         enduranceHP -= consumption;
         totalConsumedHP += consumption;
+
+        // 선두 페이스 택스: 바람막이 HP 추가 소모 (부스트에 기여 X → 순수 탈진 가속)
+        if (currentRank <= gs.leadPaceTaxRank && enduranceHP > 0f)
+        {
+            float paceTax = gs.leadPaceTaxRate * Mathf.Sqrt(speedRatio) * deltaTime;
+            enduranceHP = Mathf.Max(0f, enduranceHP - paceTax);
+        }
     }
 
     /// <summary>
@@ -507,16 +540,20 @@ public class RacerController : MonoBehaviour
         float consumedRatio = maxHP > 0f ? totalConsumedHP / maxHP : 0f;
         float threshold = gs.boostThreshold;
 
+        // ═══ Power 기반 가속 강화: power 높을수록 부스트 곡선이 가파름 ═══
+        float powerFactor = 1f + (charData.charBasePower / 20f) * gs.powerAccelCoeff;
+        float effectiveAccelExp = accelExp / Mathf.Max(powerFactor, 0.1f);
+
         float boost;
         if (consumedRatio <= threshold)
         {
-            // ── 가속 구간: 0% ~ 60% 소모 ──
+            // ── 가속 구간: 0% ~ boostThreshold 소모 ──
             float t = threshold > 0f ? consumedRatio / threshold : 0f;
-            boost = peakBoost * Mathf.Pow(t, accelExp);
+            boost = peakBoost * Mathf.Pow(t, effectiveAccelExp);
         }
         else if (enduranceHP > 0f)
         {
-            // ── 감속 구간: 60% ~ 100% 소모 ──
+            // ── 감속 구간: boostThreshold ~ 100% 소모 ──
             float remain = 1f - threshold;
             float t = remain > 0f ? (consumedRatio - threshold) / remain : 1f;
             t = Mathf.Clamp01(t);
