@@ -124,7 +124,7 @@ MonoBehaviour:
   runner_spurtStart: 0
   runner_activeRate: 3.5
   runner_peakBoost: 0.2
-  runner_accelExp: 1.5
+  runner_accelExp: 1
   runner_decelExp: 0.7
   runner_exhaustionFloor: -0.2
   leader_spurtStart: 0.1
@@ -162,7 +162,7 @@ MonoBehaviour:
   chaser_outZoneRate: 1.5
   reckoner_baseRate: 1.1
   leaderSpurtMinHP: 0.3
-  hp_earlyBonus_Runner: 0.12
+  hp_earlyBonus_Runner: 0.25
   hp_earlyBonus_Leader: 0.04
   hp_earlyBonus_Chaser: -0.02
   hp_earlyBonus_Reckoner: -0.06
