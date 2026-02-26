@@ -647,36 +647,27 @@ public class RacerController : MonoBehaviour
 
             case CharacterType.Chaser:
             {
-                bool inNearEnd = remaining <= spurtStart; // 마지막 20% (spurtStart=0.20)
+                bool inNearEnd = remaining <= spurtStart;
                 int top70Rank = Mathf.Max(1, Mathf.CeilToInt(total * 0.70f));
                 bool isOutOfPos = (currentRank > top70Rank);
 
                 if (inNearEnd)
-                {
-                    float spurtProg = spurtStart > 0f
-                        ? Mathf.Clamp01((spurtStart - remaining) / spurtStart) : 1f;
-                    rate = Mathf.Lerp(inZoneRate, activeRate, spurtProg);
-                }
+                    rate = activeRate;  // 즉시 전력질주 (Lerp 제거)
                 else if (isOutOfPos)
                     rate = outZoneRate; // top70% 이탈 → 추격
                 else
-                    rate = inZoneRate; // top70% 이내 → 보존
+                    rate = inZoneRate;  // top70% 이내 → 보존
                 break;
             }
 
             default: // Reckoner
             {
-                bool inNearEnd = remaining <= spurtStart; // 마지막 30% (spurtStart=0.30)
+                bool inNearEnd = remaining <= spurtStart;
 
                 if (inNearEnd)
-                {
-                    // 완전 보존 → Lerp 스퍼트 폭발 (순위 무관)
-                    float spurtProg = spurtStart > 0f
-                        ? Mathf.Clamp01((spurtStart - remaining) / spurtStart) : 1f;
-                    rate = Mathf.Lerp(inZoneRate, activeRate, spurtProg);
-                }
+                    rate = activeRate;  // 즉시 전력질주 (Lerp 제거)
                 else
-                    rate = inZoneRate; // 완전 보존
+                    rate = inZoneRate;  // 완전 보존
                 break;
             }
         }

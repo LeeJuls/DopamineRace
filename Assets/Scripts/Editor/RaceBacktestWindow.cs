@@ -1097,11 +1097,7 @@ public class RaceBacktestWindow : EditorWindow
                 bool inNearEnd = remaining <= spurtStart;
                 int top70Rank = Mathf.Max(1, Mathf.CeilToInt(simRacers * 0.70f));
                 if (inNearEnd)
-                {
-                    float spurtProg = spurtStart > 0f
-                        ? Mathf.Clamp01((spurtStart - remaining) / spurtStart) : 1f;
-                    rate = Mathf.Lerp(inZoneRate, activeRate, spurtProg);
-                }
+                    rate = activeRate;  // 즉시 전력질주 (Lerp 제거)
                 else if (r.currentRank > top70Rank)
                     rate = outZoneRate;
                 else
@@ -1113,13 +1109,9 @@ public class RaceBacktestWindow : EditorWindow
             {
                 bool inNearEnd = remaining <= spurtStart;
                 if (inNearEnd)
-                {
-                    float spurtProg = spurtStart > 0f
-                        ? Mathf.Clamp01((spurtStart - remaining) / spurtStart) : 1f;
-                    rate = Mathf.Lerp(inZoneRate, activeRate, spurtProg);
-                }
+                    rate = activeRate;  // 즉시 전력질주 (Lerp 제거)
                 else
-                    rate = inZoneRate; // 완전 보존
+                    rate = inZoneRate;  // 완전 보존
                 break;
             }
         }
