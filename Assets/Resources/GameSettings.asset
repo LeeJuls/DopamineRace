@@ -17,7 +17,7 @@ MonoBehaviour:
   racerMaxSpeed: 4
   speedChangeInterval: 3
   speedLerpRate: 3
-  roundLaps: 02000000020000000300000005000000030000000200000004000000
+  roundLaps: 0400000005000000030000000200000004000000
   payoutWin: 8
   payoutPlace: 3
   payoutQuinella: 31
@@ -133,13 +133,13 @@ MonoBehaviour:
   leader_accelExp: 1.2
   leader_decelExp: 1
   leader_exhaustionFloor: -0.08
-  chaser_spurtStart: 0.2
+  chaser_spurtStart: 0.15
   chaser_activeRate: 5.5
   chaser_peakBoost: 0.24
   chaser_accelExp: 1.3
   chaser_decelExp: 0.8
   chaser_exhaustionFloor: -0.03
-  reckoner_spurtStart: 0.3
+  reckoner_spurtStart: 0.2
   reckoner_activeRate: 7
   reckoner_peakBoost: 0.24
   reckoner_accelExp: 1.8
@@ -173,6 +173,13 @@ MonoBehaviour:
   formationTarget_Leader: 0.35
   formationTarget_Chaser: 0.65
   formationTarget_Reckoner: 0.85
+  positioningLapEnd: 0.5
+  formationHoldLapEnd: 1
+  runner_posTarget: 0.25
+  leader_posTarget: 0.5
+  chaser_posTarget: 0.75
+  formationGapMax: 0.3
+  formationGapMin: 0.05
   leadPaceTaxRank: 2
   leadPaceTaxRate: 2.5
   cpMultiplier: 10

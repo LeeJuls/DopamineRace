@@ -1068,8 +1068,12 @@ public class RaceBacktestWindow : EditorWindow
         switch (r.data.charType)
         {
             case CharacterType.Runner:
-                rate = activeRate; // 항상 풀스프린트
+            {
+                // 선두권 유지면 보존, 뒤처지면 스프린트 (RacerController 미러링)
+                int topRunnerRank = Mathf.Max(1, Mathf.CeilToInt(simRacers * 0.25f));
+                rate = (r.currentRank <= topRunnerRank) ? inZoneRate : activeRate;
                 break;
+            }
 
             case CharacterType.Leader:
             {

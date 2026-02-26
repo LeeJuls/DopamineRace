@@ -614,9 +614,16 @@ public class RacerController : MonoBehaviour
         switch (charData.charType)
         {
             case CharacterType.Runner:
-                // 전략 구간: 항상 풀스프린트 (HP 소진 전까지 선두권 유지)
-                rate = activeRate;
+            {
+                // 전략 구간: 선두권이면 HP 보존, 뒤처지면 스프린트로 탈환
+                // → 초반 리드를 최대한 오래 유지하는 전략
+                int topRunnerRank = Mathf.Max(1, Mathf.CeilToInt(total * 0.25f));
+                if (currentRank <= topRunnerRank)
+                    rate = inZoneRate;  // top25% 유지 → 보존 (리드 방어)
+                else
+                    rate = activeRate;  // 뒤처짐 → 스프린트 (포지션 탈환)
                 break;
+            }
 
             case CharacterType.Leader:
             {
