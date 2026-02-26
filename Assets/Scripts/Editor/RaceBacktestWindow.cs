@@ -1141,6 +1141,11 @@ public class RaceBacktestWindow : EditorWindow
         float boostAmp = 1f + gs.boostHPDrainCoeff * Mathf.Max(0f, r.hpBoostValue);
         effectiveRate *= boostAmp;
 
+        // ★ 컨디션 역보정: 저컨디션 → HP 소모 증가 (RacerController 미러링)
+        float condMul = OddsCalculator.GetConditionMultiplier(r.data.charId);
+        condMul = Mathf.Max(condMul, 0.3f);
+        effectiveRate /= condMul;
+
         float consumption = effectiveRate * Mathf.Sqrt(speedRatio) * simTimeStep;
         consumption = Mathf.Min(consumption, r.enduranceHP);
 

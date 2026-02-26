@@ -684,7 +684,7 @@ public class RacerController : MonoBehaviour
         ApplyHPConsumption(gs, track, deltaTime, rate);
     }
 
-    // ─── 공통 tail: boostAmp / speedRatio / leadPaceTax ──────────────
+    // ─── 공통 tail: boostAmp / speedRatio / condMul / leadPaceTax ─────
     private void ApplyHPConsumption(GameSettings gs, TrackData track, float deltaTime, float rate)
     {
         float baseTrackSpeed = GetBaseTrackSpeed(gs, track);
@@ -696,6 +696,12 @@ public class RacerController : MonoBehaviour
         // 부스트 피드백: 부스트 높을수록 HP 소모 증가
         float boostAmp = 1f + gs.boostHPDrainCoeff * Mathf.Max(0f, hpBoostValue);
         effectiveRate *= boostAmp;
+
+        // ★ 컨디션 역보정: 저컨디션 → HP 소모 증가, 고컨디션 → HP 소모 감소
+        // condMul 범위 0.9~1.2 → 역수 0.83~1.11 → 최하 11% 더 소모, 최상 17% 덜 소모
+        float condMul = OddsCalculator.GetConditionMultiplier(charData.charId);
+        condMul = Mathf.Max(condMul, 0.3f);
+        effectiveRate /= condMul;
 
         float consumption = effectiveRate * Mathf.Sqrt(speedRatio) * deltaTime;
         consumption = Mathf.Min(consumption, enduranceHP);
