@@ -434,6 +434,42 @@ public class GameSettings : ScriptableObject
         return deviation * formationCorrectionStrength * fade;
     }
 
+    [Header("═══ 레이스 전략: 구간 설정 ═══")]
+    [Tooltip("포지셔닝 페이즈 종료 (랩 단위, 0.5 = 첫 랩의 절반)")]
+    [Range(0.1f, 1.0f)] public float positioningLapEnd = 0.5f;
+    [Tooltip("대형 유지 페이즈 종료 (랩 단위, 1.0 = 첫 랩 완료)")]
+    [Range(0.5f, 2.0f)] public float formationHoldLapEnd = 1.0f;
+
+    [Header("═══ 레이스 전략: 포지셔닝 타겟 ═══")]
+    [Tooltip("도주 포지셔닝 타겟 (0.25 = top25%, 12명 중 1~3위)")]
+    [Range(0f, 1f)] public float runner_posTarget = 0.25f;
+    [Tooltip("선행 포지셔닝 타겟 (0.50 = top50%, 12명 중 1~6위)")]
+    [Range(0f, 1f)] public float leader_posTarget = 0.50f;
+    [Tooltip("선입 포지셔닝 타겟 (0.75 = top75%, 12명 중 1~9위)")]
+    [Range(0f, 1f)] public float chaser_posTarget = 0.75f;
+    // 추입: 타겟 없음, 항상 보존 (-1 반환)
+
+    [Header("═══ 레이스 전략: 대형 유지 간격 ═══")]
+    [Tooltip("하행 그룹이 상행 그룹과의 TotalProgress 간격이 이 값 초과 시 스프린트 (너무 뒤처짐)")]
+    [Range(0.05f, 2.0f)] public float formationGapMax = 0.3f;
+    [Tooltip("하행 그룹이 상행 그룹과의 TotalProgress 간격이 이 값 미만 시 보존 (추월 방지)")]
+    [Range(0.01f, 0.3f)] public float formationGapMin = 0.05f;
+
+    /// <summary>
+    /// 포지셔닝 페이즈에서 타입별 목표 순위 비율 반환.
+    /// 반환값 -1 = 추입 (타겟 없음, 항상 보존).
+    /// </summary>
+    public float GetPositioningTarget(CharacterType type)
+    {
+        return type switch
+        {
+            CharacterType.Runner   => runner_posTarget,
+            CharacterType.Leader   => leader_posTarget,
+            CharacterType.Chaser   => chaser_posTarget,
+            _                      => -1f  // Reckoner: 항상 보존
+        };
+    }
+
     [Header("═══ 선두 페이스 택스 (Lead Pace Tax) ═══")]
     [Tooltip("HP 추가 소모 적용 순위 (2 = 1~2위가 바람막이 세금)")]
     [Range(1, 6)] public int leadPaceTaxRank = 2;

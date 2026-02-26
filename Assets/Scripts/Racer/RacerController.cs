@@ -427,54 +427,62 @@ public class RacerController : MonoBehaviour
     // ══════════════════════════════════════
 
     /// <summary>
-    /// HP 소모 처리 (매 프레임 호출).
-    /// 존 기반 소모율: 타겟 존 안/밖 + 스퍼트 구간으로 차등 적용
-    /// effectiveRate = max(basicConsumptionRate, zoneRate)
-    /// consumption = effectiveRate × √(speedRatio) × deltaTime
+    /// HP 소모 처리 (매 프레임 호출). 4페이즈 전략 분기.
+    /// 1랩 미만: Legacy 존 기반 로직 / 포지셔닝 / 대형유지 / 전략
     /// </summary>
     private void ConsumeHP(GameSettings gs, TrackData track, float deltaTime)
     {
-        if (enduranceHP <= 0f) return; // 이미 탈진
+        if (enduranceHP <= 0f) return;
 
+        int totalLaps = GetTotalLaps();
+
+        // 1랩 이하: 기존 존 기반 로직 유지 (테스트용)
+        if (totalLaps < 2)
+        {
+            ConsumeHP_Legacy(gs, track, deltaTime);
+            return;
+        }
+
+        float totalProgress = TotalProgress;
+        if (totalProgress < gs.positioningLapEnd)
+            ConsumeHP_Positioning(gs, track, deltaTime);
+        else if (totalProgress < gs.formationHoldLapEnd)
+            ConsumeHP_FormationHold(gs, track, deltaTime);
+        else
+            ConsumeHP_Strategy(gs, track, deltaTime);
+    }
+
+    // ─── 기존 존 기반 로직 (1랩 이하 폴백) ──────────────────────────
+    private void ConsumeHP_Legacy(GameSettings gs, TrackData track, float deltaTime)
+    {
         float progress = OverallProgress;
 
-        // 타입별 HP 파라미터 (spurtStart, activeRate)
         gs.GetHPParams(charData.charType,
             out float spurtStart, out float activeRate, out _,
             out _, out _, out _);
-
-        // 타입별 존 파라미터 (targetZone, inZoneRate, outZoneRate)
         gs.GetZoneParams(charData.charType,
             out float targetZonePct, out float inZoneRate, out float outZoneRate);
 
-        // ═══ 스퍼트 판정 ═══
-        // spurtStart = 남은 진행률 (0.25 = 마지막 25%)
-        // Runner: spurtStart=0.00 → 스퍼트 없음
         bool inSpurt = spurtStart > 0f && progress >= (1f - spurtStart);
 
-        // Leader 조건부 스퍼트: HP 잔량 미달이면 스퍼트 포기 → 존 유지
+        // Leader 조건부 스퍼트: HP 잔량 미달이면 스퍼트 포기
         if (inSpurt && charData.charType == CharacterType.Leader
             && maxHP > 0f && enduranceHP / maxHP < gs.leaderSpurtMinHP)
             inSpurt = false;
 
-        // ═══ 기본 소모율 결정 (존 기반 / Reckoner 보존) ═══
         float normalRate;
         if (targetZonePct <= 0f)
         {
-            // Reckoner: 타겟 존 없음, 항상 보존 모드
-            normalRate = inZoneRate; // = reckoner_baseRate
+            normalRate = inZoneRate; // Reckoner: 항상 보존
         }
         else
         {
-            // Runner / Leader / Chaser: 존 기반 소모율
             int total = RaceManager.Instance != null
                 ? RaceManager.Instance.Racers.Count : 12;
             int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(total * targetZonePct));
-
             normalRate = (currentRank <= targetMaxRank) ? inZoneRate : outZoneRate;
         }
 
-        // ═══ 스퍼트 점진 램프: normalRate → activeRate 선형 보간 ═══
         float rate;
         if (inSpurt)
         {
@@ -487,16 +495,189 @@ public class RacerController : MonoBehaviour
             rate = normalRate;
         }
 
-        // 속도 비율 (댐핑 팩터: √ 사용으로 양성 피드백 방지)
+        ApplyHPConsumption(gs, track, deltaTime, rate);
+    }
+
+    // ─── 페이즈 1: 포지셔닝 (TotalProgress < positioningLapEnd) ─────
+    private void ConsumeHP_Positioning(GameSettings gs, TrackData track, float deltaTime)
+    {
+        gs.GetHPParams(charData.charType,
+            out _, out float activeRate, out _, out _, out _, out _);
+        gs.GetZoneParams(charData.charType,
+            out _, out float inZoneRate, out _);
+
+        float posTarget = gs.GetPositioningTarget(charData.charType);
+        float rate;
+
+        if (posTarget < 0f)
+        {
+            // Reckoner: 타겟 없음, 항상 보존
+            rate = inZoneRate;
+        }
+        else
+        {
+            int total = RaceManager.Instance != null
+                ? RaceManager.Instance.Racers.Count : 12;
+            int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(total * posTarget));
+            // 목표 구간 이내 → 보존, 뒤처짐 → 스프린트
+            rate = (currentRank <= targetMaxRank) ? inZoneRate : activeRate;
+        }
+
+        ApplyHPConsumption(gs, track, deltaTime, rate);
+    }
+
+    // ─── 페이즈 2: 대형 유지 (positioningLapEnd ~ formationHoldLapEnd) ─
+    private void ConsumeHP_FormationHold(GameSettings gs, TrackData track, float deltaTime)
+    {
+        gs.GetHPParams(charData.charType,
+            out _, out float activeRate, out _, out _, out _, out _);
+        gs.GetZoneParams(charData.charType,
+            out _, out float inZoneRate, out float outZoneRate);
+
+        int total = RaceManager.Instance != null ? RaceManager.Instance.Racers.Count : 12;
+        int topHalf = Mathf.Max(1, total / 2);
+        float rate;
+
+        if (IsUpperTrack())
+        {
+            // 상행 (Runner/Leader): 포지셔닝과 동일한 타입별 목표 유지
+            float posTarget = gs.GetPositioningTarget(charData.charType);
+            int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(total * posTarget));
+            rate = (currentRank <= targetMaxRank) ? inZoneRate : activeRate;
+        }
+        else
+        {
+            // 하행 (Chaser/Reckoner): 우선순위 제약
+
+            // 1. 상행 영역 침범 금지 → 강제 보존 (reckoner_baseRate)
+            if (currentRank <= topHalf)
+            {
+                gs.GetZoneParams(CharacterType.Reckoner, out _, out float baseConserveRate, out _);
+                rate = baseConserveRate;
+            }
+            else
+            {
+                float gap = GetLastUpperTrackProgress() - TotalProgress;
+
+                // 2. 간격 너무 벌어짐 → 스프린트 (상행 따라잡기)
+                if (gap > gs.formationGapMax)
+                {
+                    rate = activeRate;
+                }
+                // 3. 상행 추월 방지 → 보존
+                else if (gap < gs.formationGapMin)
+                {
+                    rate = inZoneRate;
+                }
+                else
+                {
+                    // 4. 하행 내 경쟁
+                    if (charData.charType == CharacterType.Chaser)
+                    {
+                        float chaserTarget = gs.GetPositioningTarget(CharacterType.Chaser);
+                        int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(total * chaserTarget));
+                        rate = (currentRank <= targetMaxRank) ? inZoneRate : outZoneRate;
+                    }
+                    else // Reckoner: 항상 보존
+                    {
+                        rate = inZoneRate;
+                    }
+                }
+            }
+        }
+
+        ApplyHPConsumption(gs, track, deltaTime, rate);
+    }
+
+    // ─── 페이즈 3: 전략 (formationHoldLapEnd 이후) ──────────────────
+    private void ConsumeHP_Strategy(GameSettings gs, TrackData track, float deltaTime)
+    {
+        gs.GetHPParams(charData.charType,
+            out float spurtStart, out float activeRate, out _,
+            out _, out _, out _);
+        gs.GetZoneParams(charData.charType,
+            out _, out float inZoneRate, out float outZoneRate);
+
+        float remaining = 1f - OverallProgress;
+        int total = RaceManager.Instance != null ? RaceManager.Instance.Racers.Count : 12;
+        float rate;
+
+        switch (charData.charType)
+        {
+            case CharacterType.Runner:
+                // 전략 구간: 항상 풀스프린트 (HP 소진 전까지 선두권 유지)
+                rate = activeRate;
+                break;
+
+            case CharacterType.Leader:
+            {
+                bool inNearEnd = remaining <= spurtStart; // 마지막 10% (spurtStart=0.10)
+                int top30Rank = Mathf.Max(1, Mathf.CeilToInt(total * 0.30f));
+                bool isOutOfPos = (currentRank > top30Rank);
+
+                if (inNearEnd)
+                {
+                    // Lerp 스퍼트: inZoneRate → activeRate (leaderSpurtMinHP 체크 제거)
+                    float spurtProg = spurtStart > 0f
+                        ? Mathf.Clamp01((spurtStart - remaining) / spurtStart) : 1f;
+                    rate = Mathf.Lerp(inZoneRate, activeRate, spurtProg);
+                }
+                else if (isOutOfPos)
+                    rate = outZoneRate; // top30% 이탈 → 추격
+                else
+                    rate = inZoneRate; // top30% 이내 → 보존
+                break;
+            }
+
+            case CharacterType.Chaser:
+            {
+                bool inNearEnd = remaining <= spurtStart; // 마지막 20% (spurtStart=0.20)
+                int top70Rank = Mathf.Max(1, Mathf.CeilToInt(total * 0.70f));
+                bool isOutOfPos = (currentRank > top70Rank);
+
+                if (inNearEnd)
+                {
+                    float spurtProg = spurtStart > 0f
+                        ? Mathf.Clamp01((spurtStart - remaining) / spurtStart) : 1f;
+                    rate = Mathf.Lerp(inZoneRate, activeRate, spurtProg);
+                }
+                else if (isOutOfPos)
+                    rate = outZoneRate; // top70% 이탈 → 추격
+                else
+                    rate = inZoneRate; // top70% 이내 → 보존
+                break;
+            }
+
+            default: // Reckoner
+            {
+                bool inNearEnd = remaining <= spurtStart; // 마지막 30% (spurtStart=0.30)
+
+                if (inNearEnd)
+                {
+                    // 완전 보존 → Lerp 스퍼트 폭발 (순위 무관)
+                    float spurtProg = spurtStart > 0f
+                        ? Mathf.Clamp01((spurtStart - remaining) / spurtStart) : 1f;
+                    rate = Mathf.Lerp(inZoneRate, activeRate, spurtProg);
+                }
+                else
+                    rate = inZoneRate; // 완전 보존
+                break;
+            }
+        }
+
+        ApplyHPConsumption(gs, track, deltaTime, rate);
+    }
+
+    // ─── 공통 tail: boostAmp / speedRatio / leadPaceTax ──────────────
+    private void ApplyHPConsumption(GameSettings gs, TrackData track, float deltaTime, float rate)
+    {
         float baseTrackSpeed = GetBaseTrackSpeed(gs, track);
         float speedRatio = baseTrackSpeed > 0.01f ? currentSpeed / baseTrackSpeed : 1f;
         speedRatio = Mathf.Clamp(speedRatio, 0.1f, 2f);
 
-        // HP 소모량 계산: max(기본달리기, 존/스퍼트) — 달리는 것 자체의 최소 소모 보장
         float effectiveRate = Mathf.Max(gs.basicConsumptionRate, rate);
 
-        // ═══ 부스트 피드백: 부스트가 높을수록 HP 소모 증가 ═══
-        // 가속할수록 HP가 빨리 닳음 → 추입은 아껴둔 HP로 버티고, 도주는 빨리 바닥
+        // 부스트 피드백: 부스트 높을수록 HP 소모 증가
         float boostAmp = 1f + gs.boostHPDrainCoeff * Mathf.Max(0f, hpBoostValue);
         effectiveRate *= boostAmp;
 
@@ -506,12 +687,40 @@ public class RacerController : MonoBehaviour
         enduranceHP -= consumption;
         totalConsumedHP += consumption;
 
-        // 선두 페이스 택스: 바람막이 HP 추가 소모 (부스트에 기여 X → 순수 탈진 가속)
+        // 선두 페이스 택스: 바람막이 추가 소모 (totalConsumedHP 미포함 → 순수 탈진 가속)
         if (currentRank <= gs.leadPaceTaxRank && enduranceHP > 0f)
         {
             float paceTax = gs.leadPaceTaxRate * Mathf.Sqrt(speedRatio) * deltaTime;
             enduranceHP = Mathf.Max(0f, enduranceHP - paceTax);
         }
+    }
+
+    // ─── 헬퍼: 상행 타입 여부 (Runner/Leader) ────────────────────────
+    private bool IsUpperTrack()
+    {
+        return charData.charType == CharacterType.Runner
+            || charData.charType == CharacterType.Leader;
+    }
+
+    // ─── 헬퍼: 상행 그룹 중 가장 낮은 TotalProgress ──────────────────
+    private float GetLastUpperTrackProgress()
+    {
+        float minProg = float.MaxValue;
+        if (RaceManager.Instance == null) return TotalProgress - 0.1f;
+
+        foreach (var r in RaceManager.Instance.Racers)
+        {
+            if (r == null || r.IsFinished) continue;
+            var type = r.CharData?.charType ?? CharacterType.Runner;
+            if (type == CharacterType.Runner || type == CharacterType.Leader)
+            {
+                float prog = r.TotalProgress;
+                if (prog < minProg) minProg = prog;
+            }
+        }
+
+        // 상행 캐릭터가 없으면 현재 위치 근처 폴백 (하행 보존 유도)
+        return minProg == float.MaxValue ? TotalProgress - 0.1f : minProg;
     }
 
     /// <summary>

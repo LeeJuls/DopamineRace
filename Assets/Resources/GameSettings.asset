@@ -133,13 +133,13 @@ MonoBehaviour:
   leader_accelExp: 1.2
   leader_decelExp: 1
   leader_exhaustionFloor: -0.08
-  chaser_spurtStart: 0.4
+  chaser_spurtStart: 0.2
   chaser_activeRate: 5.5
   chaser_peakBoost: 0.24
   chaser_accelExp: 1.3
   chaser_decelExp: 0.8
   chaser_exhaustionFloor: -0.03
-  reckoner_spurtStart: 0.4
+  reckoner_spurtStart: 0.3
   reckoner_activeRate: 7
   reckoner_peakBoost: 0.24
   reckoner_accelExp: 1.8

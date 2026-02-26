@@ -29,6 +29,7 @@ public class RaceBacktestWindow : EditorWindow
     private string lastLogPath = "";
     private bool isRunning = false;
     private bool cancelRequested = false;
+    private List<SimRacer> _activeRacers; // SimConsumeHP_FormationHold 에서 상행 그룹 탐색용
 
     // ★ 구간별 포지션 추적 체크포인트
     private static readonly float[] segCheckpoints = { 0.10f, 0.20f, 0.35f, 0.50f, 0.65f, 0.80f, 0.90f };
@@ -425,6 +426,7 @@ public class RaceBacktestWindow : EditorWindow
             }
 
             List<SimRacer> racers = new List<SimRacer>();
+            _activeRacers = racers; // FormationHold 페이즈에서 상행 그룹 탐색용
             foreach (var cd in selected)
             {
                 var racer = new SimRacer
@@ -909,42 +911,53 @@ public class RaceBacktestWindow : EditorWindow
     //  HP 시스템 미러 (SPEC-006)
     // ══════════════════════════════════════
 
-    /// <summary>HP 소모 (RacerController.ConsumeHP 미러) — 존 기반 소모율</summary>
+    /// <summary>HP 소모 (RacerController.ConsumeHP 미러) — 4페이즈 전략</summary>
     private void SimConsumeHP(SimRacer r, GameSettings gs, float progress)
     {
         if (r.enduranceHP <= 0f) return;
 
+        // 1랩 이하: Legacy 존 기반 로직
+        if (simLaps < 2)
+        {
+            SimConsumeHP_Legacy(r, gs, progress);
+            return;
+        }
+
+        // progress(OverallProgress 0-1) × simLaps = TotalProgress 환산
+        float totalProgressSim = progress * simLaps;
+        if (totalProgressSim < gs.positioningLapEnd)
+            SimConsumeHP_Positioning(r, gs);
+        else if (totalProgressSim < gs.formationHoldLapEnd)
+            SimConsumeHP_FormationHold(r, gs);
+        else
+            SimConsumeHP_Strategy(r, gs, progress);
+    }
+
+    // ─── 기존 존 기반 로직 (1랩 이하 폴백) ──────────────────────────
+    private void SimConsumeHP_Legacy(SimRacer r, GameSettings gs, float progress)
+    {
         gs.GetHPParams(r.data.charType,
             out float spurtStart, out float activeRate, out _,
             out _, out _, out _);
-
         gs.GetZoneParams(r.data.charType,
             out float targetZonePct, out float inZoneRate, out float outZoneRate);
 
-        // 스퍼트 판정 (spurtStart = 남은 진행률)
         bool inSpurt = spurtStart > 0f && progress >= (1f - spurtStart);
-
-        // Leader 조건부 스퍼트: HP 잔량 미달이면 스퍼트 포기
         if (inSpurt && r.data.charType == CharacterType.Leader
             && r.maxHP > 0f && r.enduranceHP / r.maxHP < gs.leaderSpurtMinHP)
             inSpurt = false;
 
-        // 기본 소모율 결정 (존 기반 / Reckoner 보존)
         float normalRate;
         if (targetZonePct <= 0f)
         {
-            // Reckoner: 타겟 존 없음, 항상 보존 모드
             normalRate = inZoneRate;
         }
         else
         {
-            // Runner / Leader / Chaser: 존 기반 소모율
-            int total = simRacers;
-            int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(total * targetZonePct));
+            int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(simRacers * targetZonePct));
             normalRate = (r.currentRank <= targetMaxRank) ? inZoneRate : outZoneRate;
         }
 
-        // 스퍼트 점진 램프: normalRate → activeRate 선형 보간
         float rate;
         if (inSpurt)
         {
@@ -957,6 +970,156 @@ public class RaceBacktestWindow : EditorWindow
             rate = normalRate;
         }
 
+        SimApplyHPConsumption(r, gs, rate);
+    }
+
+    // ─── 페이즈 1: 포지셔닝 ─────────────────────────────────────────
+    private void SimConsumeHP_Positioning(SimRacer r, GameSettings gs)
+    {
+        gs.GetHPParams(r.data.charType,
+            out _, out float activeRate, out _, out _, out _, out _);
+        gs.GetZoneParams(r.data.charType,
+            out _, out float inZoneRate, out _);
+
+        float posTarget = gs.GetPositioningTarget(r.data.charType);
+        float rate;
+        if (posTarget < 0f)
+        {
+            rate = inZoneRate; // Reckoner: 항상 보존
+        }
+        else
+        {
+            int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(simRacers * posTarget));
+            rate = (r.currentRank <= targetMaxRank) ? inZoneRate : activeRate;
+        }
+
+        SimApplyHPConsumption(r, gs, rate);
+    }
+
+    // ─── 페이즈 2: 대형 유지 ────────────────────────────────────────
+    private void SimConsumeHP_FormationHold(SimRacer r, GameSettings gs)
+    {
+        gs.GetHPParams(r.data.charType,
+            out _, out float activeRate, out _, out _, out _, out _);
+        gs.GetZoneParams(r.data.charType,
+            out _, out float inZoneRate, out float outZoneRate);
+
+        int topHalf = Mathf.Max(1, simRacers / 2);
+        float rate;
+
+        bool isUpperType = r.data.charType == CharacterType.Runner
+                        || r.data.charType == CharacterType.Leader;
+        if (isUpperType)
+        {
+            float posTarget = gs.GetPositioningTarget(r.data.charType);
+            int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(simRacers * posTarget));
+            rate = (r.currentRank <= targetMaxRank) ? inZoneRate : activeRate;
+        }
+        else
+        {
+            if (r.currentRank <= topHalf)
+            {
+                // 상행 영역 침범 금지 → 강제 보존 (reckoner_baseRate)
+                gs.GetZoneParams(CharacterType.Reckoner, out _, out float baseConserveRate, out _);
+                rate = baseConserveRate;
+            }
+            else
+            {
+                const float trackLen = 17f;
+                float myTotalProg = r.position / trackLen;
+                float gap = SimGetLastUpperTrackProgress() - myTotalProg;
+
+                if (gap > gs.formationGapMax)
+                    rate = activeRate; // 상행 따라잡기
+                else if (gap < gs.formationGapMin)
+                    rate = inZoneRate; // 추월 방지 → 보존
+                else if (r.data.charType == CharacterType.Chaser)
+                {
+                    float chaserTarget = gs.GetPositioningTarget(CharacterType.Chaser);
+                    int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(simRacers * chaserTarget));
+                    rate = (r.currentRank <= targetMaxRank) ? inZoneRate : outZoneRate;
+                }
+                else
+                    rate = inZoneRate; // Reckoner: 항상 보존
+            }
+        }
+
+        SimApplyHPConsumption(r, gs, rate);
+    }
+
+    // ─── 페이즈 3: 전략 ─────────────────────────────────────────────
+    private void SimConsumeHP_Strategy(SimRacer r, GameSettings gs, float progress)
+    {
+        gs.GetHPParams(r.data.charType,
+            out float spurtStart, out float activeRate, out _,
+            out _, out _, out _);
+        gs.GetZoneParams(r.data.charType,
+            out _, out float inZoneRate, out float outZoneRate);
+
+        float remaining = 1f - progress;
+        float rate;
+
+        switch (r.data.charType)
+        {
+            case CharacterType.Runner:
+                rate = activeRate; // 항상 풀스프린트
+                break;
+
+            case CharacterType.Leader:
+            {
+                bool inNearEnd = remaining <= spurtStart;
+                int top30Rank = Mathf.Max(1, Mathf.CeilToInt(simRacers * 0.30f));
+                if (inNearEnd)
+                {
+                    float spurtProg = spurtStart > 0f
+                        ? Mathf.Clamp01((spurtStart - remaining) / spurtStart) : 1f;
+                    rate = Mathf.Lerp(inZoneRate, activeRate, spurtProg);
+                }
+                else if (r.currentRank > top30Rank)
+                    rate = outZoneRate;
+                else
+                    rate = inZoneRate;
+                break;
+            }
+
+            case CharacterType.Chaser:
+            {
+                bool inNearEnd = remaining <= spurtStart;
+                int top70Rank = Mathf.Max(1, Mathf.CeilToInt(simRacers * 0.70f));
+                if (inNearEnd)
+                {
+                    float spurtProg = spurtStart > 0f
+                        ? Mathf.Clamp01((spurtStart - remaining) / spurtStart) : 1f;
+                    rate = Mathf.Lerp(inZoneRate, activeRate, spurtProg);
+                }
+                else if (r.currentRank > top70Rank)
+                    rate = outZoneRate;
+                else
+                    rate = inZoneRate;
+                break;
+            }
+
+            default: // Reckoner
+            {
+                bool inNearEnd = remaining <= spurtStart;
+                if (inNearEnd)
+                {
+                    float spurtProg = spurtStart > 0f
+                        ? Mathf.Clamp01((spurtStart - remaining) / spurtStart) : 1f;
+                    rate = Mathf.Lerp(inZoneRate, activeRate, spurtProg);
+                }
+                else
+                    rate = inZoneRate; // 완전 보존
+                break;
+            }
+        }
+
+        SimApplyHPConsumption(r, gs, rate);
+    }
+
+    // ─── 공통 tail: boostAmp / speedRatio / leadPaceTax ──────────────
+    private void SimApplyHPConsumption(SimRacer r, GameSettings gs, float rate)
+    {
         float trackSpeedMul = selectedTrack != null ? selectedTrack.speedMultiplier : 1f;
         float baseTrackSpeed = r.data.SpeedMultiplier * gs.globalSpeedMultiplier * trackSpeedMul;
         float speedRatio = baseTrackSpeed > 0.01f ? r.currentSpeed / baseTrackSpeed : 1f;
@@ -964,7 +1127,7 @@ public class RaceBacktestWindow : EditorWindow
 
         float effectiveRate = Mathf.Max(gs.basicConsumptionRate, rate);
 
-        // ═══ 부스트 피드백: 부스트가 높을수록 HP 소모 증가 ═══
+        // 부스트 피드백: 부스트 높을수록 HP 소모 증가
         float boostAmp = 1f + gs.boostHPDrainCoeff * Mathf.Max(0f, r.hpBoostValue);
         effectiveRate *= boostAmp;
 
@@ -974,12 +1137,32 @@ public class RaceBacktestWindow : EditorWindow
         r.enduranceHP -= consumption;
         r.totalConsumedHP += consumption;
 
-        // 선두 페이스 택스: 바람막이 HP 추가 소모 (부스트에 기여 X → 순수 탈진 가속)
+        // 선두 페이스 택스: 바람막이 추가 소모
         if (r.currentRank <= gs.leadPaceTaxRank && r.enduranceHP > 0f)
         {
             float paceTax = gs.leadPaceTaxRate * Mathf.Sqrt(speedRatio) * simTimeStep;
             r.enduranceHP = Mathf.Max(0f, r.enduranceHP - paceTax);
         }
+    }
+
+    // ─── 헬퍼: 상행 그룹(Runner/Leader) 중 최소 TotalProgress ────────
+    private float SimGetLastUpperTrackProgress()
+    {
+        const float trackLen = 17f;
+        float minProg = float.MaxValue;
+        if (_activeRacers == null) return -0.1f;
+
+        foreach (var r in _activeRacers)
+        {
+            if (r.finished) continue;
+            var type = r.data?.charType ?? CharacterType.Runner;
+            if (type == CharacterType.Runner || type == CharacterType.Leader)
+            {
+                float prog = r.position / trackLen;
+                if (prog < minProg) minProg = prog;
+            }
+        }
+        return minProg == float.MaxValue ? -0.1f : minProg;
     }
 
     /// <summary>HP 부스트 계산 (RacerController.CalcHPBoost 미러)</summary>
