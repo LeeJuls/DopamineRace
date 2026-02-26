@@ -974,6 +974,7 @@ public class RaceBacktestWindow : EditorWindow
     }
 
     // ─── 페이즈 1: 포지셔닝 ─────────────────────────────────────────
+    // ★ 타입 기반 포지셔닝 (RacerController 미러링)
     private void SimConsumeHP_Positioning(SimRacer r, GameSettings gs)
     {
         gs.GetHPParams(r.data.charType,
@@ -981,16 +982,21 @@ public class RaceBacktestWindow : EditorWindow
         gs.GetZoneParams(r.data.charType,
             out _, out float inZoneRate, out _);
 
-        float posTarget = gs.GetPositioningTarget(r.data.charType);
         float rate;
-        if (posTarget < 0f)
+        switch (r.data.charType)
         {
-            rate = inZoneRate; // Reckoner: 항상 보존
-        }
-        else
-        {
-            int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(simRacers * posTarget));
-            rate = (r.currentRank <= targetMaxRank) ? inZoneRate : activeRate;
+            case CharacterType.Runner:
+                rate = activeRate;
+                break;
+            case CharacterType.Leader:
+                rate = Mathf.Lerp(inZoneRate, activeRate, 0.6f);
+                break;
+            case CharacterType.Chaser:
+                rate = inZoneRate;
+                break;
+            default: // Reckoner
+                rate = Mathf.Max(gs.basicConsumptionRate, inZoneRate * 0.4f);
+                break;
         }
 
         SimApplyHPConsumption(r, gs, rate);

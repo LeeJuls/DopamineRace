@@ -105,7 +105,7 @@ public class RacerController : MonoBehaviour
         }
     }
 
-    private int GetTotalLaps()
+    public int GetTotalLaps()
     {
         return RaceManager.Instance != null ? RaceManager.Instance.CurrentLaps : GameConstants.TOTAL_LAPS;
     }
@@ -499,6 +499,11 @@ public class RacerController : MonoBehaviour
     }
 
     // ─── 페이즈 1: 포지셔닝 (TotalProgress < positioningLapEnd) ─────
+    // ★ 순위 기반 대신 타입 기반으로 HP 소모율 결정 (출발 직후 순위 부정확 문제 해결)
+    //   도주: 풀스프린트 → HP 부스트 빠르게 쌓임 → 선두 확보
+    //   선행: 중간 스프린트 → 2번째 그룹 자연 형성
+    //   선입: 보존 → 후방 유지
+    //   추입: 최소 소모 → 최후방 배치
     private void ConsumeHP_Positioning(GameSettings gs, TrackData track, float deltaTime)
     {
         gs.GetHPParams(charData.charType,
@@ -506,21 +511,25 @@ public class RacerController : MonoBehaviour
         gs.GetZoneParams(charData.charType,
             out _, out float inZoneRate, out _);
 
-        float posTarget = gs.GetPositioningTarget(charData.charType);
         float rate;
-
-        if (posTarget < 0f)
+        switch (charData.charType)
         {
-            // Reckoner: 타겟 없음, 항상 보존
-            rate = inZoneRate;
-        }
-        else
-        {
-            int total = RaceManager.Instance != null
-                ? RaceManager.Instance.Racers.Count : 12;
-            int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(total * posTarget));
-            // 목표 구간 이내 → 보존, 뒤처짐 → 스프린트
-            rate = (currentRank <= targetMaxRank) ? inZoneRate : activeRate;
+            case CharacterType.Runner:
+                // 도주: 무조건 스프린트 → 선두권 차지
+                rate = activeRate;
+                break;
+            case CharacterType.Leader:
+                // 선행: 적당히 스프린트 → 도주 바로 뒤 포지션
+                rate = Mathf.Lerp(inZoneRate, activeRate, 0.6f);
+                break;
+            case CharacterType.Chaser:
+                // 선입: 보존 → 중후반 대기 포지션
+                rate = inZoneRate;
+                break;
+            default: // Reckoner
+                // 추입: 최소 소모 → 최후방 자리잡기
+                rate = Mathf.Max(gs.basicConsumptionRate, inZoneRate * 0.4f);
+                break;
         }
 
         ApplyHPConsumption(gs, track, deltaTime, rate);

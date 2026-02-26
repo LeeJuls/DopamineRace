@@ -65,6 +65,12 @@ public class CollisionSystem : MonoBehaviour
     private void CheckCollisions(List<RacerController> racers, GameSettings gs)
     {
         if (raceElapsed < gs.collisionSettlingTime) return;
+
+        // ── 포지셔닝 페이즈 충돌 면제 ──
+        // 가장 앞선 레이서가 아직 포지셔닝 구간이면 충돌 판정 OFF
+        // → 출발 직후 자리 잡는 동안 충돌로 인한 대열 교란 방지
+        if (IsPositioningPhase(racers, gs)) return;
+
         if (globalCooldown > 0f) return;
 
         TrackData track = gs.currentTrack;
@@ -332,6 +338,31 @@ public class CollisionSystem : MonoBehaviour
             if (val <= 0f) racerCooldowns.Remove(key);
             else racerCooldowns[key] = val;
         }
+    }
+
+    // ══════════════════════════════════════
+    //  포지셔닝 페이즈 판정
+    // ══════════════════════════════════════
+
+    /// <summary>
+    /// 가장 앞선 레이서가 아직 포지셔닝 구간(positioningLapEnd) 이전이면 true.
+    /// 2바퀴 미만 레이스는 포지셔닝 페이즈 없음 (Legacy 모드).
+    /// </summary>
+    private bool IsPositioningPhase(List<RacerController> racers, GameSettings gs)
+    {
+        // 1바퀴 레이스는 포지셔닝 페이즈 없음
+        if (racers.Count == 0) return false;
+        int totalLaps = racers[0].GetTotalLaps();
+        if (totalLaps < 2) return false;
+
+        float maxProgress = 0f;
+        for (int i = 0; i < racers.Count; i++)
+        {
+            if (racers[i] == null || racers[i].IsFinished) continue;
+            float p = racers[i].TotalProgress;
+            if (p > maxProgress) maxProgress = p;
+        }
+        return maxProgress < gs.positioningLapEnd;
     }
 
     // ══════════════════════════════════════
