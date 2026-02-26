@@ -221,6 +221,29 @@ public class RaceDebugOverlay : MonoBehaviour
 
         log.reportText = sb.ToString();
 
+        // ── 완주 이벤트 누락 보완 ──
+        // 마지막 완주자는 raceActive=false 직후라 LateUpdate가 건너뛰어 미기록됨
+        if (rm != null)
+        {
+            foreach (var entry in rankings)
+            {
+                bool alreadyLogged = false;
+                foreach (var fe in log.finishEvents)
+                {
+                    if (fe.description.Contains(entry.racerName)) { alreadyLogged = true; break; }
+                }
+                if (!alreadyLogged)
+                {
+                    float hpPct = hpByIndex.ContainsKey(entry.racerIndex) ? hpByIndex[entry.racerIndex] : 0f;
+                    var racer = rm.Racers.Find(r => r.RacerIndex == entry.racerIndex);
+                    string typeName = racer?.CharData?.GetTypeName() ?? "?";
+                    float spd = racer?.CharData?.charBaseSpeed ?? 0f;
+                    LogEvent(EventType.Finish, string.Format("{0} {1}착 완주! (SPD:{2:F2} {3}) HP:{4:F0}%",
+                        entry.racerName, entry.rank, spd, typeName, hpPct));
+                }
+            }
+        }
+
         // Console 출력 (plain text)
         string plain = System.Text.RegularExpressions.Regex.Replace(sb.ToString(), "<[^>]+>", "");
         Debug.Log(plain);

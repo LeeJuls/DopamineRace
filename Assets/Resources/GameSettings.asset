@@ -154,7 +154,7 @@ MonoBehaviour:
   runner_targetZone: 0.25
   runner_inZoneRate: 0.6
   runner_outZoneRate: 2
-  leader_targetZone: 0.3
+  leader_targetZone: 0.45
   leader_inZoneRate: 1.2
   leader_outZoneRate: 1.8
   chaser_targetZone: 0.7
