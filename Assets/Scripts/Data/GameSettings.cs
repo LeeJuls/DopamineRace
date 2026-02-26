@@ -390,7 +390,9 @@ public class GameSettings : ScriptableObject
             CharacterType.Chaser   => hp_earlyBonus_Chaser,
             _                      => hp_earlyBonus_Reckoner
         };
-        if (bonus <= 0f) return 0f;
+        // 음수 보너스 허용: 하행 타입(선입/추입)은 초반에 의도적으로 감속
+        // bonus == 0이면 효과 없음 (불필요한 계산 스킵)
+        if (bonus == 0f) return 0f;
 
         float fade = 1f - (progress / hp_earlyBonusFadeEnd);
         return bonus * fade;

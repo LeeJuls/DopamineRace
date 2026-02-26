@@ -164,8 +164,8 @@ MonoBehaviour:
   leaderSpurtMinHP: 0.3
   hp_earlyBonus_Runner: 0.12
   hp_earlyBonus_Leader: 0.04
-  hp_earlyBonus_Chaser: 0.02
-  hp_earlyBonus_Reckoner: 0
+  hp_earlyBonus_Chaser: -0.02
+  hp_earlyBonus_Reckoner: -0.06
   hp_earlyBonusFadeEnd: 0.25
   formationPhaseEnd: 0.2
   formationCorrectionStrength: 0.15
