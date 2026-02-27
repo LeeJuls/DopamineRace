@@ -19,6 +19,7 @@ public class CharacterItemUI : MonoBehaviour
     private Text nameLabel;
     private Text recordLabel;
     private Text secondLabel;
+    private Text oddsLabel;          // Phase 4: 단승 배당률 배지
     private Text betOrderLabel;
 
     // ── 외부에서 사용하는 데이터 ──
@@ -45,6 +46,7 @@ public class CharacterItemUI : MonoBehaviour
         nameLabel       = FindText("NameLabel");
         recordLabel     = FindText("RecordLabel");
         secondLabel     = FindText("SecondLabel");
+        oddsLabel       = FindText("OddsLabel");
         betOrderLabel   = FindText("BetOrderLabel");
     }
 
@@ -125,7 +127,15 @@ public class CharacterItemUI : MonoBehaviour
             }
         }
 
-        // 배당률 표시는 oddsInfo.winOdds 사용 (nameLabel 옆이나 tooltip 등에서)
+        // Phase 4: 단승 배당률 배지 (모든 캐릭터 항상 표시)
+        if (oddsLabel != null)
+        {
+            if (oddsInfo != null && oddsInfo.winOdds > 0f)
+                oddsLabel.text = oddsInfo.winOdds.ToString("F1") + "x";
+            else
+                oddsLabel.text = "-";
+        }
+
         // 기본 상태: 미선택
         SetBetOrder(0);
     }

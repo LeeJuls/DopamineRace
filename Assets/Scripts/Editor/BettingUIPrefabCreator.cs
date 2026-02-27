@@ -122,6 +122,11 @@ public static class BettingUIPrefabCreator
             0f, 0.5f, 0f, 0.5f, new Vector2(460, 10), new Vector2(100, 22),
             14, TextAnchor.MiddleLeft, new Color(0.6f, 0.6f, 0.6f));
 
+        // Phase 4: OddsLabel (단승 배당률 배지 — 항상 표시)
+        MkTextObj(root, "OddsLabel", font,
+            0f, 0.5f, 0f, 0.5f, new Vector2(570, 10), new Vector2(70, 22),
+            14, TextAnchor.MiddleCenter, new Color(1f, 0.6f, 0.2f));
+
         // BetOrderLabel (착순 라벨, 기본 비활성)
         GameObject betOrder = MkTextObj(root, "BetOrderLabel", font,
             1f, 0.5f, 1f, 0.5f, new Vector2(-30, 0), new Vector2(60, 30),
