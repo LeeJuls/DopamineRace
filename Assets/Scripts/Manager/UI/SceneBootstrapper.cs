@@ -44,6 +44,7 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text oddsText;
     private Text pointsLabelText;
     private Text pointsFormulaText;
+    private Text myPointLabel;              // Phase 3: 보유 포인트
     private Text trackRoundLabel;
     private Text trackNameLabel;
     private Text distanceLabel;

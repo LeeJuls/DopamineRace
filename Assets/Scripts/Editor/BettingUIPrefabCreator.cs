@@ -234,6 +234,11 @@ public static class BettingUIPrefabCreator
             0.5f, 0.20f, 0.5f, 0.20f, Vector2.zero, new Vector2(200, 24),
             14, TextAnchor.MiddleCenter, new Color(0.6f, 0.8f, 1f));
 
+        // Phase 3: MyPointLabel (보유 포인트 — OddsArea 최하단)
+        MkTextObj(oddsArea, "MyPointLabel", font,
+            0.5f, 0.03f, 0.5f, 0.03f, Vector2.zero, new Vector2(200, 22),
+            13, TextAnchor.MiddleCenter, new Color(0.5f, 0.7f, 0.5f));
+
         // ════════════════════════════
         //  HideInfoToggle
         // ════════════════════════════

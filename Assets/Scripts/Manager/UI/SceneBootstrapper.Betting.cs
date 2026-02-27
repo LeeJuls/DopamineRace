@@ -71,6 +71,7 @@ public partial class SceneBootstrapper
                 oddsText          = FindText(oddsArea, "OddsText");
                 pointsLabelText   = FindText(oddsArea, "PointsLabel");
                 pointsFormulaText = FindText(oddsArea, "PointsFormula");
+                myPointLabel      = FindText(oddsArea, "MyPointLabel");
             }
         }
 
@@ -269,6 +270,16 @@ public partial class SceneBootstrapper
             pointsLabelText.text = Loc.Get("str.ui.betting.points_empty");
         if (pointsFormulaText != null)
             pointsFormulaText.text = "";
+        RefreshMyPoint();
+    }
+
+    /// <summary>Phase 3: 보유 포인트 표시 갱신</summary>
+    private void RefreshMyPoint()
+    {
+        if (myPointLabel == null) return;
+        var sm = ScoreManager.Instance;
+        int total = sm != null ? sm.TotalScore : 0;
+        myPointLabel.text = Loc.Get("str.hud.total_score", total);
     }
 
     // ══════════════════════════════════════
@@ -538,6 +549,8 @@ public partial class SceneBootstrapper
         if (pointsFormulaText != null)
             pointsFormulaText.text = Loc.Get("str.ui.betting.points_formula",
                 basePt, odds.ToString("F1"), result);
+
+        RefreshMyPoint();
     }
 
     // ══════════════════════════════════════
