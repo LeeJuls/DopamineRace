@@ -58,8 +58,9 @@ crashlytics-build.properties
 # /[Aa]ssets/TextMesh*Pro/
 # Recordings (Unity Recorder)
 /[Rr]ecordings/
-# Claude Code 설정
-.claude/
+# Claude Code 설정 (로컬 전용, agents/는 공유)
+.claude/*
+!.claude/agents/
 
 # MCP 브릿지 로그
 unity_code_mcp_bridge.log
