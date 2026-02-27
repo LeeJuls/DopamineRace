@@ -76,8 +76,8 @@ public class ScoreManager : MonoBehaviour
         TotalRounds = PlayerPrefs.GetInt("DopamineRace_TotalRounds", 0);
         TotalWins = PlayerPrefs.GetInt("DopamineRace_TotalWins", 0);
 
-        // ★ 세이브 버전 체크 (charName→charId 마이그레이션)
-        const int SAVE_VERSION = 2;
+        // ★ 세이브 버전 체크 (v2→v3: 거리별 누적 카운터 추가)
+        const int SAVE_VERSION = 3;
         int savedVersion = PlayerPrefs.GetInt("DopamineRace_SaveVersion", 1);
         if (savedVersion < SAVE_VERSION)
         {
@@ -165,10 +165,12 @@ public class ScoreManager : MonoBehaviour
 
         // ── 캐릭터 영구 기록 갱신 ──
         int currentLaps = GameSettings.Instance.GetLapsForRound(roundNum);
+        string distKey = GameSettings.Instance.GetDistanceKey(currentLaps);
         foreach (var rr in racerResults)
         {
             var charRecord = charRecordStore.GetOrCreate(rr.charId);
             charRecord.AddResult(trackName, rr.rank, currentLaps);
+            charRecord.UpdateDistanceCount(distKey, rr.rank);  // 거리별 누적 카운터
             Debug.Log(string.Format("[ScoreManager] 기록저장: {0} rank={1} → TotalRaces={2} recentRanks=[{3}]",
                 rr.charId, rr.rank,
                 charRecord.TotalRaces, charRecord.GetOverallRankString()));

@@ -60,6 +60,16 @@ public class CharacterRecord
     private const int MAX_RECENT = 10;
     private const int MAX_RACE_ENTRIES = 30;  // 거리별 6개씩 표시하기 위해 충분한 버퍼
 
+    // ── 거리별 누적 카운터 (영구 저장) ──
+    // 이유: recentRaceEntries(MAX=30) 슬라이딩 윈도우로는 장기 누적 승률 계산 불가
+    //       → 별도 카운터로 무한 누적
+    public int shortDistRaces;
+    public int shortDistWins;
+    public int midDistRaces;
+    public int midDistWins;
+    public int longDistRaces;
+    public int longDistWins;
+
     /// <summary>레이스 결과 기록 (맵별 + 전체)</summary>
     public void AddResult(string trackName, int rank)
     {
@@ -143,6 +153,54 @@ public class CharacterRecord
         foreach (var r in recentOverallRanks)
             parts.Add(r.ToString());
         return string.Join("-", parts.ToArray());
+    }
+
+    // ── 거리별 누적 승률 ──
+
+    /// <summary>
+    /// 거리별 누적 카운터 갱신 (ScoreManager.RecordRound에서 호출)
+    /// distKey: "str.ui.track.short" / "str.ui.track.mid" / "str.ui.track.long"
+    /// </summary>
+    public void UpdateDistanceCount(string distKey, int rank)
+    {
+        switch (distKey)
+        {
+            case "str.ui.track.short":
+                shortDistRaces++;
+                if (rank == 1) shortDistWins++;
+                break;
+            case "str.ui.track.mid":
+                midDistRaces++;
+                if (rank == 1) midDistWins++;
+                break;
+            case "str.ui.track.long":
+                longDistRaces++;
+                if (rank == 1) longDistWins++;
+                break;
+        }
+    }
+
+    /// <summary>거리별 1착 승률 (0~1). 출전 0이면 0 반환.</summary>
+    public float GetDistWinRate(string distKey)
+    {
+        switch (distKey)
+        {
+            case "str.ui.track.short":
+                return shortDistRaces > 0 ? (float)shortDistWins / shortDistRaces : 0f;
+            case "str.ui.track.mid":
+                return midDistRaces > 0 ? (float)midDistWins / midDistRaces : 0f;
+            case "str.ui.track.long":
+                return longDistRaces > 0 ? (float)longDistWins / longDistRaces : 0f;
+            default:
+                return 0f;
+        }
+    }
+
+    /// <summary>거리별 1착 승률 퍼센트 문자열 ("32%"). UI 표시용.</summary>
+    public string GetDistWinPct(string distKey)
+    {
+        float rate = GetDistWinRate(distKey);
+        return Mathf.RoundToInt(rate * 100f) + "%";
     }
 
     // ── 내부 유틸 ──
