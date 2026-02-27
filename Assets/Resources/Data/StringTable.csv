@@ -71,8 +71,8 @@ str.ui.btn.next_round,다음 라운드,Next Round,次のラウンド,下一轮,N
 str.ui.btn.new_game,새 게임,New Game,新しいゲーム,新游戏,Neues Spiel,Nuevo Juego,Novo Jogo
 str.ui.btn.close,닫기,Close,閉じる,关闭,Schließen,Cerrar,Fechar
 str.ui.btn.top100,Top 100,Top 100,Top 100,Top 100,Top 100,Top 100,Top 100
-str.ui.btn.panel_close,◀ 닫기,◀ Close,◀ 閉じる,◀ 关闭,◀ Schließen,◀ Cerrar,◀ Fechar
-str.ui.btn.panel_open,열기 ▶,Open ▶,開く ▶,打开 ▶,Öffnen ▶,Abrir ▶,Abrir ▶
+str.ui.btn.panel_close,◀,◀,◀,◀,◀,◀,◀
+str.ui.btn.panel_open,▶,▶,▶,▶,▶,▶,▶
 str.ui.panel.bet_title,배팅 선택,Place Your Bet,ベット選択,下注选择,Wette platzieren,Apostar,Apostar
 str.leaderboard.title,Top 100 리더보드,Top 100 Leaderboard,Top 100リーダーボード,Top 100 排行榜,Top 100 Rangliste,Top 100 Clasificación,Top 100 Classificação
 str.leaderboard.header,순위    점수    적중    날짜              요약,"Rank    Score    Hits    Date              Summary",順位    点数    的中    日付              概要,排名    分数    命中    日期              摘要,Rang    Punkte    Treffer    Datum              Übersicht,Rango    Puntos    Aciertos    Fecha              Resumen,Posição    Pontos    Acertos    Data              Resumo
