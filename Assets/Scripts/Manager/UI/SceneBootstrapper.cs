@@ -48,6 +48,10 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text trackNameLabel;
     private Text distanceLabel;
     private Text trackTypeLabel;
+    private Text trackDescLabel;            // Phase 2: 트랙 설명
+    private Button trackInfoToggleBtn;      // Phase 2: 패널 접기/펼치기
+    private Text trackToggleBtnText;        // Phase 2: 토글 버튼 텍스트
+    private static bool trackPanelOpen = true;  // static → 라운드 간 유지
     private Toggle hideInfoToggle;
     private CharacterInfoPopup charInfoPopup;
 

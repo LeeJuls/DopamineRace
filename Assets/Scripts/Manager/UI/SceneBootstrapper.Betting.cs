@@ -82,6 +82,14 @@ public partial class SceneBootstrapper
             trackNameLabel  = FindText(trackPanel, "TrackNameLabel");
             distanceLabel   = FindText(trackPanel, "DistanceLabel");
             trackTypeLabel  = FindText(trackPanel, "TrackTypeLabel");
+            trackDescLabel  = FindText(trackPanel, "TrackDescLabel");
+
+            Transform toggleBtnObj = trackPanel.Find("TrackInfoToggleBtn");
+            if (toggleBtnObj != null)
+            {
+                trackInfoToggleBtn = toggleBtnObj.GetComponent<Button>();
+                trackToggleBtnText = FindText(toggleBtnObj, "Text");
+            }
         }
 
         // HideInfoToggle
@@ -268,7 +276,18 @@ public partial class SceneBootstrapper
     // ══════════════════════════════════════
     private void InitTrackInfo()
     {
+        // 토글 버튼 초기화
+        if (trackInfoToggleBtn != null)
+        {
+            trackInfoToggleBtn.onClick.AddListener(() =>
+            {
+                trackPanelOpen = !trackPanelOpen;
+                ApplyTrackPanelState();
+            });
+        }
+
         RefreshTrackInfo();
+        ApplyTrackPanelState();
     }
 
     private void RefreshTrackInfo()
@@ -291,13 +310,37 @@ public partial class SceneBootstrapper
         if (distanceLabel != null)
             distanceLabel.text = Loc.Get("str.ui.track.distance", Loc.Get(distKey), laps);
 
+        // Phase 2: GetTrackTypeKey() 사용 (하드코딩 E_Dirt 제거)
         if (trackTypeLabel != null)
         {
-            if (trackInfo != null && trackInfo.trackType == TrackType.E_Dirt)
-                trackTypeLabel.text = Loc.Get("str.ui.track.type_dirt");
-            else
-                trackTypeLabel.text = Loc.Get("str.ui.track.type_base");
+            trackTypeLabel.text = trackInfo != null
+                ? Loc.Get(TrackTypeUtil.GetTrackTypeKey(trackInfo.trackType))
+                : Loc.Get("str.ui.track.type_base");
         }
+
+        // Phase 2: 트랙 설명 표시
+        if (trackDescLabel != null)
+            trackDescLabel.text = trackInfo != null ? trackInfo.DisplayDesc : "";
+    }
+
+    /// <summary>
+    /// 트랙 정보 패널 접기/펼치기 상태 적용
+    /// static trackPanelOpen → 라운드 간 유지
+    /// </summary>
+    private void ApplyTrackPanelState()
+    {
+        // 디테일 요소 표시/숨김
+        if (trackRoundLabel != null) trackRoundLabel.gameObject.SetActive(trackPanelOpen);
+        if (trackNameLabel != null)  trackNameLabel.gameObject.SetActive(trackPanelOpen);
+        if (distanceLabel != null)   distanceLabel.gameObject.SetActive(trackPanelOpen);
+        if (trackTypeLabel != null)  trackTypeLabel.gameObject.SetActive(trackPanelOpen);
+        if (trackDescLabel != null)  trackDescLabel.gameObject.SetActive(trackPanelOpen);
+
+        // 토글 버튼 텍스트 갱신
+        if (trackToggleBtnText != null)
+            trackToggleBtnText.text = trackPanelOpen
+                ? Loc.Get("str.ui.btn.panel_close")
+                : Loc.Get("str.ui.btn.panel_open");
     }
 
     // ══════════════════════════════════════
@@ -524,6 +567,7 @@ public partial class SceneBootstrapper
         DestroyArrows();
         UpdateButtonVisuals();
         RefreshTrackInfo();
+        ApplyTrackPanelState();
 
         // 팝업 닫기
         if (charInfoPopup != null)

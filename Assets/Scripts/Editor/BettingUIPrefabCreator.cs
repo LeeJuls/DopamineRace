@@ -311,6 +311,30 @@ public static class BettingUIPrefabCreator
         trackLayout.childForceExpandWidth = false;
         trackLayout.childForceExpandHeight = true;
 
+        // Phase 2: 토글 버튼 (패널 접기/펼치기) — 맨 왼쪽
+        GameObject toggleBtn = new GameObject("TrackInfoToggleBtn");
+        toggleBtn.transform.SetParent(trackInfoPanel.transform, false);
+        RectTransform toggleRt = toggleBtn.AddComponent<RectTransform>();
+        toggleRt.sizeDelta = new Vector2(0, 0);
+        Image toggleBg = toggleBtn.AddComponent<Image>();
+        toggleBg.color = new Color(0.15f, 0.2f, 0.3f, 0.9f);
+        toggleBg.raycastTarget = true;
+        Button toggleBtnComp = toggleBtn.AddComponent<Button>();
+        toggleBtnComp.targetGraphic = toggleBg;
+        LayoutElement toggleLE = toggleBtn.AddComponent<LayoutElement>();
+        toggleLE.preferredWidth = 70;
+        GameObject toggleTextObj = new GameObject("Text");
+        toggleTextObj.transform.SetParent(toggleBtn.transform, false);
+        RectTransform ttrt = toggleTextObj.AddComponent<RectTransform>();
+        ttrt.anchorMin = Vector2.zero; ttrt.anchorMax = Vector2.one;
+        ttrt.offsetMin = Vector2.zero; ttrt.offsetMax = Vector2.zero;
+        Text toggleText = toggleTextObj.AddComponent<Text>();
+        toggleText.text = "◀ 닫기";
+        toggleText.fontSize = 12;
+        toggleText.alignment = TextAnchor.MiddleCenter;
+        toggleText.color = new Color(0.5f, 0.6f, 0.8f);
+        if (font != null) toggleText.font = font;
+
         MkTextObjLayout(trackInfoPanel, "TotalRoundLabel", font, 14,
             new Color(0.9f, 0.9f, 0.9f), 160);
         MkTextObjLayout(trackInfoPanel, "TrackNameLabel", font, 14,
@@ -319,6 +343,12 @@ public static class BettingUIPrefabCreator
             new Color(0.7f, 0.8f, 0.7f), 130);
         MkTextObjLayout(trackInfoPanel, "TrackTypeLabel", font, 14,
             new Color(0.8f, 0.7f, 0.6f), 80);
+
+        // Phase 2: 트랙 설명 라벨 — 맨 오른쪽 (flexibleWidth로 남은 공간 차지)
+        GameObject trackDescObj = MkTextObjLayout(trackInfoPanel, "TrackDescLabel", font, 13,
+            new Color(0.7f, 0.8f, 0.9f), 0);
+        LayoutElement descLE = trackDescObj.GetComponent<LayoutElement>();
+        descLE.flexibleWidth = 1; // 남은 공간 전부 사용
 
         // ════════════════════════════
         //  CharacterInfoPopup (기본 비활성, 4개 레이아웃)
@@ -658,6 +688,60 @@ public static class BettingUIPrefabCreator
 
                     changed = true;
                     Debug.Log("[Patch] WinRateBg 추가 (승률 배경 박스)");
+                }
+            }
+
+            // ── Phase 2: TrackInfoPanel 토글 버튼 + 설명 라벨 ──
+            Transform trackInfoPanel = root.transform.Find("TrackInfoPanel");
+            if (trackInfoPanel != null)
+            {
+                if (trackInfoPanel.Find("TrackInfoToggleBtn") == null)
+                {
+                    GameObject toggleBtn = new GameObject("TrackInfoToggleBtn");
+                    toggleBtn.transform.SetParent(trackInfoPanel, false);
+                    toggleBtn.transform.SetAsFirstSibling();  // 맨 왼쪽
+                    toggleBtn.AddComponent<RectTransform>();
+                    Image tBg = toggleBtn.AddComponent<Image>();
+                    tBg.color = new Color(0.15f, 0.2f, 0.3f, 0.9f);
+                    tBg.raycastTarget = true;
+                    Button tBtn = toggleBtn.AddComponent<Button>();
+                    tBtn.targetGraphic = tBg;
+                    LayoutElement tLE = toggleBtn.AddComponent<LayoutElement>();
+                    tLE.preferredWidth = 70;
+
+                    GameObject tTextObj = new GameObject("Text");
+                    tTextObj.transform.SetParent(toggleBtn.transform, false);
+                    RectTransform tTextRt = tTextObj.AddComponent<RectTransform>();
+                    tTextRt.anchorMin = Vector2.zero; tTextRt.anchorMax = Vector2.one;
+                    tTextRt.offsetMin = Vector2.zero; tTextRt.offsetMax = Vector2.zero;
+                    Text tText = tTextObj.AddComponent<Text>();
+                    tText.text = "◀ 닫기";
+                    tText.fontSize = 12;
+                    tText.alignment = TextAnchor.MiddleCenter;
+                    tText.color = new Color(0.5f, 0.6f, 0.8f);
+                    if (font != null) tText.font = font;
+
+                    changed = true;
+                    Debug.Log("[Patch] TrackInfoToggleBtn 추가");
+                }
+
+                if (trackInfoPanel.Find("TrackDescLabel") == null)
+                {
+                    GameObject descObj = new GameObject("TrackDescLabel");
+                    descObj.transform.SetParent(trackInfoPanel, false);
+                    descObj.transform.SetAsLastSibling();  // 맨 오른쪽
+                    descObj.AddComponent<RectTransform>();
+                    Text descText = descObj.AddComponent<Text>();
+                    descText.fontSize = 13;
+                    descText.alignment = TextAnchor.MiddleLeft;
+                    descText.color = new Color(0.7f, 0.8f, 0.9f);
+                    descText.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    if (font != null) descText.font = font;
+                    LayoutElement dLE = descObj.AddComponent<LayoutElement>();
+                    dLE.flexibleWidth = 1;  // 남은 공간 전부 사용
+
+                    changed = true;
+                    Debug.Log("[Patch] TrackDescLabel 추가");
                 }
             }
 
