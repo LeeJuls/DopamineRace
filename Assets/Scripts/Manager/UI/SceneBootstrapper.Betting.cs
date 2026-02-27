@@ -79,6 +79,7 @@ public partial class SceneBootstrapper
         Transform trackPanel = root.Find("TrackInfoPanel");
         if (trackPanel != null)
         {
+            trackPanelBg    = trackPanel.GetComponent<Image>(); // 배경 Image (닫힐 때 숨김)
             trackRoundLabel = FindText(trackPanel, "TotalRoundLabel");
             trackNameLabel  = FindText(trackPanel, "TrackNameLabel");
             distanceLabel   = FindText(trackPanel, "DistanceLabel");
@@ -340,6 +341,9 @@ public partial class SceneBootstrapper
     /// </summary>
     private void ApplyTrackPanelState()
     {
+        // 패널 배경 Image 표시/숨김 (토글 버튼은 자식이라 패널을 비활성화할 수 없으므로 Image만 끔)
+        if (trackPanelBg != null) trackPanelBg.enabled = trackPanelOpen;
+
         // 디테일 요소 표시/숨김
         if (trackRoundLabel != null) trackRoundLabel.gameObject.SetActive(trackPanelOpen);
         if (trackNameLabel != null)  trackNameLabel.gameObject.SetActive(trackPanelOpen);
