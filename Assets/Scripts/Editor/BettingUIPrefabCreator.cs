@@ -604,6 +604,20 @@ public static class BettingUIPrefabCreator
     [MenuItem("DopamineRace/Patch Betting UI Prefabs (Safe)")]
     public static void PatchPrefabs()
     {
+        bool ok = UnityEditor.EditorUtility.DisplayDialog(
+            "프리팹 패치 확인",
+            "기존 프리팹에 새 UI 요소를 추가합니다.\n\n" +
+            "⚠️ 기존 작업한 프리팹 수동 수정이 있다면 덮어씌워질 수 있습니다.\n\n" +
+            "진짜 진행할까요?",
+            "Yes, 패치 진행",
+            "No, 취소"
+        );
+        if (!ok)
+        {
+            Debug.Log("[Patch] 프리팹 패치 취소됨.");
+            return;
+        }
+
         string prefabPath = PREFAB_DIR + "/BettingPanel.prefab";
         if (!File.Exists(prefabPath.Replace("Assets/", Application.dataPath + "/")))
         {
