@@ -120,10 +120,13 @@ public class TrackInfo
             if (i < cols.Length)
             {
                 string typeStr = cols[i++].Trim();
-                if (typeStr == "E_Dirt")
-                    t.trackType = TrackType.E_Dirt;
-                else
-                    t.trackType = TrackType.E_Base;
+                t.trackType = typeStr switch
+                {
+                    "E_Dirt" => TrackType.E_Dirt,
+                    "E_Snow" => TrackType.E_Snow,
+                    "E_Rain" => TrackType.E_Rain,
+                    _ => TrackType.E_Base
+                };
             }
         }
         catch (System.Exception e)

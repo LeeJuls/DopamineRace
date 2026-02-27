@@ -1,12 +1,30 @@
 using UnityEngine;
 
 /// <summary>
-/// 트랙 타입 (기본/더트)
+/// 트랙 타입 (기본/더트/설산/우천)
 /// </summary>
 public enum TrackType
 {
     E_Base,  // 기본
-    E_Dirt   // 더트
+    E_Dirt,  // 더트
+    E_Snow,  // 설산
+    E_Rain   // 우천
+}
+
+/// <summary>
+/// TrackType → StringTable UID 변환 헬퍼
+/// 이유: 하드코딩된 if/else 분기 대신 enum 기반 매핑으로 확장성 확보
+/// </summary>
+public static class TrackTypeUtil
+{
+    public static string GetTrackTypeKey(TrackType type) => type switch
+    {
+        TrackType.E_Base => "str.ui.track.type_base",
+        TrackType.E_Dirt => "str.ui.track.type_dirt",
+        TrackType.E_Snow => "str.ui.track.type_snow",
+        TrackType.E_Rain => "str.ui.track.type_rain",
+        _ => "str.ui.track.type_base"
+    };
 }
 
 /// <summary>

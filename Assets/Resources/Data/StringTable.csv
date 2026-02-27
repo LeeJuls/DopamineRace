@@ -120,6 +120,8 @@ str.ui.track.mid,중거리,Middle,中距離,中距离,Mittel,Media,Média
 str.ui.track.long,장거리,Long,長距離,长距离,Lang,Larga,Longa
 str.ui.track.type_base,기본,Base,基本,基本,Basis,Base,Base
 str.ui.track.type_dirt,더트,Dirt,ダート,泥地,Dirt,Tierra,Terra
+str.ui.track.type_snow,설산,Snow,雪,雪地,Schnee,Nieve,Neve
+str.ui.track.type_rain,우천,Rain,雨,雨天,Regen,Lluvia,Chuva
 str.ui.char.popularity,인기{0}.,Pop{0}.,人気{0}.,人气{0}.,Pop{0}.,Pop{0}.,Pop{0}.
 str.ui.char.record,{0}전 {1}승,{0}R {1}W,{0}戦{1}勝,{0}战{1}胜,{0}R {1}S,{0}C {1}V,{0}C {1}V
 str.ui.char.second,2위 {0}회,2nd {0}x,2位 {0}回,第2名 {0}次,2. {0}x,2º {0}x,2º {0}x
