@@ -374,6 +374,10 @@ public static class BettingUIPrefabCreator
             new Color(0.7f, 0.8f, 0.9f), 0);
         LayoutElement descLE = trackDescObj.GetComponent<LayoutElement>();
         descLE.flexibleWidth = 1; // 남은 공간 전부 사용
+        Text descText = trackDescObj.GetComponent<Text>();
+        descText.horizontalOverflow = HorizontalWrapMode.Wrap;    // 너비 초과 시 줄바꿈
+        descText.verticalOverflow   = VerticalWrapMode.Overflow;  // 줄바꿈된 내용 잘리지 않도록
+        descText.alignment          = TextAnchor.MiddleLeft;
 
         // ════════════════════════════
         //  CharacterInfoPopup (기본 비활성, 4개 레이아웃)
@@ -762,46 +766,6 @@ public static class BettingUIPrefabCreator
                 Debug.Log("[Patch] MyPointLabel 추가 (보유 포인트 표시)");
             }
 
-            // ── 레이아웃 교정 (수동 편집으로 틀어진 위치 복원) ──
-            changed |= FixStretchPosition(root.transform, "TrackInfoPanel",
-                0.01f, 0.01f, 0.75f, 0.11f);
-            changed |= FixStretchPosition(root.transform, "TopArea",
-                0f, 0.82f, 1f, 1f);
-            changed |= FixStretchPosition(root.transform, "CharacterListPanel",
-                0.01f, 0.12f, 0.75f, 0.80f);
-
-            // StartBtn (포인트 앵커 — 우측 하단)
-            Transform startBtnT = root.transform.Find("StartBtn");
-            if (startBtnT != null)
-            {
-                RectTransform srt = startBtnT.GetComponent<RectTransform>();
-                if (srt != null && (srt.anchorMin.x < 0.8f || srt.anchorMin.y > 0.1f))
-                {
-                    srt.anchorMin = new Vector2(0.82f, 0.02f);
-                    srt.anchorMax = new Vector2(0.82f, 0.02f);
-                    srt.anchoredPosition = Vector2.zero;
-                    srt.sizeDelta = new Vector2(180, 55);
-                    changed = true;
-                    Debug.Log("[Patch] StartBtn 위치 교정 (우측 하단)");
-                }
-            }
-
-            // HideInfoToggle 위치 교정
-            Transform hideToggleT = root.transform.Find("HideInfoToggle");
-            if (hideToggleT != null)
-            {
-                RectTransform hrt = hideToggleT.GetComponent<RectTransform>();
-                if (hrt != null && Mathf.Abs(hrt.anchorMin.x - 0.85f) > 0.1f)
-                {
-                    hrt.anchorMin = new Vector2(0.85f, 0.78f);
-                    hrt.anchorMax = new Vector2(0.85f, 0.78f);
-                    hrt.anchoredPosition = Vector2.zero;
-                    hrt.sizeDelta = new Vector2(180, 28);
-                    changed = true;
-                    Debug.Log("[Patch] HideInfoToggle 위치 교정");
-                }
-            }
-
             // ── Phase 2: TrackInfoPanel 토글 버튼 + 설명 라벨 ──
             Transform trackInfoPanel = root.transform.Find("TrackInfoPanel");
             if (trackInfoPanel != null)
@@ -846,13 +810,26 @@ public static class BettingUIPrefabCreator
                     descText.fontSize = 13;
                     descText.alignment = TextAnchor.MiddleLeft;
                     descText.color = new Color(0.7f, 0.8f, 0.9f);
-                    descText.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    descText.horizontalOverflow = HorizontalWrapMode.Wrap;   // 줄바꿈
+                    descText.verticalOverflow   = VerticalWrapMode.Overflow; // 잘림 방지
                     if (font != null) descText.font = font;
                     LayoutElement dLE = descObj.AddComponent<LayoutElement>();
                     dLE.flexibleWidth = 1;  // 남은 공간 전부 사용
 
                     changed = true;
                     Debug.Log("[Patch] TrackDescLabel 추가");
+                }
+                else
+                {
+                    // 기존 TrackDescLabel이 있으면 overflow 설정 교정
+                    Text existDesc = trackInfoPanel.Find("TrackDescLabel").GetComponent<Text>();
+                    if (existDesc != null && existDesc.horizontalOverflow != HorizontalWrapMode.Wrap)
+                    {
+                        existDesc.horizontalOverflow = HorizontalWrapMode.Wrap;
+                        existDesc.verticalOverflow   = VerticalWrapMode.Overflow;
+                        changed = true;
+                        Debug.Log("[Patch] TrackDescLabel: horizontalOverflow → Wrap 교정");
+                    }
                 }
             }
 
