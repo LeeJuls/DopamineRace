@@ -34,18 +34,8 @@ public partial class SceneBootstrapper
             BuildBettingUIFallback(parent);
         }
 
-        // === 우상단 정보 (프리팹 밖 — 항상 표시) ===
-        roundText = MkText(parent, Loc.Get("str.hud.round", 1, 7),
-            new Vector2(1, 1), new Vector2(1, 1),
-            new Vector2(-20, -10), new Vector2(250, 30), 22, TextAnchor.MiddleRight, Color.white);
-
-        lapText = MkText(parent, Loc.Get("str.hud.this_race", 1),
-            new Vector2(1, 1), new Vector2(1, 1),
-            new Vector2(-20, -38), new Vector2(250, 25), 18, TextAnchor.MiddleRight, new Color(0.8f, 0.9f, 1f));
-
-        scoreText = MkText(parent, Loc.Get("str.hud.total_score", 0),
-            new Vector2(1, 1), new Vector2(1, 1),
-            new Vector2(-20, -62), new Vector2(250, 25), 20, TextAnchor.MiddleRight, Color.yellow);
+        // 우상단 HUD (roundText / lapText / scoreText) 제거
+        // 레이싱 화면은 프리팹으로 재작업 예정 — 해당 시점에 다시 구현
     }
 
     // ══════════════════════════════════════
