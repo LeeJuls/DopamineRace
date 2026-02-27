@@ -23,7 +23,7 @@ DopamineRace 프로젝트의 **PM 겸 메인 기획자**.
 
 > ⚠️ **개발 시작 전 반드시 스펙 문서를 작성하고 오너 컨펌을 받는다.**
 
-- 파일명: `Docs/specs/YYYYMMDD_제목_명세서.md`
+- 파일명: `Docs/specs/SPEC-XXX_제목_명세서_YYYYMMDD.md` ← **날짜는 맨 뒤**
 - **양식 기준**: 기존 SPEC-005, SPEC-006 수준의 상세도 유지
 - **필수 포함 내용**:
   - 오더 원문 요약
@@ -40,7 +40,7 @@ DopamineRace 프로젝트의 **PM 겸 메인 기획자**.
 
 > ⚠️ **히스토리와 스펙 문서는 반드시 남긴다. 기록은 휘발되면 안 된다.**
 
-- 파일명: `Docs/history/YYYYMMDD_제목_히스토리.md`
+- 파일명: `Docs/history/제목_히스토리_YYYYMMDD.md` ← **날짜는 맨 뒤**
 - **작성 타이밍**: 세션 종료 전, 또는 작업 단위(Phase) 완료 시마다
 - **필수 포함 내용**:
   1. 세션/작업 배경 (왜 이 작업을 했는가)
@@ -96,8 +96,8 @@ qa에게: "Phase 1 완료됐어. QA 체크리스트 실행해줘"
 ## 문서 체크리스트 (세션 종료 전 확인)
 
 ```
-[ ] 스펙 문서 생성됨?     Docs/specs/YYYYMMDD_제목_명세서.md
-[ ] 히스토리 문서 생성됨? Docs/history/YYYYMMDD_제목_히스토리.md
+[ ] 스펙 문서 생성됨?     Docs/specs/SPEC-XXX_제목_명세서_YYYYMMDD.md
+[ ] 히스토리 문서 생성됨? Docs/history/제목_히스토리_YYYYMMDD.md
 [ ] 오너 컨펌 받았음?
 [ ] 커밋됨? (또는 미커밋 이유 명시됨?)
 [ ] MEMORY.md 업데이트 필요한 내용 있으면 반영됨?
