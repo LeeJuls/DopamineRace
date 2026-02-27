@@ -244,4 +244,4 @@ MonoBehaviour:
   mainFont: {fileID: 12800000, guid: d33d11b90102e7042ad01b77a72b3fe6, type: 3}
   koreanFont: {fileID: 0}
   uiFontScale: 1
-  enableRaceDebug: 1
+  enableRaceDebug: 0

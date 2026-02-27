@@ -807,7 +807,7 @@ public class GameSettings : ScriptableObject
 
     [Header("═══ 디버그 ═══")]
     [Tooltip("레이스 디버그 오버레이 (F1:토글 F2:상세 F3:캐릭터선택)")]
-    public bool enableRaceDebug = true;
+    public bool enableRaceDebug = false;
 
     /// <summary>
     /// 타입별 구간 보너스 가져오기

@@ -484,7 +484,8 @@ public partial class SceneBootstrapper
                     var record = ScoreManager.Instance != null
                         ? ScoreManager.Instance.GetCharacterRecord(charData.charId)
                         : null;
-                    charInfoPopup.Show(charData, oddsInfo, record);
+                    var trackInfo = TrackDatabase.Instance?.CurrentTrackInfo;
+                    charInfoPopup.Show(charData, oddsInfo, record, trackInfo);
                 }
             }
         }
