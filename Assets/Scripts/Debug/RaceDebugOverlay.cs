@@ -17,7 +17,7 @@ using System.Text;
 /// </summary>
 public class RaceDebugOverlay : MonoBehaviour
 {
-    private bool showDebug = true;
+    private bool showDebug = false;  // 기본 비표시 → F1으로 토글
     private bool showDetail = false;
     private int viewingRound = -1;  // -1 = 현재 라운드
     private Vector2 scrollPos;
@@ -28,6 +28,14 @@ public class RaceDebugOverlay : MonoBehaviour
     private GUIStyle critStyle;
     private GUIStyle copyBtnStyle;
     private bool stylesInitialized = false;
+
+    private void Awake()
+    {
+        // GameSettings.enableRaceDebug = true → 시작 시 바로 표시
+        // false → 숨김 상태로 시작, F1으로 토글 가능
+        if (GameSettings.Instance != null)
+            showDebug = GameSettings.Instance.enableRaceDebug;
+    }
 
     // ── 갱신 주기 ──
     private float refreshInterval = 0.2f;

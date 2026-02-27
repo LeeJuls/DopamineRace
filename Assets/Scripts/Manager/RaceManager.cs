@@ -69,11 +69,8 @@ public class RaceManager : MonoBehaviour
         // 충돌 시스템 부착
         collisionSystem = gameObject.AddComponent<CollisionSystem>();
 
-        // 디버그 오버레이 부착
-        if (GameSettings.Instance.enableRaceDebug)
-        {
-            debugOverlay = gameObject.AddComponent<RaceDebugOverlay>();
-        }
+        // 디버그 오버레이 부착 (항상 생성 — F1으로 토글 가능)
+        debugOverlay = gameObject.AddComponent<RaceDebugOverlay>();
     }
 
     private void Start()
