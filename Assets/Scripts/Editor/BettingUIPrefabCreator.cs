@@ -762,6 +762,46 @@ public static class BettingUIPrefabCreator
                 Debug.Log("[Patch] MyPointLabel 추가 (보유 포인트 표시)");
             }
 
+            // ── 레이아웃 교정 (수동 편집으로 틀어진 위치 복원) ──
+            changed |= FixStretchPosition(root.transform, "TrackInfoPanel",
+                0.01f, 0.01f, 0.75f, 0.11f);
+            changed |= FixStretchPosition(root.transform, "TopArea",
+                0f, 0.82f, 1f, 1f);
+            changed |= FixStretchPosition(root.transform, "CharacterListPanel",
+                0.01f, 0.12f, 0.75f, 0.80f);
+
+            // StartBtn (포인트 앵커 — 우측 하단)
+            Transform startBtnT = root.transform.Find("StartBtn");
+            if (startBtnT != null)
+            {
+                RectTransform srt = startBtnT.GetComponent<RectTransform>();
+                if (srt != null && (srt.anchorMin.x < 0.8f || srt.anchorMin.y > 0.1f))
+                {
+                    srt.anchorMin = new Vector2(0.82f, 0.02f);
+                    srt.anchorMax = new Vector2(0.82f, 0.02f);
+                    srt.anchoredPosition = Vector2.zero;
+                    srt.sizeDelta = new Vector2(180, 55);
+                    changed = true;
+                    Debug.Log("[Patch] StartBtn 위치 교정 (우측 하단)");
+                }
+            }
+
+            // HideInfoToggle 위치 교정
+            Transform hideToggleT = root.transform.Find("HideInfoToggle");
+            if (hideToggleT != null)
+            {
+                RectTransform hrt = hideToggleT.GetComponent<RectTransform>();
+                if (hrt != null && Mathf.Abs(hrt.anchorMin.x - 0.85f) > 0.1f)
+                {
+                    hrt.anchorMin = new Vector2(0.85f, 0.78f);
+                    hrt.anchorMax = new Vector2(0.85f, 0.78f);
+                    hrt.anchoredPosition = Vector2.zero;
+                    hrt.sizeDelta = new Vector2(180, 28);
+                    changed = true;
+                    Debug.Log("[Patch] HideInfoToggle 위치 교정");
+                }
+            }
+
             // ── Phase 2: TrackInfoPanel 토글 버튼 + 설명 라벨 ──
             Transform trackInfoPanel = root.transform.Find("TrackInfoPanel");
             if (trackInfoPanel != null)
@@ -889,6 +929,42 @@ public static class BettingUIPrefabCreator
         text.verticalOverflow = VerticalWrapMode.Overflow;
         if (font != null) text.font = font;
         return text;
+    }
+
+    /// <summary>
+    /// 스트레치 앵커 요소의 위치 교정.
+    /// anchoredPosition/sizeDelta가 (0,0)이 아니면 수동 편집으로 틀어진 것 → 복원.
+    /// </summary>
+    private static bool FixStretchPosition(Transform parent, string childName,
+        float ancMinX, float ancMinY, float ancMaxX, float ancMaxY)
+    {
+        Transform child = parent.Find(childName);
+        if (child == null) return false;
+
+        RectTransform rt = child.GetComponent<RectTransform>();
+        if (rt == null) return false;
+
+        // 앵커가 다른 경우 또는 anchoredPosition/sizeDelta가 0이 아닌 경우
+        bool needsFix = false;
+        if (Mathf.Abs(rt.anchorMin.x - ancMinX) > 0.001f ||
+            Mathf.Abs(rt.anchorMin.y - ancMinY) > 0.001f ||
+            Mathf.Abs(rt.anchorMax.x - ancMaxX) > 0.001f ||
+            Mathf.Abs(rt.anchorMax.y - ancMaxY) > 0.001f)
+            needsFix = true;
+
+        if (rt.anchoredPosition.sqrMagnitude > 1f || rt.sizeDelta.sqrMagnitude > 1f)
+            needsFix = true;
+
+        if (!needsFix) return false;
+
+        rt.anchorMin = new Vector2(ancMinX, ancMinY);
+        rt.anchorMax = new Vector2(ancMaxX, ancMaxY);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = Vector2.zero;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+        Debug.Log($"[Patch] {childName} 위치 교정 → anchor({ancMinX},{ancMinY})-({ancMaxX},{ancMaxY})");
+        return true;
     }
 
     // ══════════════════════════════════════════════════════
