@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "unity": {
+      "command": "C:\\Users\\user\\.local\\bin\\uvx.exe",
+      "args": ["unity-code-mcp-stdio"],
+      "env": {
+        "UNITY_PORT": "21088"
+      }
+    }
+  }
+}

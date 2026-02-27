@@ -109,12 +109,14 @@
 
 ## 문서 폴더 규칙
 - **작업 문서는 `Docs/` 하위에만 저장** (`doc/` 폴더 폐기)
-  - 히스토리: `Docs/history/YYYYMMDD_제목_히스토리.md`
-  - 명세서: `Docs/specs/YYYYMMDD_제목_명세서.md`
-  - 그 외 문서: `Docs/YYYYMMDD_제목.md`
+  - 히스토리: `Docs/history/제목_히스토리_YYYYMMDD.md`
+  - 명세서: `Docs/specs/SPEC-XXX_제목_명세서_YYYYMMDD.md`
+  - 그 외 문서: `Docs/제목_YYYYMMDD.md`
+  - **날짜는 파일명 맨 뒤에 붙인다** (제목으로 정렬/검색이 쉽게)
 
-## 사용 전 필수 단계
-- Unity에서 `DopamineRace > Create Betting UI Prefabs` 메뉴 실행
+## 프리팹 시스템 주의사항
+- **절대 금지**: `DopamineRace > Create Betting UI Prefabs` (기존 수동 작업 삭제됨)
+- **안전 패치**: `DopamineRace > Patch Betting UI Prefabs (Safe)` (없는 요소만 추가)
 - GameSettings Inspector에서 bettingPanelPrefab / characterItemPrefab 자동 연결 확인
 
 ## Completed (as of 2026-02-25 session 1)
@@ -172,9 +174,34 @@ roundLaps=[2,2,3,5,3,2,4]
 - **선행 포지션 개선**: leader_targetZone 0.30→0.45
 - **UI 디자이너 온보딩 가이드**: `Docs/20260226_UI디자이너_온보딩가이드.md`
 
+## Completed (as of 2026-02-27 session 2 — SPEC-007 배팅 UI 개선)
+- **SPEC-007 Phase 1~5 구현 완료 + Phase 6 QA 통과**
+  - Phase 1: TrackType 확장 (E_Snow, E_Rain) + CharacterRecord 거리별 누적
+  - Phase 2: 트랙 정보 패널 재설계 (TrackInfoToggleBtn, TrackDescLabel)
+  - Phase 3: My Point / Get Point UI (MyPointLabel, RefreshMyPoint)
+  - Phase 4: 배당률 배지 항상 표시 (OddsLabel on CharacterItem)
+  - Phase 5: 캐릭터 팝업 개선 (레이더차트 보너스 스탯 강조, 거리별 승률)
+- **PatchPrefabs() 강화**: CharacterItem OddsLabel + MyPointLabel 패치 + FixStretchPosition() 위치 교정
+- **RaceDebug F1 수정**: 항상 생성, showDebug 초기값만 GameSettings로 제어
+- **확인 다이얼로그**: Create/Patch 메뉴 모두 실행 전 확인
+- **MCP 연동**: Signal-Loop UnityCodeMCPServer (port 21088) + uv 기반 `.mcp.json` 설정
+
+### SPEC-007 아키텍처 추가 노트
+- `PatchPrefabs()`는 FixStretchPosition()으로 위치 교정도 수행 → 수동 배치 후 다시 돌리면 리셋 주의
+- `SAVE_VERSION` 2 → 3 (CharacterRecord 거리별 필드 추가)
+- CharacterInfoPopup.Show() 시그니처: (CharacterData, PopularityInfo, CharacterRecord, TrackInfo=null)
+- XCharts RadarChart: rich text `<color>` 태그로 보너스 스탯 ★ 강조
+
+### MCP 설정
+- Unity 측: `com.signal-loop.unitycodemcpserver` (Packages/manifest.json)
+- Claude 측: `.mcp.json` → `uvx unity-code-mcp-stdio` (UNITY_PORT=21088)
+- uv 경로: `C:\Users\user\.local\bin\uv.exe`
+- 도구: execute_csharp_script_in_unity_editor, read_console_logs, run_tests 등
+
 ## Remaining Tasks
-- **밸런스 플레이 테스트**: 도주 파아악 + 선행 4위권 확인 (이번 세션 변경 후 미검증)
-- **RaceBacktestWindow 5바퀴 백테스트** 필수 (간이 스크립트 불충분)
+- **프리팹 수동 디자인 작업**: 위치/크기/텍스트 정렬 → Unity Editor에서 수동 조정 (가이드: `Docs/SPEC-007_프리팹수정가이드_20260227.md`)
+- **밸런스 플레이 테스트**: 도주 파아악 + 선행 4위권 확인
+- **RaceBacktestWindow 5바퀴 백테스트** 필수
 - 사용자 직접 플레이 테스트 (비주얼 확인, 타이밍 조정)
 - 디졸브/빌드업 속도 미세 조정 (현재 각 1.2초)
 - 캐릭터 스폰 Y위치/속도, 로고 크기/위치 미세 조정
@@ -189,5 +216,7 @@ roundLaps=[2,2,3,5,3,2,4]
 - Play 모드 전환 중 MCP 사용 자제
 
 ## Detail docs
-- See [2026-02-22_EasyChart순위그래프전환_인수인계.md](./2026-02-22_EasyChart순위그래프전환_인수인계.md) for latest handover
+- See [SPEC-007_인수인계서_20260227.md](./SPEC-007_인수인계서_20260227.md) for SPEC-007 handover
+- See [SPEC-007_프리팹수정가이드_20260227.md](./SPEC-007_프리팹수정가이드_20260227.md) for prefab manual editing guide
+- See [2026-02-22_EasyChart순위그래프전환_인수인계.md](./2026-02-22_EasyChart순위그래프전환_인수인계.md) for EasyChart handover
 - See [handover.md](./handover.md) for previous handover (배팅 UI 개편)
