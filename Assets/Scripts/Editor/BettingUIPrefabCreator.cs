@@ -633,15 +633,27 @@ public static class BettingUIPrefabCreator
             return;
         }
 
+        var gs = AssetDatabase.LoadAssetAtPath<GameSettings>("Assets/Resources/GameSettings.asset");
+        Font font = gs != null ? gs.mainFont : null;
+
+        // ── 1) CharacterItem.prefab 패치 ──
+        string charItemPath = PREFAB_DIR + "/CharacterItem.prefab";
+        if (File.Exists(charItemPath.Replace("Assets/", Application.dataPath + "/")))
+        {
+            PatchCharacterItemPrefab(charItemPath, font);
+        }
+        else
+        {
+            Debug.LogWarning("[Patch] CharacterItem.prefab이 없습니다. 스킵합니다.");
+        }
+
+        // ── 2) BettingPanel.prefab 패치 ──
         string prefabPath = PREFAB_DIR + "/BettingPanel.prefab";
         if (!File.Exists(prefabPath.Replace("Assets/", Application.dataPath + "/")))
         {
             Debug.LogError("[Patch] BettingPanel.prefab이 없습니다. 먼저 'Create Betting UI Prefabs'를 실행하세요.");
             return;
         }
-
-        var gs = AssetDatabase.LoadAssetAtPath<GameSettings>("Assets/Resources/GameSettings.asset");
-        Font font = gs != null ? gs.mainFont : null;
 
         using (var scope = new PrefabUtility.EditPrefabContentsScope(prefabPath))
         {
@@ -728,6 +740,26 @@ public static class BettingUIPrefabCreator
                     changed = true;
                     Debug.Log("[Patch] WinRateBg 추가 (승률 배경 박스)");
                 }
+            }
+
+            // ── Phase 3: MyPointLabel (보유 포인트 — OddsArea 최하단) ──
+            Transform oddsArea = null;
+            Transform topArea = root.transform.Find("TopArea");
+            if (topArea != null)
+                oddsArea = topArea.Find("OddsArea");
+
+            if (oddsArea != null && oddsArea.Find("MyPointLabel") == null)
+            {
+                PatchMkText(oddsArea, "MyPointLabel", font,
+                    0.5f, 0.03f, 0.5f, 0.03f, 13, TextAnchor.MiddleCenter,
+                    new Color(0.5f, 0.7f, 0.5f));
+                // sizeDelta를 직접 설정 (stretch 모드가 아닌 고정 크기)
+                RectTransform myPtRt = oddsArea.Find("MyPointLabel").GetComponent<RectTransform>();
+                myPtRt.offsetMin = Vector2.zero;
+                myPtRt.offsetMax = Vector2.zero;
+                myPtRt.sizeDelta = new Vector2(200, 22);
+                changed = true;
+                Debug.Log("[Patch] MyPointLabel 추가 (보유 포인트 표시)");
             }
 
             // ── Phase 2: TrackInfoPanel 토글 버튼 + 설명 라벨 ──
@@ -857,6 +889,49 @@ public static class BettingUIPrefabCreator
         text.verticalOverflow = VerticalWrapMode.Overflow;
         if (font != null) text.font = font;
         return text;
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  D) CharacterItem 프리팹 패치
+    // ══════════════════════════════════════════════════════
+
+    /// <summary>CharacterItem.prefab에 누락된 요소 추가</summary>
+    private static void PatchCharacterItemPrefab(string charItemPath, Font font)
+    {
+        using (var scope = new PrefabUtility.EditPrefabContentsScope(charItemPath))
+        {
+            GameObject root = scope.prefabContentsRoot;
+            bool changed = false;
+
+            // Phase 4: OddsLabel (단승 배당률 배지)
+            if (root.transform.Find("OddsLabel") == null)
+            {
+                GameObject oddsObj = new GameObject("OddsLabel");
+                oddsObj.transform.SetParent(root.transform, false);
+                RectTransform rt = oddsObj.AddComponent<RectTransform>();
+                rt.anchorMin = new Vector2(0f, 0.5f);
+                rt.anchorMax = new Vector2(0f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.anchoredPosition = new Vector2(570, 10);
+                rt.sizeDelta = new Vector2(70, 22);
+
+                Text text = oddsObj.AddComponent<Text>();
+                text.fontSize = 14;
+                text.alignment = TextAnchor.MiddleCenter;
+                text.color = new Color(1f, 0.6f, 0.2f);
+                text.horizontalOverflow = HorizontalWrapMode.Overflow;
+                text.verticalOverflow = VerticalWrapMode.Overflow;
+                if (font != null) text.font = font;
+
+                changed = true;
+                Debug.Log("[Patch] CharacterItem: OddsLabel 추가 (배당률 배지)");
+            }
+
+            if (!changed)
+                Debug.Log("[Patch] CharacterItem: 변경 사항 없음 — 모든 요소가 이미 존재합니다.");
+            else
+                Debug.Log("[Patch] CharacterItem 패치 완료!");
+        }
     }
 
     // ══════════════════════════════════════════════════════
