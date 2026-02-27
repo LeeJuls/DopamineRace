@@ -71,3 +71,7 @@ Docs/logs/
 # 메모/문서 파일 (선택)
 *.txt
 !Assets/**/*.txt
+
+# Unity 자동 복구 씬 (크래시 시 자동생성 임시파일)
+/[Aa]ssets/[_]Recovery/
+/[Aa]ssets/[_]Recovery.meta
