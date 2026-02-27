@@ -19,6 +19,21 @@ public static class BettingUIPrefabCreator
     [MenuItem("DopamineRace/Create Betting UI Prefabs")]
     public static void CreatePrefabs()
     {
+        bool ok = UnityEditor.EditorUtility.DisplayDialog(
+            "⚠️ 프리팹 전체 재생성 확인",
+            "기존 프리팹을 완전히 삭제하고 새로 만듭니다.\n\n" +
+            "🚨 기존에 작업한 프리팹 수정 내용이 모두 사라집니다!\n\n" +
+            "최초 초기 세팅 시에만 사용하세요.\n\n" +
+            "정말로 진행할까요?",
+            "Yes, 완전 재생성",
+            "No, 취소"
+        );
+        if (!ok)
+        {
+            Debug.Log("[Create] 프리팹 재생성 취소됨.");
+            return;
+        }
+
         EnsureDirectory(PREFAB_DIR);
 
         // GameSettings에서 폰트 참조
