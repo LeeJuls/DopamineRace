@@ -43,6 +43,7 @@ public class CharacterInfoPopup : MonoBehaviour
     // 코루틴 전달용 (Show → ShowSequence)
     private CharacterData pendingData;
     private CharacterRecord pendingRecord;
+    private TrackInfo pendingTrackInfo;
 
     /// <summary>현재 표시 중인 캐릭터 UID</summary>
     public string CurrentCharId => currentCharId;
@@ -168,7 +169,7 @@ public class CharacterInfoPopup : MonoBehaviour
     /// <summary>
     /// 팝업 표시 (캐릭터 클릭 시)
     /// </summary>
-    public void Show(CharacterData data, PopularityInfo info, CharacterRecord record)
+    public void Show(CharacterData data, PopularityInfo info, CharacterRecord record, TrackInfo trackInfo = null)
     {
         if (!isInitialized) Init();
         if (data == null) return;
@@ -217,6 +218,7 @@ public class CharacterInfoPopup : MonoBehaviour
         // 5) 코루틴 전달용 저장
         pendingData = data;
         pendingRecord = record;
+        pendingTrackInfo = trackInfo;
 
         // 6) 활성화 + 레이아웃 강제 갱신
         gameObject.SetActive(true);
@@ -256,7 +258,7 @@ public class CharacterInfoPopup : MonoBehaviour
             InitRadarChart();
 
         // ── 데이터 갱신 ──
-        UpdateRadarChart(pendingData);
+        UpdateRadarChart(pendingData, pendingTrackInfo);
         UpdateRecentRecords(pendingRecord);
 
         // ── 슬라이드인 애니메이션 ──
@@ -331,7 +333,7 @@ public class CharacterInfoPopup : MonoBehaviour
         radarChart.RefreshChart();
     }
 
-    private void UpdateRadarChart(CharacterData data)
+    private void UpdateRadarChart(CharacterData data, TrackInfo trackInfo = null)
     {
         if (radarChart == null || data == null)
         {
@@ -351,8 +353,23 @@ public class CharacterInfoPopup : MonoBehaviour
                 "str.ui.char.stat.brave", "str.ui.char.stat.calm",
                 "str.ui.char.stat.endurance", "str.ui.char.stat.luck"
             };
-            foreach (string key in statKeys)
-                radar.AddIndicator(Loc.Get(key), 0, 20);
+
+            // Phase 5: 트랙 보너스 스탯 하이라이트 (노란색 ★)
+            // TrackDB bonus 필드 > 0인 스탯 자동 노란색
+            bool[] highlights = new bool[6]; // speed, power, brave, calm, endurance, luck
+            if (trackInfo != null)
+            {
+                highlights[1] = trackInfo.powerSpeedBonus > 0f;  // power
+                highlights[2] = trackInfo.braveSpeedBonus > 0f;  // brave
+            }
+
+            for (int i = 0; i < statKeys.Length; i++)
+            {
+                string label = Loc.Get(statKeys[i]);
+                if (highlights[i])
+                    label = "<color=#FFD700>" + label + "★</color>";
+                radar.AddIndicator(label, 0, 20);
+            }
         }
 
         // 4색 배경 시리즈 (구역 표현: 큰 값부터 → 작은 값 위에 겹침)
@@ -433,13 +450,28 @@ public class CharacterInfoPopup : MonoBehaviour
         if (recentRecordHeader != null)
             recentRecordHeader.text = Loc.Get("str.ui.char.recent_record");
 
-        // 거리별 라벨
+        // 거리별 라벨 + 1착 승률 (Phase 5)
         if (shortDistLabel != null)
-            shortDistLabel.text = Loc.Get("str.ui.track.short");
+        {
+            string label = Loc.Get("str.ui.track.short");
+            if (record != null && record.shortDistRaces > 0)
+                label += " <color=#FFD700>1st." + record.GetDistWinPct("str.ui.track.short") + "</color>";
+            shortDistLabel.text = label;
+        }
         if (midDistLabel != null)
-            midDistLabel.text = Loc.Get("str.ui.track.mid");
+        {
+            string label = Loc.Get("str.ui.track.mid");
+            if (record != null && record.midDistRaces > 0)
+                label += " <color=#FFD700>1st." + record.GetDistWinPct("str.ui.track.mid") + "</color>";
+            midDistLabel.text = label;
+        }
         if (longDistLabel != null)
-            longDistLabel.text = Loc.Get("str.ui.track.long");
+        {
+            string label = Loc.Get("str.ui.track.long");
+            if (record != null && record.longDistRaces > 0)
+                label += " <color=#FFD700>1st." + record.GetDistWinPct("str.ui.track.long") + "</color>";
+            longDistLabel.text = label;
+        }
 
         // 거리별 순위 분류
         List<int> shortRanks = new List<int>();
