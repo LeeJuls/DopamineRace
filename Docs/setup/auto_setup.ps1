@@ -180,6 +180,25 @@ Write-OK "Claude Desktop 설정 파일 생성 완료"
 Write-OK "경로: $claudeConfigFile"
 
 # ------------------------------------------
+# 7. Claude 메모리 동기화 (Docs/MEMORY.md → 로컬 Claude 메모리)
+# ------------------------------------------
+Write-Step "7/7 - Claude 메모리 동기화"
+
+# 프로젝트 경로를 Claude 메모리 폴더 키로 변환
+# 예: D:\unity\Project\DopamineRace → D--unity-Project-DopamineRace
+$projectKey = $ProjectPath -replace ':', '-' -replace '\\', '-' -replace '/', '-'
+$memoryDir = "$env:USERPROFILE\.claude\projects\$projectKey\memory"
+$memorySource = "$ProjectPath\Docs\MEMORY.md"
+
+if (Test-Path $memorySource) {
+    New-Item -ItemType Directory -Path $memoryDir -Force | Out-Null
+    Copy-Item $memorySource "$memoryDir\MEMORY.md" -Force
+    Write-OK "Claude 메모리 동기화 완료: $memoryDir\MEMORY.md"
+} else {
+    Write-WARN "MEMORY.md 없음 (git pull 후 다시 실행): $memorySource"
+}
+
+# ------------------------------------------
 # 완료!
 # ------------------------------------------
 Write-Host ""
