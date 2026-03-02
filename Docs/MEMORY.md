@@ -199,7 +199,8 @@ roundLaps=[2,2,3,5,3,2,4]
 - 도구: execute_csharp_script_in_unity_editor, read_console_logs, run_tests 등
 
 ## Remaining Tasks
-- **프리팹 수동 디자인 작업**: 위치/크기/텍스트 정렬 → Unity Editor에서 수동 조정 (가이드: `Docs/SPEC-007_프리팹수정가이드_20260227.md`)
+- **배팅 화면 UI 배치 수동 조정**: 프리팹 위치/크기는 사용자가 Unity Editor에서 직접 (Claude 좌표 ≠ 실제 위치)
+  - OddsLabel(배당률) 위치 이동 작업 대기 중
 - **밸런스 플레이 테스트**: 도주 파아악 + 선행 4위권 확인
 - **RaceBacktestWindow 5바퀴 백테스트** 필수
 - 사용자 직접 플레이 테스트 (비주얼 확인, 타이밍 조정)
@@ -207,15 +208,36 @@ roundLaps=[2,2,3,5,3,2,4]
 - 캐릭터 스폰 Y위치/속도, 로고 크기/위치 미세 조정
 - SampleScene 직접 시작 시 BGM 재생 처리 (SceneBootstrapper 보완)
 - EasyChart 순위 차트 런타임 테스트 (이전 세션 미완료)
-- Pixem 에디터: `CharacterPrefabNameInput` (InputField) Inspector에서 수동 연결 필요
 - 런타임 전체 흐름 테스트 (charId 기반 배팅/결과/세이브)
 
+## Completed (as of 2026-03-02)
+- **BetOrderLabel 클릭 차단 버그 수정**
+  - 원인: BettingPanel.prefab에서 CharacterInfoPopup이 active=True → Image(raycast=True)가 캐릭터 리스트 덮음
+  - 수정: CharacterInfoPopup active=False (프리팹 기본값)
+- **CharacterItem 행 높이 조절**: Layout Element Preferred Height 150→90
+- **MCP 안정화**
+  - ProjectSettings: Enter Play Mode → `Reload Scene Only` (Domain Reload 비활성화) — git으로 자동 동기화됨
+  - ConditionIconFactory: `cached != null` 체크 추가 → 씬 리로드 후 파괴된 Sprite 재생성
+  - `Docs/setup/mcp_kill_zombie.bat` — 좀비 프로세스 정리 배치
+  - `Docs/setup/mcp_watchdog.ps1` — MCP 다운 감지 워치독
+- **다국어 텍스트 수정**
+  - `str.ui.panel.bet_title` / `str.ui.betting.title`: "Bet Select" 기준 전 언어 번역 통일 (ja 제외)
+  - BettingPanel.prefab TitleText: BestFit 활성화 (min:10, max:40) → 다국어 텍스트 영역 초과 방지
+- **멀티PC + UI 디자이너 협업 환경 구축**
+  - `CLAUDE.md` (프로젝트 루트, git 동기화) — 어느 PC에서나 Claude가 자동 로드
+  - `auto_setup.ps1` Step 7: MEMORY.md → Claude 메모리 폴더 자동 동기화
+  - `Assets/Design/Incoming/` + `전달노트_양식.md` — UI 디자이너 파일 전달 시스템
+  - `Docs/specs/UI_배팅화면_리소스_명세서_20260301.md` — 디자이너 작업 명세서
+
 ## MCP 주의사항
-- `unity-code-mcp-stdio` 서버가 Unity 상태 변경(Play/Recompile) 시 크래시 → 좀비 프로세스 누적
-- 새 세션 시작 전: `Get-Process unity-code-mcp-stdio | Stop-Process -Force` 실행 권장
-- Play 모드 전환 중 MCP 사용 자제
+- `unity-code-mcp-stdio` 서버가 Unity 상태 변경(Recompile) 시 크래시 → 좀비 프로세스 누적
+- Play 모드는 `Reload Scene Only`로 설정 완료 → Play 시 MCP 끊김 해결됨
+- 새 세션 시작 전: `Docs/setup/mcp_kill_zombie.bat` 실행 권장 (또는 `Get-Process unity-code-mcp-stdio | Stop-Process -Force`)
+- **세션 중 MCP 재시작해도 해당 대화에서는 툴 재등록 안 됨 → 새 Claude 세션 필요**
+- MCP 스크립트는 단순하게 작성 (재귀/긴 루프 → 타임아웃 유발)
 
 ## Detail docs
+- See [history/버그수정_MCP안정화_다국어_인수인계_20260302.md](./history/버그수정_MCP안정화_다국어_인수인계_20260302.md) for latest handover (2026-03-02)
 - See [SPEC-007_인수인계서_20260227.md](./SPEC-007_인수인계서_20260227.md) for SPEC-007 handover
 - See [SPEC-007_프리팹수정가이드_20260227.md](./SPEC-007_프리팹수정가이드_20260227.md) for prefab manual editing guide
 - See [2026-02-22_EasyChart순위그래프전환_인수인계.md](./2026-02-22_EasyChart순위그래프전환_인수인계.md) for EasyChart handover
