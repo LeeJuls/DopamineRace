@@ -61,6 +61,8 @@ crashlytics-build.properties
 # Claude Code 설정 (로컬 전용, agents/는 공유)
 .claude/*
 !.claude/agents/
+# Scripts 폴더 안에 생성된 Claude Code 설정도 무시
+Assets/Scripts/.claude/
 
 # MCP 브릿지 로그
 unity_code_mcp_bridge.log
