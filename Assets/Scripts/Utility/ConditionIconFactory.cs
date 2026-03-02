@@ -26,7 +26,7 @@ public static class ConditionIconFactory
         if (cache == null)
             cache = new Dictionary<Condition, Sprite>();
 
-        if (cache.TryGetValue(condition, out Sprite cached))
+        if (cache.TryGetValue(condition, out Sprite cached) && cached != null)
             return cached;
 
         Color color;
