@@ -73,7 +73,7 @@ str.ui.btn.close,닫기,Close,閉じる,关闭,Schließen,Cerrar,Fechar
 str.ui.btn.top100,Top 100,Top 100,Top 100,Top 100,Top 100,Top 100,Top 100
 str.ui.btn.panel_close,◀,◀,◀,◀,◀,◀,◀
 str.ui.btn.panel_open,▶,▶,▶,▶,▶,▶,▶
-str.ui.panel.bet_title,배팅 선택,Place Your Bet,ベット選択,下注选择,Wette platzieren,Apostar,Apostar
+str.ui.panel.bet_title,배팅 선택,Bet Select,ベット選択,投注选择,Wett-Auswahl,Selección de Apuesta,Seleção de Aposta
 str.leaderboard.title,Top 100 리더보드,Top 100 Leaderboard,Top 100リーダーボード,Top 100 排行榜,Top 100 Rangliste,Top 100 Clasificación,Top 100 Classificação
 str.leaderboard.header,순위    점수    적중    날짜              요약,"Rank    Score    Hits    Date              Summary",順位    点数    的中    日付              概要,排名    分数    命中    日期              摘要,Rang    Punkte    Treffer    Datum              Übersicht,Rango    Puntos    Aciertos    Fecha              Resumen,Posição    Pontos    Acertos    Data              Resumo
 str.leaderboard.empty,"기록이 없습니다.\n게임을 완료하면 자동으로 기록됩니다.","No records yet.\nComplete a game to save your score.",記録がありません。,"暂无记录。\n完成游戏后自动保存。","Noch keine Einträge.\nBeende ein Spiel zum Speichern.","Sin registros.\nCompleta un juego para guardar.","Sem registros.\nComplete um jogo para salvar."
@@ -106,7 +106,7 @@ str.finish.score_zero,+0점,+0 pts,+0点,+0分,+0 Pkt,+0 pts,+0 pts
 str.finish.total,"총점: {0}점  ({1}/{2} 적중)","Total: {0} pts  ({1}/{2} hits)","合計: {0}点（{1}/{2}的中）","总分: {0}分（{1}/{2}命中）","Gesamt: {0} Pkt  ({1}/{2} Treffer)","Total: {0} pts  ({1}/{2} aciertos)","Total: {0} pts  ({1}/{2} acertos)"
 str.leaderboard.row,"{0}위  {1}점  {2}R  {3}  {4}","{0}th  {1}pts  {2}R  {3}  {4}",{0}位  {1}点  {2}R  {3}  {4},{0}名  {1}分  {2}轮  {3}  {4},{0}.  {1}Pkt  {2}R  {3}  {4},{0}º  {1}pts  {2}R  {3}  {4},{0}º  {1}pts  {2}R  {3}  {4}
 str.ui.betting.round,{0}라운드,Round {0},{0}ラウンド,第{0}轮,Runde {0},Ronda {0},Rodada {0}
-str.ui.betting.title,배팅 선택!,Place Your Bet!,ベット選択！,下注选择！,Wette platzieren!,¡Apostar!,Apostar!
+str.ui.betting.title,배팅 선택!,Bet Select!,ベット選択！,投注选择！,Wett-Auswahl!,¡Selección de Apuesta!,Seleção de Aposta!
 str.ui.betting.odds,배당률 : {0}배,Odds : {0}x,配当率 : {0}倍,赔率: {0}倍,Quote: {0}x,Cuota: {0}x,Cota: {0}x
 str.ui.betting.odds_empty,배당률 : - 배,Odds : -,配当率 : -,赔率: -,Quote: -,Cuota: -,Cota: -
 str.ui.betting.points_label,{0} 획득 포인트,{0} Points,{0} 獲得ポイント,{0} 获得积分,{0} Punkte,{0} Puntos,{0} Pontos
