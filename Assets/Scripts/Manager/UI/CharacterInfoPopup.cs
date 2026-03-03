@@ -62,7 +62,7 @@ public class CharacterInfoPopup : MonoBehaviour
         Transform layout1 = transform.Find("Layout1_TopArea");
         if (layout1 != null)
         {
-            charTypeLabel = FindText(layout1, "CharTypeLabel");
+            charTypeLabel = FindText("Layout2_Left/CharTypeLabel");
 
             Transform closeBtnObj = layout1.Find("CloseBtn");
             if (closeBtnObj != null)
@@ -318,14 +318,15 @@ public class CharacterInfoPopup : MonoBehaviour
         radar.splitNumber = 4; // 4구역 (5, 10, 15, 20)
         radar.startAngle = 90; // 상단부터 시작
         radar.center = new float[] { 0.5f, 0.5f }; // 차트 중앙
+        radar.axisName.labelStyle.textStyle.fontSize = 16; // 인디케이터 레이블 폰트 크기
 
         // 반지름: 비율 기반 + 절대 상한 (과대 렌더링 방지)
         RectTransform chartRt = radarChartArea.GetComponent<RectTransform>();
         float w = chartRt.rect.width > 0 ? chartRt.rect.width : 200f;
         float h = chartRt.rect.height > 0 ? chartRt.rect.height : 200f;
         float minDim = Mathf.Min(w, h);
-        // 영역의 30%를 반지름으로 사용하되, 최소 25px ~ 최대 80px
-        float radius = Mathf.Clamp(minDim * 0.30f, 25f, 80f);
+        // 영역의 42%를 반지름으로 사용하되, 최소 25px ~ 최대 110px
+        float radius = Mathf.Clamp(minDim * 0.42f, 25f, 110f);
         radar.radius = radius;
 
         Debug.Log($"[CharInfoPopup] InitRadarChart rect={w:F0}x{h:F0}, radius={radius:F0}");
@@ -408,8 +409,7 @@ public class CharacterInfoPopup : MonoBehaviour
         {
             statSerie.EnsureComponent<AreaStyle>();
             statSerie.EnsureComponent<LabelStyle>();
-            statSerie.areaStyle.show = true;
-            statSerie.areaStyle.color = new Color(1f, 1f, 1f, 0.3f);
+            statSerie.areaStyle.show = false; // 채움 없이 선만 표시
             statSerie.lineStyle.show = true;
             statSerie.lineStyle.color = Color.white;
             statSerie.lineStyle.width = 2f;
