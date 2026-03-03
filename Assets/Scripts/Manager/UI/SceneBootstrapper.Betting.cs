@@ -63,6 +63,13 @@ public partial class SceneBootstrapper
                 pointsFormulaText = FindText(oddsArea, "PointsFormula");
                 myPointLabel      = FindText(oddsArea, "MyPointLabel");
             }
+            // OddsArea 밖으로 이동한 경우 BetDescText 하위에서 재탐색
+            if (oddsText == null)
+            {
+                Transform betDescText = topArea.Find("BetDescText");
+                if (betDescText != null)
+                    oddsText = FindText(betDescText, "OddsText");
+            }
         }
 
         // TrackInfoPanel
@@ -269,7 +276,7 @@ public partial class SceneBootstrapper
     {
         if (myPointLabel == null) return;
         var sm = ScoreManager.Instance;
-        int total = sm != null ? sm.TotalScore : 0;
+        int total = sm != null ? sm.CurrentGameScore : 0;
         myPointLabel.text = Loc.Get("str.hud.total_score", total);
     }
 
@@ -393,6 +400,7 @@ public partial class SceneBootstrapper
         UpdateTabVisuals(tabIndex);
         UpdateButtonVisuals();
         UpdateBettingArrows();
+        if (charInfoPopup != null) charInfoPopup.Hide();
     }
 
     private void UpdateTabVisuals(int activeIndex)
@@ -518,10 +526,17 @@ public partial class SceneBootstrapper
         var bet = GameManager.Instance?.CurrentBet;
         var racers = CharacterDatabase.Instance?.SelectedCharacters;
 
+        // 배팅 타입이 선택된 순간부터 고정 배율 표시
+        if (oddsText != null)
+        {
+            if (bet != null)
+                oddsText.text = Loc.Get("str.ui.betting.odds", BettingCalculator.GetPayout(bet.type));
+            else
+                oddsText.text = Loc.Get("str.ui.betting.odds_empty");
+        }
+
         if (bet == null || bet.selections.Count == 0)
         {
-            if (oddsText != null)
-                oddsText.text = Loc.Get("str.ui.betting.odds_empty");
             if (pointsLabelText != null)
                 pointsLabelText.text = Loc.Get("str.ui.betting.points_empty");
             if (pointsFormulaText != null)
@@ -531,9 +546,6 @@ public partial class SceneBootstrapper
 
         float odds = OddsCalculator.GetExpectedOdds(bet, racers);
 
-        if (oddsText != null)
-            oddsText.text = Loc.Get("str.ui.betting.odds", odds.ToString("F1"));
-
         int basePt = BettingCalculator.GetPayout(bet.type);
         int result = Mathf.RoundToInt(basePt * odds);
 
@@ -542,7 +554,8 @@ public partial class SceneBootstrapper
                 BettingCalculator.GetTypeName(bet.type));
 
         if (pointsFormulaText != null)
-            pointsFormulaText.text = Loc.Get("str.ui.betting.points_formula",
+            pointsFormulaText.text = string.Format(
+                "<color=#FFE000>{0}</color>x<color=#FF8C00>{1}</color> = {2}",
                 basePt, odds.ToString("F1"), result);
 
         RefreshMyPoint();
