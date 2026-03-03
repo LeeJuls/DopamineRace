@@ -473,12 +473,20 @@ public static class BettingUIPrefabCreator
         storyImg.color = new Color(0.4f, 0.4f, 0.4f);
         storyBtn.AddComponent<Button>().interactable = false;
 
-        // Illustration (캐릭터 일러스트 — 부모 영역에 반응형 stretch)
-        GameObject illustObj = MkChild(layout2Left, "Illustration",
+        // IllustrationMask (크롭 마스크 — 비율은 Unity Editor에서 수동 조절)
+        GameObject illustMask = MkChild(layout2Left, "IllustrationMask",
             0.05f, 0.18f, 0.95f, 0.88f, Vector2.zero, Vector2.zero);
+        Image maskBgImg = illustMask.AddComponent<Image>();
+        maskBgImg.color = Color.clear; // 마스크 이미지 투명
+        UnityEngine.UI.Mask maskComp = illustMask.AddComponent<UnityEngine.UI.Mask>();
+        maskComp.showMaskGraphic = false;
+
+        // Illustration (IllustrationMask 자식 — stretch fill)
+        GameObject illustObj = MkChild(illustMask, "Illustration",
+            0f, 0f, 1f, 1f, Vector2.zero, Vector2.zero);
         Image illustImg = illustObj.AddComponent<Image>();
         illustImg.color = Color.white;
-        illustImg.preserveAspect = true;
+        illustImg.preserveAspect = false; // 마스크로 크롭하므로 false
 
         // WinRateBg (승률 배경 — 검정 50% 반투명)
         GameObject winRateBg = MkChild(layout2Left, "WinRateBg",
@@ -743,6 +751,48 @@ public static class BettingUIPrefabCreator
 
                     changed = true;
                     Debug.Log("[Patch] WinRateBg 추가 (승률 배경 박스)");
+                }
+            }
+
+            // ── IllustrationMask (이미지 크롭 마스크) ──
+            if (layout2Left != null)
+            {
+                Transform illustDirect = layout2Left.Find("Illustration");
+                Transform illustMaskTr = layout2Left.Find("IllustrationMask");
+                if (illustDirect != null && illustMaskTr == null)
+                {
+                    // 기존 Illustration의 RectTransform 값 저장
+                    RectTransform illustRt = illustDirect.GetComponent<RectTransform>();
+                    Vector2 savedAnchorMin = illustRt.anchorMin;
+                    Vector2 savedAnchorMax = illustRt.anchorMax;
+                    Vector2 savedPos       = illustRt.anchoredPosition;
+                    Vector2 savedSize      = illustRt.sizeDelta;
+
+                    // IllustrationMask 생성 (기존 Illustration 위치 그대로)
+                    GameObject maskObj = PatchMkChild(layout2Left, "IllustrationMask",
+                        savedAnchorMin.x, savedAnchorMin.y, savedAnchorMax.x, savedAnchorMax.y);
+                    RectTransform maskRt = maskObj.GetComponent<RectTransform>();
+                    maskRt.anchoredPosition = savedPos;
+                    maskRt.sizeDelta        = savedSize;
+
+                    Image maskImg = maskObj.AddComponent<Image>();
+                    maskImg.color = Color.clear;
+                    UnityEngine.UI.Mask mc = maskObj.AddComponent<UnityEngine.UI.Mask>();
+                    mc.showMaskGraphic = false;
+
+                    // Illustration을 IllustrationMask 자식으로 이동 + stretch
+                    illustDirect.SetParent(maskObj.transform, false);
+                    illustRt.anchorMin        = Vector2.zero;
+                    illustRt.anchorMax        = Vector2.one;
+                    illustRt.anchoredPosition = Vector2.zero;
+                    illustRt.sizeDelta        = Vector2.zero;
+
+                    // preserveAspect 해제 (마스크 크롭 방식)
+                    Image illustImg = illustDirect.GetComponent<Image>();
+                    if (illustImg != null) illustImg.preserveAspect = false;
+
+                    changed = true;
+                    Debug.Log("[Patch] IllustrationMask 추가 + Illustration 이동 완료");
                 }
             }
 

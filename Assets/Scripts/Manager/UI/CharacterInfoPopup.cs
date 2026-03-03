@@ -105,7 +105,9 @@ public class CharacterInfoPopup : MonoBehaviour
         Transform layout2Left = transform.Find("Layout2_Left");
         if (layout2Left != null)
         {
-            Transform illustObj = layout2Left.Find("Illustration");
+            // IllustrationMask/Illustration 우선 탐색, 구버전(직속) 호환
+            Transform illustObj = layout2Left.Find("IllustrationMask/Illustration");
+            if (illustObj == null) illustObj = layout2Left.Find("Illustration");
             if (illustObj != null)
                 illustration = illustObj.GetComponent<Image>();
 
@@ -318,7 +320,8 @@ public class CharacterInfoPopup : MonoBehaviour
         radar.splitNumber = 4; // 4구역 (5, 10, 15, 20)
         radar.startAngle = 90; // 상단부터 시작
         radar.center = new float[] { 0.5f, 0.5f }; // 차트 중앙
-        radar.axisName.labelStyle.textStyle.fontSize = 16; // 인디케이터 레이블 폰트 크기
+        radar.axisName.labelStyle.textStyle.fontSize = 24; // 인디케이터 레이블 폰트 크기
+        radar.axisName.labelStyle.textStyle.color = Color.white; // 레이블 색상 흰색
 
         // 반지름: 비율 기반 + 절대 상한 (과대 렌더링 방지)
         RectTransform chartRt = radarChartArea.GetComponent<RectTransform>();
@@ -450,28 +453,13 @@ public class CharacterInfoPopup : MonoBehaviour
         if (recentRecordHeader != null)
             recentRecordHeader.text = Loc.Get("str.ui.char.recent_record");
 
-        // 거리별 라벨 + 1착 승률 (Phase 5)
+        // 거리별 라벨 (승률 표시 제거 — 순위 목록만 표시)
         if (shortDistLabel != null)
-        {
-            string label = Loc.Get("str.ui.track.short");
-            if (record != null && record.shortDistRaces > 0)
-                label += " <color=#FFD700>1st." + record.GetDistWinPct("str.ui.track.short") + "</color>";
-            shortDistLabel.text = label;
-        }
+            shortDistLabel.text = Loc.Get("str.ui.track.short");
         if (midDistLabel != null)
-        {
-            string label = Loc.Get("str.ui.track.mid");
-            if (record != null && record.midDistRaces > 0)
-                label += " <color=#FFD700>1st." + record.GetDistWinPct("str.ui.track.mid") + "</color>";
-            midDistLabel.text = label;
-        }
+            midDistLabel.text = Loc.Get("str.ui.track.mid");
         if (longDistLabel != null)
-        {
-            string label = Loc.Get("str.ui.track.long");
-            if (record != null && record.longDistRaces > 0)
-                label += " <color=#FFD700>1st." + record.GetDistWinPct("str.ui.track.long") + "</color>";
-            longDistLabel.text = label;
-        }
+            longDistLabel.text = Loc.Get("str.ui.track.long");
 
         // 거리별 순위 분류
         List<int> shortRanks = new List<int>();
@@ -512,7 +500,7 @@ public class CharacterInfoPopup : MonoBehaviour
         var parts = new List<string>();
         foreach (int rank in ranks)
             parts.Add(ColoredRank(rank));
-        return string.Join("  ", parts.ToArray());
+        return string.Join(" ", parts.ToArray());
     }
 
     /// <summary>순위에 따른 rich text 색상 적용</summary>
