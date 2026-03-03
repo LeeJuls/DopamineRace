@@ -1090,5 +1090,49 @@ public static class BettingUIPrefabCreator
             }
         }
     }
+
+    // (임시 메뉴 제거됨 — StringTable은 CSV 직접 편집)
+    private static void _RemovedPatchStringTableKeys()
+    {
+        string csvPath = "Assets/Resources/Data/StringTable.csv";
+        string fullPath = System.IO.Path.Combine(Application.dataPath, "../" + csvPath);
+        if (!System.IO.File.Exists(fullPath))
+        {
+            Debug.LogError("[StringTable] 파일을 찾을 수 없습니다: " + fullPath);
+            return;
+        }
+
+        string content = System.IO.File.ReadAllText(fullPath, System.Text.Encoding.UTF8);
+        bool changed = false;
+
+        // str.ui.track.type_label — 경기장 상태 : {0}
+        const string key = "str.ui.track.type_label";
+        if (!content.Contains(key))
+        {
+            const string anchor = "str.ui.track.type_rain,우천,Rain,雨,雨天,Regen,Lluvia,Chuva";
+            const string newLine = "\nstr.ui.track.type_label,경기장 상태 : {0},Track Status : {0},コース状態 : {0},赛场状态 : {0},Streckenstatus : {0},Estado de pista : {0},Estado da pista : {0}";
+            if (content.Contains(anchor))
+            {
+                content = content.Replace(anchor, anchor + newLine);
+                changed = true;
+                Debug.Log("[StringTable] str.ui.track.type_label 추가 완료");
+            }
+            else
+            {
+                Debug.LogWarning("[StringTable] anchor 라인을 찾지 못했습니다. 수동으로 추가해주세요.");
+            }
+        }
+        else
+        {
+            Debug.Log("[StringTable] str.ui.track.type_label 이미 존재합니다.");
+        }
+
+        if (changed)
+        {
+            System.IO.File.WriteAllText(fullPath, content, System.Text.Encoding.UTF8);
+            AssetDatabase.ImportAsset(csvPath);
+            Debug.Log("[StringTable] 패치 완료 — Unity가 재임포트합니다.");
+        }
+    }
 }
 #endif

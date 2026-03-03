@@ -319,12 +319,13 @@ public partial class SceneBootstrapper
         if (distanceLabel != null)
             distanceLabel.text = Loc.Get("str.ui.track.distance", Loc.Get(distKey), laps);
 
-        // Phase 2: GetTrackTypeKey() 사용 (하드코딩 E_Dirt 제거)
+        // 경기장 상태 : {트랙타입} 형식으로 표시
         if (trackTypeLabel != null)
         {
-            trackTypeLabel.text = trackInfo != null
+            string typeStr = trackInfo != null
                 ? Loc.Get(TrackTypeUtil.GetTrackTypeKey(trackInfo.trackType))
                 : Loc.Get("str.ui.track.type_base");
+            trackTypeLabel.text = Loc.Get("str.ui.track.type_label", typeStr);
         }
 
         // Phase 2: 트랙 설명 표시
