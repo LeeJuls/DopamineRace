@@ -15,6 +15,7 @@ public class CharacterInfoPopup : MonoBehaviour
     private Text winRateLabel;
     private Text skillDescLabel;
     private Image illustration;
+    private AspectRatioFitter illustrationFitter; // 원본 비율 유지 크롭용
     private Image skillIcon;
     private Image storyIcon;
     private Button closeBtn;
@@ -109,7 +110,10 @@ public class CharacterInfoPopup : MonoBehaviour
             Transform illustObj = layout2Left.Find("IllustrationMask/Illustration");
             if (illustObj == null) illustObj = layout2Left.Find("Illustration");
             if (illustObj != null)
+            {
                 illustration = illustObj.GetComponent<Image>();
+                illustrationFitter = illustObj.GetComponent<AspectRatioFitter>();
+            }
 
             Transform storyObj = layout2Left.Find("StoryIconBtn");
             if (storyObj != null)
@@ -193,6 +197,9 @@ public class CharacterInfoPopup : MonoBehaviour
             {
                 illustration.sprite = spr;
                 illustration.color = Color.white;
+                // 원본 비율로 AspectRatioFitter 갱신 → 높이에 맞춰 가로 자동 결정
+                if (illustrationFitter != null)
+                    illustrationFitter.aspectRatio = spr.texture.width / (float)spr.texture.height;
             }
             else
             {

@@ -477,16 +477,21 @@ public static class BettingUIPrefabCreator
         GameObject illustMask = MkChild(layout2Left, "IllustrationMask",
             0.05f, 0.18f, 0.95f, 0.88f, Vector2.zero, Vector2.zero);
         Image maskBgImg = illustMask.AddComponent<Image>();
-        maskBgImg.color = Color.clear; // 마스크 이미지 투명
+        maskBgImg.color = Color.white; // Mask는 alpha>0 이어야 자식을 클리핑함
         UnityEngine.UI.Mask maskComp = illustMask.AddComponent<UnityEngine.UI.Mask>();
-        maskComp.showMaskGraphic = false;
+        maskComp.showMaskGraphic = false; // 마스크 이미지 자체는 숨김
 
-        // Illustration (IllustrationMask 자식 — stretch fill)
+        // Illustration (IllustrationMask 자식 — 세로 stretch, 가로는 AspectRatioFitter가 결정)
+        // AspectRatioFitter(HeightControlsWidth) → 높이에 맞춰 원본 비율로 가로 자동 결정
+        // → 마스크보다 넓어지면 마스크가 좌우를 크롭
         GameObject illustObj = MkChild(illustMask, "Illustration",
-            0f, 0f, 1f, 1f, Vector2.zero, Vector2.zero);
+            0.5f, 0f, 0.5f, 1f, Vector2.zero, Vector2.zero);
         Image illustImg = illustObj.AddComponent<Image>();
         illustImg.color = Color.white;
-        illustImg.preserveAspect = false; // 마스크로 크롭하므로 false
+        illustImg.preserveAspect = false;
+        AspectRatioFitter fitter = illustObj.AddComponent<AspectRatioFitter>();
+        fitter.aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
+        fitter.aspectRatio = 1.0f; // 기본값, 런타임에 실제 이미지 비율로 갱신됨
 
         // WinRateBg (승률 배경 — 검정 50% 반투명)
         GameObject winRateBg = MkChild(layout2Left, "WinRateBg",
@@ -776,23 +781,51 @@ public static class BettingUIPrefabCreator
                     maskRt.sizeDelta        = savedSize;
 
                     Image maskImg = maskObj.AddComponent<Image>();
-                    maskImg.color = Color.clear;
+                    maskImg.color = Color.white; // Mask는 alpha>0 이어야 자식을 클리핑함
                     UnityEngine.UI.Mask mc = maskObj.AddComponent<UnityEngine.UI.Mask>();
-                    mc.showMaskGraphic = false;
+                    mc.showMaskGraphic = false; // 마스크 이미지 자체는 숨김
 
-                    // Illustration을 IllustrationMask 자식으로 이동 + stretch
+                    // Illustration을 IllustrationMask 자식으로 이동
+                    // Anchor: 세로 stretch, 가로 중앙 고정 → AspectRatioFitter가 가로 결정
                     illustDirect.SetParent(maskObj.transform, false);
-                    illustRt.anchorMin        = Vector2.zero;
-                    illustRt.anchorMax        = Vector2.one;
+                    illustRt.anchorMin        = new Vector2(0.5f, 0f);
+                    illustRt.anchorMax        = new Vector2(0.5f, 1f);
                     illustRt.anchoredPosition = Vector2.zero;
                     illustRt.sizeDelta        = Vector2.zero;
 
-                    // preserveAspect 해제 (마스크 크롭 방식)
                     Image illustImg = illustDirect.GetComponent<Image>();
                     if (illustImg != null) illustImg.preserveAspect = false;
 
+                    // AspectRatioFitter 추가 (없으면)
+                    AspectRatioFitter arf = illustDirect.GetComponent<AspectRatioFitter>();
+                    if (arf == null) arf = illustDirect.gameObject.AddComponent<AspectRatioFitter>();
+                    arf.aspectMode  = AspectRatioFitter.AspectMode.HeightControlsWidth;
+                    arf.aspectRatio = 1.0f;
+
                     changed = true;
-                    Debug.Log("[Patch] IllustrationMask 추가 + Illustration 이동 완료");
+                    Debug.Log("[Patch] IllustrationMask 추가 + AspectRatioFitter 적용");
+                }
+                else if (illustMaskTr != null)
+                {
+                    // IllustrationMask는 있지만 AspectRatioFitter 미적용 상태 교정
+                    Transform illustInMask = illustMaskTr.Find("Illustration");
+                    if (illustInMask != null)
+                    {
+                        RectTransform rt = illustInMask.GetComponent<RectTransform>();
+                        if (rt != null)
+                        {
+                            rt.anchorMin        = new Vector2(0.5f, 0f);
+                            rt.anchorMax        = new Vector2(0.5f, 1f);
+                            rt.anchoredPosition = Vector2.zero;
+                            rt.sizeDelta        = Vector2.zero;
+                        }
+                        AspectRatioFitter arf = illustInMask.GetComponent<AspectRatioFitter>();
+                        if (arf == null) arf = illustInMask.gameObject.AddComponent<AspectRatioFitter>();
+                        arf.aspectMode  = AspectRatioFitter.AspectMode.HeightControlsWidth;
+                        arf.aspectRatio = 1.0f;
+                        changed = true;
+                        Debug.Log("[Patch] Illustration AspectRatioFitter 교정 적용");
+                    }
                 }
             }
 
