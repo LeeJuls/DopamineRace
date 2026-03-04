@@ -82,7 +82,7 @@ public partial class SceneBootstrapper
             string mark = myPicks.Contains(r.RacerIndex) ? " ★" : "";
             string lapInfo = r.IsFinished ? Loc.Get("str.hud.finished") : "[" + Loc.Get("str.hud.lap_progress", r.CurrentLap, totalLaps) + "]";
             string spd = r.IsFinished ? "" : " x" + r.CurrentSpeed.ToString("F1");
-            rankTexts[i].text = Loc.Get("str.hud.rank", i + 1) + " " + GameConstants.RACER_NAMES[r.RacerIndex] + " " + lapInfo + spd + mark;
+            rankTexts[i].text = Loc.GetRank(i + 1) + " " + GameConstants.RACER_NAMES[r.RacerIndex] + " " + lapInfo + spd + mark;
             rankTexts[i].color = myPicks.Contains(r.RacerIndex) ? new Color(1f, 0.9f, 0.3f) : Color.white;
         }
     }

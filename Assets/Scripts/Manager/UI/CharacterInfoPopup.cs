@@ -513,7 +513,7 @@ public class CharacterInfoPopup : MonoBehaviour
     /// <summary>순위에 따른 rich text 색상 적용</summary>
     private string ColoredRank(int rank)
     {
-        string rankText = Loc.Get("str.hud.rank", rank);
+        string rankText = Loc.GetRank(rank);
         switch (rank)
         {
             case 1:  return "<color=#FFD700>" + rankText + "</color>";
