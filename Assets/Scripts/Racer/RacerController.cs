@@ -306,7 +306,7 @@ public class RacerController : MonoBehaviour
         // 스탯이 없으면 레거시 방식 (fallback)
         if (charData == null)
         {
-            return UnityEngine.Random.Range(gs.racerMinSpeed, gs.racerMaxSpeed);
+            return gs.globalSpeedMultiplier;
         }
 
         TrackData track = gs.currentTrack; // null이면 일반 트랙
@@ -1201,7 +1201,7 @@ public class RacerController : MonoBehaviour
                 ? GameSettings.Instance.currentTrack.speedMultiplier : 1f;
             return charData.SpeedMultiplier * GameSettings.Instance.globalSpeedMultiplier * trackMul;
         }
-        return GameSettings.Instance.racerMinSpeed;
+        return GameSettings.Instance.globalSpeedMultiplier;
     }
 
     // ══════════════════════════════════════

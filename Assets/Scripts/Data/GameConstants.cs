@@ -19,10 +19,6 @@ public static class GameConstants
             return S.racerCount;
         }
     }
-    public static float RACER_MIN_SPEED => S.racerMinSpeed;
-    public static float RACER_MAX_SPEED => S.racerMaxSpeed;
-    public static float SPEED_CHANGE_INTERVAL => S.speedChangeInterval;
-    public static float SPEED_LERP_RATE => S.speedLerpRate;
     public static int TOTAL_LAPS => S.GetLapsForRound(1);
     public static int FIRST_PLACE_SCORE => S.firstPlaceScore;
     public static int SECOND_PLACE_SCORE => S.secondPlaceScore;

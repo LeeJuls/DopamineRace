@@ -11,19 +11,6 @@ public class GameSettings : ScriptableObject
     [Range(2, 12)]
     public int racerCount = 8;
 
-    [Header("═══ 속도 설정 (레거시 - A-2에서 교체 예정) ═══")]
-    [Tooltip("최소 속도")]
-    public float racerMinSpeed = 1.0f;
-
-    [Tooltip("최대 속도")]
-    public float racerMaxSpeed = 4.0f;
-
-    [Tooltip("속도 변경 간격 (초)")]
-    public float speedChangeInterval = 3f;
-
-    [Tooltip("속도 보간 속도")]
-    public float speedLerpRate = 3f;
-
     [Header("═══ 라운드 설정 ═══")]
     [Tooltip("라운드별 바퀴 수 (배열 길이 = 총 라운드 수)\n예: [1,2,1,5,3,1,4] → 7라운드")]
     public int[] roundLaps = new int[] { 2, 2, 3, 5, 3, 2, 4 };
@@ -237,10 +224,12 @@ public class GameSettings : ScriptableObject
     //  레이스 공식 (Inspector에서 실시간 조절)
     // ══════════════════════════════════════
 
-    [Header("═══ 레이스 기본 공식 ═══")]
-    [Tooltip("전체 속도 배율 (캐릭터 speed에 곱해짐)")]
-    [Range(0.5f, 5.0f)]
+    [Header("═══ 속도 설정 ═══")]
+    [Tooltip("기본 달리기 속도 배율. 높일수록 전체 레이스 속도가 빨라짐.\n(캐릭터 Speed 스탯 × 이 값 × 트랙 배율 = 기본속도)")]
+    [Range(0.5f, 10.0f)]
     public float globalSpeedMultiplier = 2.5f;
+
+    [Header("═══ 레이스 기본 공식 ═══")]
 
     [Tooltip("calm 기반 속도 변동 배율\n높을수록 calm 낮은 캐릭터 속도 요동 큼")]
     [Range(0f, 0.5f)]
