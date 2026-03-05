@@ -102,10 +102,10 @@ str.finish.title,Finish!!,Finish!!,フィニッシュ！！,终点！！,Ziel!!,
 str.finish.round_header,라운드별 결과,Round Results,ラウンド別結果,各轮结果,Rundenergebnisse,Resultados por Ronda,Resultados por Rodada
 str.finish.hit,적중!,Hit!,的中！,命中！,Treffer!,¡Acierto!,Acertou!
 str.finish.miss,실패,Miss,失敗,失败,Daneben,Fallo,Errou
-str.finish.score_plus,+{0}점,+{0} pts,+{0}点,+{0}分,+{0} Pkt,+{0} pts,+{0} pts
-str.finish.score_zero,+0점,+0 pts,+0点,+0分,+0 Pkt,+0 pts,+0 pts
+str.finish.score_plus,+{0}점,+{0}pt,+{0}点,+{0}分,+{0} Pkt,+{0} pts,+{0} pts
+str.finish.score_zero,+0점,+0pt,+0点,+0分,+0 Pkt,+0 pts,+0 pts
 str.finish.total,"총점: {0}점  ({1}/{2} 적중)","Total: {0} pts  ({1}/{2} hits)","合計: {0}点（{1}/{2}的中）","总分: {0}分（{1}/{2}命中）","Gesamt: {0} Pkt  ({1}/{2} Treffer)","Total: {0} pts  ({1}/{2} aciertos)","Total: {0} pts  ({1}/{2} acertos)"
-str.leaderboard.row,"{0}위  {1}점  {2}R  {3}  {4}","{0}  {1}pts  {2}R  {3}  {4}",{0}位  {1}点  {2}R  {3}  {4},{0}名  {1}分  {2}轮  {3}  {4},{0}.  {1}Pkt  {2}R  {3}  {4},{0}º  {1}pts  {2}R  {3}  {4},{0}º  {1}pts  {2}R  {3}  {4}
+str.leaderboard.row,"{0}위  {1}점  {2}R  {3}  {4}","{0}  {1}pt  {2}R  {3}  {4}",{0}位  {1}点  {2}R  {3}  {4},{0}名  {1}分  {2}轮  {3}  {4},{0}.  {1}Pkt  {2}R  {3}  {4},{0}º  {1}pts  {2}R  {3}  {4},{0}º  {1}pts  {2}R  {3}  {4}
 str.ui.betting.round,{0}라운드,Round {0},{0}ラウンド,第{0}轮,Runde {0},Ronda {0},Rodada {0}
 str.ui.betting.title,배팅 선택!,Bet Select!,ベット選択！,投注选择！,Wett-Auswahl!,¡Selección de Apuesta!,Seleção de Aposta!
 str.ui.betting.odds,배당률 : {0}배,Odds : {0}x,配当率 : {0}倍,赔率: {0}倍,Quote: {0}x,Cuota: {0}x,Cota: {0}x

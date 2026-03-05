@@ -294,15 +294,17 @@ public class ScoreManager : MonoBehaviour
         return currentGameAppearances.ContainsKey(charId) ? currentGameAppearances[charId] : 0;
     }
 
-    /// <summary>라운드 결과 요약 문자열 (결과 화면용)</summary>
+    /// <summary>라운드 결과 요약 문자열 (리더보드 저장용 — 현재 언어로 포맷)</summary>
     public string GetRoundSummary()
     {
-        if (RoundHistory.Count == 0) return "기록 없음";
+        if (RoundHistory.Count == 0) return "-";
         var parts = new List<string>();
         foreach (var r in RoundHistory)
         {
             string typeName = BettingCalculator.GetTypeName(r.betType);
-            string scoreStr = r.score > 0 ? "+" + r.score + "점" : "+0점";
+            string scoreStr = r.score > 0
+                ? Loc.Get("str.finish.score_plus", r.score)
+                : Loc.Get("str.finish.score_zero");
             parts.Add("R" + r.round + ": " + typeName + " " + scoreStr);
         }
         return string.Join(" | ", parts.ToArray());
