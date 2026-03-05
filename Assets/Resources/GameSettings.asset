@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc087597b8911e547bfa008df77a4b6c, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: Assembly-CSharp::GameSettings
-  racerCount: 8
+  racerCount: 9
   roundLaps: 0100000002000000030000000200000004000000
   payoutWin: 8
   payoutPlace: 3
@@ -88,7 +88,7 @@ MonoBehaviour:
   midDistanceMax: 4
   bettingPanelPrefab: {fileID: 5633231458979343494, guid: fef3be23b6c277c46bc725f43e7daa89, type: 3}
   characterItemPrefab: {fileID: 5916920405917991211, guid: 39d93f93d300bd5428eea2e210d9d88f, type: 3}
-  resultPanelPrefab: {fileID: 5516585375138630484, guid: be432a661f51cfd42be4d64449198572, type: 3}
+  resultPanelPrefab: {fileID: 8567012208848269126, guid: be432a661f51cfd42be4d64449198572, type: 3}
   pathDeviation: 0.7
   characterScale: 1.2
   laneOffset: 0.05

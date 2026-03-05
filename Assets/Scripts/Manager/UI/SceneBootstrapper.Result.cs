@@ -46,7 +46,7 @@ public partial class SceneBootstrapper
         }
     }
 
-    /// <summary>프리팹 내부 요소 참조 캐싱 (v2: 전체 순위 + PickArrow)</summary>
+    /// <summary>프리팹 내부 요소 참조 캐싱 (v3: 9행 고정 + PickArrow)</summary>
     private void CacheResultUIReferences(Transform root)
     {
         // TitleText
@@ -120,15 +120,12 @@ public partial class SceneBootstrapper
             resultTitleText.color = score > 0 ? COLOR_RESULT_WIN : COLOR_RESULT_LOSE;
         }
 
-        // ── RankSection: 전체 순위 표시 ──
+        // ── RankSection: 전체 순위 표시 (9행 고정, 항상 전부 활성) ──
         var db = CharacterDatabase.Instance;
         for (int i = 0; i < MAX_RANK_ROWS; i++)
         {
             if (resultRankRows[i] == null) continue;
-
-            bool active = i < totalRacers;
-            resultRankRows[i].SetActive(active);
-            if (!active) continue;
+            if (i >= totalRacers) continue; // 혹시 레이서 수가 9 미만일 때만 방어
 
             int racerIdx = rankings[i].racerIndex;
 
