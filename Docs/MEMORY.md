@@ -236,7 +236,27 @@ roundLaps=[2,2,3,5,3,2,4]
 - **세션 중 MCP 재시작해도 해당 대화에서는 툴 재등록 안 됨 → 새 Claude 세션 필요**
 - MCP 스크립트는 단순하게 작성 (재귀/긴 루프 → 타임아웃 유발)
 
+## Completed (as of 2026-03-03)
+- **캐릭터 정보 팝업 UI 개선**
+  - CharTypeLabel 탐색 경로: Layout1 → `"Layout2_Left/CharTypeLabel"` (슬래시 경로)
+  - StoryIconBtn 제거 (BettingPanel.prefab 수동)
+  - RadarChart 확대: radius 0.30→0.42, max 80→110px, 레이블 24px 흰색, 채움 제거
+  - 거리별 승률(1st.n%) 제거 → 순위만 공백 구분 표시 (예: `단거리  3위 7위 5위`)
+- **IllustrationMask (일러스트 좌우 크롭)**
+  - 구조: `IllustrationMask(Image+Mask)` → `Illustration(Image+AspectRatioFitter:HeightControlsWidth)`
+  - 런타임 스프라이트 로드 후 `fitter.aspectRatio = w/h` 갱신
+  - BettingUIPrefabCreator Create/Patch 양쪽 지원
+  - **Color.white 필수** (clear면 Mask가 자식 전체 숨김)
+- **TrackTypeLabel 형식 개선**: 타입 단독 → `"경기장 상태 : {0}"` (str.ui.track.type_label 키 신규)
+- **SPEC-007 업데이트**: 레이더차트 확대 완료 표시 + 부록C 추가 작업 내역
+- 최신 커밋: `e18cbf2` (push 완료)
+
+### 수동 작업 대기 (Unity Inspector)
+- Layout2_Left의 HorizontalLayoutGroup 제거 → CharTypeLabel 자유 배치 가능
+- IllustrationMask 높이 조절로 크롭 범위 조절
+
 ## Detail docs
+- See [history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md](./history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md) for latest handover (2026-03-03)
 - See [history/버그수정_MCP안정화_다국어_인수인계_20260302.md](./history/버그수정_MCP안정화_다국어_인수인계_20260302.md) for latest handover (2026-03-02)
 - See [SPEC-007_인수인계서_20260227.md](./SPEC-007_인수인계서_20260227.md) for SPEC-007 handover
 - See [SPEC-007_프리팹수정가이드_20260227.md](./SPEC-007_프리팹수정가이드_20260227.md) for prefab manual editing guide
