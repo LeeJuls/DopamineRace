@@ -63,7 +63,9 @@ public partial class SceneBootstrapper
 
                 resultRankRows[i] = row.gameObject;
 
-                Transform iconT = row.Find("CharIcon");
+                // CharIconMask > CharIcon 구조 (v4: 얼굴 크롭) / legacy fallback
+                Transform iconT = row.Find("CharIconMask/CharIcon");
+                if (iconT == null) iconT = row.Find("CharIcon");
                 if (iconT != null) resultRankIcons[i] = iconT.GetComponent<Image>();
 
                 Transform nameT = row.Find("CharName");
@@ -154,7 +156,7 @@ public partial class SceneBootstrapper
                 }
             }
 
-            // 아이콘
+            // 아이콘 (RectMask2D 얼굴 크롭 — AspectRatioFitter로 비율 자동 조정)
             if (resultRankIcons[i] != null)
             {
                 if (charData != null)
@@ -163,12 +165,17 @@ public partial class SceneBootstrapper
                     if (spr != null)
                     {
                         resultRankIcons[i].sprite = spr;
-                        resultRankIcons[i].color = Color.white;
+                        resultRankIcons[i].color  = Color.white;
+                        // 스프라이트 실제 비율로 AspectRatioFitter 갱신
+                        // → 너비(30px) 고정, 높이를 비율에 맞게 늘려 마스크 밖으로 뻗게 함
+                        var fitter = resultRankIcons[i].GetComponent<AspectRatioFitter>();
+                        if (fitter != null && spr.rect.height > 0f)
+                            fitter.aspectRatio = spr.rect.width / spr.rect.height;
                     }
                     else
                     {
                         resultRankIcons[i].sprite = null;
-                        resultRankIcons[i].color = new Color(0.3f, 0.3f, 0.3f);
+                        resultRankIcons[i].color  = new Color(0.3f, 0.3f, 0.3f);
                     }
                 }
             }

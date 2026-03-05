@@ -283,13 +283,29 @@ public static class ResultUIPrefabCreator
         bt.color = Color.black;
         if (font != null) bt.font = font;
 
-        // CharIcon
+        // CharIconMask (30×30 RectMask2D — 얼굴 영역만 보이도록 클리핑)
+        GameObject iconMask = new GameObject("CharIconMask");
+        iconMask.transform.SetParent(row.transform, false);
+        SetLeftCenter(iconMask, xIcon, COL_ICON, COL_ICON);
+        iconMask.AddComponent<RectMask2D>();
+
+        // CharIcon (실제 스프라이트 — 상단 앵커로 얼굴 노출, AspectRatioFitter로 높이 자동 조정)
         GameObject icon = new GameObject("CharIcon");
-        icon.transform.SetParent(row.transform, false);
-        SetLeftCenter(icon, xIcon, COL_ICON, COL_ICON);
+        icon.transform.SetParent(iconMask.transform, false);
+        RectTransform iconRt = icon.AddComponent<RectTransform>();
+        iconRt.anchorMin        = new Vector2(0f, 1f);   // 너비 stretch (좌→우)
+        iconRt.anchorMax        = new Vector2(1f, 1f);   // y: 마스크 상단 고정
+        iconRt.pivot            = new Vector2(0.5f, 1f);
+        iconRt.anchoredPosition = Vector2.zero;
+        iconRt.sizeDelta        = new Vector2(0f, 75f);  // 너비=부모, 초기 높이=75px
         Image iconImg = icon.AddComponent<Image>();
-        iconImg.color = new Color(0.3f, 0.3f, 0.3f, 1f);
-        iconImg.preserveAspect = true;
+        iconImg.color          = new Color(0.3f, 0.3f, 0.3f, 1f); // 스프라이트 없을 때 회색
+        iconImg.preserveAspect = false;
+        // WidthControlsHeight: 30px 너비 기준으로 높이를 비율에 맞게 조정
+        // aspectRatio는 런타임(ShowResult)에서 실제 스프라이트 비율로 갱신
+        AspectRatioFitter iconFitter = icon.AddComponent<AspectRatioFitter>();
+        iconFitter.aspectMode  = AspectRatioFitter.AspectMode.WidthControlsHeight;
+        iconFitter.aspectRatio = 0.4f; // 기본값 (너비:높이 ≈ 2:5)
 
         // CharName
         GameObject charName = new GameObject("CharName");
@@ -401,6 +417,61 @@ public static class ResultUIPrefabCreator
                 {
                     Debug.Log("[ResultUIPrefabCreator][Patch] " + rowName + " HorizontalLayoutGroup 제거");
                     UnityEngine.Object.DestroyImmediate(oldHlg);
+                }
+
+                // CharIconMask 없으면 추가 (기존 CharIcon을 마스크 방식으로 전환)
+                if (existingRow.Find("CharIconMask") == null)
+                {
+                    float xIconPos = COL_LEFT_PAD + COL_BADGE + COL_SPACING;
+                    Debug.Log("[ResultUIPrefabCreator][Patch] " + rowName + "/CharIconMask 없음 → 추가");
+
+                    Transform oldIcon = existingRow.Find("CharIcon");
+
+                    GameObject iconMask = new GameObject("CharIconMask");
+                    iconMask.transform.SetParent(existingRow, false);
+                    SetLeftCenter(iconMask, xIconPos, COL_ICON, COL_ICON);
+                    iconMask.AddComponent<RectMask2D>();
+
+                    if (oldIcon != null)
+                    {
+                        // 기존 CharIcon을 CharIconMask 안으로 이동
+                        oldIcon.SetParent(iconMask.transform, false);
+                        RectTransform oldIconRt = oldIcon.GetComponent<RectTransform>();
+                        if (oldIconRt != null)
+                        {
+                            oldIconRt.anchorMin        = new Vector2(0f, 1f);
+                            oldIconRt.anchorMax        = new Vector2(1f, 1f);
+                            oldIconRt.pivot            = new Vector2(0.5f, 1f);
+                            oldIconRt.anchoredPosition = Vector2.zero;
+                            oldIconRt.sizeDelta        = new Vector2(0f, 75f);
+                        }
+                        Image oldImg = oldIcon.GetComponent<Image>();
+                        if (oldImg != null) oldImg.preserveAspect = false;
+                        if (oldIcon.GetComponent<AspectRatioFitter>() == null)
+                        {
+                            var fit = oldIcon.gameObject.AddComponent<AspectRatioFitter>();
+                            fit.aspectMode  = AspectRatioFitter.AspectMode.WidthControlsHeight;
+                            fit.aspectRatio = 0.4f;
+                        }
+                    }
+                    else
+                    {
+                        // CharIcon 자체가 없으면 새로 생성
+                        GameObject icon = new GameObject("CharIcon");
+                        icon.transform.SetParent(iconMask.transform, false);
+                        RectTransform iconRt = icon.AddComponent<RectTransform>();
+                        iconRt.anchorMin        = new Vector2(0f, 1f);
+                        iconRt.anchorMax        = new Vector2(1f, 1f);
+                        iconRt.pivot            = new Vector2(0.5f, 1f);
+                        iconRt.anchoredPosition = Vector2.zero;
+                        iconRt.sizeDelta        = new Vector2(0f, 75f);
+                        Image iconImg = icon.AddComponent<Image>();
+                        iconImg.color          = new Color(0.3f, 0.3f, 0.3f, 1f);
+                        iconImg.preserveAspect = false;
+                        var fit = icon.AddComponent<AspectRatioFitter>();
+                        fit.aspectMode  = AspectRatioFitter.AspectMode.WidthControlsHeight;
+                        fit.aspectRatio = 0.4f;
+                    }
                 }
 
                 // PickArrow 없으면 추가
