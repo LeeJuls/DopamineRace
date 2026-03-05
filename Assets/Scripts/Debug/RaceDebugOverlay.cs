@@ -20,9 +20,9 @@ public class RaceDebugOverlay : MonoBehaviour
     private bool showDebug = false;  // 기본 비표시 → F1으로 토글
     private bool showDetail = false;
     private int viewingRound = -1;  // -1 = 현재 라운드
-    private Vector2 scrollPos;
-    private Vector2 raceLogScroll;
-    private Vector2 finishLogScroll;
+    private int activeTab = 0;      // 0=상태 1=HP 2=이벤트
+    private Vector2 tabContentScroll;
+    private static readonly string[] TabNames = { "📊 상태", "💪 HP", "⚡ 이벤트" };
     private GUIStyle headerStyle;
     private GUIStyle normalStyle;
     private GUIStyle critStyle;
@@ -63,8 +63,7 @@ public class RaceDebugOverlay : MonoBehaviour
     private int lastSnapshotLap = -1;  // 마지막으로 스냅샷을 찍은 바퀴
 
     // ── HP 탭 UI ──
-    private bool showHPTab = true;
-    private Vector2 hpTabScroll;
+    // (탭 시스템으로 전환 — 별도 스크롤 불필요)
 
     public enum EventType { Critical, CollisionHit, CollisionDodge, Slingshot, Attack, Finish, Track }
 
@@ -589,7 +588,6 @@ public class RaceDebugOverlay : MonoBehaviour
     // ══════════════════════════════════════
 
     private bool showOddsSection = true;
-    private Vector2 oddsScrollPos;
 
     /// <summary>charId → DisplayName 변환 (디버그 오버레이용)</summary>
     private string GetCharDisplayName(string charId)
@@ -628,13 +626,7 @@ public class RaceDebugOverlay : MonoBehaviour
             "<color=yellow>인기  이름    단승   컨디션         최근순위   출전</color>",
             normalStyle);
 
-        // 1줄 높이 약 16px, 3~4개 = 64px, 최대 6개 = 96px 스크롤 영역
-        float rowHeight = 16f;
-        float scrollHeight = Mathf.Clamp(odds.Count * rowHeight, rowHeight * 3.5f, rowHeight * 6f);
-
-        oddsScrollPos = GUILayout.BeginScrollView(oddsScrollPos, GUILayout.Height(scrollHeight));
-
-        // 각 캐릭터 행
+        // 각 캐릭터 행 (탭 외부 스크롤뷰로 처리)
         foreach (var info in odds)
         {
             // 인기순위 색상
@@ -670,8 +662,6 @@ public class RaceDebugOverlay : MonoBehaviour
                 info.totalRaces, newTag),
                 normalStyle);
         }
-
-        GUILayout.EndScrollView();
 
         // 하단 요약: 평균 배당
         float avgOdds = 0f;
@@ -734,7 +724,7 @@ public class RaceDebugOverlay : MonoBehaviour
 
         GUILayout.Label("🏇 Race Debug [F1:토글 F2:상세 F3:라운드]", headerStyle);
 
-        // 라운드 탭 표시
+        // 라운드 표시
         string roundLabel = viewingRound == -1
             ? "<color=#66FF66>R" + currentRound + "(LIVE)</color>"
             : "<color=#88CCFF>R" + viewingRound + "(기록)</color>";
@@ -754,155 +744,97 @@ public class RaceDebugOverlay : MonoBehaviour
         GUILayout.Label("트랙: " + trackName + "  |  보기: " + roundLabel + "  |  저장: " + allRoundLogs.Count + "R", normalStyle);
         GUILayout.Label("라운드: " + roundTabs, normalStyle);
 
-        // ★ 복사 버튼 영역
+        // ★ 복사 버튼 (항상 표시 — 탭 전환해도 전체 로그 복사 가능)
         GUILayout.BeginHorizontal();
         {
             int displayRoundForCopy = viewingRound == -1 ? currentRound : viewingRound;
 
             if (GUILayout.Button("📋 R" + displayRoundForCopy + " 로그복사", copyBtnStyle, GUILayout.Width(130), GUILayout.Height(22)))
-            {
-                string text = BuildCopyText(displayRoundForCopy);
-                CopyToClipboard(text, "R" + displayRoundForCopy + " 로그 복사됨!");
-            }
+                CopyToClipboard(BuildCopyText(displayRoundForCopy), "R" + displayRoundForCopy + " 로그 복사됨!");
 
             if (allRoundLogs.Count > 1)
             {
                 if (GUILayout.Button("📋 전체 로그복사", copyBtnStyle, GUILayout.Width(120), GUILayout.Height(22)))
-                {
-                    string text = BuildCopyTextAll();
-                    CopyToClipboard(text, "전체 " + allRoundLogs.Count + "R 로그 복사됨!");
-                }
+                    CopyToClipboard(BuildCopyTextAll(), "전체 " + allRoundLogs.Count + "R 로그 복사됨!");
             }
 
-            // 복사 피드백 표시
             if (copyFeedbackTimer > 0f)
-            {
                 GUILayout.Label("<color=#66FF66>✓ " + copyFeedbackMsg + "</color>", normalStyle);
-            }
         }
         GUILayout.EndHorizontal();
 
+        // ── 탭 선택 버튼 ──
+        GUILayout.Label("─────────────────────────────────────", normalStyle);
+        GUILayout.BeginHorizontal();
+        for (int i = 0; i < TabNames.Length; i++)
+        {
+            GUI.backgroundColor = (activeTab == i)
+                ? new Color(0.25f, 0.45f, 0.75f)
+                : new Color(0.18f, 0.18f, 0.18f);
+            if (GUILayout.Button(TabNames[i], GUILayout.Height(24)))
+            {
+                activeTab = i;
+                tabContentScroll = Vector2.zero;
+            }
+        }
+        GUI.backgroundColor = Color.white;
+        GUILayout.EndHorizontal();
         GUILayout.Label("─────────────────────────────────────", normalStyle);
 
+        // ── 탭 콘텐츠 (단일 스크롤뷰 — 고정헤더 약 142px 제외) ──
         int displayRound = viewingRound == -1 ? currentRound : viewingRound;
         RoundLog displayLog = allRoundLogs.ContainsKey(displayRound) ? allRoundLogs[displayRound] : null;
 
-        // ── 인기도 / 배당 / 컨디션 섹션 ──
+        tabContentScroll = GUILayout.BeginScrollView(tabContentScroll, GUILayout.Height(panelHeight - 142f));
+
+        switch (activeTab)
+        {
+            case 0: DrawStatusTab(displayLog); break;
+            case 1: DrawHPTabContent(displayLog); break;
+            case 2: DrawEventsTab(displayLog, displayRound); break;
+        }
+
+        GUILayout.EndScrollView();
+        GUILayout.EndArea();
+    }
+
+    // ── 탭 0: 상태 (인기도/배당 + 실시간 순위) ──
+    private void DrawStatusTab(RoundLog displayLog)
+    {
         DrawOddsSection();
 
-        // ── 상단: 레이스 상태 (현재) 또는 리포트 (과거) ──
-        float statusHeight = (panelHeight - 160) * 0.25f;
-
+        GUILayout.Label("─────────────────────────────────────", normalStyle);
         if (viewingRound == -1)
         {
-            scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Height(statusHeight));
             GUILayout.Label(showDetail ? cachedDetailText : cachedSimpleText, normalStyle);
-            GUILayout.EndScrollView();
         }
         else
         {
             GUILayout.Label("<color=#88CCFF>── 라운드 " + viewingRound + " 리포트 ──</color>", headerStyle);
-            scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Height(statusHeight));
             if (displayLog != null && !string.IsNullOrEmpty(displayLog.reportText))
                 GUILayout.Label(displayLog.reportText, normalStyle);
             else
                 GUILayout.Label("  (아직 리포트 없음)", normalStyle);
-            GUILayout.EndScrollView();
         }
-
-        // ── HP 바퀴별 스냅샷 탭 ──
-        DrawHPTab(displayLog, panelHeight);
-
-        // ── 중단: 레이싱 이벤트 ──
-        GUILayout.Label("─────────────────────────────────────", normalStyle);
-        int racingCount = displayLog != null ? displayLog.racingEvents.Count : 0;
-        GUILayout.Label("⚡ 레이싱 이벤트 R" + displayRound + " (" + racingCount + "건)", headerStyle);
-
-        float raceLogHeight = (panelHeight - 160) * 0.2f;
-        raceLogScroll = GUILayout.BeginScrollView(raceLogScroll, GUILayout.Height(raceLogHeight));
-        if (displayLog != null)
-        {
-            for (int i = 0; i < displayLog.racingEvents.Count; i++)
-            {
-                var e = displayLog.racingEvents[i];
-                string c = "#FFFFFF";
-                switch (e.type)
-                {
-                    case EventType.Critical: c = "#FF8800"; break;
-                    case EventType.CollisionHit: c = "#FF6666"; break;
-                    case EventType.CollisionDodge: c = "#88CCFF"; break;
-                    case EventType.Slingshot: c = "#66FF66"; break;
-                    case EventType.Attack: c = "#FFD700"; break;
-                    case EventType.Track: c = "#CC88FF"; break;
-                }
-                GUILayout.Label(string.Format("<color={0}>[{1:F1}s] {2} {3}</color>",
-                    c, e.time, e.GetIcon(), e.description), normalStyle);
-            }
-        }
-        GUILayout.EndScrollView();
-
-        // ── 하단: 완주 기록 ──
-        GUILayout.Label("─────────────────────────────────────", normalStyle);
-        int finishCount = displayLog != null ? displayLog.finishEvents.Count : 0;
-        GUILayout.Label("🏁 완주 기록 R" + displayRound + " (" + finishCount + "건)", headerStyle);
-
-        float finishLogHeight = (panelHeight - 160) * 0.15f;
-        finishLogScroll = GUILayout.BeginScrollView(finishLogScroll, GUILayout.Height(finishLogHeight));
-        if (displayLog != null)
-        {
-            for (int i = 0; i < displayLog.finishEvents.Count; i++)
-            {
-                var e = displayLog.finishEvents[i];
-                GUILayout.Label(string.Format("<color=#AAAAAA>[{0:F1}s] {1} {2}</color>",
-                    e.time, e.GetIcon(), e.description), normalStyle);
-            }
-        }
-        GUILayout.EndScrollView();
-
-        GUILayout.EndArea();
     }
 
-    // ══════════════════════════════════════
-    //  HP 바퀴별 스냅샷 탭
-    // ══════════════════════════════════════
-
-    private void DrawHPTab(RoundLog displayLog, float panelHeight)
+    // ── 탭 1: HP 바퀴별 스냅샷 ──
+    private void DrawHPTabContent(RoundLog displayLog)
     {
-        GUILayout.Label("─────────────────────────────────────", normalStyle);
-
-        int snapCount = displayLog != null ? displayLog.lapSnapshots.Count : 0;
-        string hpHeader = showHPTab
-            ? "▼ 💪 HP 바퀴별 (" + snapCount + "바퀴)"
-            : "▶ 💪 HP 바퀴별 (" + snapCount + "바퀴)";
-
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button(hpHeader, normalStyle, GUILayout.ExpandWidth(true)))
-            showHPTab = !showHPTab;
-        GUILayout.EndHorizontal();
-
-        if (!showHPTab) return;
-
         if (displayLog == null || displayLog.lapSnapshots.Count == 0)
         {
             GUILayout.Label("  <color=#888888>(아직 바퀴 완료 데이터 없음)</color>", normalStyle);
             return;
         }
 
-        float hpTabHeight = (panelHeight - 160) * 0.2f;
-        hpTabScroll = GUILayout.BeginScrollView(hpTabScroll, GUILayout.Height(hpTabHeight));
-
         foreach (var snapshot in displayLog.lapSnapshots)
         {
             GUILayout.Label(string.Format("<color=#FFDD44>── {0}바퀴 완료 ──</color>", snapshot.lap), normalStyle);
-
             foreach (var info in snapshot.racers)
             {
-                // HP 바 색상: >50% 초록, >20% 주황, 그 외 빨강
                 string hpColor = info.hpPercent > 50f ? "#66FF66"
                     : info.hpPercent > 20f ? "#FFAA44"
                     : "#FF4444";
-
-                // HP 바 시각화 (10칸)
                 int filled = Mathf.RoundToInt(info.hpPercent / 10f);
                 string bar = "";
                 for (int b = 0; b < 10; b++)
@@ -915,7 +847,55 @@ public class RaceDebugOverlay : MonoBehaviour
             }
             GUILayout.Space(4);
         }
-
-        GUILayout.EndScrollView();
     }
+
+    // ── 탭 2: 레이싱 이벤트 + 완주 기록 ──
+    private void DrawEventsTab(RoundLog displayLog, int displayRound)
+    {
+        int racingCount = displayLog != null ? displayLog.racingEvents.Count : 0;
+        GUILayout.Label("⚡ 레이싱 이벤트 R" + displayRound + " (" + racingCount + "건)", headerStyle);
+
+        if (displayLog != null)
+        {
+            for (int i = 0; i < displayLog.racingEvents.Count; i++)
+            {
+                var e = displayLog.racingEvents[i];
+                string c = "#FFFFFF";
+                switch (e.type)
+                {
+                    case EventType.Critical:       c = "#FF8800"; break;
+                    case EventType.CollisionHit:   c = "#FF6666"; break;
+                    case EventType.CollisionDodge: c = "#88CCFF"; break;
+                    case EventType.Slingshot:      c = "#66FF66"; break;
+                    case EventType.Attack:         c = "#FFD700"; break;
+                    case EventType.Track:          c = "#CC88FF"; break;
+                }
+                GUILayout.Label(string.Format("<color={0}>[{1:F1}s] {2} {3}</color>",
+                    c, e.time, e.GetIcon(), e.description), normalStyle);
+            }
+        }
+
+        GUILayout.Label("─────────────────────────────────────", normalStyle);
+        int finishCount = displayLog != null ? displayLog.finishEvents.Count : 0;
+        GUILayout.Label("🏁 완주 기록 R" + displayRound + " (" + finishCount + "건)", headerStyle);
+
+        if (displayLog != null)
+        {
+            for (int i = 0; i < displayLog.finishEvents.Count; i++)
+            {
+                var e = displayLog.finishEvents[i];
+                GUILayout.Label(string.Format("<color=#AAAAAA>[{0:F1}s] {1} {2}</color>",
+                    e.time, e.GetIcon(), e.description), normalStyle);
+            }
+        }
+
+        // 과거 라운드 보기 시 리포트도 표시
+        if (viewingRound != -1 && displayLog != null && !string.IsNullOrEmpty(displayLog.reportText))
+        {
+            GUILayout.Label("─────────────────────────────────────", normalStyle);
+            GUILayout.Label("<color=#88CCFF>── 라운드 리포트 ──</color>", headerStyle);
+            GUILayout.Label(displayLog.reportText, normalStyle);
+        }
+    }
+
 }
