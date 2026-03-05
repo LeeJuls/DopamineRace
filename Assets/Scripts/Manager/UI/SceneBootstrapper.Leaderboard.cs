@@ -119,7 +119,10 @@ public partial class SceneBootstrapper
             for (int i = 0; i < entries.Count; i++)
             {
                 var e = entries[i];
-                string rank    = (i + 1).ToString().PadLeft(3);
+                // 영어는 1st/2nd/3rd/4th 서수, 나머지 언어는 숫자만 (StringTable에서 위/位 등 처리)
+                string rank = Loc.CurrentLang == "en"
+                    ? GetEnOrdinal(i + 1)
+                    : (i + 1).ToString().PadLeft(3);
                 string score   = e.score.ToString().PadLeft(6);
                 string summary = e.summary;
                 if (summary.Length > 40) summary = summary.Substring(0, 40) + "...";
@@ -142,5 +145,20 @@ public partial class SceneBootstrapper
             Canvas.ForceUpdateCanvases();
             leaderboardScrollRect.normalizedPosition = new Vector2(0f, 1f);
         }
+    }
+
+    // ══════════════════════════════════════
+    //  영어 서수 헬퍼 (1→1st, 2→2nd, 3→3rd, 4~→4th)
+    //  11/12/13은 예외: 11th / 12th / 13th
+    // ══════════════════════════════════════
+    private static string GetEnOrdinal(int n)
+    {
+        int mod100 = n % 100;
+        string suffix = (mod100 >= 11 && mod100 <= 13) ? "th"
+            : (n % 10) == 1 ? "st"
+            : (n % 10) == 2 ? "nd"
+            : (n % 10) == 3 ? "rd"
+            : "th";
+        return n.ToString() + suffix;
     }
 }
