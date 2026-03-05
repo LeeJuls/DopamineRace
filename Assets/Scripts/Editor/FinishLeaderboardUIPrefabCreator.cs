@@ -415,6 +415,13 @@ public static class FinishLeaderboardUIPrefabCreator
             new Vector2(0.5f, 0.04f), new Vector2(200f, 55f),
             COLOR_BTN_RED, 28, font);
 
+        // ── 루트 크기 강제 재설정 (자식 추가 후 Unity가 sizeDelta를 변경할 수 있으므로) ──
+        rootRt.anchorMin        = new Vector2(0.5f, 0.5f);
+        rootRt.anchorMax        = new Vector2(0.5f, 0.5f);
+        rootRt.pivot            = new Vector2(0.5f, 0.5f);
+        rootRt.anchoredPosition = Vector2.zero;
+        rootRt.sizeDelta        = new Vector2(880f, 800f);
+
         return root;
     }
 
