@@ -78,6 +78,7 @@ public partial class SceneBootstrapper : MonoBehaviour
         public Image outlineImage;   // 배팅 마커 노란 테두리 (null이면 비배팅)
         public Text numberText;
         public int racerIndex;
+        public float velocity;       // SmoothDamp 관성용
     }
     private RacerCircleUI[] racerCircles;
     private RectTransform trackBarRect;

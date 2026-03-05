@@ -160,6 +160,7 @@ public partial class SceneBootstrapper
     {
         RacerCircleUI circle;
         circle.racerIndex = index;
+        circle.velocity = 0f;
 
         // 루트
         GameObject root = new GameObject("RacerCircle_" + index);
@@ -168,7 +169,7 @@ public partial class SceneBootstrapper
         circle.rect.anchorMin = new Vector2(0.5f, 0);
         circle.rect.anchorMax = new Vector2(0.5f, 0);
         circle.rect.pivot = new Vector2(0.5f, 0.5f);
-        circle.rect.sizeDelta = new Vector2(28, 28);
+        circle.rect.sizeDelta = new Vector2(40, 40);
         circle.rect.anchoredPosition = Vector2.zero;
 
         // 테두리 이미지 (배팅 마커용, 기본 비활성)
@@ -177,8 +178,8 @@ public partial class SceneBootstrapper
         RectTransform outlineRt = outlineObj.AddComponent<RectTransform>();
         outlineRt.anchorMin = Vector2.zero;
         outlineRt.anchorMax = Vector2.one;
-        outlineRt.offsetMin = new Vector2(-3, -3);
-        outlineRt.offsetMax = new Vector2(3, 3);
+        outlineRt.offsetMin = new Vector2(-5, -5);
+        outlineRt.offsetMax = new Vector2(5, 5);
         circle.outlineImage = outlineObj.AddComponent<Image>();
         circle.outlineImage.sprite = knob;
         circle.outlineImage.color = new Color(1f, 0.9f, 0.3f, 0.9f);
@@ -207,12 +208,12 @@ public partial class SceneBootstrapper
         circle.numberText = numObj.AddComponent<Text>();
         circle.numberText.font = font;
         circle.numberText.text = (index + 1).ToString();
-        circle.numberText.fontSize = FontHelper.ScaledFontSize(14);
+        circle.numberText.fontSize = FontHelper.ScaledFontSize(18);
         circle.numberText.alignment = TextAnchor.MiddleCenter;
         circle.numberText.color = Color.gray; // 초기: 회색 번호 (흰 원 위)
         circle.numberText.resizeTextForBestFit = true;
-        circle.numberText.resizeTextMinSize = FontHelper.ScaledFontSize(8);
-        circle.numberText.resizeTextMaxSize = FontHelper.ScaledFontSize(14);
+        circle.numberText.resizeTextMinSize = FontHelper.ScaledFontSize(10);
+        circle.numberText.resizeTextMaxSize = FontHelper.ScaledFontSize(18);
 
         return circle;
     }
@@ -310,8 +311,9 @@ public partial class SceneBootstrapper
             if (c.outlineImage != null)
                 c.outlineImage.gameObject.SetActive(isBet);
 
-            // 위치 초기화 (START)
+            // 위치 + 속도 초기화 (START)
             c.rect.anchoredPosition = Vector2.zero;
+            racerCircles[i].velocity = 0f;
         }
     }
 
@@ -326,9 +328,7 @@ public partial class SceneBootstrapper
         float barHeight = trackBarRect.rect.height;
         if (barHeight <= 0) return;
 
-        // Lerp 속도: OverallProgress가 웨이포인트 단위 불연속이라
-        // 시각적으로 부드럽게 슬라이드하되 실제 속도에 빠르게 수렴
-        float lerpSpeed = 12f * Time.deltaTime;
+        float dt = Time.deltaTime;
 
         for (int i = 0; i < racerCircles.Length && i < racers.Count; i++)
         {
@@ -338,7 +338,12 @@ public partial class SceneBootstrapper
             var racer = racers[circle.racerIndex];
             float targetY = Mathf.Clamp01(racer.OverallProgress) * barHeight;
             float currentY = circle.rect.anchoredPosition.y;
-            float smoothY = Mathf.Lerp(currentY, targetY, lerpSpeed);
+
+            // SmoothDamp: 관성 기반 부드러운 이동 (급정지 없음)
+            float vel = circle.velocity;
+            float smoothY = Mathf.SmoothDamp(currentY, targetY, ref vel, 0.15f, Mathf.Infinity, dt);
+            racerCircles[i].velocity = vel;
+
             circle.rect.anchoredPosition = new Vector2(0, smoothY);
         }
 
