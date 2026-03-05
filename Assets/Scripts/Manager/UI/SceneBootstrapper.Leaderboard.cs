@@ -131,7 +131,6 @@ public partial class SceneBootstrapper
     //
     //  [신형] EntryContainer != null → Instantiate(EntryTemplate) per entry
     //         InfoText  : 등수/점수/날짜 (top3 금색)
-    //         SummaryText : 요약 5개씩 줄 분리
     //
     //  [Legacy] ContentText 단일 블롭 — 구형 프리팹 폴백
     // ══════════════════════════════════════
@@ -188,10 +187,6 @@ public partial class SceneBootstrapper
                         infoText.text  = infoLine;
                         infoText.color = (i < 3) ? gold : white;
                     }
-
-                    var summaryText = FindText(entryGO.transform, "SummaryText");
-                    if (summaryText != null)
-                        summaryText.text = BuildSummaryText(e.summary);
                 }
             }
         }

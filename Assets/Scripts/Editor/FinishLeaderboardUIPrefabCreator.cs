@@ -281,8 +281,7 @@ public static class FinishLeaderboardUIPrefabCreator
     //    │  └─ Viewport (RectMask2D)
     //    │     └─ EntryContainer (VerticalLayoutGroup + CSF)
     //    │        └─ EntryTemplate [active=false — 클론 소스]
-    //    │           ├─ InfoText    (28pt, 흰색)
-    //    │           └─ SummaryText (22pt, 회색)
+    //    │           └─ InfoText    (28pt, 흰색)
     //    └─ CloseBtn
     // ══════════════════════════════════════════════
     internal static GameObject CreateLeaderboardPanelPrefab(Font font)
@@ -385,23 +384,6 @@ public static class FinishLeaderboardUIPrefabCreator
         if (font != null) infoText.font = font;
         ContentSizeFitter infoCSF = infoGo.AddComponent<ContentSizeFitter>();
         infoCSF.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-        // SummaryText (요약 줄, 22pt 연회색, 줄 넘김 가능)
-        GameObject summaryGo = new GameObject("SummaryText");
-        summaryGo.transform.SetParent(template.transform, false);
-        RectTransform summaryRt = summaryGo.AddComponent<RectTransform>();
-        summaryRt.sizeDelta = new Vector2(0f, 27f);
-        Text summaryText = summaryGo.AddComponent<Text>();
-        summaryText.text              = "R1:Win+0";
-        summaryText.fontSize          = 22;
-        summaryText.alignment         = TextAnchor.UpperLeft;
-        summaryText.color             = new Color(0.75f, 0.75f, 0.75f, 1f);
-        summaryText.horizontalOverflow = HorizontalWrapMode.Wrap;
-        summaryText.verticalOverflow   = VerticalWrapMode.Overflow;
-        summaryText.supportRichText   = false;
-        if (font != null) summaryText.font = font;
-        ContentSizeFitter summaryCSF = summaryGo.AddComponent<ContentSizeFitter>();
-        summaryCSF.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
         // EntryTemplate 비활성화 (클론 소스이므로 숨김)
         template.SetActive(false);
