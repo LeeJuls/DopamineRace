@@ -238,7 +238,7 @@ public partial class SceneBootstrapper
             RectTransform drt = divObj.AddComponent<RectTransform>();
             drt.anchorMin = new Vector2(0, yNorm);
             drt.anchorMax = new Vector2(1, yNorm);
-            drt.sizeDelta = new Vector2(10, 2); // 절반 크기
+            drt.sizeDelta = new Vector2(6, 6); // 짧고 굵게
             drt.anchoredPosition = Vector2.zero;
             Image dimg = divObj.AddComponent<Image>();
             dimg.color = new Color(1f, 0.85f, 0.3f, 0.85f); // 노란빛 + 높은 불투명도
