@@ -65,6 +65,16 @@ public class CollisionVFX : MonoBehaviour
         if (vfxRoot == null)
             CreateVFXObjects(gs);
 
+        // 스프라이트가 파괴됐으면 재생성
+        if (_circleSprite == null)
+        {
+            _circleSprite = CollisionSpriteFactory.CreateCircleSprite(32, Color.white);
+            _starSprite = CollisionSpriteFactory.CreateStarSprite(32, Color.white, 6);
+            _star5Sprite = CollisionSpriteFactory.CreateStarSprite(32, Color.white, 5);
+            _arrowSprite = CollisionSpriteFactory.CreateArrowSprite(32, Color.white);
+            _shieldSprite = CollisionSpriteFactory.CreateShieldSprite(32, Color.white);
+        }
+
         // ── GameSettings에서 크기 읽기 ──
         float iconScale = gs.vfxIconScale;
         float labelCharSize = gs.vfxLabelSize;
