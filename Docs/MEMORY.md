@@ -210,6 +210,60 @@ roundLaps=[2,2,3,5,3,2,4]
 - EasyChart 순위 차트 런타임 테스트 (이전 세션 미완료)
 - 런타임 전체 흐름 테스트 (charId 기반 배팅/결과/세이브)
 
+## Completed (as of 2026-03-05)
+
+### ResultPanel Phase 2 — 전체 순위 + 화살표 표시 (커밋 `94e2da7`)
+- **결과 화면 구조 변경**: 3섹션(Top3 순위 / 내결과 / 점수) → 2섹션(전체 순위 / 점수)
+- **BetResultSection 완전 제거**: resultBetTypeLabel, resultPickRows[] 등 모두 삭제
+- **전체 N위 표시**: 최대 12행, 레이서 수만큼 동적 활성화 (`resultRankRows[i].SetActive`)
+- **화살표 마커 (PickArrow)**:
+  - 내가 선택한 캐릭터의 **실제 도달 순위** 행에 `← 1st` 형식으로 표시
+  - 배팅 타입별 레이블: Win→"1st", Exacta→"1st"/"2nd", Trio/Quinella→"pick"
+  - 적중(score>0) → 초록, 미적중 → 빨강
+- **배지 색상**: 1위=금 / 2위=은 / 3위=동 / 4위~=회색 (0.45,0.45,0.45)
+- **StringTable**: `str.result.rank_header` 7개 언어 추가 (순위/Rankings/順位/排名/Rang/Posición/Classificação)
+- **수정 파일**: `ResultUIPrefabCreator.cs`, `SceneBootstrapper.Result.cs`, `SceneBootstrapper.cs`, `StringTable.csv`, `ResultPanel.prefab` (MCP 재생성, 20/20 검증)
+
+### 결과창 디버그 단축키 F8/F9/F10 (커밋 `294569d`)
+- **목적**: 결과 화면 수정 시 1판 플레이 없이 즉시 결과 확인
+- **신규 파일**: `Assets/Scripts/Manager/UI/SceneBootstrapper.Debug.cs` (`#if UNITY_EDITOR`)
+  - F8 → Win 배팅 (1위 캐릭터 선택, 무조건 적중)
+  - F9 → Exacta 배팅 (1·2위 선택, 무조건 적중)
+  - F10 → Trio 배팅 (1·2·3위 선택, 무조건 적중)
+  - Fisher-Yates 셔플로 매번 랜덤 순위 생성
+- **수정 파일**:
+  - `GameManager.cs`: `DebugSetCurrentBet()` 추가 (CurrentBet private set 우회)
+  - `RaceManager.cs`: `DebugSetFinalRankings()` 추가 (finalRankings private field 우회)
+  - `SceneBootstrapper.cs`: Update()에 `#if UNITY_EDITOR UpdateDebugInput(); #endif` 추가
+
+### CheatGuideWindow (커밋 `331eada`, `98757ba`)
+- **신규 파일**: `Assets/Scripts/Editor/CheatGuideWindow.cs`
+- **메뉴**: `DopamineRace > 치트 기능 보기 (Ctrl+Shift+D)`
+- **6개 섹션**:
+  1. 결과창 미리보기 단축키 (F8/F9/F10)
+  2. 레이스 디버그 오버레이 (F1/F2/F3)
+  3. 트랙 & 스폰 위치 편집기 (E/R/S/D)
+  4. Editor 메뉴 — 프리팹 관리
+  5. 기타 기능 & 주요 설정값
+  6. 향후 추가될 치트 기능 (슬롯)
+- **배지**: `editorOnly=true` → 파란 `[Editor Only]`, `false` → 주황 `[항상 활성]`
+- **규칙**: 새 치트 기능 추가 시 이 파일에도 반드시 기재할 것
+
+### 디버그 키 릴리즈 빌드 제거 (커밋 `5553482`)
+- **목적**: 릴리즈 빌드에서 디버그 기능 완전 제거
+- `RaceDebugOverlay.cs`: F1/F2/F3 키 `#if UNITY_EDITOR` 가드 + OnGUI `#if !UNITY_EDITOR return` 추가
+- `WaypointEditor.cs`: Update() 전체 `#if UNITY_EDITOR` 가드 (E/S 키 + 마우스)
+- `SpawnEditor.cs`: Update() 전체 `#if UNITY_EDITOR` 가드 (R/S 키 + 마우스)
+- `TrackDebugPath.cs`: D 키 `#if UNITY_EDITOR` 가드 추가
+- CheatGuideWindow 배지 업데이트 (F1-F3/E/R/S/D 모두 `[Editor Only]`로 정정)
+
+### 전체 Push (2026-03-05)
+- 6개 커밋 push: `1500d61` → `5553482`
+- 브랜치: `main`
+
+## Detail docs
+- See [history/ResultPanel_디버그치트가이드_히스토리_20260305.md](./history/ResultPanel_디버그치트가이드_히스토리_20260305.md) for 2026-03-05 handover
+
 ## Completed (as of 2026-03-02)
 - **BetOrderLabel 클릭 차단 버그 수정**
   - 원인: BettingPanel.prefab에서 CharacterInfoPopup이 active=True → Image(raycast=True)가 캐릭터 리스트 덮음
@@ -256,8 +310,9 @@ roundLaps=[2,2,3,5,3,2,4]
 - IllustrationMask 높이 조절로 크롭 범위 조절
 
 ## Detail docs
-- See [history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md](./history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md) for latest handover (2026-03-03)
-- See [history/버그수정_MCP안정화_다국어_인수인계_20260302.md](./history/버그수정_MCP안정화_다국어_인수인계_20260302.md) for latest handover (2026-03-02)
+- See [history/ResultPanel_디버그치트가이드_히스토리_20260305.md](./history/ResultPanel_디버그치트가이드_히스토리_20260305.md) for latest handover (2026-03-05)
+- See [history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md](./history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md) for previous handover (2026-03-03)
+- See [history/버그수정_MCP안정화_다국어_인수인계_20260302.md](./history/버그수정_MCP안정화_다국어_인수인계_20260302.md) for previous handover (2026-03-02)
 - See [SPEC-007_인수인계서_20260227.md](./SPEC-007_인수인계서_20260227.md) for SPEC-007 handover
 - See [SPEC-007_프리팹수정가이드_20260227.md](./SPEC-007_프리팹수정가이드_20260227.md) for prefab manual editing guide
 - See [2026-02-22_EasyChart순위그래프전환_인수인계.md](./2026-02-22_EasyChart순위그래프전환_인수인계.md) for EasyChart handover
