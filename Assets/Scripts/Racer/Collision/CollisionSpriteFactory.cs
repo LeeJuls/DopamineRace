@@ -28,7 +28,10 @@ public static class CollisionSpriteFactory
             }
         }
         tex.Apply();
-        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+        tex.hideFlags = HideFlags.HideAndDontSave;
+        var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+        sprite.hideFlags = HideFlags.HideAndDontSave;
+        return sprite;
     }
 
     /// <summary>별 모양 스프라이트 (충돌)</summary>
@@ -65,7 +68,10 @@ public static class CollisionSpriteFactory
         }
 
         tex.Apply();
-        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+        tex.hideFlags = HideFlags.HideAndDontSave;
+        var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+        sprite.hideFlags = HideFlags.HideAndDontSave;
+        return sprite;
     }
 
     /// <summary>위쪽 화살표 스프라이트 (슬링샷)</summary>
@@ -106,7 +112,10 @@ public static class CollisionSpriteFactory
         }
 
         tex.Apply();
-        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+        tex.hideFlags = HideFlags.HideAndDontSave;
+        var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+        sprite.hideFlags = HideFlags.HideAndDontSave;
+        return sprite;
     }
 
     /// <summary>방패 모양 스프라이트 (회피)</summary>
@@ -152,7 +161,10 @@ public static class CollisionSpriteFactory
         }
 
         tex.Apply();
-        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+        tex.hideFlags = HideFlags.HideAndDontSave;
+        var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+        sprite.hideFlags = HideFlags.HideAndDontSave;
+        return sprite;
     }
 
     // ── 기하 유틸 ──
