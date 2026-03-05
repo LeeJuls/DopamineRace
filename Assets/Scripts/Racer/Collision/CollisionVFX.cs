@@ -43,7 +43,8 @@ public class CollisionVFX : MonoBehaviour
 
     private static void EnsureSprites()
     {
-        if (spritesCreated) return;
+        if (spritesCreated && circleSprite != null) return;
+        spritesCreated = false;
         circleSprite = CollisionSpriteFactory.CreateCircleSprite(32, Color.white);
         starSprite = CollisionSpriteFactory.CreateStarSprite(32, Color.white, 6);
         star5Sprite = CollisionSpriteFactory.CreateStarSprite(32, Color.white, 5);
