@@ -294,20 +294,23 @@ public class ScoreManager : MonoBehaviour
         return currentGameAppearances.ContainsKey(charId) ? currentGameAppearances[charId] : 0;
     }
 
-    /// <summary>라운드 결과 요약 문자열 (리더보드 저장용 — 현재 언어로 포맷)</summary>
+    /// <summary>
+    /// 라운드 결과 요약 문자열 (리더보드 JSON 저장용)
+    /// 포맷: "R1:Win+27 R2:Exacta+500 R3:Win+0"
+    /// — BetType.ToString() 사용 → 항상 영어, 언어 무관하게 저장
+    /// — 표시 시 BuildSummaryBlock()에서 5개씩 줄 분리
+    /// </summary>
     public string GetRoundSummary()
     {
         if (RoundHistory.Count == 0) return "-";
         var parts = new List<string>();
         foreach (var r in RoundHistory)
         {
-            string typeName = BettingCalculator.GetTypeName(r.betType);
-            string scoreStr = r.score > 0
-                ? Loc.Get("str.finish.score_plus", r.score)
-                : Loc.Get("str.finish.score_zero");
-            parts.Add("R" + r.round + ": " + typeName + " " + scoreStr);
+            string type  = r.betType.ToString();                    // Win / Exacta / Trio …
+            string score = r.score > 0 ? "+" + r.score : "+0";
+            parts.Add("R" + r.round + ":" + type + score);
         }
-        return string.Join(" | ", parts.ToArray());
+        return string.Join(" ", parts.ToArray());
     }
 
     // ═══════════════════════════════════════

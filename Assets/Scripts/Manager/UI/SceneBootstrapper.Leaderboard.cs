@@ -99,44 +99,61 @@ public partial class SceneBootstrapper
 
     // ══════════════════════════════════════
     //  ShowLeaderboard — 데이터 채우기
+    //
+    //  표시 형식 (항목마다 1~N줄):
+    //    [등수]  [점수]  [날짜]
+    //      R1:Win+27 R2:Exacta+500 R3:Win+0 R4:Win+16 R5:Win+53
+    //      R6:Win+11 R7:Win+1 ...
+    //
+    //  — 등수: 영어는 서수(1st/2nd), 나머지는 숫자만(str.leaderboard.row 포맷이 suffix 처리)
+    //  — 날짜: "2026-03-05 16:59" → "26-03-05" (연도 앞 2자리·시간 생략)
+    //  — 요약: 5개씩 줄 분리, 2칸 들여쓰기
+    //  — 구형 summary(" | " 포함)는 그대로 한 줄 표시 (하위 호환)
     // ══════════════════════════════════════
     private void ShowLeaderboard()
     {
-        // 버튼 텍스트 Loc 갱신 (프리팹 기본값이 한국어 고정이므로 런타임 갱신)
+        // Loc 갱신 (프리팹 기본값이 한국어 고정이므로 런타임 갱신)
         if (leaderboardTitleText    != null) leaderboardTitleText.text    = Loc.Get("str.leaderboard.title");
         if (leaderboardHeaderText   != null) leaderboardHeaderText.text   = Loc.Get("str.leaderboard.header");
         if (leaderboardCloseBtnText != null) leaderboardCloseBtnText.text = Loc.Get("str.ui.btn.close");
 
         var entries = LeaderboardData.GetTop(100);
-        string content = "";
+        var sb = new System.Text.StringBuilder();
 
         if (entries.Count == 0)
         {
-            content = "\n\n\n" + Loc.Get("str.leaderboard.empty");
+            sb.Append("\n\n\n").Append(Loc.Get("str.leaderboard.empty"));
         }
         else
         {
             for (int i = 0; i < entries.Count; i++)
             {
                 var e = entries[i];
-                // 영어는 1st/2nd/3rd/4th 서수, 나머지 언어는 숫자만 (StringTable에서 위/位 등 처리)
-                string rank = Loc.CurrentLang == "en"
-                    ? GetEnOrdinal(i + 1)
-                    : (i + 1).ToString().PadLeft(3);
-                string score   = e.score.ToString().PadLeft(6);
-                string summary = e.summary;
-                if (summary.Length > 40) summary = summary.Substring(0, 40) + "...";
 
-                string line = Loc.Get("str.leaderboard.row", rank, score, e.rounds, e.date, summary);
+                // 등수: 영어는 서수, 나머지는 숫자만 (str.leaderboard.row 포맷이 위/位 등 suffix 담당)
+                string rankStr = Loc.CurrentLang == "en"
+                    ? GetEnOrdinal(i + 1)
+                    : (i + 1).ToString();
+
+                // 날짜 압축: "2026-03-05 16:59" → "26-03-05"
+                string dateStr = e.date.Length >= 10 ? e.date.Substring(2, 8) : e.date;
+
+                // 정보 줄: "1위  1591점  26-03-05" / "1st  1591pt  26-03-05"
+                string infoLine = Loc.Get("str.leaderboard.row", rankStr, e.score, dateStr);
+
+                // 요약 블록: 5개씩 줄 분리 (신형 포맷) / 구형 포맷 폴백
+                string summaryBlock = BuildSummaryBlock(e.summary);
+
+                string entry = infoLine + summaryBlock;
 
                 if (i < 3)
-                    content += "<color=#FFD700>" + line + "</color>\n";
+                    sb.Append("<color=#FFD700>").Append(entry).Append("</color>\n\n");
                 else
-                    content += line + "\n";
+                    sb.Append(entry).Append("\n\n");
             }
         }
 
-        if (leaderboardContentText != null) leaderboardContentText.text = content;
+        if (leaderboardContentText != null) leaderboardContentText.text = sb.ToString();
         leaderboardPopup.SetActive(true);
 
         // 스크롤 맨 위로 리셋 (Canvas 레이아웃 갱신 후)
@@ -148,7 +165,43 @@ public partial class SceneBootstrapper
     }
 
     // ══════════════════════════════════════
-    //  영어 서수 헬퍼 (1→1st, 2→2nd, 3→3rd, 4~→4th)
+    //  요약 블록 빌드 (5개씩 줄 분리)
+    //
+    //  신형 포맷: "R1:Win+27 R2:Exacta+500 ..."  → 5개씩 줄 나눔
+    //  구형 포맷: "R1: Win +27pt | ..." → 한 줄로 그대로 표시 (하위 호환)
+    // ══════════════════════════════════════
+    private static string BuildSummaryBlock(string summary)
+    {
+        if (string.IsNullOrEmpty(summary) || summary == "-")
+            return "";
+
+        const string INDENT = "  "; // 2칸 들여쓰기
+
+        // 구형 포맷 감지 (" | " 구분자)
+        if (summary.Contains(" | "))
+            return "\n" + INDENT + summary;
+
+        // 신형 포맷: 공백으로 split → 5개씩 그룹
+        string[] rounds = summary.Split(new char[]{ ' ' },
+            System.StringSplitOptions.RemoveEmptyEntries);
+        if (rounds.Length == 0) return "";
+
+        var sb = new System.Text.StringBuilder();
+        for (int j = 0; j < rounds.Length; j += 5)
+        {
+            sb.Append("\n").Append(INDENT);
+            int end = Mathf.Min(j + 5, rounds.Length);
+            for (int k = j; k < end; k++)
+            {
+                if (k > j) sb.Append(" ");
+                sb.Append(rounds[k]);
+            }
+        }
+        return sb.ToString();
+    }
+
+    // ══════════════════════════════════════
+    //  영어 서수 헬퍼 (1→1st, 2→2nd, 3→3rd, 4+→4th)
     //  11/12/13은 예외: 11th / 12th / 13th
     // ══════════════════════════════════════
     private static string GetEnOrdinal(int n)
