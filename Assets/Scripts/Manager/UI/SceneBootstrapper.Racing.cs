@@ -326,8 +326,8 @@ public partial class SceneBootstrapper
         float barWidth = trackBarRect.rect.width;
         if (barHeight <= 0) return;
 
-        // 좌우 오프셋 범위: 바 폭의 ±40% (원이 패널 밖으로 안 나가게)
-        float xRange = barWidth * 0.4f;
+        // 좌우 오프셋 범위: 바 폭의 ±20%
+        float xRange = barWidth * 0.2f;
         // 레인 오프셋 최대값 추정 (RACER_COUNT/2 * laneOffset설정)
         float maxLateral = GameConstants.RACER_COUNT * 0.5f *
             (GameSettings.Instance != null ? GameSettings.Instance.laneOffset : 0.15f) + 0.5f;
