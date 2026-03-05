@@ -373,10 +373,10 @@ public static class FinishLeaderboardUIPrefabCreator
         GameObject infoGo = new GameObject("InfoText");
         infoGo.transform.SetParent(template.transform, false);
         RectTransform infoRt = infoGo.AddComponent<RectTransform>();
-        infoRt.sizeDelta = new Vector2(0f, 34f);
+        infoRt.sizeDelta = new Vector2(0f, 44f);
         Text infoText = infoGo.AddComponent<Text>();
         infoText.text              = "1위  0점  26-01-01";
-        infoText.fontSize          = 28;
+        infoText.fontSize          = 36;
         infoText.alignment         = TextAnchor.UpperLeft;
         infoText.color             = COLOR_WHITE;
         infoText.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -390,10 +390,10 @@ public static class FinishLeaderboardUIPrefabCreator
         GameObject summaryGo = new GameObject("SummaryText");
         summaryGo.transform.SetParent(template.transform, false);
         RectTransform summaryRt = summaryGo.AddComponent<RectTransform>();
-        summaryRt.sizeDelta = new Vector2(0f, 27f);
+        summaryRt.sizeDelta = new Vector2(0f, 34f);
         Text summaryText = summaryGo.AddComponent<Text>();
         summaryText.text              = "R1:Win+0";
-        summaryText.fontSize          = 22;
+        summaryText.fontSize          = 28;
         summaryText.alignment         = TextAnchor.UpperLeft;
         summaryText.color             = new Color(0.75f, 0.75f, 0.75f, 1f);
         summaryText.horizontalOverflow = HorizontalWrapMode.Overflow; // BuildSummaryText()에서 \n으로 이미 줄 분리
