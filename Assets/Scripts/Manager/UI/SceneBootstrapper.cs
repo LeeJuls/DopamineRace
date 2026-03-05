@@ -76,6 +76,7 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text resultTitleText;
     // RankSection — 9명 고정 (레이서 수 항상 9)
     private const int MAX_RANK_ROWS = 9;
+    private Text         resultSectionLabel;                          // "순위" / "Rankings" / "順位"
     private GameObject[] resultRankRows   = new GameObject[MAX_RANK_ROWS];
     private Image[]      resultRankIcons  = new Image[MAX_RANK_ROWS];
     private Text[]       resultRankNames  = new Text[MAX_RANK_ROWS];

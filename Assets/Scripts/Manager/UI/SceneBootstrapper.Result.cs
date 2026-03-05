@@ -56,6 +56,10 @@ public partial class SceneBootstrapper
         Transform rankSection = root.Find("RankSection");
         if (rankSection != null)
         {
+            // SectionLabel — str.result.rank_header (언어 전환 시 ShowResult에서 갱신)
+            Transform sectionLblT = rankSection.Find("SectionLabel");
+            if (sectionLblT != null) resultSectionLabel = sectionLblT.GetComponent<Text>();
+
             for (int i = 0; i < MAX_RANK_ROWS; i++)
             {
                 Transform row = rankSection.Find("Rank" + (i + 1) + "Row");
@@ -121,6 +125,10 @@ public partial class SceneBootstrapper
             resultTitleText.text  = score > 0 ? Loc.Get("str.result.win") : Loc.Get("str.result.lose");
             resultTitleText.color = score > 0 ? COLOR_RESULT_WIN : COLOR_RESULT_LOSE;
         }
+
+        // ── SectionLabel (str.result.rank_header) ──
+        if (resultSectionLabel != null)
+            resultSectionLabel.text = Loc.Get("str.result.rank_header");
 
         // ── RankSection: 전체 순위 표시 (9행 고정, 항상 전부 활성) ──
         var db = CharacterDatabase.Instance;
