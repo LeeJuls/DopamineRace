@@ -309,8 +309,39 @@ roundLaps=[2,2,3,5,3,2,4]
 - Layout2_Left의 HorizontalLayoutGroup 제거 → CharTypeLabel 자유 배치 가능
 - IllustrationMask 높이 조절로 크롭 범위 조절
 
+## Completed (as of 2026-03-05 session 2)
+
+### ResultPanel 5~9위 행간 균등 조정 (커밋 `4fecd39`)
+- 5위(-90) / 9위(-552) 고정, 6위→-205.5, 7위→-321, 8위→-436.5
+
+### FinishPanel 프리팹 전환 + F4 디버그 메뉴 (커밋 `cca998b` ~ `503410b`)
+- **프리팹 기반 전환**: `GameSettings.finishPanelPrefab` 참조 → `BuildFinishUI()` 분기 + Legacy 폴백
+- **FinishPanel.prefab 구조**:
+  - `FinishPanel` (880×650) → `TitleText` / `RoundScrollView(ScrollRect)` > `Viewport(RectMask2D)` > `RoundDetailText(Text+ContentSizeFitter)` / `TotalScoreText` / `NewGameBtn` / `Top100Btn`
+  - ScrollRect: vertical only, Clamped, sensitivity=30, ContentSizeFitter.VerticalPreferred
+  - 폰트: neodgm (GameSettings.mainFont) 5개 Text 전체 적용
+- **F4 디버그 메뉴** (`SceneBootstrapper.Debug.cs`):
+  - F4 토글 → IMGUI 박스 (`#if UNITY_EDITOR`)
+  - 1=Win결과 / 2=Exacta결과 / 3=Trio결과 / 4=Finish강제표시
+  - 기존 F8/F9/F10 단축키 유지
+- **신규 파일**: `Assets/Scripts/Editor/FinishLeaderboardUIPrefabCreator.cs`
+- 최신 커밋: `503410b` (push 완료)
+
+### 프리팹 시스템 (FinishPanel 추가)
+- `GameSettings.finishPanelPrefab` — FinishPanel.prefab 참조
+- `DopamineRace > Create Finish UI Prefab` 메뉴로 재생성 가능
+- MCP 생성 시 Font null 우회 → Reflection 패치 스크립트 별도 실행 필요
+
+### Remaining Tasks (업데이트)
+- **LeaderboardPanel.prefab 프리팹 전환** (Phase 2)
+  - `GameSettings.leaderboardPanelPrefab` 필드 추가
+  - `FinishLeaderboardUIPrefabCreator.CreateLeaderboardPanelPrefab()` 추가
+  - `SceneBootstrapper.Leaderboard.cs` 프리팹 분기 + Cache
+  - F4 메뉴 5번 → `DebugShowLeaderboard()` 추가
+
 ## Detail docs
-- See [history/ResultPanel_디버그치트가이드_히스토리_20260305.md](./history/ResultPanel_디버그치트가이드_히스토리_20260305.md) for latest handover (2026-03-05)
+- See [history/FinishPanel프리팹전환_F4디버그_히스토리_20260305.md](./history/FinishPanel프리팹전환_F4디버그_히스토리_20260305.md) for latest handover (2026-03-05 session 2)
+- See [history/ResultPanel_디버그치트가이드_히스토리_20260305.md](./history/ResultPanel_디버그치트가이드_히스토리_20260305.md) for previous handover (2026-03-05)
 - See [history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md](./history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md) for previous handover (2026-03-03)
 - See [history/버그수정_MCP안정화_다국어_인수인계_20260302.md](./history/버그수정_MCP안정화_다국어_인수인계_20260302.md) for previous handover (2026-03-02)
 - See [SPEC-007_인수인계서_20260227.md](./SPEC-007_인수인계서_20260227.md) for SPEC-007 handover
