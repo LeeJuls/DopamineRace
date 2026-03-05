@@ -439,11 +439,10 @@ public class RaceDebugOverlay : MonoBehaviour
             prevCritState[idx] = isCrit;
         }
 
-        // 현재 라운드 보기 시 자동 스크롤
-        if (viewingRound == -1)
+        // 이벤트 탭 활성화 시 자동 스크롤 (최신 이벤트 하단 표시)
+        if (viewingRound == -1 && activeTab == 2)
         {
-            raceLogScroll.y = float.MaxValue;
-            finishLogScroll.y = float.MaxValue;
+            tabContentScroll.y = float.MaxValue;
         }
     }
 
