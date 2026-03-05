@@ -135,7 +135,7 @@ public partial class SceneBootstrapper
         if (finishTop100BtnText  != null) finishTop100BtnText.text  = Loc.Get("str.ui.btn.top100");
         if (finishTitleText      != null) finishTitleText.text      = Loc.Get("str.finish.title");
 
-        string detail = "<b>" + Loc.Get("str.finish.round_header") + "</b>\n";
+        string detail = Loc.Get("str.finish.round_header") + "\n";
         detail += "─────────────────────────\n";
         foreach (var r in sm.RoundHistory)
         {
