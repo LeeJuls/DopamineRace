@@ -105,6 +105,48 @@ public class RacerController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 웨이포인트 간 보간된 진행률 (0~1). 트랙바 UI용.
+    /// OverallProgress는 웨이포인트 도달 시에만 갱신(계단식)되지만,
+    /// 이 값은 실제 위치 기반으로 매 프레임 연속적으로 변합니다.
+    /// </summary>
+    public float SmoothProgress
+    {
+        get
+        {
+            if (isFinished) return 1f;
+            if (waypoints == null || waypoints.Count == 0) return 0f;
+
+            int totalLaps = GetTotalLaps();
+            int wpCount = waypoints.Count;
+
+            if (headingToFinish)
+            {
+                // 마지막 구간: 최종 웨이포인트 → 결승선(wp 0)
+                Vector3 finishPos = GetOffsetPosition(0);
+                Vector3 lastWpPos = GetOffsetPosition(wpCount - 1);
+                float segLen = Vector3.Distance(lastWpPos, finishPos);
+                float distToFinish = Vector3.Distance(transform.position, finishPos);
+                float frac = segLen > 0.01f ? Mathf.Clamp01(1f - distToFinish / segLen) : 1f;
+                float totalSegments = totalLaps * wpCount;
+                return Mathf.Clamp01((totalSegments - 1f + frac) / totalSegments);
+            }
+
+            // 현재 목표 웨이포인트와 이전 웨이포인트 사이 보간
+            Vector3 target = GetOffsetPosition(currentWP);
+            int prevIdx = currentWP > 0 ? currentWP - 1 : wpCount - 1;
+            Vector3 prev = GetOffsetPosition(prevIdx);
+
+            float segmentLength = Vector3.Distance(prev, target);
+            float distToTarget = Vector3.Distance(transform.position, target);
+            float fraction = segmentLength > 0.01f ? Mathf.Clamp01(1f - distToTarget / segmentLength) : 0f;
+
+            // currentWP = 목표 인덱스 → currentWP개 완료 + fraction 진행 중
+            float lapProgress = (currentWP + fraction) / wpCount;
+            return Mathf.Clamp01((currentLap + lapProgress) / totalLaps);
+        }
+    }
+
     public int GetTotalLaps()
     {
         return RaceManager.Instance != null ? RaceManager.Instance.CurrentLaps : GameConstants.TOTAL_LAPS;

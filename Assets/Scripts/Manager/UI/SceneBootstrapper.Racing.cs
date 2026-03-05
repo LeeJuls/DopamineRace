@@ -160,8 +160,6 @@ public partial class SceneBootstrapper
     {
         RacerCircleUI circle;
         circle.racerIndex = index;
-        circle.velocity = 0f;
-
         // 루트
         GameObject root = new GameObject("RacerCircle_" + index);
         root.transform.SetParent(parent, false);
@@ -234,18 +232,18 @@ public partial class SceneBootstrapper
         {
             float yNorm = (float)lap / totalLaps;
 
-            // 수평선
+            // 수평선 (충분히 두껍고 눈에 잘 보이게)
             GameObject divObj = new GameObject("LapDivider_" + lap);
             divObj.transform.SetParent(trackBarRect, false);
             RectTransform drt = divObj.AddComponent<RectTransform>();
             drt.anchorMin = new Vector2(0, yNorm);
             drt.anchorMax = new Vector2(1, yNorm);
-            drt.sizeDelta = new Vector2(0, 2);
+            drt.sizeDelta = new Vector2(20, 4); // 4px 두께, 좌우 확장
             drt.anchoredPosition = Vector2.zero;
             Image dimg = divObj.AddComponent<Image>();
-            dimg.color = new Color(1, 1, 1, 0.35f);
+            dimg.color = new Color(1f, 0.85f, 0.3f, 0.85f); // 노란빛 + 높은 불투명도
 
-            // 구분선은 원 뒤에 그려지도록 맨 앞에 배치
+            // 구분선은 바 위, 원 뒤에 그려지도록
             divObj.transform.SetAsFirstSibling();
 
             // 라벨 ("1)", "2)" ...)
@@ -255,17 +253,17 @@ public partial class SceneBootstrapper
             lblRt.anchorMin = new Vector2(1, yNorm);
             lblRt.anchorMax = new Vector2(1, yNorm);
             lblRt.pivot = new Vector2(0, 0.5f);
-            lblRt.sizeDelta = new Vector2(24, 16);
-            lblRt.anchoredPosition = new Vector2(4, 0);
+            lblRt.sizeDelta = new Vector2(30, 20);
+            lblRt.anchoredPosition = new Vector2(6, 0);
             Text lblText = lblObj.AddComponent<Text>();
             lblText.font = font;
             lblText.text = lap + ")";
-            lblText.fontSize = FontHelper.ScaledFontSize(10);
+            lblText.fontSize = FontHelper.ScaledFontSize(12);
             lblText.alignment = TextAnchor.MiddleLeft;
-            lblText.color = new Color(1, 1, 1, 0.45f);
+            lblText.color = new Color(1f, 0.85f, 0.3f, 0.9f); // 노란빛
             lblText.resizeTextForBestFit = true;
-            lblText.resizeTextMinSize = FontHelper.ScaledFontSize(7);
-            lblText.resizeTextMaxSize = FontHelper.ScaledFontSize(10);
+            lblText.resizeTextMinSize = FontHelper.ScaledFontSize(8);
+            lblText.resizeTextMaxSize = FontHelper.ScaledFontSize(12);
 
             lblObj.transform.SetAsFirstSibling();
 
@@ -311,9 +309,8 @@ public partial class SceneBootstrapper
             if (c.outlineImage != null)
                 c.outlineImage.gameObject.SetActive(isBet);
 
-            // 위치 + 속도 초기화 (START)
+            // 위치 초기화 (START)
             c.rect.anchoredPosition = Vector2.zero;
-            racerCircles[i].velocity = 0f;
         }
     }
 
@@ -328,23 +325,15 @@ public partial class SceneBootstrapper
         float barHeight = trackBarRect.rect.height;
         if (barHeight <= 0) return;
 
-        float dt = Time.deltaTime;
-
         for (int i = 0; i < racerCircles.Length && i < racers.Count; i++)
         {
             var circle = racerCircles[i];
             if (circle.racerIndex >= racers.Count) continue;
 
             var racer = racers[circle.racerIndex];
-            float targetY = Mathf.Clamp01(racer.OverallProgress) * barHeight;
-            float currentY = circle.rect.anchoredPosition.y;
-
-            // SmoothDamp: 관성 기반 부드러운 이동 (급정지 없음)
-            float vel = circle.velocity;
-            float smoothY = Mathf.SmoothDamp(currentY, targetY, ref vel, 0.15f, Mathf.Infinity, dt);
-            racerCircles[i].velocity = vel;
-
-            circle.rect.anchoredPosition = new Vector2(0, smoothY);
+            // SmoothProgress: 웨이포인트 간 실제 위치 보간 → 매 프레임 연속 값
+            float y = Mathf.Clamp01(racer.SmoothProgress) * barHeight;
+            circle.rect.anchoredPosition = new Vector2(0, y);
         }
 
         // 배팅 마커를 최상위 z-order로
