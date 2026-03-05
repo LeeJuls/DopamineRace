@@ -3,27 +3,85 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// [EDITOR ONLY] 결과창 디버그 미리보기
+/// [EDITOR ONLY] 디버그 단축키 모음
 ///
-/// F8  : 결과창 즉시 표시 (Win 배팅, 1등 선택 → 무조건 적중)
-/// F9  : 결과창 즉시 표시 (Exacta 배팅, 1·2등 선택 → 적중)
-/// F10 : 결과창 즉시 표시 (Trio 배팅, 랜덤 → 적중)
+/// F4       : 디버그 메뉴 토글 (번호 선택 방식)
+/// F8       : 결과창 즉시 표시 (Win 배팅, 1등 선택 → 무조건 적중)
+/// F9       : 결과창 즉시 표시 (Exacta 배팅, 1·2등 선택 → 적중)
+/// F10      : 결과창 즉시 표시 (Trio 배팅, 랜덤 → 적중)
+///
+/// [F4 메뉴 번호]
+/// 1 = 결과창 (Win)
+/// 2 = 결과창 (Exacta)
+/// 3 = 결과창 (Trio)
+/// 4 = 최종 결산(Finish) 화면 강제 표시
 ///
 /// 모든 단축키는 플레이 모드에서만 동작합니다.
 /// </summary>
 public partial class SceneBootstrapper
 {
     // ══════════════════════════════════════
+    //  F4 메뉴 상태
+    // ══════════════════════════════════════
+    private bool _debugMenuOpen = false;
+
+    // ══════════════════════════════════════
     //  디버그 입력 체크 (Update에서 호출)
     // ══════════════════════════════════════
     private void UpdateDebugInput()
     {
+        // F4: 메뉴 토글
+        if (Input.GetKeyDown(KeyCode.F4))
+            _debugMenuOpen = !_debugMenuOpen;
+
+        // 빠른 접근 단축키 (메뉴 없이 직접)
         if (Input.GetKeyDown(KeyCode.F8))
-            DebugJumpToResult(BetType.Win,      hitGuaranteed: true);
+            DebugJumpToResult(BetType.Win,    hitGuaranteed: true);
         if (Input.GetKeyDown(KeyCode.F9))
-            DebugJumpToResult(BetType.Exacta,   hitGuaranteed: true);
+            DebugJumpToResult(BetType.Exacta, hitGuaranteed: true);
         if (Input.GetKeyDown(KeyCode.F10))
-            DebugJumpToResult(BetType.Trio,     hitGuaranteed: true);
+            DebugJumpToResult(BetType.Trio,   hitGuaranteed: true);
+
+        // F4 메뉴가 열려 있을 때 번호 선택
+        if (_debugMenuOpen)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            { DebugJumpToResult(BetType.Win,    true); _debugMenuOpen = false; }
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            { DebugJumpToResult(BetType.Exacta, true); _debugMenuOpen = false; }
+            if (Input.GetKeyDown(KeyCode.Alpha3))
+            { DebugJumpToResult(BetType.Trio,   true); _debugMenuOpen = false; }
+            if (Input.GetKeyDown(KeyCode.Alpha4))
+            { DebugJumpToFinish();                     _debugMenuOpen = false; }
+            if (Input.GetKeyDown(KeyCode.Escape))
+                _debugMenuOpen = false;
+        }
+    }
+
+    // ══════════════════════════════════════
+    //  F4 메뉴 IMGUI 렌더
+    // ══════════════════════════════════════
+    private void OnGUI()
+    {
+        if (!Application.isPlaying || !_debugMenuOpen) return;
+
+        GUIStyle boxStyle = new GUIStyle(GUI.skin.box)
+        {
+            fontSize  = 18,
+            alignment = TextAnchor.MiddleLeft,
+            richText  = true
+        };
+        boxStyle.normal.textColor = Color.white;
+
+        string menu =
+            "<b>[DEBUG MENU]</b>\n\n" +
+            "1. 결과창 (Win)\n"       +
+            "2. 결과창 (Exacta)\n"    +
+            "3. 결과창 (Trio)\n"      +
+            "4. 최종 결산(Finish)\n\n" +
+            "<color=#AAAAAA>ESC / F4 = 닫기</color>";
+
+        GUI.Box(new Rect(20f, 20f, 280f, 200f), menu, boxStyle);
     }
 
     // ══════════════════════════════════════
@@ -117,6 +175,15 @@ public partial class SceneBootstrapper
             "[DEBUG] 결과창 강제 표시 — BetType={0}, Hit={1}, 1위={2}",
             betType, hitGuaranteed,
             fakeRankings.Count > 0 ? fakeRankings[0].racerName : "?"));
+    }
+
+    // ══════════════════════════════════════
+    //  최종 결산(Finish) 강제 표시
+    // ══════════════════════════════════════
+    private void DebugJumpToFinish()
+    {
+        GameManager.Instance?.ChangeState(GameManager.GameState.Finish);
+        Debug.Log("[DEBUG] Finish 화면 강제 표시");
     }
 }
 #endif
