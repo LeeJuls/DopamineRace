@@ -105,21 +105,26 @@ public class RacerController : MonoBehaviour
         }
     }
 
+    // ── 트랙바 부드러운 진행률 ──
+    private float _smoothProgressRatchet = 0f;   // 모노토닉 래칫 (단조 증가만 허용)
+
     /// <summary>
     /// 웨이포인트 간 보간된 진행률 (0~1). 트랙바 UI용.
-    /// OverallProgress는 웨이포인트 도달 시에만 갱신(계단식)되지만,
-    /// 이 값은 벡터 투영 기반으로 매 프레임 연속적으로 변합니다.
-    /// ★ 핵심: 경로 이탈(deviation)의 직교 성분이 진행률에 영향 없음.
+    /// ★ 벡터 투영 + 모노토닉 래칫:
+    ///   - 직교 이탈(deviation)에 영향 없음
+    ///   - 웨이포인트 전환 시 미세 정체(턱턱) 없음
     /// </summary>
     public float SmoothProgress
     {
         get
         {
             if (isFinished) return 1f;
+            if (!isRacing) return _smoothProgressRatchet;
             if (waypoints == null || waypoints.Count == 0) return 0f;
 
             int totalLaps = GetTotalLaps();
             int wpCount = waypoints.Count;
+            float progress;
 
             if (headingToFinish)
             {
@@ -128,23 +133,47 @@ public class RacerController : MonoBehaviour
                     waypoints[wpCount - 1].position,
                     waypoints[0].position);
                 float totalSegments = totalLaps * wpCount;
-                return Mathf.Clamp01((totalSegments - 1f + frac) / totalSegments);
+                progress = (totalSegments - 1f + frac) / totalSegments;
+            }
+            else
+            {
+                // 현재 구간: 이전 웨이포인트 → 현재 목표 웨이포인트
+                int prevIdx = currentWP > 0 ? currentWP - 1 : wpCount - 1;
+                // 상한 클램프 제거 → 웨이포인트 도달 직전 오버슈트 허용
+                float fraction = ProjectOnSegmentRaw(
+                    waypoints[prevIdx].position,
+                    waypoints[currentWP].position);
+                float lapProgress = (currentWP + fraction) / wpCount;
+                progress = (currentLap + lapProgress) / totalLaps;
             }
 
-            // 현재 구간: 이전 웨이포인트 → 현재 목표 웨이포인트
-            int prevIdx = currentWP > 0 ? currentWP - 1 : wpCount - 1;
-            float fraction = ProjectOnSegment(
-                waypoints[prevIdx].position,
-                waypoints[currentWP].position);
+            progress = Mathf.Clamp01(progress);
 
-            float lapProgress = (currentWP + fraction) / wpCount;
-            return Mathf.Clamp01((currentLap + lapProgress) / totalLaps);
+            // ★ 모노토닉 래칫: 레이스 중 진행률은 절대 후퇴하지 않음
+            // → 웨이포인트 전환 시 fraction 리셋에 의한 미세 정체 완전 제거
+            if (progress > _smoothProgressRatchet)
+                _smoothProgressRatchet = progress;
+
+            return _smoothProgressRatchet;
         }
     }
 
     /// <summary>
-    /// 두 기준점(웨이포인트) 사이에 현재 위치를 투영하여 진행 비율(0~1) 반환.
-    /// 직교 방향 이탈(deviation, lane offset)에 영향 받지 않아 떨림 없음.
+    /// 벡터 투영 (하한만 클램프, 상한은 자유 — 오버슈트 허용).
+    /// 레이서가 웨이포인트를 지나쳤지만 아직 전환 안 된 순간에도 진행률 계속 증가.
+    /// </summary>
+    private float ProjectOnSegmentRaw(Vector3 segStart, Vector3 segEnd)
+    {
+        Vector3 segDir = segEnd - segStart;
+        float segLen = segDir.magnitude;
+        if (segLen < 0.01f) return 0f;
+        Vector3 toPos = transform.position - segStart;
+        float dot = Vector3.Dot(toPos, segDir / segLen);
+        return Mathf.Max(0f, dot / segLen); // 상한 클램프 없음
+    }
+
+    /// <summary>
+    /// 벡터 투영 (0~1 클램프, headingToFinish용).
     /// </summary>
     private float ProjectOnSegment(Vector3 segStart, Vector3 segEnd)
     {
@@ -196,6 +225,7 @@ public class RacerController : MonoBehaviour
     {
         isRacing = true; isFinished = false; headingToFinish = false; FinishOrder = -1;
         currentLap = 0; currentWP = 0;
+        _smoothProgressRatchet = 0f;  // 래칫 리셋
         lastPosition = transform.position;
 
         // 스탯 기반 초기 속도

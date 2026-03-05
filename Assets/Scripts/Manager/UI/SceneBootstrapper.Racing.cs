@@ -107,20 +107,20 @@ public partial class SceneBootstrapper
         // ── GOAL 라벨 (패널 상단) ──
         Text goalText = MkText(panel.transform, Loc.Get("str.hud.goal"),
             new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, 0), new Vector2(80, 22),
-            FontHelper.ScaledFontSize(13), TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.3f));
+            new Vector2(0, 0), new Vector2(120, 40),
+            FontHelper.ScaledFontSize(36), TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.3f));
         goalText.resizeTextForBestFit = true;
-        goalText.resizeTextMinSize = FontHelper.ScaledFontSize(8);
-        goalText.resizeTextMaxSize = FontHelper.ScaledFontSize(13);
+        goalText.resizeTextMinSize = FontHelper.ScaledFontSize(14);
+        goalText.resizeTextMaxSize = FontHelper.ScaledFontSize(36);
 
         // ── START 라벨 (패널 하단) ──
         Text startText = MkText(panel.transform, Loc.Get("str.hud.start"),
             new Vector2(0.5f, 0), new Vector2(0.5f, 0),
-            new Vector2(0, 0), new Vector2(80, 22),
-            FontHelper.ScaledFontSize(13), TextAnchor.MiddleCenter, new Color(0.7f, 0.9f, 1f));
+            new Vector2(0, 0), new Vector2(120, 40),
+            FontHelper.ScaledFontSize(36), TextAnchor.MiddleCenter, new Color(0.7f, 0.9f, 1f));
         startText.resizeTextForBestFit = true;
-        startText.resizeTextMinSize = FontHelper.ScaledFontSize(8);
-        startText.resizeTextMaxSize = FontHelper.ScaledFontSize(13);
+        startText.resizeTextMinSize = FontHelper.ScaledFontSize(14);
+        startText.resizeTextMaxSize = FontHelper.ScaledFontSize(36);
 
         // ── 트랙 바 영역 (GOAL/START 라벨 사이) ──
         GameObject barArea = new GameObject("TrackBarArea");
@@ -128,9 +128,9 @@ public partial class SceneBootstrapper
         trackBarRect = barArea.AddComponent<RectTransform>();
         trackBarRect.anchorMin = new Vector2(0, 0);
         trackBarRect.anchorMax = new Vector2(1, 1);
-        // GOAL라벨(22px) 위, START라벨(22px) 아래 여백
-        trackBarRect.offsetMin = new Vector2(0, 24);
-        trackBarRect.offsetMax = new Vector2(0, -24);
+        // GOAL라벨(40px) 위, START라벨(40px) 아래 여백
+        trackBarRect.offsetMin = new Vector2(0, 42);
+        trackBarRect.offsetMax = new Vector2(0, -42);
 
         // ── 흰색 세로 막대 (중앙 4px) ──
         GameObject barBg = new GameObject("BarBg");
