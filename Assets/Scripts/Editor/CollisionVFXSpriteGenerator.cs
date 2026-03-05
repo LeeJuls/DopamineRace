@@ -1,16 +1,63 @@
 using UnityEngine;
+using UnityEditor;
+using System.IO;
 
 // ══════════════════════════════════════════
-//  충돌 VFX용 런타임 스프라이트 생성
-//  static 유틸 클래스 (인스턴스 불필요)
+//  충돌 VFX 스프라이트 PNG 생성 도구
+//  메뉴: DopamineRace > Generate Collision VFX Sprites
+//  Assets/Resources/VFX/ 에 5개 PNG 저장
 // ══════════════════════════════════════════
-public static class CollisionSpriteFactory
+public static class CollisionVFXSpriteGenerator
 {
-    /// <summary>원형 스프라이트</summary>
-    public static Sprite CreateCircleSprite(int size, Color color)
+    private const int SIZE = 64;
+    private const string OUTPUT_DIR = "Assets/Resources/VFX";
+
+    [MenuItem("DopamineRace/Generate Collision VFX Sprites")]
+    public static void Generate()
     {
-        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-        tex.filterMode = FilterMode.Point;
+        if (!Directory.Exists(OUTPUT_DIR))
+            Directory.CreateDirectory(OUTPUT_DIR);
+
+        SavePNG(CreateCircle(SIZE), "vfx_circle");
+        SavePNG(CreateStar(SIZE, 6), "vfx_star6");
+        SavePNG(CreateStar(SIZE, 5), "vfx_star5");
+        SavePNG(CreateArrow(SIZE), "vfx_arrow");
+        SavePNG(CreateShield(SIZE), "vfx_shield");
+
+        AssetDatabase.Refresh();
+
+        // Import 설정: Sprite, Point filter, PPU=64
+        string[] names = { "vfx_circle", "vfx_star6", "vfx_star5", "vfx_arrow", "vfx_shield" };
+        foreach (var name in names)
+        {
+            string path = $"{OUTPUT_DIR}/{name}.png";
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spritePixelsPerUnit = SIZE;
+                importer.filterMode = FilterMode.Point;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.alphaIsTransparency = true;
+                importer.SaveAndReimport();
+            }
+        }
+
+        Debug.Log($"[CollisionVFXSpriteGenerator] {names.Length}개 스프라이트 생성 완료 → {OUTPUT_DIR}/");
+    }
+
+    private static void SavePNG(Texture2D tex, string name)
+    {
+        byte[] png = tex.EncodeToPNG();
+        string path = $"{OUTPUT_DIR}/{name}.png";
+        File.WriteAllBytes(path, png);
+        Object.DestroyImmediate(tex);
+    }
+
+    // ── 원형 ──
+    private static Texture2D CreateCircle(int size)
+    {
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
         float center = size / 2f;
         float radius = size / 2f - 1f;
 
@@ -20,36 +67,30 @@ public static class CollisionSpriteFactory
             {
                 float dist = Vector2.Distance(new Vector2(x, y), new Vector2(center, center));
                 if (dist <= radius)
-                    tex.SetPixel(x, y, color);
+                    tex.SetPixel(x, y, Color.white);
                 else if (dist <= radius + 1f)
-                    tex.SetPixel(x, y, new Color(color.r, color.g, color.b, 0.5f));
+                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, 0.5f));
                 else
                     tex.SetPixel(x, y, Color.clear);
             }
         }
         tex.Apply();
-        tex.hideFlags = HideFlags.HideAndDontSave;
-        var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
-        sprite.hideFlags = HideFlags.HideAndDontSave;
-        return sprite;
+        return tex;
     }
 
-    /// <summary>별 모양 스프라이트 (충돌)</summary>
-    public static Sprite CreateStarSprite(int size, Color color, int points = 6)
+    // ── 별 ──
+    private static Texture2D CreateStar(int size, int points)
     {
-        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-        tex.filterMode = FilterMode.Point;
-        float center = size / 2f;
-
-        Color[] clear = new Color[size * size];
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        var clear = new Color[size * size];
         for (int i = 0; i < clear.Length; i++) clear[i] = Color.clear;
         tex.SetPixels(clear);
 
+        float center = size / 2f;
         float outerR = size / 2f - 1f;
         float innerR = outerR * 0.45f;
 
-        // 별 꼭짓점 계산
-        Vector2[] verts = new Vector2[points * 2];
+        var verts = new Vector2[points * 2];
         for (int i = 0; i < points * 2; i++)
         {
             float angle = (i * Mathf.PI / points) - Mathf.PI / 2f;
@@ -57,74 +98,53 @@ public static class CollisionSpriteFactory
             verts[i] = new Vector2(center + Mathf.Cos(angle) * r, center + Mathf.Sin(angle) * r);
         }
 
-        // 채우기 (간단한 scanline)
         for (int y = 0; y < size; y++)
-        {
             for (int x = 0; x < size; x++)
-            {
                 if (IsPointInPolygon(new Vector2(x, y), verts))
-                    tex.SetPixel(x, y, color);
-            }
-        }
+                    tex.SetPixel(x, y, Color.white);
 
         tex.Apply();
-        tex.hideFlags = HideFlags.HideAndDontSave;
-        var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
-        sprite.hideFlags = HideFlags.HideAndDontSave;
-        return sprite;
+        return tex;
     }
 
-    /// <summary>위쪽 화살표 스프라이트 (슬링샷)</summary>
-    public static Sprite CreateArrowSprite(int size, Color color)
+    // ── 화살표 ──
+    private static Texture2D CreateArrow(int size)
     {
-        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-        tex.filterMode = FilterMode.Point;
-
-        Color[] clear = new Color[size * size];
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        var clear = new Color[size * size];
         for (int i = 0; i < clear.Length; i++) clear[i] = Color.clear;
         tex.SetPixels(clear);
 
         float center = size / 2f;
-
-        // 화살표 머리 (삼각형)
-        Vector2[] head = new Vector2[]
+        var head = new Vector2[]
         {
-            new Vector2(center, size - 2),           // 꼭대기
-            new Vector2(3, size * 0.5f),             // 좌하
-            new Vector2(size - 3, size * 0.5f),      // 우하
+            new Vector2(center, size - 2),
+            new Vector2(3, size * 0.5f),
+            new Vector2(size - 3, size * 0.5f),
         };
-
-        // 화살표 몸통 (직사각형)
         float bodyLeft = size * 0.3f;
         float bodyRight = size * 0.7f;
         float bodyTop = size * 0.55f;
         float bodyBottom = 2f;
 
         for (int y = 0; y < size; y++)
-        {
             for (int x = 0; x < size; x++)
             {
                 bool inHead = IsPointInTriangle(new Vector2(x, y), head[0], head[1], head[2]);
                 bool inBody = x >= bodyLeft && x <= bodyRight && y >= bodyBottom && y <= bodyTop;
                 if (inHead || inBody)
-                    tex.SetPixel(x, y, color);
+                    tex.SetPixel(x, y, Color.white);
             }
-        }
 
         tex.Apply();
-        tex.hideFlags = HideFlags.HideAndDontSave;
-        var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
-        sprite.hideFlags = HideFlags.HideAndDontSave;
-        return sprite;
+        return tex;
     }
 
-    /// <summary>방패 모양 스프라이트 (회피)</summary>
-    public static Sprite CreateShieldSprite(int size, Color color)
+    // ── 방패 ──
+    private static Texture2D CreateShield(int size)
     {
-        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-        tex.filterMode = FilterMode.Point;
-
-        Color[] clear = new Color[size * size];
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        var clear = new Color[size * size];
         for (int i = 0; i < clear.Length; i++) clear[i] = Color.clear;
         tex.SetPixels(clear);
 
@@ -135,36 +155,28 @@ public static class CollisionSpriteFactory
         for (int y = 0; y < size; y++)
         {
             float t = (float)y / size;
-            // 방패: 위쪽은 넓고 아래로 갈수록 좁아지는 형태
-            float halfWidth;
-            if (t > 0.5f)
-                halfWidth = (size / 2f - 2f);  // 상단: 넓은 폭
-            else
-                halfWidth = (size / 2f - 2f) * (t / 0.5f);  // 하단: 점점 좁아짐 (뾰족)
+            float halfWidth = t > 0.5f
+                ? (size / 2f - 2f)
+                : (size / 2f - 2f) * (t / 0.5f);
 
             for (int x = 0; x < size; x++)
             {
                 float dx = Mathf.Abs(x - centerX);
                 if (dx <= halfWidth && y >= bottom && y <= top)
                 {
-                    // 테두리 효과
                     bool isBorder = (dx >= halfWidth - 1.5f) ||
                                     (y <= bottom + 1.5f) ||
                                     (y >= top - 1.5f) ||
                                     (t <= 0.5f && dx >= halfWidth - 1.5f);
-                    if (isBorder)
-                        tex.SetPixel(x, y, color);
-                    else
-                        tex.SetPixel(x, y, new Color(color.r, color.g, color.b, 0.5f));
+                    tex.SetPixel(x, y, isBorder
+                        ? Color.white
+                        : new Color(1f, 1f, 1f, 0.5f));
                 }
             }
         }
 
         tex.Apply();
-        tex.hideFlags = HideFlags.HideAndDontSave;
-        var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
-        sprite.hideFlags = HideFlags.HideAndDontSave;
-        return sprite;
+        return tex;
     }
 
     // ── 기하 유틸 ──
@@ -178,9 +190,7 @@ public static class CollisionSpriteFactory
             if (((polygon[i].y > point.y) != (polygon[j].y > point.y)) &&
                 (point.x < (polygon[j].x - polygon[i].x) * (point.y - polygon[i].y)
                 / (polygon[j].y - polygon[i].y) + polygon[i].x))
-            {
                 inside = !inside;
-            }
             j = i;
         }
         return inside;
@@ -191,9 +201,7 @@ public static class CollisionSpriteFactory
         float d1 = Sign(p, a, b);
         float d2 = Sign(p, b, c);
         float d3 = Sign(p, c, a);
-        bool hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-        bool hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-        return !(hasNeg && hasPos);
+        return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
     }
 
     private static float Sign(Vector2 p1, Vector2 p2, Vector2 p3)
