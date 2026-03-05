@@ -67,9 +67,22 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ── 레이싱 UI ──
     private Text countdownText;
     private Text raceTimerText;
-    private Text[] rankTexts;
     private Text myBetText;
     private Text racingRoundText;
+
+    // ── 트랙 프로그레스 바 ──
+    private struct RacerCircleUI
+    {
+        public RectTransform rect;
+        public Image circleImage;
+        public Image outlineImage;   // 배팅 마커 노란 테두리 (null이면 비배팅)
+        public Text numberText;
+        public int racerIndex;
+    }
+    private RacerCircleUI[] racerCircles;
+    private RectTransform trackBarRect;
+    private List<GameObject> lapDividers = new List<GameObject>();
+    private HashSet<int> myPickIndices = new HashSet<int>();
 
     // ── 결과 UI ──
     private Transform resultPanelRoot;
@@ -113,7 +126,6 @@ public partial class SceneBootstrapper : MonoBehaviour
 
     // ── 런타임 ──
     private float raceTimer;
-    private float rankUpdateTimer;
     private List<GameObject> betArrows = new List<GameObject>();
 
     // ══════════════════════════════════════
@@ -202,12 +214,7 @@ public partial class SceneBootstrapper : MonoBehaviour
             raceTimer += Time.deltaTime;
             if (raceTimerText != null) raceTimerText.text = Loc.Get("str.hud.timer", raceTimer.ToString("F1"));
 
-            rankUpdateTimer -= Time.deltaTime;
-            if (rankUpdateTimer <= 0f)
-            {
-                UpdateLiveRankings();
-                rankUpdateTimer = 0.3f;
-            }
+            UpdateTrackProgressBar();
             UpdateArrowPositions();
         }
 #if UNITY_EDITOR
@@ -317,6 +324,7 @@ public partial class SceneBootstrapper : MonoBehaviour
             case GameManager.GameState.Racing:
                 racingUI.SetActive(true);
                 raceTimer = 0f;
+                InitTrackBarForRace();
                 UpdateMyBet();
                 UpdateRacingRoundInfo();
                 HideAllRaceLabels();

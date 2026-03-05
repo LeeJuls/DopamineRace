@@ -87,6 +87,8 @@ str.hud.lap_progress,{0}/{1}바퀴,{0}/{1} Laps,{0}/{1}周,{0}/{1}圈,{0}/{1} Ru
 str.hud.finished,완주,Finished,完走,完赛,Ziel,Meta,Chegada
 str.hud.my_bet,내 배팅 ▶ {0} | {1},My Bet ▶ {0} | {1},マイベット ▶ {0} | {1},我的投注 ▶ {0} | {1},Meine Wette ▶ {0} | {1},Mi Apuesta ▶ {0} | {1},Minha Aposta ▶ {0} | {1}
 str.hud.race_info,"Round {0}/{1}  |  {2}바퀴","Round {0}/{1}  |  {2} Laps",ラウンド{0}/{1}  |  {2}周,"第{0}/{1}轮  |  {2}圈","Runde {0}/{1}  |  {2} Runden","Ronda {0}/{1}  |  {2} Vueltas","Rodada {0}/{1}  |  {2} Voltas"
+str.hud.start,출발,START,スタート,起点,START,SALIDA,LARGADA
+str.hud.goal,결승,GOAL,ゴール,终点,ZIEL,META,CHEGADA
 str.result.title,레이스 결과,Race Result,レース結果,比赛结果,Rennergebnis,Resultado,Resultado
 str.result.win,적중!,Hit!,的中！,命中！,Treffer!,¡Acierto!,Acertou!
 str.result.lose,아쉽네요...,So close...,残念...,可惜...,Knapp daneben...,Casi...,Quase...
