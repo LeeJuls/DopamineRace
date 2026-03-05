@@ -489,4 +489,15 @@ public class RaceManager : MonoBehaviour
 
         return result;
     }
+
+#if UNITY_EDITOR
+    // ══════════════════════════════════════
+    //  디버그 전용 (Editor 빌드에서만 활성)
+    // ══════════════════════════════════════
+    /// <summary>[DEBUG] 결과창 미리보기용 — 최종 순위 강제 설정</summary>
+    public void DebugSetFinalRankings(System.Collections.Generic.List<RankingEntry> fakeRankings)
+    {
+        finalRankings = fakeRankings;
+    }
+#endif
 }

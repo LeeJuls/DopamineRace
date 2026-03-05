@@ -389,4 +389,12 @@ public class GameManager : MonoBehaviour
         RaceManager.Instance?.SetLaps(laps);
         Debug.Log("[라운드] Round " + CurrentRound + ", Laps: " + laps);
     }
+
+#if UNITY_EDITOR
+    // ══════════════════════════════════════
+    //  디버그 전용 (Editor 빌드에서만 활성)
+    // ══════════════════════════════════════
+    /// <summary>[DEBUG] 결과창 미리보기용 — 배팅 강제 설정</summary>
+    public void DebugSetCurrentBet(BetInfo bet) { CurrentBet = bet; }
+#endif
 }

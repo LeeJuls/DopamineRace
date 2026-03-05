@@ -196,6 +196,9 @@ public partial class SceneBootstrapper : MonoBehaviour
             }
             UpdateArrowPositions();
         }
+#if UNITY_EDITOR
+        UpdateDebugInput();
+#endif
     }
 
     // ══════════════════════════════════════
