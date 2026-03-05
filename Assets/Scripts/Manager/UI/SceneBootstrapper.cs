@@ -90,14 +90,15 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text   nextRoundBtnText;
 
     // ── Finish UI ──
-    private Transform finishPanelRoot;
-    private Text   finishTitleText;
-    private Text   finishRoundDetailText;
-    private Text   finishTotalScoreText;
-    private Button finishNewGameButton;
-    private Text   finishNewGameBtnText;
-    private Button finishTop100Button;
-    private Text   finishTop100BtnText;
+    private Transform  finishPanelRoot;
+    private Text       finishTitleText;
+    private Text       finishRoundDetailText;
+    private Text       finishTotalScoreText;
+    private Button     finishNewGameButton;
+    private Text       finishNewGameBtnText;
+    private Button     finishTop100Button;
+    private Text       finishTop100BtnText;
+    private ScrollRect finishScrollRect;      // 라운드 목록 스크롤
 
     // ── 리더보드 ──
     private Text leaderboardContentText;

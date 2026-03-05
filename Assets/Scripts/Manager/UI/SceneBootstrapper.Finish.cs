@@ -34,9 +34,22 @@ public partial class SceneBootstrapper
     // ══════════════════════════════════════
     private void CacheFinishUIReferences(Transform root)
     {
-        finishTitleText       = FindText(root, "TitleText");
-        finishRoundDetailText = FindText(root, "RoundDetailText");
-        finishTotalScoreText  = FindText(root, "TotalScoreText");
+        finishTitleText      = FindText(root, "TitleText");
+        finishTotalScoreText = FindText(root, "TotalScoreText");
+
+        // RoundScrollView 구조 (v2: 스크롤 지원)
+        Transform scrollT = root.Find("RoundScrollView");
+        if (scrollT != null)
+        {
+            finishScrollRect      = scrollT.GetComponent<ScrollRect>();
+            Transform detailT     = scrollT.Find("Viewport/RoundDetailText");
+            finishRoundDetailText = detailT?.GetComponent<Text>();
+        }
+        else
+        {
+            // 레거시: 직접 자식 (폴백)
+            finishRoundDetailText = FindText(root, "RoundDetailText");
+        }
 
         // NewGameBtn
         Transform ngT = root.Find("NewGameBtn");
@@ -146,5 +159,12 @@ public partial class SceneBootstrapper
 
         if (finishTotalScoreText != null)
             finishTotalScoreText.text = Loc.Get("str.finish.total", total, wins, sm.RoundHistory.Count);
+
+        // 스크롤 맨 위로 리셋 (Canvas 레이아웃 갱신 후)
+        if (finishScrollRect != null)
+        {
+            Canvas.ForceUpdateCanvases();
+            finishScrollRect.normalizedPosition = new Vector2(0f, 1f);
+        }
     }
 }

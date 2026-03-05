@@ -10,12 +10,14 @@ using System.IO;
 ///
 /// 구조:
 ///   FinishPanel (880×650, 반투명 어두운 배경)
-///   ├─ TitleText        (str.finish.title — 금색, 55pt)
-///   ├─ RoundDetailText  (700×400, 20pt, rich text)
-///   ├─ TotalScoreText   (500×60, 38pt, 노랑)
-///   ├─ NewGameBtn       (220×55, 파란)
+///   ├─ TitleText          (str.finish.title — 금색, 55pt)
+///   ├─ RoundScrollView    (700×300, ScrollRect — 라운드 목록 스크롤)
+///   │  └─ Viewport        (RectMask2D, fill)
+///   │     └─ RoundDetailText (Text + ContentSizeFitter, 20pt, rich text)
+///   ├─ TotalScoreText     (500×60, 38pt, 노랑)
+///   ├─ NewGameBtn         (220×55, 파란)
 ///   │  └─ BtnText
-///   └─ Top100Btn        (220×55, 보라)
+///   └─ Top100Btn          (220×55, 보라)
 ///      └─ BtnText
 ///
 /// 생성물:
@@ -97,12 +99,61 @@ public static class FinishLeaderboardUIPrefabCreator
             Vector2.zero, new Vector2(500f, 70f),
             55, TextAnchor.MiddleCenter, COLOR_GOLD, font, false);
 
-        // ── RoundDetailText (anchor y=0.58, 흰색 20pt, rich text) ──
-        GameObject detailGo = MkText(root.transform, "RoundDetailText", "",
-            new Vector2(0.5f, 0.58f), new Vector2(0.5f, 0.58f),
-            Vector2.zero, new Vector2(700f, 400f),
-            20, TextAnchor.UpperCenter, COLOR_WHITE, font, true);
-        detailGo.GetComponent<Text>().verticalOverflow = VerticalWrapMode.Overflow;
+        // ── RoundScrollView (anchor y=0.57, 700×300, ScrollRect) ──
+        GameObject scrollView = new GameObject("RoundScrollView");
+        scrollView.transform.SetParent(root.transform, false);
+        RectTransform scrollRt = scrollView.AddComponent<RectTransform>();
+        scrollRt.anchorMin        = new Vector2(0.5f, 0.57f);
+        scrollRt.anchorMax        = new Vector2(0.5f, 0.57f);
+        scrollRt.pivot            = new Vector2(0.5f, 0.5f);
+        scrollRt.anchoredPosition = Vector2.zero;
+        scrollRt.sizeDelta        = new Vector2(700f, 300f);
+        // ScrollRect 설정 (수직 스크롤만)
+        ScrollRect sr = scrollView.AddComponent<ScrollRect>();
+        sr.horizontal     = false;
+        sr.vertical       = true;
+        sr.movementType   = ScrollRect.MovementType.Clamped;
+        sr.scrollSensitivity = 30f;
+        // ScrollRect에 투명 Image (레이캐스트 블로킹용)
+        Image srImg = scrollView.AddComponent<Image>();
+        srImg.color = new Color(0f, 0f, 0f, 0f);
+
+        // ── Viewport (RectMask2D, fill) ──
+        GameObject viewport = new GameObject("Viewport");
+        viewport.transform.SetParent(scrollView.transform, false);
+        RectTransform vpRt = viewport.AddComponent<RectTransform>();
+        vpRt.anchorMin        = Vector2.zero;
+        vpRt.anchorMax        = Vector2.one;
+        vpRt.pivot            = new Vector2(0f, 1f);
+        vpRt.anchoredPosition = Vector2.zero;
+        vpRt.sizeDelta        = Vector2.zero;
+        viewport.AddComponent<RectMask2D>();
+
+        // ── RoundDetailText (top-stretch, ContentSizeFitter) ──
+        GameObject detailGo = new GameObject("RoundDetailText");
+        detailGo.transform.SetParent(viewport.transform, false);
+        RectTransform detailRt = detailGo.AddComponent<RectTransform>();
+        detailRt.anchorMin        = new Vector2(0f, 1f);
+        detailRt.anchorMax        = new Vector2(1f, 1f);
+        detailRt.pivot            = new Vector2(0.5f, 1f);
+        detailRt.anchoredPosition = Vector2.zero;
+        detailRt.sizeDelta        = new Vector2(0f, 300f); // 초기값, CSF가 자동 조정
+        Text detailText = detailGo.AddComponent<Text>();
+        detailText.text           = "";
+        detailText.fontSize       = 20;
+        detailText.alignment      = TextAnchor.UpperLeft;
+        detailText.color          = COLOR_WHITE;
+        detailText.supportRichText = true;
+        detailText.verticalOverflow = VerticalWrapMode.Overflow;
+        if (font != null) detailText.font = font;
+        // ContentSizeFitter — 텍스트 내용에 맞춰 높이 자동 확장
+        ContentSizeFitter csf = detailGo.AddComponent<ContentSizeFitter>();
+        csf.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
+        csf.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+        // ScrollRect 연결
+        sr.viewport = vpRt;
+        sr.content  = detailRt;
 
         // ── TotalScoreText (anchor y=0.18, 노랑 38pt) ──
         MkText(root.transform, "TotalScoreText", "",
