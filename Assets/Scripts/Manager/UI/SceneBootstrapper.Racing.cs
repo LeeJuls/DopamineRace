@@ -236,9 +236,9 @@ public partial class SceneBootstrapper
             GameObject divObj = new GameObject("LapDivider_" + lap);
             divObj.transform.SetParent(trackBarRect, false);
             RectTransform drt = divObj.AddComponent<RectTransform>();
-            drt.anchorMin = new Vector2(0, yNorm);
-            drt.anchorMax = new Vector2(1, yNorm);
-            drt.sizeDelta = new Vector2(6, 6); // 짧고 굵게
+            drt.anchorMin = new Vector2(0.5f, yNorm);
+            drt.anchorMax = new Vector2(0.5f, yNorm);
+            drt.sizeDelta = new Vector2(14, 6); // 짧고 굵은 사각형
             drt.anchoredPosition = Vector2.zero;
             Image dimg = divObj.AddComponent<Image>();
             dimg.color = new Color(1f, 0.85f, 0.3f, 0.85f); // 노란빛 + 높은 불투명도
