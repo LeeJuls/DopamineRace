@@ -24,6 +24,30 @@ public partial class SceneBootstrapper
         new Color(0.60f, 0.30f, 0.10f),  // 12 = 갈색 (여분)
     };
 
+    // ── 원형 스프라이트 캐시 (Unity 6 내장 Knob 없음 → 코드 생성) ──
+    private static Sprite _circleSprite;
+    private static Sprite CircleSprite
+    {
+        get
+        {
+            if (_circleSprite != null) return _circleSprite;
+            int sz = 64;
+            var tex = new Texture2D(sz, sz, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+            float c = sz / 2f, r = sz / 2f - 1f;
+            for (int y = 0; y < sz; y++)
+                for (int x = 0; x < sz; x++)
+                {
+                    float d = Mathf.Sqrt((x - c) * (x - c) + (y - c) * (y - c));
+                    tex.SetPixel(x, y, d <= r ? Color.white : Color.clear);
+                }
+            tex.Apply();
+            _circleSprite = Sprite.Create(tex, new Rect(0, 0, sz, sz), new Vector2(0.5f, 0.5f), 100);
+            _circleSprite.name = "GeneratedCircle";
+            return _circleSprite;
+        }
+    }
+
     // ══════════════════════════════════════
     //  레이싱 HUD 빌드
     // ══════════════════════════════════════
@@ -64,7 +88,7 @@ public partial class SceneBootstrapper
             Transform prefabBar = prefabInst.transform.Find("TrackBarArea");
             if (prefabBar != null) trackBarRect = prefabBar as RectTransform ?? prefabBar.GetComponent<RectTransform>();
             racerCircles = new RacerCircleUI[racerCount];
-            Sprite prefabKnob = Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
+            Sprite prefabKnob = CircleSprite;
             Transform circleParent = trackBarRect != null ? trackBarRect : prefabInst.transform;
             for (int i = racerCount - 1; i >= 0; i--)
                 racerCircles[i] = CreateRacerCircle(circleParent, i, prefabKnob);
@@ -121,11 +145,11 @@ public partial class SceneBootstrapper
 
         // ── 레이서 원형 마커 생성 (역순: 높은 번호 먼저 → 낮은 번호가 위에 그려짐) ──
         racerCircles = new RacerCircleUI[racerCount];
-        Sprite knob = Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
+        Sprite circleSprt = CircleSprite;
 
         for (int i = racerCount - 1; i >= 0; i--)
         {
-            racerCircles[i] = CreateRacerCircle(barArea.transform, i, knob);
+            racerCircles[i] = CreateRacerCircle(barArea.transform, i, circleSprt);
         }
     }
 
@@ -204,8 +228,6 @@ public partial class SceneBootstrapper
         lapDividers.Clear();
 
         if (totalLaps <= 1 || trackBarRect == null) return;
-
-        Sprite knob = Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
 
         for (int lap = 1; lap < totalLaps; lap++)
         {
