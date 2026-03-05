@@ -74,15 +74,13 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ── 결과 UI ──
     private Transform resultPanelRoot;
     private Text resultTitleText;
-    // RankSection (1~3위 캐릭터)
-    private Image[] resultRankIcons  = new Image[3];
-    private Text[]  resultRankNames  = new Text[3];
-    // BetResultSection (내 배팅 선택)
-    private Text            resultBetTypeLabel;
-    private GameObject[]    resultPickRows    = new GameObject[3];
-    private Text[]          resultPickLabels  = new Text[3];
-    private Text[]          resultPickNames   = new Text[3];
-    private Text[]          resultPickResults = new Text[3];
+    // RankSection — 전체 N위 (최대 12)
+    private const int MAX_RANK_ROWS = 12;
+    private GameObject[] resultRankRows   = new GameObject[MAX_RANK_ROWS];
+    private Image[]      resultRankIcons  = new Image[MAX_RANK_ROWS];
+    private Text[]       resultRankNames  = new Text[MAX_RANK_ROWS];
+    private Text[]       resultRankBadges = new Text[MAX_RANK_ROWS];
+    private Text[]       resultRankArrows = new Text[MAX_RANK_ROWS];
     // ScoreSection
     private Text resultScoreFormulaText;
     private Text resultTotalScoreText;

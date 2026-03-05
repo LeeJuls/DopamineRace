@@ -8,6 +8,9 @@ using System.IO;
 /// 결과 화면 UI 프리팹 자동 생성 Editor 스크립트.
 /// Unity 메뉴: DopamineRace > Create Result UI Prefabs
 ///
+/// 구조: TitleText / RankSection (12 rows + PickArrow) / ScoreSection / NextRoundBtn
+/// BetResultSection 제거 → 순위 목록에 화살표로 내 픽 표시
+///
 /// 생성물:
 ///   Assets/Prefabs/UI/ResultPanel.prefab
 /// </summary>
@@ -15,6 +18,7 @@ public static class ResultUIPrefabCreator
 {
     private const string PREFAB_DIR = "Assets/Prefabs/UI";
     private const string RESULT_PANEL_PATH = "Assets/Prefabs/UI/ResultPanel.prefab";
+    private const int MAX_RANK_ROWS = 12;
 
     // ──────────────────────────────────────────────
     //  색상 상수
@@ -23,13 +27,12 @@ public static class ResultUIPrefabCreator
     private static readonly Color COLOR_WIN        = new Color(1f,   0.85f, 0.2f, 1f);
     private static readonly Color COLOR_WHITE      = Color.white;
     private static readonly Color COLOR_GRAY       = new Color(0.75f, 0.75f, 0.75f, 1f);
-    private static readonly Color COLOR_RANK1      = new Color(1f,   0.84f, 0f,   1f);  // Gold
+    private static readonly Color COLOR_RANK1      = new Color(1f,   0.84f, 0f,   1f);   // Gold
     private static readonly Color COLOR_RANK2      = new Color(0.75f, 0.75f, 0.75f, 1f); // Silver
     private static readonly Color COLOR_RANK3      = new Color(0.80f, 0.50f, 0.20f, 1f); // Bronze
+    private static readonly Color COLOR_RANK_REST  = new Color(0.45f, 0.45f, 0.45f, 1f); // 4위 이하
     private static readonly Color COLOR_BTN_NEXT   = new Color(0.25f, 0.50f, 0.90f, 1f);
     private static readonly Color COLOR_SECTION_BG = new Color(1f,   1f,   1f,   0.06f);
-    private static readonly Color COLOR_PICK_HIT   = new Color(0.4f,  1f,   0.4f,  1f);
-    private static readonly Color COLOR_PICK_MISS  = new Color(1f,   0.4f,  0.4f,  1f);
 
     // ══════════════════════════════════════════════
     //  메뉴 항목: Create (완전 재생성)
@@ -148,16 +151,16 @@ public static class ResultUIPrefabCreator
             Vector2.zero, new Vector2(600, 65),
             52, TextAnchor.MiddleCenter, COLOR_WIN, font, true);
 
-        // ── RankSection ──
+        // ── RankSection (전체 순위, 최대 12행) ──
         GameObject rankSection = MkContainer(root.transform, "RankSection",
-            new Vector2(0.5f, 0.74f), new Vector2(0.5f, 0.74f),
-            Vector2.zero, new Vector2(640, 160));
+            new Vector2(0.5f, 0.60f), new Vector2(0.5f, 0.60f),
+            Vector2.zero, new Vector2(640, 400));
         Image rankBg = rankSection.AddComponent<Image>();
         rankBg.color = COLOR_SECTION_BG;
         VerticalLayoutGroup rankVlg = rankSection.AddComponent<VerticalLayoutGroup>();
         rankVlg.childAlignment = TextAnchor.MiddleLeft;
-        rankVlg.spacing = 4f;
-        rankVlg.padding = new RectOffset(12, 12, 8, 8);
+        rankVlg.spacing = 2f;
+        rankVlg.padding = new RectOffset(12, 12, 6, 6);
         rankVlg.childControlWidth = true;
         rankVlg.childControlHeight = false;
         rankVlg.childForceExpandWidth = true;
@@ -165,48 +168,29 @@ public static class ResultUIPrefabCreator
 
         // 섹션 라벨
         GameObject sectionLbl = MkTextChild(rankSection.transform, "SectionLabel", "순위",
-            new Vector2(480, 24), 16, TextAnchor.MiddleLeft, COLOR_GRAY, font, false);
-        SetLayoutElement(sectionLbl, 480, 24);
+            new Vector2(480, 22), 15, TextAnchor.MiddleLeft, COLOR_GRAY, font, false);
+        SetLayoutElement(sectionLbl, 480, 22);
 
-        // Rank1 / Rank2 / Rank3 Row
-        Color[] rankColors = { COLOR_RANK1, COLOR_RANK2, COLOR_RANK3 };
-        string[] rankLabels = { "1위", "2위", "3위" };
-        for (int i = 0; i < 3; i++)
+        // Rank1~12 Row (4위 이상은 기본 hidden)
+        for (int i = 0; i < MAX_RANK_ROWS; i++)
         {
-            CreateRankRow(rankSection.transform, "Rank" + (i + 1) + "Row",
-                rankLabels[i], rankColors[i], font);
-        }
+            Color badgeColor;
+            if (i == 0) badgeColor = COLOR_RANK1;
+            else if (i == 1) badgeColor = COLOR_RANK2;
+            else if (i == 2) badgeColor = COLOR_RANK3;
+            else badgeColor = COLOR_RANK_REST;
 
-        // ── BetResultSection ──
-        GameObject betSection = MkContainer(root.transform, "BetResultSection",
-            new Vector2(0.5f, 0.535f), new Vector2(0.5f, 0.535f),
-            Vector2.zero, new Vector2(640, 130));
-        Image betBg = betSection.AddComponent<Image>();
-        betBg.color = COLOR_SECTION_BG;
-        VerticalLayoutGroup betVlg = betSection.AddComponent<VerticalLayoutGroup>();
-        betVlg.childAlignment = TextAnchor.MiddleLeft;
-        betVlg.spacing = 4f;
-        betVlg.padding = new RectOffset(12, 12, 8, 8);
-        betVlg.childControlWidth = true;
-        betVlg.childControlHeight = false;
-        betVlg.childForceExpandWidth = true;
-        betVlg.childForceExpandHeight = false;
+            string rankLabel = (i + 1) + "위";  // 런타임에 GetOrdinal()로 동적 변경
+            GameObject row = CreateRankRow(rankSection.transform, "Rank" + (i + 1) + "Row",
+                rankLabel, badgeColor, font);
 
-        // 배팅 타입 라벨
-        GameObject betTypeLbl = MkTextChild(betSection.transform, "BetTypeLabel", "-",
-            new Vector2(480, 26), 18, TextAnchor.MiddleLeft, COLOR_WHITE, font, false);
-        SetLayoutElement(betTypeLbl, 480, 26);
-
-        // Pick1 / Pick2 / Pick3 Row (Pick2, Pick3는 기본 hidden)
-        for (int i = 0; i < 3; i++)
-        {
-            GameObject pickRow = CreatePickRow(betSection.transform, "Pick" + (i + 1) + "Row", font);
-            if (i > 0) pickRow.SetActive(false);
+            // 4위 이상은 기본 비활성 (런타임에 레이서 수만큼 활성화)
+            if (i >= 3) row.SetActive(false);
         }
 
         // ── ScoreSection ──
         GameObject scoreSection = MkContainer(root.transform, "ScoreSection",
-            new Vector2(0.5f, 0.355f), new Vector2(0.5f, 0.355f),
+            new Vector2(0.5f, 0.20f), new Vector2(0.5f, 0.20f),
             Vector2.zero, new Vector2(640, 90));
         Image scoreBg = scoreSection.AddComponent<Image>();
         scoreBg.color = COLOR_SECTION_BG;
@@ -231,8 +215,8 @@ public static class ResultUIPrefabCreator
         GameObject btn = new GameObject("NextRoundBtn");
         btn.transform.SetParent(root.transform, false);
         RectTransform btnRt = btn.AddComponent<RectTransform>();
-        btnRt.anchorMin = new Vector2(0.5f, 0.12f);
-        btnRt.anchorMax = new Vector2(0.5f, 0.12f);
+        btnRt.anchorMin = new Vector2(0.5f, 0.08f);
+        btnRt.anchorMax = new Vector2(0.5f, 0.08f);
         btnRt.pivot = new Vector2(0.5f, 0.5f);
         btnRt.sizeDelta = new Vector2(260, 62);
         btn.AddComponent<Image>().color = COLOR_BTN_NEXT;
@@ -245,33 +229,33 @@ public static class ResultUIPrefabCreator
         return root;
     }
 
-    // ── Rank Row (1위/2위/3위) ──
-    private static void CreateRankRow(Transform parent, string name, string rankLabel, Color badgeColor, Font font)
+    // ── Rank Row (순위 행: 배지 + 아이콘 + 이름 + 화살표) ──
+    private static GameObject CreateRankRow(Transform parent, string name, string rankLabel, Color badgeColor, Font font)
     {
         GameObject row = new GameObject(name);
         row.transform.SetParent(parent, false);
         RectTransform rowRt = row.AddComponent<RectTransform>();
-        rowRt.sizeDelta = new Vector2(480, 34);
+        rowRt.sizeDelta = new Vector2(480, 30);
 
         HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
         hlg.childAlignment = TextAnchor.MiddleLeft;
-        hlg.spacing = 8f;
+        hlg.spacing = 6f;
         hlg.padding = new RectOffset(0, 0, 0, 0);
         hlg.childControlWidth = false;
         hlg.childControlHeight = false;
         hlg.childForceExpandWidth = false;
         hlg.childForceExpandHeight = false;
 
-        SetLayoutElement(row, 480, 34);
+        SetLayoutElement(row, 480, 30);
 
         // RankBadge (배경 + 텍스트)
         GameObject badge = new GameObject("RankBadge");
         badge.transform.SetParent(row.transform, false);
         RectTransform badgeRt = badge.AddComponent<RectTransform>();
-        badgeRt.sizeDelta = new Vector2(42, 28);
+        badgeRt.sizeDelta = new Vector2(40, 26);
         Image badgeImg = badge.AddComponent<Image>();
         badgeImg.color = badgeColor;
-        SetLayoutElement(badge, 42, 28);
+        SetLayoutElement(badge, 40, 26);
 
         GameObject badgeText = new GameObject("BadgeText");
         badgeText.transform.SetParent(badge.transform, false);
@@ -282,7 +266,7 @@ public static class ResultUIPrefabCreator
         badgeTextRt.offsetMax = Vector2.zero;
         Text bt = badgeText.AddComponent<Text>();
         bt.text = rankLabel;
-        bt.fontSize = 15;
+        bt.fontSize = 14;
         bt.fontStyle = FontStyle.Bold;
         bt.alignment = TextAnchor.MiddleCenter;
         bt.color = Color.black;
@@ -292,168 +276,150 @@ public static class ResultUIPrefabCreator
         GameObject icon = new GameObject("CharIcon");
         icon.transform.SetParent(row.transform, false);
         RectTransform iconRt = icon.AddComponent<RectTransform>();
-        iconRt.sizeDelta = new Vector2(36, 36);
+        iconRt.sizeDelta = new Vector2(30, 30);
         Image iconImg = icon.AddComponent<Image>();
-        iconImg.color = new Color(0.3f, 0.3f, 0.3f, 1f);  // 아이콘 없을 때 회색
+        iconImg.color = new Color(0.3f, 0.3f, 0.3f, 1f);
         iconImg.preserveAspect = true;
-        SetLayoutElement(icon, 36, 36);
+        SetLayoutElement(icon, 30, 30);
 
         // CharName
         GameObject charName = new GameObject("CharName");
         charName.transform.SetParent(row.transform, false);
         RectTransform nameRt = charName.AddComponent<RectTransform>();
-        nameRt.sizeDelta = new Vector2(360, 30);
+        nameRt.sizeDelta = new Vector2(260, 28);
         Text nameText = charName.AddComponent<Text>();
         nameText.text = "-";
-        nameText.fontSize = 22;
+        nameText.fontSize = 20;
         nameText.alignment = TextAnchor.MiddleLeft;
         nameText.color = COLOR_WHITE;
         nameText.resizeTextForBestFit = true;
-        nameText.resizeTextMinSize = 14;
-        nameText.resizeTextMaxSize = 24;
+        nameText.resizeTextMinSize = 13;
+        nameText.resizeTextMaxSize = 22;
         if (font != null) nameText.font = font;
-        SetLayoutElement(charName, 360, 30);
-    }
+        SetLayoutElement(charName, 260, 28);
 
-    // ── Pick Row (내 선택 → 실제 순위) ──
-    private static GameObject CreatePickRow(Transform parent, string name, Font font)
-    {
-        GameObject row = new GameObject(name);
-        row.transform.SetParent(parent, false);
-        RectTransform rowRt = row.AddComponent<RectTransform>();
-        rowRt.sizeDelta = new Vector2(480, 28);
-
-        HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
-        hlg.childAlignment = TextAnchor.MiddleLeft;
-        hlg.spacing = 8f;
-        hlg.childControlWidth = false;
-        hlg.childControlHeight = false;
-        hlg.childForceExpandWidth = false;
-        hlg.childForceExpandHeight = false;
-
-        SetLayoutElement(row, 480, 28);
-
-        // LabelText ("1착:", "2착:", "3착:")
-        GameObject lbl = new GameObject("LabelText");
-        lbl.transform.SetParent(row.transform, false);
-        RectTransform lblRt = lbl.AddComponent<RectTransform>();
-        lblRt.sizeDelta = new Vector2(50, 26);
-        Text lblText = lbl.AddComponent<Text>();
-        lblText.text = "-";
-        lblText.fontSize = 18;
-        lblText.alignment = TextAnchor.MiddleLeft;
-        lblText.color = COLOR_GRAY;
-        if (font != null) lblText.font = font;
-        SetLayoutElement(lbl, 50, 26);
-
-        // PickName (선택한 캐릭터 이름)
-        GameObject pickName = new GameObject("PickName");
-        pickName.transform.SetParent(row.transform, false);
-        RectTransform pickNameRt = pickName.AddComponent<RectTransform>();
-        pickNameRt.sizeDelta = new Vector2(220, 26);
-        Text pickNameText = pickName.AddComponent<Text>();
-        pickNameText.text = "-";
-        pickNameText.fontSize = 18;
-        pickNameText.alignment = TextAnchor.MiddleLeft;
-        pickNameText.color = COLOR_WHITE;
-        if (font != null) pickNameText.font = font;
-        SetLayoutElement(pickName, 220, 26);
-
-        // PickResult ("→ 1위" or "→ 5위")
-        GameObject pickResult = new GameObject("PickResult");
-        pickResult.transform.SetParent(row.transform, false);
-        RectTransform pickResultRt = pickResult.AddComponent<RectTransform>();
-        pickResultRt.sizeDelta = new Vector2(160, 26);
-        Text pickResultText = pickResult.AddComponent<Text>();
-        pickResultText.text = "";
-        pickResultText.fontSize = 18;
-        pickResultText.fontStyle = FontStyle.Bold;
-        pickResultText.alignment = TextAnchor.MiddleLeft;
-        pickResultText.color = COLOR_PICK_HIT;
-        if (font != null) pickResultText.font = font;
-        SetLayoutElement(pickResult, 160, 26);
+        // PickArrow (← 1st / ← pick — 기본 hidden)
+        GameObject pickArrow = new GameObject("PickArrow");
+        pickArrow.transform.SetParent(row.transform, false);
+        RectTransform arrowRt = pickArrow.AddComponent<RectTransform>();
+        arrowRt.sizeDelta = new Vector2(120, 28);
+        Text arrowText = pickArrow.AddComponent<Text>();
+        arrowText.text = "";
+        arrowText.fontSize = 18;
+        arrowText.fontStyle = FontStyle.Bold;
+        arrowText.alignment = TextAnchor.MiddleLeft;
+        arrowText.color = COLOR_WHITE;
+        if (font != null) arrowText.font = font;
+        SetLayoutElement(pickArrow, 120, 28);
+        pickArrow.SetActive(false); // 기본 비활성
 
         return row;
     }
 
     // ══════════════════════════════════════════════
-    //  Patch: 없는 요소만 추가
+    //  Patch: 없는 요소만 추가 (v2: 전체 순위 + PickArrow)
     // ══════════════════════════════════════════════
     private static void PatchResultPanel(Transform root, Font font)
     {
         // TitleText
         PatchEnsureText(root, "TitleText", "WIN", 52, TextAnchor.MiddleCenter, COLOR_WIN, font, true);
 
-        // RankSection
+        // ── BetResultSection 레거시 제거 ──
+        Transform oldBetSection = root.Find("BetResultSection");
+        if (oldBetSection != null)
+        {
+            Debug.Log("[ResultUIPrefabCreator][Patch] BetResultSection 레거시 제거");
+            Object.DestroyImmediate(oldBetSection.gameObject);
+        }
+
+        // ── RankSection ──
         Transform rankSection = root.Find("RankSection");
         if (rankSection == null)
         {
             Debug.Log("[ResultUIPrefabCreator][Patch] RankSection 없음 → 추가");
             GameObject rSec = MkContainer(root, "RankSection",
-                new Vector2(0.5f, 0.74f), new Vector2(0.5f, 0.74f),
-                Vector2.zero, new Vector2(640, 160));
+                new Vector2(0.5f, 0.60f), new Vector2(0.5f, 0.60f),
+                Vector2.zero, new Vector2(640, 400));
             rSec.AddComponent<Image>().color = COLOR_SECTION_BG;
             VerticalLayoutGroup vlg = rSec.AddComponent<VerticalLayoutGroup>();
             vlg.childAlignment = TextAnchor.MiddleLeft;
-            vlg.spacing = 4f;
-            vlg.padding = new RectOffset(12, 12, 8, 8);
+            vlg.spacing = 2f;
+            vlg.padding = new RectOffset(12, 12, 6, 6);
             vlg.childControlWidth = true;
             vlg.childControlHeight = false;
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
             rankSection = rSec.transform;
-            MkTextChild(rankSection, "SectionLabel", "순위", new Vector2(480, 24), 16, TextAnchor.MiddleLeft, COLOR_GRAY, font, false);
+            MkTextChild(rankSection, "SectionLabel", "순위", new Vector2(480, 22), 15, TextAnchor.MiddleLeft, COLOR_GRAY, font, false);
         }
-        string[] rankLabels = { "1위", "2위", "3위" };
-        Color[] rankColors = { COLOR_RANK1, COLOR_RANK2, COLOR_RANK3 };
-        for (int i = 0; i < 3; i++)
+
+        // 12행 RankRow 보장 (+ 각 행에 PickArrow 보장)
+        for (int i = 0; i < MAX_RANK_ROWS; i++)
         {
             string rowName = "Rank" + (i + 1) + "Row";
-            if (rankSection.Find(rowName) == null)
+            Transform existingRow = rankSection.Find(rowName);
+            if (existingRow == null)
             {
+                Color badgeColor;
+                if (i == 0) badgeColor = COLOR_RANK1;
+                else if (i == 1) badgeColor = COLOR_RANK2;
+                else if (i == 2) badgeColor = COLOR_RANK3;
+                else badgeColor = COLOR_RANK_REST;
+
                 Debug.Log("[ResultUIPrefabCreator][Patch] " + rowName + " 없음 → 추가");
-                CreateRankRow(rankSection, rowName, rankLabels[i], rankColors[i], font);
+                GameObject row = CreateRankRow(rankSection, rowName, (i + 1) + "위", badgeColor, font);
+                if (i >= 3) row.SetActive(false);
             }
-        }
-
-        // BetResultSection
-        Transform betSection = root.Find("BetResultSection");
-        if (betSection == null)
-        {
-            Debug.Log("[ResultUIPrefabCreator][Patch] BetResultSection 없음 → 추가");
-            GameObject bSec = MkContainer(root, "BetResultSection",
-                new Vector2(0.5f, 0.535f), new Vector2(0.5f, 0.535f),
-                Vector2.zero, new Vector2(640, 130));
-            bSec.AddComponent<Image>().color = COLOR_SECTION_BG;
-            VerticalLayoutGroup vlg = bSec.AddComponent<VerticalLayoutGroup>();
-            vlg.childAlignment = TextAnchor.MiddleLeft;
-            vlg.spacing = 4f;
-            vlg.padding = new RectOffset(12, 12, 8, 8);
-            vlg.childControlWidth = true;
-            vlg.childControlHeight = false;
-            vlg.childForceExpandWidth = true;
-            vlg.childForceExpandHeight = false;
-            betSection = bSec.transform;
-            MkTextChild(betSection, "BetTypeLabel", "-", new Vector2(480, 26), 18, TextAnchor.MiddleLeft, COLOR_WHITE, font, false);
-        }
-        for (int i = 0; i < 3; i++)
-        {
-            string pickName = "Pick" + (i + 1) + "Row";
-            if (betSection.Find(pickName) == null)
+            else
             {
-                Debug.Log("[ResultUIPrefabCreator][Patch] " + pickName + " 없음 → 추가");
-                GameObject pickRow = CreatePickRow(betSection, pickName, font);
-                if (i > 0) pickRow.SetActive(false);
+                // 기존 Row에 PickArrow가 없으면 추가
+                if (existingRow.Find("PickArrow") == null)
+                {
+                    Debug.Log("[ResultUIPrefabCreator][Patch] " + rowName + "/PickArrow 없음 → 추가");
+                    GameObject pickArrow = new GameObject("PickArrow");
+                    pickArrow.transform.SetParent(existingRow, false);
+                    RectTransform arrowRt = pickArrow.AddComponent<RectTransform>();
+                    arrowRt.sizeDelta = new Vector2(120, 28);
+                    Text arrowText = pickArrow.AddComponent<Text>();
+                    arrowText.text = "";
+                    arrowText.fontSize = 18;
+                    arrowText.fontStyle = FontStyle.Bold;
+                    arrowText.alignment = TextAnchor.MiddleLeft;
+                    arrowText.color = COLOR_WHITE;
+                    if (font != null) arrowText.font = font;
+                    SetLayoutElement(pickArrow, 120, 28);
+                    pickArrow.SetActive(false);
+                }
+                // BadgeText가 없으면 추가
+                Transform badgeT = existingRow.Find("RankBadge");
+                if (badgeT != null && badgeT.Find("BadgeText") == null)
+                {
+                    Debug.Log("[ResultUIPrefabCreator][Patch] " + rowName + "/RankBadge/BadgeText 없음 → 추가");
+                    GameObject badgeText = new GameObject("BadgeText");
+                    badgeText.transform.SetParent(badgeT, false);
+                    RectTransform badgeTextRt = badgeText.AddComponent<RectTransform>();
+                    badgeTextRt.anchorMin = Vector2.zero;
+                    badgeTextRt.anchorMax = Vector2.one;
+                    badgeTextRt.offsetMin = Vector2.zero;
+                    badgeTextRt.offsetMax = Vector2.zero;
+                    Text bt = badgeText.AddComponent<Text>();
+                    bt.text = (i + 1) + "위";
+                    bt.fontSize = 14;
+                    bt.fontStyle = FontStyle.Bold;
+                    bt.alignment = TextAnchor.MiddleCenter;
+                    bt.color = Color.black;
+                    if (font != null) bt.font = font;
+                }
             }
         }
 
-        // ScoreSection
+        // ── ScoreSection ──
         Transform scoreSection = root.Find("ScoreSection");
         if (scoreSection == null)
         {
             Debug.Log("[ResultUIPrefabCreator][Patch] ScoreSection 없음 → 추가");
             GameObject sSec = MkContainer(root, "ScoreSection",
-                new Vector2(0.5f, 0.355f), new Vector2(0.5f, 0.355f),
+                new Vector2(0.5f, 0.20f), new Vector2(0.5f, 0.20f),
                 Vector2.zero, new Vector2(640, 90));
             sSec.AddComponent<Image>().color = COLOR_SECTION_BG;
             VerticalLayoutGroup vlg = sSec.AddComponent<VerticalLayoutGroup>();
@@ -476,15 +442,15 @@ public static class ResultUIPrefabCreator
                 MkTextChild(scoreSection, "TotalScoreText", "", new Vector2(580, 38), 30, TextAnchor.MiddleCenter, COLOR_WIN, font, true);
         }
 
-        // NextRoundBtn
+        // ── NextRoundBtn ──
         if (root.Find("NextRoundBtn") == null)
         {
             Debug.Log("[ResultUIPrefabCreator][Patch] NextRoundBtn 없음 → 추가");
             GameObject btn = new GameObject("NextRoundBtn");
             btn.transform.SetParent(root, false);
             RectTransform btnRt = btn.AddComponent<RectTransform>();
-            btnRt.anchorMin = new Vector2(0.5f, 0.12f);
-            btnRt.anchorMax = new Vector2(0.5f, 0.12f);
+            btnRt.anchorMin = new Vector2(0.5f, 0.08f);
+            btnRt.anchorMax = new Vector2(0.5f, 0.08f);
             btnRt.pivot = new Vector2(0.5f, 0.5f);
             btnRt.sizeDelta = new Vector2(260, 62);
             btn.AddComponent<Image>().color = COLOR_BTN_NEXT;
