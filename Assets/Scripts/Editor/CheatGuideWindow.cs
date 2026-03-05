@@ -76,7 +76,7 @@ public class CheatGuideWindow : EditorWindow
         // ══════════════════════════════════════════
         //  섹션 2: 레이스 디버그 오버레이  [항상 활성]
         // ══════════════════════════════════════════
-        DrawSection("🖥️  레이스 디버그 오버레이", "RaceDebugOverlay.cs", editorOnly: false);
+        DrawSection("🖥️  레이스 디버그 오버레이", "RaceDebugOverlay.cs", editorOnly: true);
 
         BeginTable();
         DrawTableHeader("단축키", "상태", "동작");
@@ -94,7 +94,7 @@ public class CheatGuideWindow : EditorWindow
         // ══════════════════════════════════════════
         //  섹션 3: 트랙 & 스폰 편집기  [항상 활성]
         // ══════════════════════════════════════════
-        DrawSection("🗺️  트랙 & 스폰 위치 편집기", "WaypointEditor.cs / SpawnEditor.cs / TrackDebugPath.cs", editorOnly: false);
+        DrawSection("🗺️  트랙 & 스폰 위치 편집기", "WaypointEditor.cs / SpawnEditor.cs / TrackDebugPath.cs", editorOnly: true);
 
         BeginTable();
         DrawTableHeader("단축키", "편집 대상", "동작");
@@ -133,7 +133,7 @@ public class CheatGuideWindow : EditorWindow
         // ══════════════════════════════════════════
         //  섹션 5: 기타 숨겨진 기능 / 설정값
         // ══════════════════════════════════════════
-        DrawSection("🕵️  기타 기능 & 주요 설정값", "여러 파일", editorOnly: false);
+        DrawSection("🕵️  기타 기능 & 주요 설정값", "여러 파일", editorOnly: true);
 
         DrawKeyRow("치트 가이드 열기",  "Ctrl+Shift+D", "이 창을 엽니다 (DopamineRace > 치트 기능 보기)");
         DrawKeyRow("MCP 재시작",        "수동",          "Tools > UnityCodeMcpServer > STDIO > Restart Server");

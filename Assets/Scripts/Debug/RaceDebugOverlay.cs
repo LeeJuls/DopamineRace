@@ -367,6 +367,7 @@ public class RaceDebugOverlay : MonoBehaviour
 
     private void Update()
     {
+#if UNITY_EDITOR
         if (Input.GetKeyDown(KeyCode.F1)) showDebug = !showDebug;
         if (Input.GetKeyDown(KeyCode.F2)) showDetail = !showDetail;
         if (Input.GetKeyDown(KeyCode.F3))
@@ -380,6 +381,7 @@ public class RaceDebugOverlay : MonoBehaviour
                 if (viewingRound > currentRound) viewingRound = -1;
             }
         }
+#endif
 
         refreshTimer -= Time.deltaTime;
         if (refreshTimer <= 0f)
@@ -708,6 +710,9 @@ public class RaceDebugOverlay : MonoBehaviour
 
     private void OnGUI()
     {
+#if !UNITY_EDITOR
+        return; // 릴리즈 빌드에서는 오버레이 완전 비활성
+#endif
         if (!showDebug) return;
         var rm = RaceManager.Instance;
         if (rm == null) return;

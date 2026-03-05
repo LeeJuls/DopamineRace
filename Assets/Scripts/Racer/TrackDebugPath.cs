@@ -26,6 +26,7 @@ public class TrackDebugPath : MonoBehaviour
 
     private void Update()
     {
+#if UNITY_EDITOR
         if (Input.GetKeyDown(KeyCode.D))
         {
             showing = !showing;
@@ -35,6 +36,7 @@ public class TrackDebugPath : MonoBehaviour
                 HidePath();
             Debug.Log(showing ? "경로 표시 ON" : "경로 표시 OFF");
         }
+#endif
     }
 
     private void ShowPath()
