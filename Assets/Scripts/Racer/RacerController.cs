@@ -105,84 +105,41 @@ public class RacerController : MonoBehaviour
         }
     }
 
-    // ── 트랙바 부드러운 진행률 ──
-    private float _smoothProgressRatchet = 0f;   // 모노토닉 래칫 (단조 증가만 허용)
+    // ── 트랙바 진행률: 이동 거리 누적 방식 ──
+    private float _cumulativeDistance = 0f;  // 누적 이동 거리
+    private float _oneLapDistance = 0f;      // 1바퀴 트랙 총 거리
 
     /// <summary>
-    /// 웨이포인트 간 보간된 진행률 (0~1). 트랙바 UI용.
-    /// ★ 벡터 투영 + 모노토닉 래칫:
-    ///   - 직교 이탈(deviation)에 영향 없음
-    ///   - 웨이포인트 전환 시 미세 정체(턱턱) 없음
+    /// 트랙바 UI용 진행률 (0~1).
+    /// ★ 캐릭터의 실제 이동 거리를 그대로 누적 → 별도 계산 없음.
+    ///   - 캐릭터 움직임과 100% 동기화
+    ///   - 바퀴 수가 늘면 자동으로 압축 (같은 바 높이, 더 긴 총 거리)
     /// </summary>
     public float SmoothProgress
     {
         get
         {
             if (isFinished) return 1f;
-            if (!isRacing) return _smoothProgressRatchet;
-            if (waypoints == null || waypoints.Count == 0) return 0f;
-
-            int totalLaps = GetTotalLaps();
-            int wpCount = waypoints.Count;
-            float progress;
-
-            if (headingToFinish)
-            {
-                // 마지막 구간: 최종 웨이포인트 → 결승선(wp 0)
-                float frac = ProjectOnSegment(
-                    waypoints[wpCount - 1].position,
-                    waypoints[0].position);
-                float totalSegments = totalLaps * wpCount;
-                progress = (totalSegments - 1f + frac) / totalSegments;
-            }
-            else
-            {
-                // 현재 구간: 이전 웨이포인트 → 현재 목표 웨이포인트
-                int prevIdx = currentWP > 0 ? currentWP - 1 : wpCount - 1;
-                // 상한 클램프 제거 → 웨이포인트 도달 직전 오버슈트 허용
-                float fraction = ProjectOnSegmentRaw(
-                    waypoints[prevIdx].position,
-                    waypoints[currentWP].position);
-                float lapProgress = (currentWP + fraction) / wpCount;
-                progress = (currentLap + lapProgress) / totalLaps;
-            }
-
-            progress = Mathf.Clamp01(progress);
-
-            // ★ 모노토닉 래칫: 레이스 중 진행률은 절대 후퇴하지 않음
-            // → 웨이포인트 전환 시 fraction 리셋에 의한 미세 정체 완전 제거
-            if (progress > _smoothProgressRatchet)
-                _smoothProgressRatchet = progress;
-
-            return _smoothProgressRatchet;
+            float totalDist = _oneLapDistance * GetTotalLaps();
+            if (totalDist <= 0f) return 0f;
+            return Mathf.Clamp01(_cumulativeDistance / totalDist);
         }
     }
 
     /// <summary>
-    /// 벡터 투영 (하한만 클램프, 상한은 자유 — 오버슈트 허용).
-    /// 레이서가 웨이포인트를 지나쳤지만 아직 전환 안 된 순간에도 진행률 계속 증가.
+    /// 1바퀴 트랙 거리 계산 (웨이포인트 중심선 기준).
+    /// Initialize 후 한 번만 호출.
     /// </summary>
-    private float ProjectOnSegmentRaw(Vector3 segStart, Vector3 segEnd)
+    private void CalculateOneLapDistance()
     {
-        Vector3 segDir = segEnd - segStart;
-        float segLen = segDir.magnitude;
-        if (segLen < 0.01f) return 0f;
-        Vector3 toPos = transform.position - segStart;
-        float dot = Vector3.Dot(toPos, segDir / segLen);
-        return Mathf.Max(0f, dot / segLen); // 상한 클램프 없음
-    }
-
-    /// <summary>
-    /// 벡터 투영 (0~1 클램프, headingToFinish용).
-    /// </summary>
-    private float ProjectOnSegment(Vector3 segStart, Vector3 segEnd)
-    {
-        Vector3 segDir = segEnd - segStart;
-        float segLen = segDir.magnitude;
-        if (segLen < 0.01f) return 0f;
-        Vector3 toPos = transform.position - segStart;
-        float dot = Vector3.Dot(toPos, segDir / segLen);
-        return Mathf.Clamp01(dot / segLen);
+        _oneLapDistance = 0f;
+        if (waypoints == null || waypoints.Count < 2) return;
+        for (int i = 0; i < waypoints.Count; i++)
+        {
+            int next = (i + 1) % waypoints.Count;
+            _oneLapDistance += Vector3.Distance(
+                waypoints[i].position, waypoints[next].position);
+        }
     }
 
     public int GetTotalLaps()
@@ -225,7 +182,8 @@ public class RacerController : MonoBehaviour
     {
         isRacing = true; isFinished = false; headingToFinish = false; FinishOrder = -1;
         currentLap = 0; currentWP = 0;
-        _smoothProgressRatchet = 0f;  // 래칫 리셋
+        _cumulativeDistance = 0f;       // 누적 거리 리셋
+        CalculateOneLapDistance();       // 1바퀴 트랙 거리 계산
         lastPosition = transform.position;
 
         // 스탯 기반 초기 속도
@@ -372,7 +330,9 @@ public class RacerController : MonoBehaviour
         else
         {
             float step = currentSpeed * Time.deltaTime;
-            transform.position += dir.normalized * Mathf.Min(step, dist);
+            float actualStep = Mathf.Min(step, dist);
+            transform.position += dir.normalized * actualStep;
+            _cumulativeDistance += actualStep;   // ★ 실제 이동 거리 누적
         }
 
         FlipSprite();

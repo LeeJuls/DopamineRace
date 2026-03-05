@@ -325,19 +325,14 @@ public partial class SceneBootstrapper
         float barHeight = trackBarRect.rect.height;
         if (barHeight <= 0) return;
 
-        float lerpRate = 25f * Time.deltaTime; // 투영 기반이라 떨림 최소 → 높은 응답성
-
         for (int i = 0; i < racerCircles.Length && i < racers.Count; i++)
         {
             var circle = racerCircles[i];
             if (circle.racerIndex >= racers.Count) continue;
 
             var racer = racers[circle.racerIndex];
-            // SmoothProgress: 웨이포인트 간 실제 위치 보간 → 매 프레임 연속 값
-            float targetY = Mathf.Clamp01(racer.SmoothProgress) * barHeight;
-            float currentY = circle.rect.anchoredPosition.y;
-            // Lerp로 미세 떨림(deviation 흔들림) 필터링
-            float y = Mathf.Lerp(currentY, targetY, lerpRate);
+            // 캐릭터의 실제 이동 거리 누적 → 바 높이로 직접 매핑 (별도 보간 불필요)
+            float y = racer.SmoothProgress * barHeight;
             circle.rect.anchoredPosition = new Vector2(0, y);
         }
 
