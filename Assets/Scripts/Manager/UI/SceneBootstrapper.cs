@@ -104,10 +104,12 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Transform  leaderboardPanelRoot;
     private Text       leaderboardTitleText;
     private Text       leaderboardHeaderText;
-    private Text       leaderboardContentText;
     private ScrollRect leaderboardScrollRect;
+    private Transform  leaderboardEntryContainer;   // EntryContainer (VLG 내용)
+    private GameObject leaderboardEntryTemplate;    // EntryTemplate (disabled 클론 소스)
     private Button     leaderboardCloseButton;
     private Text       leaderboardCloseBtnText;
+    private Text       leaderboardContentText;      // Legacy 폴백 전용 (null 허용)
 
     // ── 런타임 ──
     private float raceTimer;

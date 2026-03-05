@@ -272,6 +272,18 @@ public static class FinishLeaderboardUIPrefabCreator
 
     // ══════════════════════════════════════════════
     //  LeaderboardPanel 프리팹 구조 생성
+    //
+    //  구조:
+    //    LeaderboardPanel (880×800)
+    //    ├─ TitleText      (36pt, 금색)
+    //    ├─ HeaderText     (26pt, 연회색)
+    //    ├─ ContentScrollView (ScrollRect)
+    //    │  └─ Viewport (RectMask2D)
+    //    │     └─ EntryContainer (VerticalLayoutGroup + CSF)
+    //    │        └─ EntryTemplate [active=false — 클론 소스]
+    //    │           ├─ InfoText    (28pt, 흰색)
+    //    │           └─ SummaryText (22pt, 회색)
+    //    └─ CloseBtn
     // ══════════════════════════════════════════════
     internal static GameObject CreateLeaderboardPanelPrefab(Font font)
     {
@@ -291,13 +303,13 @@ public static class FinishLeaderboardUIPrefabCreator
             Vector2.zero, new Vector2(500f, 55f),
             36, TextAnchor.MiddleCenter, COLOR_GOLD, font, false);
 
-        // ── HeaderText (anchor y=0.87, 연회색 28pt) ──
-        MkText(root.transform, "HeaderText", "Rank   Score   Hits   Date   Summary",
+        // ── HeaderText (anchor y=0.87, 연회색 26pt) ──
+        MkText(root.transform, "HeaderText", "등수  포인트  달성일",
             new Vector2(0.5f, 0.87f), new Vector2(0.5f, 0.87f),
-            Vector2.zero, new Vector2(800f, 40f),
-            28, TextAnchor.MiddleCenter, COLOR_LIGHT_GRAY, font, false);
+            Vector2.zero, new Vector2(800f, 36f),
+            26, TextAnchor.MiddleLeft, COLOR_LIGHT_GRAY, font, false);
 
-        // ── ContentScrollView (anchor y=0.49, 800×580, ScrollRect) ──
+        // ── ContentScrollView (anchor y=0.49, 800×590, ScrollRect) ──
         GameObject scrollView = new GameObject("ContentScrollView");
         scrollView.transform.SetParent(root.transform, false);
         RectTransform scrollRt = scrollView.AddComponent<RectTransform>();
@@ -305,13 +317,12 @@ public static class FinishLeaderboardUIPrefabCreator
         scrollRt.anchorMax        = new Vector2(0.5f, 0.49f);
         scrollRt.pivot            = new Vector2(0.5f, 0.5f);
         scrollRt.anchoredPosition = Vector2.zero;
-        scrollRt.sizeDelta        = new Vector2(800f, 580f);
+        scrollRt.sizeDelta        = new Vector2(800f, 590f);
         ScrollRect sr = scrollView.AddComponent<ScrollRect>();
         sr.horizontal        = false;
         sr.vertical          = true;
         sr.movementType      = ScrollRect.MovementType.Clamped;
         sr.scrollSensitivity = 30f;
-        // 투명 Image (레이캐스트 블로킹용)
         scrollView.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
 
         // ── Viewport (RectMask2D, fill) ──
@@ -325,30 +336,79 @@ public static class FinishLeaderboardUIPrefabCreator
         vpRt.sizeDelta        = Vector2.zero;
         viewport.AddComponent<RectMask2D>();
 
-        // ── ContentText (top-stretch, ContentSizeFitter, 32pt) ──
-        GameObject contentGo = new GameObject("ContentText");
-        contentGo.transform.SetParent(viewport.transform, false);
-        RectTransform contentRt = contentGo.AddComponent<RectTransform>();
-        contentRt.anchorMin        = new Vector2(0f, 1f);
-        contentRt.anchorMax        = new Vector2(1f, 1f);
-        contentRt.pivot            = new Vector2(0.5f, 1f);
-        contentRt.anchoredPosition = Vector2.zero;
-        contentRt.sizeDelta        = new Vector2(0f, 580f);
-        Text contentText = contentGo.AddComponent<Text>();
-        contentText.text            = "";
-        contentText.fontSize        = 32;
-        contentText.alignment       = TextAnchor.UpperLeft;
-        contentText.color           = COLOR_WHITE;
-        contentText.supportRichText = true;
-        contentText.verticalOverflow = VerticalWrapMode.Overflow;
-        if (font != null) contentText.font = font;
-        ContentSizeFitter csf = contentGo.AddComponent<ContentSizeFitter>();
-        csf.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
-        csf.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+        // ── EntryContainer (VerticalLayoutGroup + CSF, top-stretch) ──
+        GameObject container = new GameObject("EntryContainer");
+        container.transform.SetParent(viewport.transform, false);
+        RectTransform containerRt = container.AddComponent<RectTransform>();
+        containerRt.anchorMin        = new Vector2(0f, 1f);
+        containerRt.anchorMax        = new Vector2(1f, 1f);
+        containerRt.pivot            = new Vector2(0.5f, 1f);
+        containerRt.anchoredPosition = Vector2.zero;
+        containerRt.sizeDelta        = Vector2.zero;
+        VerticalLayoutGroup containerVlg = container.AddComponent<VerticalLayoutGroup>();
+        containerVlg.spacing             = 10f;
+        containerVlg.childForceExpandWidth  = true;
+        containerVlg.childForceExpandHeight = false;
+        containerVlg.childAlignment         = TextAnchor.UpperLeft;
+        containerVlg.padding = new RectOffset(8, 8, 6, 6);
+        ContentSizeFitter containerCSF = container.AddComponent<ContentSizeFitter>();
+        containerCSF.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
+        containerCSF.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+        // ── EntryTemplate [active=false — 런타임에 Instantiate해서 사용] ──
+        GameObject template = new GameObject("EntryTemplate");
+        template.transform.SetParent(container.transform, false);
+        RectTransform templateRt = template.AddComponent<RectTransform>();
+        templateRt.sizeDelta = new Vector2(0f, 60f);
+        VerticalLayoutGroup entryVlg = template.AddComponent<VerticalLayoutGroup>();
+        entryVlg.spacing             = 3f;
+        entryVlg.childForceExpandWidth  = true;
+        entryVlg.childForceExpandHeight = false;
+        entryVlg.childAlignment         = TextAnchor.UpperLeft;
+        ContentSizeFitter entryCSF = template.AddComponent<ContentSizeFitter>();
+        entryCSF.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
+        entryCSF.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+        // InfoText (등수·점수·날짜 한 줄, 28pt 흰색)
+        GameObject infoGo = new GameObject("InfoText");
+        infoGo.transform.SetParent(template.transform, false);
+        RectTransform infoRt = infoGo.AddComponent<RectTransform>();
+        infoRt.sizeDelta = new Vector2(0f, 34f);
+        Text infoText = infoGo.AddComponent<Text>();
+        infoText.text              = "1위  0점  26-01-01";
+        infoText.fontSize          = 28;
+        infoText.alignment         = TextAnchor.UpperLeft;
+        infoText.color             = COLOR_WHITE;
+        infoText.horizontalOverflow = HorizontalWrapMode.Overflow;
+        infoText.verticalOverflow   = VerticalWrapMode.Overflow;
+        infoText.supportRichText   = false;
+        if (font != null) infoText.font = font;
+        ContentSizeFitter infoCSF = infoGo.AddComponent<ContentSizeFitter>();
+        infoCSF.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        // SummaryText (요약 줄, 22pt 연회색, 줄 넘김 가능)
+        GameObject summaryGo = new GameObject("SummaryText");
+        summaryGo.transform.SetParent(template.transform, false);
+        RectTransform summaryRt = summaryGo.AddComponent<RectTransform>();
+        summaryRt.sizeDelta = new Vector2(0f, 27f);
+        Text summaryText = summaryGo.AddComponent<Text>();
+        summaryText.text              = "R1:Win+0";
+        summaryText.fontSize          = 22;
+        summaryText.alignment         = TextAnchor.UpperLeft;
+        summaryText.color             = new Color(0.75f, 0.75f, 0.75f, 1f);
+        summaryText.horizontalOverflow = HorizontalWrapMode.Wrap;
+        summaryText.verticalOverflow   = VerticalWrapMode.Overflow;
+        summaryText.supportRichText   = false;
+        if (font != null) summaryText.font = font;
+        ContentSizeFitter summaryCSF = summaryGo.AddComponent<ContentSizeFitter>();
+        summaryCSF.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        // EntryTemplate 비활성화 (클론 소스이므로 숨김)
+        template.SetActive(false);
 
         // ScrollRect 연결
         sr.viewport = vpRt;
-        sr.content  = contentRt;
+        sr.content  = containerRt;
 
         // ── CloseBtn (anchor y=0.04, 어두운 빨강, 28pt) ──
         CreateButton(root.transform, "CloseBtn", "닫기",

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GameSettings
   m_EditorClassIdentifier: Assembly-CSharp::GameSettings
   racerCount: 9
-  roundLaps: 0100000002000000030000000200000004000000
+  roundLaps: 0100000001000000
   payoutWin: 8
   payoutPlace: 3
   payoutQuinella: 31
