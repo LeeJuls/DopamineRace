@@ -323,7 +323,14 @@ public partial class SceneBootstrapper
 
         var racers = RaceManager.Instance.Racers;
         float barHeight = trackBarRect.rect.height;
+        float barWidth = trackBarRect.rect.width;
         if (barHeight <= 0) return;
+
+        // 좌우 오프셋 범위: 바 폭의 ±40% (원이 패널 밖으로 안 나가게)
+        float xRange = barWidth * 0.4f;
+        // 레인 오프셋 최대값 추정 (RACER_COUNT/2 * laneOffset설정)
+        float maxLateral = GameConstants.RACER_COUNT * 0.5f *
+            (GameSettings.Instance != null ? GameSettings.Instance.laneOffset : 0.15f) + 0.5f;
 
         for (int i = 0; i < racerCircles.Length && i < racers.Count; i++)
         {
@@ -331,9 +338,11 @@ public partial class SceneBootstrapper
             if (circle.racerIndex >= racers.Count) continue;
 
             var racer = racers[circle.racerIndex];
-            // 캐릭터의 실제 이동 거리 누적 → 바 높이로 직접 매핑 (별도 보간 불필요)
+            // Y: 실제 이동 거리 누적 → 바 높이로 직접 매핑
             float y = racer.SmoothProgress * barHeight;
-            circle.rect.anchoredPosition = new Vector2(0, y);
+            // X: 캐릭터의 레인+경로이탈을 그대로 가져와서 좌우 펼치기
+            float x = (racer.LateralOffset / maxLateral) * xRange;
+            circle.rect.anchoredPosition = new Vector2(x, y);
         }
 
         // 배팅 마커를 최상위 z-order로

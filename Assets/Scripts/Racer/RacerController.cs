@@ -86,6 +86,13 @@ public class RacerController : MonoBehaviour
     public float MaxCPValue => maxCP;
     public float CPRatio => maxCP > 0f ? calmPoints / maxCP : 0f;
 
+    // ── 트랙바 좌우 흔들림 ──
+    /// <summary>
+    /// 캐릭터의 레인 오프셋 + 경로 이탈값.
+    /// 트랙바 원의 X 좌표에 그대로 매핑하여 좌우로 펼치기.
+    /// </summary>
+    public float LateralOffset => laneOffset + deviationOffset;
+
     public float TotalProgress => isFinished ? float.MaxValue :
         (waypoints == null || waypoints.Count == 0) ? 0 :
         currentLap + (float)currentWP / waypoints.Count;
