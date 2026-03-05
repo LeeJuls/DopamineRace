@@ -332,15 +332,31 @@ roundLaps=[2,2,3,5,3,2,4]
 - `DopamineRace > Create Finish UI Prefab` 메뉴로 재생성 가능
 - MCP 생성 시 Font null 우회 → Reflection 패치 스크립트 별도 실행 필요
 
-### Remaining Tasks (업데이트)
-- **LeaderboardPanel.prefab 프리팹 전환** (Phase 2)
+## Completed (as of 2026-03-05 session 3)
+
+### LeaderboardPanel UI 1차 완료 (커밋 `6cc5c7f` ~ `b9ee49c`)
+- **LeaderboardPanel.prefab 프리팹 전환 완료**:
   - `GameSettings.leaderboardPanelPrefab` 필드 추가
-  - `FinishLeaderboardUIPrefabCreator.CreateLeaderboardPanelPrefab()` 추가
-  - `SceneBootstrapper.Leaderboard.cs` 프리팹 분기 + Cache
-  - F4 메뉴 5번 → `DebugShowLeaderboard()` 추가
+  - `FinishLeaderboardUIPrefabCreator.CreateLeaderboardPanelPrefab()` EntryTemplate 구조로 추가
+  - `SceneBootstrapper.Leaderboard.cs` 전면 재작성 — 프리팹 분기 + `CacheLeaderboardUIReferences()`
+  - F4 디버그 메뉴 5번 → `DebugShowLeaderboard()` 추가
+- **LeaderboardPanel.prefab 구조**:
+  - `LeaderboardPanel` (880×800) → `TitleText` / `HeaderText` / `ContentScrollView(ScrollRect)` > `Viewport(RectMask2D)` > `EntryContainer(VLG+CSF)` > `EntryTemplate[active=false]` (InfoText 36pt + SummaryText 28pt) / `CloseBtn`
+  - `EntryTemplate`: `active=false` GO → `Instantiate()`로 클론 (top3 금색, 이하 흰색)
+- **버그 수정**:
+  1. `HorizontalWrapMode.Overflow` — ContentSizeFitter+Wrap 조합 너비=0 계산 버그 수정
+  2. `rootRt.sizeDelta` 강제 재설정 — Unity가 자식 추가 중 (880,800)→(1200,5) 덮어쓰는 버그 수정
+- **영어 서수 표기 수정**: `GetEnOrdinal()` (11/12/13 예외 포함)
+- **헤더 Summary 컬럼 텍스트 제거** (StringTable 7개 언어)
+- 최신 커밋: `b9ee49c`
+
+### 알려진 Unity 패턴 (프리팹 에디터 스크립트)
+- **rootRt.sizeDelta 자동 변경**: 자식 GO 추가 완료 후 루트 RT 강제 재설정 필수 (`PrefabUtility.SaveAsPrefabAsset()` 직전)
+- **ContentSizeFitter + HorizontalWrapMode.Wrap**: 너비=0 계산 버그 → `Overflow` + 코드에서 `\n` 명시 삽입
 
 ## Detail docs
-- See [history/FinishPanel프리팹전환_F4디버그_히스토리_20260305.md](./history/FinishPanel프리팹전환_F4디버그_히스토리_20260305.md) for latest handover (2026-03-05 session 2)
+- See [history/LeaderboardPanel_리더보드UI1차_히스토리_20260305.md](./history/LeaderboardPanel_리더보드UI1차_히스토리_20260305.md) for latest handover (2026-03-05 session 3)
+- See [history/FinishPanel프리팹전환_F4디버그_히스토리_20260305.md](./history/FinishPanel프리팹전환_F4디버그_히스토리_20260305.md) for previous handover (2026-03-05 session 2)
 - See [history/ResultPanel_디버그치트가이드_히스토리_20260305.md](./history/ResultPanel_디버그치트가이드_히스토리_20260305.md) for previous handover (2026-03-05)
 - See [history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md](./history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md) for previous handover (2026-03-03)
 - See [history/버그수정_MCP안정화_다국어_인수인계_20260302.md](./history/버그수정_MCP안정화_다국어_인수인계_20260302.md) for previous handover (2026-03-02)
