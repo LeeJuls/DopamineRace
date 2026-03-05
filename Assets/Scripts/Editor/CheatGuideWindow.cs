@@ -49,102 +49,113 @@ public class CheatGuideWindow : EditorWindow
         GUILayout.Space(12);
         GUILayout.Label("🎮  DopamineRace  디버그 & 치트 가이드", _styleHeader);
         GUILayout.Label(
-            "플레이 모드 전용 단축키 · 숨겨진 기능 목록\n" +
-            "모든 기능은 #if UNITY_EDITOR 가드 — 릴리즈 빌드에 포함되지 않습니다.",
+            "플레이 모드 단축키 · 숨겨진 기능 목록\n" +
+            "⚠️  [Editor Only] = #if UNITY_EDITOR 릴리즈 빌드 제외  |  [항상 활성] = 릴리즈 빌드에도 포함됨",
             _styleNote);
         GUILayout.Space(8);
         DrawHRule();
 
         // ══════════════════════════════════════════
-        //  섹션 1: 결과창 미리보기
+        //  섹션 1: 결과창 미리보기  [Editor Only]
         // ══════════════════════════════════════════
-        DrawSection("📊  결과창 미리보기 단축키", "SceneBootstrapper.Debug.cs");
-
-        string[] resultKeys  = { "F8",  "F9",     "F10"  };
-        string[] resultTypes = { "Win", "Exacta", "Trio" };
-        string[] resultDescs =
-        {
-            "단승 배팅 — 1위 캐릭터 선택 → 무조건 적중",
-            "연승 배팅 — 1·2위 캐릭터 선택 → 무조건 적중",
-            "삼복승 배팅 — 1·2·3위 캐릭터 선택 → 무조건 적중",
-        };
+        DrawSection("📊  결과창 미리보기 단축키", "SceneBootstrapper.Debug.cs", editorOnly: true);
 
         BeginTable();
         DrawTableHeader("단축키", "배팅 타입", "동작");
-        for (int i = 0; i < resultKeys.Length; i++)
-            DrawTableRow(i, resultKeys[i], resultTypes[i], resultDescs[i]);
+        DrawTableRow(0, "F8",  "Win",    "단승 배팅 — 1위 캐릭터 선택 → 무조건 적중");
+        DrawTableRow(1, "F9",  "Exacta", "연승 배팅 — 1·2위 캐릭터 선택 → 무조건 적중");
+        DrawTableRow(2, "F10", "Trio",   "삼복승 배팅 — 1·2·3위 캐릭터 선택 → 무조건 적중");
         EndTable();
 
-        DrawNote("▸ 플레이 모드에서 언제든지 사용 가능 (배팅 화면 / 레이스 중 / 결과창 모두 가능)\n" +
-                 "▸ 순위는 매번 랜덤으로 섞여 화살표(←) 위치가 다양하게 표시됨");
+        DrawNote("▸ 플레이 모드에서 언제든지 사용 가능 (배팅 화면 / 레이스 중 / 결과창 모두)\n" +
+                 "▸ 순위는 매번 랜덤 셔플 → 화살표(←) 위치가 다양하게 표시됨");
 
         GUILayout.Space(14);
         DrawHRule();
 
         // ══════════════════════════════════════════
-        //  섹션 2: 프리팹 빌더 메뉴
+        //  섹션 2: 레이스 디버그 오버레이  [항상 활성]
         // ══════════════════════════════════════════
-        DrawSection("🔧  Editor 메뉴 — 프리팹 관리", "DopamineRace 상단 메뉴");
+        DrawSection("🖥️  레이스 디버그 오버레이", "RaceDebugOverlay.cs", editorOnly: false);
 
-        string[] menuItems =
-        {
-            "Create Betting UI Prefabs",
-            "Patch Betting UI Prefabs (Safe)",
-            "Create Result UI Prefabs",
-            "Patch Result UI Prefabs (Safe)",
-        };
-        string[] menuDescs =
-        {
-            "배팅 패널 프리팹 완전 재생성 (기존 덮어쓰기, 최초 1회 사용)",
-            "배팅 패널 프리팹 안전 패치 — 없는 요소만 추가, 기존 설정 유지",
-            "결과 패널 프리팹 완전 재생성 (기존 덮어쓰기, 구조 변경 시 사용)",
-            "결과 패널 프리팹 안전 패치 — 없는 요소만 추가, 기존 설정 유지",
-        };
-        string[] menuFiles =
-        {
-            "BettingUIPrefabCreator.cs",
-            "BettingUIPrefabCreator.cs",
-            "ResultUIPrefabCreator.cs",
-            "ResultUIPrefabCreator.cs",
-        };
+        BeginTable();
+        DrawTableHeader("단축키", "상태", "동작");
+        DrawTableRow(0, "F1", "토글",   "디버그 오버레이 전체 표시 / 숨김");
+        DrawTableRow(1, "F2", "토글",   "간략 모드 ↔ 상세 모드 전환");
+        DrawTableRow(2, "F3", "순환",   "라운드별 이벤트 로그 순회 (R1→R2→...→현재→R1)");
+        EndTable();
+
+        DrawNote("▸ 레이스 진행 중 실시간 HP·CP·순위·이벤트 정보 확인\n" +
+                 "▸ 릴리즈 빌드에도 포함되어 있으므로 출시 전 제거 여부 검토 필요");
+
+        GUILayout.Space(14);
+        DrawHRule();
+
+        // ══════════════════════════════════════════
+        //  섹션 3: 트랙 & 스폰 편집기  [항상 활성]
+        // ══════════════════════════════════════════
+        DrawSection("🗺️  트랙 & 스폰 위치 편집기", "WaypointEditor.cs / SpawnEditor.cs / TrackDebugPath.cs", editorOnly: false);
+
+        BeginTable();
+        DrawTableHeader("단축키", "편집 대상", "동작");
+        DrawTableRow(0, "E",        "웨이포인트",  "WaypointEditor — 트랙 경로 편집 모드 ON/OFF");
+        DrawTableRow(1, "R",        "스폰 위치",   "SpawnEditor — 캐릭터 출발 위치 편집 모드 ON/OFF");
+        DrawTableRow(2, "S",        "저장",        "편집 모드 중 → 변경사항을 JSON 파일로 저장\n(track_waypoints.json / spawn_positions.json)");
+        DrawTableRow(3, "D",        "경로 표시",   "TrackDebugPath — 트랙 웨이포인트 연결선 표시 ON/OFF");
+        EndTable();
+
+        DrawNote("▸ E / R 키로 편집 모드를 켠 뒤 마우스로 포인트를 드래그하여 수정\n" +
+                 "▸ S 키로 저장하면 Assets/Resources/Data/ 아래 JSON 파일이 갱신됨\n" +
+                 "▸ ⚠️ 릴리즈 빌드에도 키 리스너가 살아 있음 — 출시 전 #if UNITY_EDITOR 처리 권장");
+
+        GUILayout.Space(14);
+        DrawHRule();
+
+        // ══════════════════════════════════════════
+        //  섹션 4: Editor 메뉴 — 프리팹 관리
+        // ══════════════════════════════════════════
+        DrawSection("🔧  Editor 메뉴 — 프리팹 관리", "DopamineRace 상단 메뉴", editorOnly: true);
 
         BeginTable();
         DrawTableHeader("메뉴 항목", "파일", "설명");
-        for (int i = 0; i < menuItems.Length; i++)
-            DrawTableRow(i, menuItems[i], menuFiles[i], menuDescs[i]);
+        DrawTableRow(0, "Create Betting UI Prefabs",       "BettingUIPrefabCreator.cs",  "배팅 패널 프리팹 완전 재생성 (기존 수동 수정 초기화됨)");
+        DrawTableRow(1, "Patch Betting UI Prefabs (Safe)", "BettingUIPrefabCreator.cs",  "배팅 패널 안전 패치 — 없는 요소만 추가, 기존 설정 유지");
+        DrawTableRow(2, "Create Result UI Prefabs",        "ResultUIPrefabCreator.cs",   "결과 패널 프리팹 완전 재생성 (구조 변경 시 사용)");
+        DrawTableRow(3, "Patch Result UI Prefabs (Safe)",  "ResultUIPrefabCreator.cs",   "결과 패널 안전 패치 — 없는 요소만 추가, 기존 설정 유지");
         EndTable();
 
-        DrawNote("▸ Patch는 기존 Inspector 수동 조정을 유지하므로 일반적인 업데이트에 권장\n" +
-                 "▸ Create는 완전 재생성 — 수동 수정 내용이 모두 초기화됨");
+        DrawNote("▸ 일반적인 업데이트는 Patch 사용 권장 (Inspector 조정 유지)\n" +
+                 "▸ Create는 완전 재생성 — 수동 Inspector 수정 내용 모두 초기화됨");
 
         GUILayout.Space(14);
         DrawHRule();
 
         // ══════════════════════════════════════════
-        //  섹션 3: 기타 숨겨진 기능
+        //  섹션 5: 기타 숨겨진 기능 / 설정값
         // ══════════════════════════════════════════
-        DrawSection("🕵️  기타 숨겨진 기능 / 설정", "여러 파일");
+        DrawSection("🕵️  기타 기능 & 주요 설정값", "여러 파일", editorOnly: false);
 
         DrawKeyRow("치트 가이드 열기",  "Ctrl+Shift+D", "이 창을 엽니다 (DopamineRace > 치트 기능 보기)");
-        DrawKeyRow("MCP 재시작",       "수동",          "Tools > UnityCodeMcpServer > STDIO > Restart Server");
+        DrawKeyRow("MCP 재시작",        "수동",          "Tools > UnityCodeMcpServer > STDIO > Restart Server");
         DrawKeyRow("좀비 프로세스 제거", "수동",          "Docs/setup/mcp_kill_zombie.bat 실행 (새 세션 시작 전)");
 
-        DrawNote("▸ SAVE_VERSION = 2 — 구버전 세이브 파일은 자동으로 삭제됨\n" +
-                 "▸ hpSpeedCompress = 0.85 — 기본속도 격차 ~0.83% 압축 (GameConstants에서 조정)");
+        DrawNote("▸ SAVE_VERSION = 2 — 구버전 세이브 파일은 자동 삭제됨\n" +
+                 "▸ hpSpeedCompress = 0.85 — 기본속도 격차 ~0.83% 압축 (GameConstants 조정)\n" +
+                 "▸ 도주(Runner)는 0.5랩 선두 확보 후 스프린트, 추입(Reckoner)은 최후반 역전 패턴");
 
         GUILayout.Space(14);
         DrawHRule();
 
         // ══════════════════════════════════════════
-        //  섹션 4: 추가 예정 / 빈 슬롯
+        //  섹션 6: 향후 추가될 치트 기능
         // ══════════════════════════════════════════
-        DrawSection("➕  향후 추가될 치트 기능", "");
+        DrawSection("➕  향후 추가될 치트 기능", "", editorOnly: false);
 
         EditorGUILayout.HelpBox(
             "새 치트 기능을 추가하면 여기에 항목을 기재하세요.\n\n" +
             "  [ 파일 ]  Assets/Scripts/Editor/CheatGuideWindow.cs\n" +
-            "  [ 위치 ]  해당 섹션 DrawTableRow() 또는 DrawKeyRow() 추가\n" +
-            "  [ 규칙 ]  #if UNITY_EDITOR 가드 필수 · 릴리즈 빌드 포함 금지",
+            "  [ 위치 ]  해당 섹션의 DrawTableRow() 또는 DrawKeyRow() 한 줄 추가\n" +
+            "  [ 규칙 ]  릴리즈 빌드 포함 여부를 editorOnly 파라미터로 명시",
             MessageType.Info);
 
         GUILayout.Space(20);
@@ -155,10 +166,25 @@ public class CheatGuideWindow : EditorWindow
     // ──────────────────────────────────────────────
     //  드로우 헬퍼
     // ──────────────────────────────────────────────
-    private void DrawSection(string title, string sourceFile)
+    private void DrawSection(string title, string sourceFile, bool editorOnly)
     {
         GUILayout.Space(10);
+        EditorGUILayout.BeginHorizontal();
         GUILayout.Label(title, _styleSectionTitle);
+        string badge = editorOnly ? "[Editor Only]" : "[항상 활성]";
+        Color  badgeColor = editorOnly
+            ? new Color(0.4f, 0.8f, 1f)
+            : new Color(1f, 0.6f, 0.3f);
+        var badgeStyle = new GUIStyle(EditorStyles.miniLabel)
+        {
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleLeft,
+        };
+        badgeStyle.normal.textColor = badgeColor;
+        GUILayout.Label(badge, badgeStyle, GUILayout.Width(100));
+        GUILayout.FlexibleSpace();
+        EditorGUILayout.EndHorizontal();
+
         if (!string.IsNullOrEmpty(sourceFile))
         {
             EditorGUI.indentLevel++;
