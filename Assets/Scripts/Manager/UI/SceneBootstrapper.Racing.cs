@@ -325,7 +325,7 @@ public partial class SceneBootstrapper
         float barHeight = trackBarRect.rect.height;
         if (barHeight <= 0) return;
 
-        float lerpRate = 18f * Time.deltaTime; // 떨림 제거용 보간 (응답성 유지)
+        float lerpRate = 25f * Time.deltaTime; // 투영 기반이라 떨림 최소 → 높은 응답성
 
         for (int i = 0; i < racerCircles.Length && i < racers.Count; i++)
         {
