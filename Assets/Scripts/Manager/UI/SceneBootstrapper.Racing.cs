@@ -138,7 +138,7 @@ public partial class SceneBootstrapper
         RectTransform barBgRt = barBg.AddComponent<RectTransform>();
         barBgRt.anchorMin = new Vector2(0.5f, 0);
         barBgRt.anchorMax = new Vector2(0.5f, 1);
-        barBgRt.sizeDelta = new Vector2(4, 0);
+        barBgRt.sizeDelta = new Vector2(6, 0);
         barBgRt.anchoredPosition = Vector2.zero;
         Image barBgImg = barBg.AddComponent<Image>();
         barBgImg.color = new Color(1, 1, 1, 0.7f);
@@ -326,15 +326,20 @@ public partial class SceneBootstrapper
         float barHeight = trackBarRect.rect.height;
         if (barHeight <= 0) return;
 
+        // Lerp 속도: OverallProgress가 웨이포인트 단위 불연속이라
+        // 시각적으로 부드럽게 슬라이드하되 실제 속도에 빠르게 수렴
+        float lerpSpeed = 12f * Time.deltaTime;
+
         for (int i = 0; i < racerCircles.Length && i < racers.Count; i++)
         {
             var circle = racerCircles[i];
             if (circle.racerIndex >= racers.Count) continue;
 
             var racer = racers[circle.racerIndex];
-            float progress = racer.OverallProgress;
-            float y = Mathf.Clamp01(progress) * barHeight;
-            circle.rect.anchoredPosition = new Vector2(0, y);
+            float targetY = Mathf.Clamp01(racer.OverallProgress) * barHeight;
+            float currentY = circle.rect.anchoredPosition.y;
+            float smoothY = Mathf.Lerp(currentY, targetY, lerpSpeed);
+            circle.rect.anchoredPosition = new Vector2(0, smoothY);
         }
 
         // 배팅 마커를 최상위 z-order로
