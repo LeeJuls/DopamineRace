@@ -238,7 +238,7 @@ public partial class SceneBootstrapper
             RectTransform drt = divObj.AddComponent<RectTransform>();
             drt.anchorMin = new Vector2(0, yNorm);
             drt.anchorMax = new Vector2(1, yNorm);
-            drt.sizeDelta = new Vector2(20, 4); // 4px 두께, 좌우 확장
+            drt.sizeDelta = new Vector2(10, 2); // 절반 크기
             drt.anchoredPosition = Vector2.zero;
             Image dimg = divObj.AddComponent<Image>();
             dimg.color = new Color(1f, 0.85f, 0.3f, 0.85f); // 노란빛 + 높은 불투명도
@@ -325,6 +325,8 @@ public partial class SceneBootstrapper
         float barHeight = trackBarRect.rect.height;
         if (barHeight <= 0) return;
 
+        float lerpRate = 18f * Time.deltaTime; // 떨림 제거용 보간 (응답성 유지)
+
         for (int i = 0; i < racerCircles.Length && i < racers.Count; i++)
         {
             var circle = racerCircles[i];
@@ -332,7 +334,10 @@ public partial class SceneBootstrapper
 
             var racer = racers[circle.racerIndex];
             // SmoothProgress: 웨이포인트 간 실제 위치 보간 → 매 프레임 연속 값
-            float y = Mathf.Clamp01(racer.SmoothProgress) * barHeight;
+            float targetY = Mathf.Clamp01(racer.SmoothProgress) * barHeight;
+            float currentY = circle.rect.anchoredPosition.y;
+            // Lerp로 미세 떨림(deviation 흔들림) 필터링
+            float y = Mathf.Lerp(currentY, targetY, lerpRate);
             circle.rect.anchoredPosition = new Vector2(0, y);
         }
 
