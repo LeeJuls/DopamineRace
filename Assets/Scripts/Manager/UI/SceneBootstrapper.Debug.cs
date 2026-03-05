@@ -15,6 +15,7 @@ using System.Collections.Generic;
 /// 2 = 결과창 (Exacta)
 /// 3 = 결과창 (Trio)
 /// 4 = 최종 결산(Finish) 화면 강제 표시
+/// 5 = Top100 리더보드 강제 표시
 ///
 /// 모든 단축키는 플레이 모드에서만 동작합니다.
 /// </summary>
@@ -53,6 +54,8 @@ public partial class SceneBootstrapper
             { DebugJumpToResult(BetType.Trio,   true); _debugMenuOpen = false; }
             if (Input.GetKeyDown(KeyCode.Alpha4))
             { DebugJumpToFinish();                     _debugMenuOpen = false; }
+            if (Input.GetKeyDown(KeyCode.Alpha5))
+            { DebugShowLeaderboard();                  _debugMenuOpen = false; }
             if (Input.GetKeyDown(KeyCode.Escape))
                 _debugMenuOpen = false;
         }
@@ -75,13 +78,14 @@ public partial class SceneBootstrapper
 
         string menu =
             "<b>[DEBUG MENU]</b>\n\n" +
-            "1. 결과창 (Win)\n"       +
-            "2. 결과창 (Exacta)\n"    +
-            "3. 결과창 (Trio)\n"      +
-            "4. 최종 결산(Finish)\n\n" +
+            "1. 결과창 (Win)\n"           +
+            "2. 결과창 (Exacta)\n"        +
+            "3. 결과창 (Trio)\n"          +
+            "4. 최종 결산(Finish)\n"      +
+            "5. Top100 리더보드\n\n"      +
             "<color=#AAAAAA>ESC / F4 = 닫기</color>";
 
-        GUI.Box(new Rect(20f, 20f, 280f, 200f), menu, boxStyle);
+        GUI.Box(new Rect(20f, 20f, 280f, 220f), menu, boxStyle);
     }
 
     // ══════════════════════════════════════
@@ -184,6 +188,15 @@ public partial class SceneBootstrapper
     {
         GameManager.Instance?.ChangeState(GameManager.GameState.Finish);
         Debug.Log("[DEBUG] Finish 화면 강제 표시");
+    }
+
+    // ══════════════════════════════════════
+    //  Top100 리더보드 강제 표시
+    // ══════════════════════════════════════
+    private void DebugShowLeaderboard()
+    {
+        ShowLeaderboard();
+        Debug.Log("[DEBUG] Leaderboard 강제 표시");
     }
 }
 #endif

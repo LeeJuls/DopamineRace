@@ -56,19 +56,25 @@ public class CheatGuideWindow : EditorWindow
         DrawHRule();
 
         // ══════════════════════════════════════════
-        //  섹션 1: 결과창 미리보기  [Editor Only]
+        //  섹션 1: 디버그 메뉴 + 결과창 미리보기  [Editor Only]
         // ══════════════════════════════════════════
-        DrawSection("📊  결과창 미리보기 단축키", "SceneBootstrapper.Debug.cs", editorOnly: true);
+        DrawSection("📊  디버그 메뉴 / 결과창 미리보기 단축키", "SceneBootstrapper.Debug.cs", editorOnly: true);
 
         BeginTable();
-        DrawTableHeader("단축키", "배팅 타입", "동작");
-        DrawTableRow(0, "F8",  "Win",    "단승 배팅 — 1위 캐릭터 선택 → 무조건 적중");
-        DrawTableRow(1, "F9",  "Exacta", "연승 배팅 — 1·2위 캐릭터 선택 → 무조건 적중");
-        DrawTableRow(2, "F10", "Trio",   "삼복승 배팅 — 1·2·3위 캐릭터 선택 → 무조건 적중");
+        DrawTableHeader("단축키", "대상", "동작");
+        DrawTableRow(0, "F4",          "디버그 메뉴",  "번호 선택 메뉴 토글 (1~5번) / ESC 또는 F4로 닫기");
+        DrawTableRow(1, "F4 → 1",      "Win",          "단승 결과창 강제 표시 → 무조건 적중");
+        DrawTableRow(2, "F4 → 2",      "Exacta",       "연승 결과창 강제 표시 → 무조건 적중");
+        DrawTableRow(3, "F4 → 3",      "Trio",         "삼복승 결과창 강제 표시 → 무조건 적중");
+        DrawTableRow(4, "F4 → 4",      "Finish",       "최종 결산(Finish) 화면 강제 표시");
+        DrawTableRow(5, "F4 → 5",      "Leaderboard",  "Top100 리더보드 팝업 강제 표시");
+        DrawTableRow(6, "F8",          "Win",          "단승 배팅 — 1위 캐릭터 선택 → 무조건 적중 (빠른 접근)");
+        DrawTableRow(7, "F9",          "Exacta",       "연승 배팅 — 1·2위 캐릭터 선택 → 무조건 적중 (빠른 접근)");
+        DrawTableRow(8, "F10",         "Trio",         "삼복승 배팅 — 1·2·3위 캐릭터 선택 → 무조건 적중 (빠른 접근)");
         EndTable();
 
         DrawNote("▸ 플레이 모드에서 언제든지 사용 가능 (배팅 화면 / 레이스 중 / 결과창 모두)\n" +
-                 "▸ 순위는 매번 랜덤 셔플 → 화살표(←) 위치가 다양하게 표시됨");
+                 "▸ F8/F9/F10 은 F4 메뉴 없이 바로 결과창으로 점프하는 빠른 접근 단축키");
 
         GUILayout.Space(14);
         DrawHRule();

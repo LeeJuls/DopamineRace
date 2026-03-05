@@ -25,16 +25,20 @@ using System.IO;
 /// </summary>
 public static class FinishLeaderboardUIPrefabCreator
 {
-    private const string PREFAB_DIR        = "Assets/Prefabs/UI";
-    private const string FINISH_PANEL_PATH = "Assets/Prefabs/UI/FinishPanel.prefab";
+    private const string PREFAB_DIR             = "Assets/Prefabs/UI";
+    private const string FINISH_PANEL_PATH      = "Assets/Prefabs/UI/FinishPanel.prefab";
+    private const string LEADERBOARD_PANEL_PATH = "Assets/Prefabs/UI/LeaderboardPanel.prefab";
 
     // 색상
     private static readonly Color COLOR_BG_DARK    = new Color(0f,    0f,    0f,    0.85f);
+    private static readonly Color COLOR_BG_DARKER  = new Color(0f,    0f,    0f,    0.90f);
     private static readonly Color COLOR_GOLD       = new Color(1f,    0.85f, 0.2f,  1f);
     private static readonly Color COLOR_YELLOW     = Color.yellow;
     private static readonly Color COLOR_WHITE      = Color.white;
+    private static readonly Color COLOR_LIGHT_GRAY = new Color(0.8f,  0.8f,  0.8f,  1f);
     private static readonly Color COLOR_BTN_BLUE   = new Color(0.25f, 0.5f,  0.9f,  1f);
     private static readonly Color COLOR_BTN_PURPLE = new Color(0.5f,  0.3f,  0.6f,  1f);
+    private static readonly Color COLOR_BTN_RED    = new Color(0.5f,  0.3f,  0.3f,  1f);
 
     // ══════════════════════════════════════════════
     //  메뉴 항목
@@ -222,6 +226,136 @@ public static class FinishLeaderboardUIPrefabCreator
         t.supportRichText = richText;
         if (font != null) t.font = font;
         return go;
+    }
+
+    // ══════════════════════════════════════════════
+    //  메뉴 항목 — LeaderboardPanel
+    // ══════════════════════════════════════════════
+    [MenuItem("DopamineRace/Create Leaderboard UI Prefab")]
+    public static void CreateLeaderboardPrefab()
+    {
+        bool ok = EditorUtility.DisplayDialog(
+            "LeaderboardPanel 프리팹 생성",
+            "LeaderboardPanel.prefab을 새로 생성합니다.\n" +
+            "이미 존재하는 경우 덮어씁니다.\n\n진행할까요?",
+            "Yes, 생성",
+            "No, 취소"
+        );
+        if (!ok) { Debug.Log("[FinishLeaderboardUIPrefabCreator] 취소됨."); return; }
+
+        EnsureDirectory(PREFAB_DIR);
+
+        var gs   = AssetDatabase.LoadAssetAtPath<GameSettings>("Assets/Resources/GameSettings.asset");
+        Font font = gs != null ? gs.mainFont : null;
+
+        GameObject panel = CreateLeaderboardPanelPrefab(font);
+        PrefabUtility.SaveAsPrefabAsset(panel, LEADERBOARD_PANEL_PATH);
+        UnityEngine.Object.DestroyImmediate(panel);
+        Debug.Log("[FinishLeaderboardUIPrefabCreator] 생성 완료: " + LEADERBOARD_PANEL_PATH);
+
+        // GameSettings 자동 연결
+        if (gs != null)
+        {
+            gs.leaderboardPanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(LEADERBOARD_PANEL_PATH);
+            EditorUtility.SetDirty(gs);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[FinishLeaderboardUIPrefabCreator] GameSettings.leaderboardPanelPrefab 자동 연결 완료!");
+        }
+        else
+        {
+            Debug.LogWarning("[FinishLeaderboardUIPrefabCreator] GameSettings.asset을 찾을 수 없습니다. 수동으로 연결해주세요.");
+        }
+
+        AssetDatabase.Refresh();
+        EditorUtility.DisplayDialog("완료", "LeaderboardPanel.prefab 생성 완료!", "OK");
+    }
+
+    // ══════════════════════════════════════════════
+    //  LeaderboardPanel 프리팹 구조 생성
+    // ══════════════════════════════════════════════
+    internal static GameObject CreateLeaderboardPanelPrefab(Font font)
+    {
+        // ── 루트 패널 (880×800, 중앙) ──
+        GameObject root = new GameObject("LeaderboardPanel");
+        RectTransform rootRt = root.AddComponent<RectTransform>();
+        rootRt.anchorMin        = new Vector2(0.5f, 0.5f);
+        rootRt.anchorMax        = new Vector2(0.5f, 0.5f);
+        rootRt.pivot            = new Vector2(0.5f, 0.5f);
+        rootRt.anchoredPosition = Vector2.zero;
+        rootRt.sizeDelta        = new Vector2(880f, 800f);
+        root.AddComponent<Image>().color = COLOR_BG_DARKER;
+
+        // ── TitleText (anchor y=0.94, 금색 36pt) ──
+        MkText(root.transform, "TitleText", "Top 100 Leaderboard",
+            new Vector2(0.5f, 0.94f), new Vector2(0.5f, 0.94f),
+            Vector2.zero, new Vector2(500f, 55f),
+            36, TextAnchor.MiddleCenter, COLOR_GOLD, font, false);
+
+        // ── HeaderText (anchor y=0.87, 연회색 28pt) ──
+        MkText(root.transform, "HeaderText", "Rank   Score   Hits   Date   Summary",
+            new Vector2(0.5f, 0.87f), new Vector2(0.5f, 0.87f),
+            Vector2.zero, new Vector2(800f, 40f),
+            28, TextAnchor.MiddleCenter, COLOR_LIGHT_GRAY, font, false);
+
+        // ── ContentScrollView (anchor y=0.49, 800×580, ScrollRect) ──
+        GameObject scrollView = new GameObject("ContentScrollView");
+        scrollView.transform.SetParent(root.transform, false);
+        RectTransform scrollRt = scrollView.AddComponent<RectTransform>();
+        scrollRt.anchorMin        = new Vector2(0.5f, 0.49f);
+        scrollRt.anchorMax        = new Vector2(0.5f, 0.49f);
+        scrollRt.pivot            = new Vector2(0.5f, 0.5f);
+        scrollRt.anchoredPosition = Vector2.zero;
+        scrollRt.sizeDelta        = new Vector2(800f, 580f);
+        ScrollRect sr = scrollView.AddComponent<ScrollRect>();
+        sr.horizontal        = false;
+        sr.vertical          = true;
+        sr.movementType      = ScrollRect.MovementType.Clamped;
+        sr.scrollSensitivity = 30f;
+        // 투명 Image (레이캐스트 블로킹용)
+        scrollView.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+
+        // ── Viewport (RectMask2D, fill) ──
+        GameObject viewport = new GameObject("Viewport");
+        viewport.transform.SetParent(scrollView.transform, false);
+        RectTransform vpRt = viewport.AddComponent<RectTransform>();
+        vpRt.anchorMin        = Vector2.zero;
+        vpRt.anchorMax        = Vector2.one;
+        vpRt.pivot            = new Vector2(0f, 1f);
+        vpRt.anchoredPosition = Vector2.zero;
+        vpRt.sizeDelta        = Vector2.zero;
+        viewport.AddComponent<RectMask2D>();
+
+        // ── ContentText (top-stretch, ContentSizeFitter, 32pt) ──
+        GameObject contentGo = new GameObject("ContentText");
+        contentGo.transform.SetParent(viewport.transform, false);
+        RectTransform contentRt = contentGo.AddComponent<RectTransform>();
+        contentRt.anchorMin        = new Vector2(0f, 1f);
+        contentRt.anchorMax        = new Vector2(1f, 1f);
+        contentRt.pivot            = new Vector2(0.5f, 1f);
+        contentRt.anchoredPosition = Vector2.zero;
+        contentRt.sizeDelta        = new Vector2(0f, 580f);
+        Text contentText = contentGo.AddComponent<Text>();
+        contentText.text            = "";
+        contentText.fontSize        = 32;
+        contentText.alignment       = TextAnchor.UpperLeft;
+        contentText.color           = COLOR_WHITE;
+        contentText.supportRichText = true;
+        contentText.verticalOverflow = VerticalWrapMode.Overflow;
+        if (font != null) contentText.font = font;
+        ContentSizeFitter csf = contentGo.AddComponent<ContentSizeFitter>();
+        csf.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
+        csf.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+        // ScrollRect 연결
+        sr.viewport = vpRt;
+        sr.content  = contentRt;
+
+        // ── CloseBtn (anchor y=0.04, 어두운 빨강, 28pt) ──
+        CreateButton(root.transform, "CloseBtn", "닫기",
+            new Vector2(0.5f, 0.04f), new Vector2(200f, 55f),
+            COLOR_BTN_RED, 28, font);
+
+        return root;
     }
 
     // ══════════════════════════════════════════════

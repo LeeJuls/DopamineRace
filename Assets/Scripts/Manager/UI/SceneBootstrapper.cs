@@ -101,8 +101,13 @@ public partial class SceneBootstrapper : MonoBehaviour
     private ScrollRect finishScrollRect;      // 라운드 목록 스크롤
 
     // ── 리더보드 ──
-    private Text leaderboardContentText;
-    private Text leaderboardTitleText;
+    private Transform  leaderboardPanelRoot;
+    private Text       leaderboardTitleText;
+    private Text       leaderboardHeaderText;
+    private Text       leaderboardContentText;
+    private ScrollRect leaderboardScrollRect;
+    private Button     leaderboardCloseButton;
+    private Text       leaderboardCloseBtnText;
 
     // ── 런타임 ──
     private float raceTimer;
