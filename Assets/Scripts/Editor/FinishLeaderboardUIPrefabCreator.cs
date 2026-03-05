@@ -396,7 +396,7 @@ public static class FinishLeaderboardUIPrefabCreator
         summaryText.fontSize          = 22;
         summaryText.alignment         = TextAnchor.UpperLeft;
         summaryText.color             = new Color(0.75f, 0.75f, 0.75f, 1f);
-        summaryText.horizontalOverflow = HorizontalWrapMode.Wrap;
+        summaryText.horizontalOverflow = HorizontalWrapMode.Overflow; // BuildSummaryText()에서 \n으로 이미 줄 분리
         summaryText.verticalOverflow   = VerticalWrapMode.Overflow;
         summaryText.supportRichText   = false;
         if (font != null) summaryText.font = font;
