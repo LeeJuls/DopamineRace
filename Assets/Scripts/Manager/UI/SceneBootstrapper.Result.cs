@@ -139,9 +139,16 @@ public partial class SceneBootstrapper
 
             int racerIdx = rankings[i].racerIndex;
 
+            // SelectedCharacters 우선 (실제 게임: racerIdx = 선발 순서 인덱스)
+            // fallback AllCharacters (F8/F9/F10 디버그: racerIdx = AllCharacters 인덱스)
             CharacterData charData = null;
-            if (db != null && racerIdx >= 0 && racerIdx < db.AllCharacters.Count)
-                charData = db.AllCharacters[racerIdx];
+            if (db != null && racerIdx >= 0)
+            {
+                if (racerIdx < db.SelectedCharacters.Count)
+                    charData = db.SelectedCharacters[racerIdx];
+                else if (racerIdx < db.AllCharacters.Count)
+                    charData = db.AllCharacters[racerIdx];
+            }
 
             // 배지 텍스트: 동적으로 서수 표기 (1위/1st/1着)
             if (resultRankBadges[i] != null)

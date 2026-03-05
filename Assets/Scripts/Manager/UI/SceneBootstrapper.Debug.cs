@@ -33,10 +33,16 @@ public partial class SceneBootstrapper
     /// <param name="hitGuaranteed">true면 선택한 캐릭터가 실제 순위에 맞게 픽 → 무조건 적중</param>
     private void DebugJumpToResult(BetType betType, bool hitGuaranteed)
     {
-        var db = CharacterDatabase.Instance;
-        int count = (db != null) ? Mathf.Min(db.AllCharacters.Count, 8) : 8;
+        var db   = CharacterDatabase.Instance;
+        int need = GameSettings.Instance?.racerCount ?? 9; // 9명 고정
 
-        // ── 1. 랜덤 순위 생성 ──
+        // SelectedCharacters 보장 (미선발 상태면 즉시 선발)
+        if (db != null && db.SelectedCharacters.Count < need)
+            db.SelectRandom(need);
+
+        int count = (db != null) ? Mathf.Min(db.SelectedCharacters.Count, need) : need;
+
+        // ── 1. 랜덤 순위 생성 (SelectedCharacters 기준 — ShowResult와 동일한 인덱스 체계) ──
         var indices = new List<int>();
         for (int i = 0; i < count; i++) indices.Add(i);
 
@@ -50,8 +56,8 @@ public partial class SceneBootstrapper
         var fakeRankings = new List<RaceManager.RankingEntry>();
         for (int r = 0; r < count; r++)
         {
-            string name = (db != null && indices[r] < db.AllCharacters.Count)
-                ? db.AllCharacters[indices[r]].DisplayName
+            string name = (db != null && indices[r] < db.SelectedCharacters.Count)
+                ? db.SelectedCharacters[indices[r]].DisplayName
                 : "Racer " + (indices[r] + 1);
 
             fakeRankings.Add(new RaceManager.RankingEntry
