@@ -333,6 +333,11 @@ public class GameSettings : ScriptableObject
     [Tooltip("스프린트 진입 순간 speedLerp 배율 (2.5 = 즉각 가속 효과)")]
     [Range(1f, 5f)] public float sprintBurstLerpMult = 2.5f;
 
+    [Header("═══ HP: 스프린트 급소모 (SPEC-RC-002 v2) ═══")]
+    [Tooltip("스프린트 시 HP 소모율 배율 (Runner 제외). 3.0 = 3배 빠른 소모.\n" +
+             "단거리일수록 hpLapReference/totalLaps 배율 가산 → 단거리 추입 불리, 장거리 유리")]
+    [Range(1f, 8f)] public float sprintHPDrainMultiplier = 3.0f;
+
     // ── 레거시 포지션 보정 (deprecated, 시리얼 유지) ──
     [HideInInspector] public float paceLeadReduction = 0.15f;
     [HideInInspector] public float paceLeadFadeStart = 0.7f;

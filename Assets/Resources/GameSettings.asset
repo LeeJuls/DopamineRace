@@ -144,8 +144,13 @@ MonoBehaviour:
   reckoner_peakBoost: 0.24
   reckoner_accelExp: 1.8
   reckoner_decelExp: 0.4
-  reckoner_exhaustionFloor: -0.01
-  longRaceLateBoostAmp: 0.15
+  reckoner_exhaustionFloor: -0.08
+  longRaceLateBoostAmp: 0.3
+  leaderSprintLastLapThreshold: 0.2
+  chaserSprintLastLapThreshold: 0.3
+  reckonerSprintLastLapThreshold: 0.4
+  sprintBurstLerpMult: 2.5
+  sprintHPDrainMultiplier: 3
   paceLeadReduction: 0.15
   paceLeadFadeStart: 0.7
   paceLeadMaxRank: 3

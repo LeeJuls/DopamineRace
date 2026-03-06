@@ -150,6 +150,9 @@ public class RaceBacktestWindow : EditorWindow
         public float calmPoints;          // 현재 CP
         public float maxCP;               // 최대 CP
 
+        // ★ SPEC-RC-002: 스프린트 상태
+        public bool isSprintMode;         // 전력질주 상태
+
         // ★ 구간별 포지션 추적
         public bool[] segRecorded;        // 각 체크포인트 통과 여부
     }
@@ -543,7 +546,11 @@ public class RaceBacktestWindow : EditorWindow
                     }
 
                     float targetSpeed = baseTarget * penaltyMul * slingshotMul;
-                    r.currentSpeed = Mathf.Lerp(r.currentSpeed, targetSpeed, simTimeStep * gs.raceSpeedLerp);
+                    // [SPEC-RC-002] 스프린트 진입 시 Burst Lerp
+                    float effectiveLerp = r.isSprintMode
+                        ? gs.raceSpeedLerp * gs.sprintBurstLerpMult
+                        : gs.raceSpeedLerp;
+                    r.currentSpeed = Mathf.Lerp(r.currentSpeed, targetSpeed, simTimeStep * effectiveLerp);
                     r.position += r.currentSpeed * simTimeStep;
 
                     // ★ 구간별 포지션 기록
@@ -1053,37 +1060,38 @@ public class RaceBacktestWindow : EditorWindow
         SimApplyHPConsumption(r, gs, rate);
     }
 
-    // ─── 페이즈 3: 전략 ─────────────────────────────────────────────
+    // ─── 페이즈 3: 전략 (SPEC-RC-002 미러링) ────────────────────────
     private void SimConsumeHP_Strategy(SimRacer r, GameSettings gs, float progress)
     {
         gs.GetHPParams(r.data.charType,
-            out float spurtStart, out float activeRate, out _,
+            out _, out float activeRate, out _,
             out _, out _, out _);
         gs.GetZoneParams(r.data.charType,
             out _, out float inZoneRate, out float outZoneRate);
 
-        float remaining = 1f - progress;
         float rate;
+        bool sprintThisFrame = false;
 
         switch (r.data.charType)
         {
             case CharacterType.Runner:
             {
-                // 선두권 유지면 보존, 뒤처지면 스프린트 (RacerController 미러링)
-                int topRunnerRank = Mathf.Max(1, Mathf.CeilToInt(simRacers * 0.25f));
-                rate = (r.currentRank <= topRunnerRank) ? inZoneRate : activeRate;
+                // [SPEC-RC-002] 도주: 항상 전력질주
+                rate = activeRate;
+                sprintThisFrame = true;
                 break;
             }
 
             case CharacterType.Leader:
             {
-                bool inNearEnd = remaining <= spurtStart;
+                // [SPEC-RC-002] 선행: 마지막 바퀴 20% 남으면 전력질주
+                bool inSprint = SimIsLastLapSprintZone(progress, gs.leaderSprintLastLapThreshold);
                 int top30Rank = Mathf.Max(1, Mathf.CeilToInt(simRacers * 0.30f));
-                if (inNearEnd)
+
+                if (inSprint)
                 {
-                    float spurtProg = spurtStart > 0f
-                        ? Mathf.Clamp01((spurtStart - remaining) / spurtStart) : 1f;
-                    rate = Mathf.Lerp(inZoneRate, activeRate, spurtProg);
+                    rate = activeRate;
+                    sprintThisFrame = true;
                 }
                 else if (r.currentRank > top30Rank)
                     rate = outZoneRate;
@@ -1094,10 +1102,15 @@ public class RaceBacktestWindow : EditorWindow
 
             case CharacterType.Chaser:
             {
-                bool inNearEnd = remaining <= spurtStart;
+                // [SPEC-RC-002] 선입: 마지막 바퀴 30% 남으면 전력질주
+                bool inSprint = SimIsLastLapSprintZone(progress, gs.chaserSprintLastLapThreshold);
                 int top70Rank = Mathf.Max(1, Mathf.CeilToInt(simRacers * 0.70f));
-                if (inNearEnd)
-                    rate = activeRate;  // 즉시 전력질주 (Lerp 제거)
+
+                if (inSprint)
+                {
+                    rate = activeRate;
+                    sprintThisFrame = true;
+                }
                 else if (r.currentRank > top70Rank)
                     rate = outZoneRate;
                 else
@@ -1107,19 +1120,37 @@ public class RaceBacktestWindow : EditorWindow
 
             default: // Reckoner
             {
-                bool inNearEnd = remaining <= spurtStart;
-                if (inNearEnd)
-                    rate = activeRate;  // 즉시 전력질주 (Lerp 제거)
+                // [SPEC-RC-002] 추입: 마지막 바퀴 40% 남으면 전력질주
+                bool inSprint = SimIsLastLapSprintZone(progress, gs.reckonerSprintLastLapThreshold);
+
+                if (inSprint)
+                {
+                    rate = activeRate;
+                    sprintThisFrame = true;
+                }
                 else
-                    rate = inZoneRate;  // 완전 보존
+                    rate = inZoneRate;
                 break;
             }
         }
 
+        r.isSprintMode = sprintThisFrame;
         SimApplyHPConsumption(r, gs, rate);
     }
 
-    // ─── 공통 tail: boostAmp / speedRatio / leadPaceTax ──────────────
+    // ─── 헬퍼: 마지막 바퀴 기준 스프린트 판정 (SPEC-RC-002 미러링) ──
+    private bool SimIsLastLapSprintZone(float overallProgress, float threshold)
+    {
+        if (simLaps < 2) return false;
+        float lastLapStart = (float)(simLaps - 1) / simLaps;
+        if (overallProgress < lastLapStart) return false;
+        float lastLapLen = 1f / simLaps;
+        float lastLapProg = (overallProgress - lastLapStart) / lastLapLen;
+        float lastLapRemaining = 1f - lastLapProg;
+        return lastLapRemaining <= threshold;
+    }
+
+    // ─── 공통 tail: boostAmp / speedRatio / leadPaceTax (SPEC-RC-002 미러링) ──
     private void SimApplyHPConsumption(SimRacer r, GameSettings gs, float rate)
     {
         float trackSpeedMul = selectedTrack != null ? selectedTrack.speedMultiplier : 1f;
@@ -1138,7 +1169,21 @@ public class RaceBacktestWindow : EditorWindow
         condMul = Mathf.Max(condMul, 0.3f);
         effectiveRate /= condMul;
 
-        float consumption = effectiveRate * Mathf.Sqrt(speedRatio) * simTimeStep;
+        // [SPEC-RC-002 v2] 스프린트 HP 급소모 시스템 (RacerController 미러링)
+        // ① speedRatio 바이패스
+        float speedMul = r.isSprintMode
+            ? Mathf.Max(1f, Mathf.Sqrt(speedRatio))
+            : Mathf.Sqrt(speedRatio);
+
+        // ② 스프린트 급소모 배율 (Runner 제외)
+        // lapFactor = hpLapReference / totalLaps → 단거리일수록 높음
+        if (r.isSprintMode && r.data.charType != CharacterType.Runner)
+        {
+            float lapFactor = (float)gs.hpLapReference / Mathf.Max(1, simLaps);
+            effectiveRate *= gs.sprintHPDrainMultiplier * lapFactor;
+        }
+
+        float consumption = effectiveRate * speedMul * simTimeStep;
         consumption = Mathf.Min(consumption, r.enduranceHP);
 
         r.enduranceHP -= consumption;

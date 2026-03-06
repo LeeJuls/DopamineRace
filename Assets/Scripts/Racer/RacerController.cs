@@ -769,12 +769,24 @@ public class RacerController : MonoBehaviour
         condMul = Mathf.Max(condMul, 0.3f);
         effectiveRate /= condMul;
 
-        // [SPEC-RC-002 fix] 스프린트 시 speedRatio 바이패스
-        // 보존 중 느린 속도 → sqrt(speedRatio) 감쇄 → 스프린트에서도 소모 약함 → 부스트 안 쌓임 (악순환)
-        // 스프린트 = 전력질주 → 속도 무관하게 풀 소모해야 폭발적 부스트 생성
+        // [SPEC-RC-002 v2] 스프린트 HP 급소모 시스템
+        // ① speedRatio 바이패스: 스프린트 시 속도 무관 풀 소모
         float speedMul = isSprintMode
             ? Mathf.Max(1f, Mathf.Sqrt(speedRatio))   // 스프린트: 최소 1.0 보장
             : Mathf.Sqrt(speedRatio);                   // 보존: 기존 감쇄 유지
+
+        // ② 스프린트 급소모 배율 (Runner 제외: Runner는 Strategy 전체가 스프린트)
+        // lapFactor = hpLapReference / totalLaps → 단거리일수록 높음
+        // 2바퀴: 1.5배 / 3바퀴: 1.0배 / 5바퀴: 0.6배
+        // → 단거리 추입: 극한 소모 → 탈진 → 꼴찌
+        // → 장거리 추입: 완만 소모 → HP 충분 → 부스트 폭발 → 역전
+        if (isSprintMode && charData.charType != CharacterType.Runner)
+        {
+            int totalLaps = GetTotalLaps();
+            float lapFactor = (float)gs.hpLapReference / Mathf.Max(1, totalLaps);
+            effectiveRate *= gs.sprintHPDrainMultiplier * lapFactor;
+        }
+
         float consumption = effectiveRate * speedMul * deltaTime;
         consumption = Mathf.Min(consumption, enduranceHP);
 
