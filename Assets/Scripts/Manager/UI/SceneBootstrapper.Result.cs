@@ -2,8 +2,13 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 라운드 결과 화면: 순위(캐릭터 아이콘+이름) + 배팅 결과 + 점수
+/// 라운드 결과 화면: 전체 순위(배지+아이콘+이름+화살표) + 점수
 /// ResultPanel.prefab 기반 (ResultUIPrefabCreator로 생성/패치)
+///
+/// 구조 변경 (v2):
+///  - BetResultSection 제거
+///  - RankSection에 전체 N위 표시 (최대 12행)
+///  - 내 픽 캐릭터의 실제 순위 행에 ← 화살표 + 레이블 표시
 /// </summary>
 public partial class SceneBootstrapper
 {
@@ -11,6 +16,12 @@ public partial class SceneBootstrapper
     private static readonly Color COLOR_RESULT_LOSE = new Color(0.7f, 0.7f, 0.7f, 1f);
     private static readonly Color COLOR_PICK_HIT    = new Color(0.4f, 1f,  0.4f,  1f);
     private static readonly Color COLOR_PICK_MISS   = new Color(1f,  0.4f, 0.4f,  1f);
+
+    // 배지 색상
+    private static readonly Color COLOR_BADGE_GOLD   = new Color(1f,   0.84f, 0f,   1f);
+    private static readonly Color COLOR_BADGE_SILVER = new Color(0.75f, 0.75f, 0.75f, 1f);
+    private static readonly Color COLOR_BADGE_BRONZE = new Color(0.80f, 0.50f, 0.20f, 1f);
+    private static readonly Color COLOR_BADGE_GRAY   = new Color(0.45f, 0.45f, 0.45f, 1f);
 
     // ══════════════════════════════════════
     //  UI 구축 (프리팹 기반)
@@ -35,52 +46,44 @@ public partial class SceneBootstrapper
         }
     }
 
-    /// <summary>프리팹 내부 요소 참조 캐싱</summary>
+    /// <summary>프리팹 내부 요소 참조 캐싱 (v3: 9행 고정 + PickArrow)</summary>
     private void CacheResultUIReferences(Transform root)
     {
         // TitleText
         resultTitleText = FindText(root, "TitleText");
 
-        // RankSection
+        // RankSection — 전체 N위 (최대 12)
         Transform rankSection = root.Find("RankSection");
         if (rankSection != null)
         {
+            // SectionLabel — str.result.rank_header (언어 전환 시 ShowResult에서 갱신)
+            Transform sectionLblT = rankSection.Find("SectionLabel");
+            if (sectionLblT != null) resultSectionLabel = sectionLblT.GetComponent<Text>();
+
             for (int i = 0; i < MAX_RANK_ROWS; i++)
             {
                 Transform row = rankSection.Find("Rank" + (i + 1) + "Row");
-                if (row != null)
+                if (row == null) break;
+
+                resultRankRows[i] = row.gameObject;
+
+                // CharIconMask > CharIcon 구조 (v4: 얼굴 크롭) / legacy fallback
+                Transform iconT = row.Find("CharIconMask/CharIcon");
+                if (iconT == null) iconT = row.Find("CharIcon");
+                if (iconT != null) resultRankIcons[i] = iconT.GetComponent<Image>();
+
+                Transform nameT = row.Find("CharName");
+                if (nameT != null) resultRankNames[i] = nameT.GetComponent<Text>();
+
+                Transform badgeT = row.Find("RankBadge");
+                if (badgeT != null)
                 {
-                    Transform iconT = row.Find("CharIcon");
-                    if (iconT != null) resultRankIcons[i] = iconT.GetComponent<Image>();
-
-                    Transform nameT = row.Find("CharName");
-                    if (nameT != null) resultRankNames[i] = nameT.GetComponent<Text>();
+                    Transform badgeTextT = badgeT.Find("BadgeText");
+                    if (badgeTextT != null) resultRankBadges[i] = badgeTextT.GetComponent<Text>();
                 }
-            }
-        }
 
-        // BetResultSection
-        Transform betSection = root.Find("BetResultSection");
-        if (betSection != null)
-        {
-            resultBetTypeLabel = FindText(betSection, "BetTypeLabel");
-
-            for (int i = 0; i < 3; i++)
-            {
-                Transform row = betSection.Find("Pick" + (i + 1) + "Row");
-                if (row != null)
-                {
-                    resultPickRows[i] = row.gameObject;
-
-                    Transform lblT = row.Find("LabelText");
-                    if (lblT != null) resultPickLabels[i] = lblT.GetComponent<Text>();
-
-                    Transform nameT = row.Find("PickName");
-                    if (nameT != null) resultPickNames[i] = nameT.GetComponent<Text>();
-
-                    Transform resultT = row.Find("PickResult");
-                    if (resultT != null) resultPickResults[i] = resultT.GetComponent<Text>();
-                }
+                Transform arrowT = row.Find("PickArrow");
+                if (arrowT != null) resultRankArrows[i] = arrowT.GetComponent<Text>();
             }
         }
 
@@ -109,11 +112,12 @@ public partial class SceneBootstrapper
     private void ShowResult()
     {
         var rankings = RaceManager.Instance?.GetFinalRankings();
-        if (rankings == null || rankings.Count < 3) return;
+        if (rankings == null || rankings.Count == 0) return;
 
         var gm  = GameManager.Instance;
         var bet = gm?.CurrentBet;
         int score = ScoreManager.Instance?.LastRoundScore ?? 0;
+        int totalRacers = rankings.Count;
 
         // ── TitleText ──
         if (resultTitleText != null)
@@ -122,16 +126,52 @@ public partial class SceneBootstrapper
             resultTitleText.color = score > 0 ? COLOR_RESULT_WIN : COLOR_RESULT_LOSE;
         }
 
-        // ── RankSection: 전체 순위 캐릭터 아이콘 + 이름 ──
+        // ── SectionLabel (str.result.rank_header) ──
+        if (resultSectionLabel != null)
+            resultSectionLabel.text = Loc.Get("str.result.rank_header");
+
+        // ── RankSection: 전체 순위 표시 (9행 고정, 항상 전부 활성) ──
         var db = CharacterDatabase.Instance;
-        for (int i = 0; i < MAX_RANK_ROWS && i < rankings.Count; i++)
+        for (int i = 0; i < MAX_RANK_ROWS; i++)
         {
+            if (resultRankRows[i] == null) continue;
+            if (i >= totalRacers) continue; // 혹시 레이서 수가 9 미만일 때만 방어
+
             int racerIdx = rankings[i].racerIndex;
 
+            // SelectedCharacters 우선 (실제 게임: racerIdx = 선발 순서 인덱스)
+            // fallback AllCharacters (F8/F9/F10 디버그: racerIdx = AllCharacters 인덱스)
             CharacterData charData = null;
-            if (db != null && racerIdx >= 0 && racerIdx < db.AllCharacters.Count)
-                charData = db.AllCharacters[racerIdx];
+            if (db != null && racerIdx >= 0)
+            {
+                if (racerIdx < db.SelectedCharacters.Count)
+                    charData = db.SelectedCharacters[racerIdx];
+                else if (racerIdx < db.AllCharacters.Count)
+                    charData = db.AllCharacters[racerIdx];
+            }
 
+            // 배지 텍스트: 동적으로 서수 표기 (1위/1st/1着)
+            if (resultRankBadges[i] != null)
+                resultRankBadges[i].text = GetOrdinal(i + 1);
+
+            // 배지 배경색 동적 설정 (RankBadge Image)
+            if (resultRankRows[i] != null)
+            {
+                Transform badgeT = resultRankRows[i].transform.Find("RankBadge");
+                if (badgeT != null)
+                {
+                    Image badgeImg = badgeT.GetComponent<Image>();
+                    if (badgeImg != null)
+                    {
+                        if (i == 0) badgeImg.color = COLOR_BADGE_GOLD;
+                        else if (i == 1) badgeImg.color = COLOR_BADGE_SILVER;
+                        else if (i == 2) badgeImg.color = COLOR_BADGE_BRONZE;
+                        else badgeImg.color = COLOR_BADGE_GRAY;
+                    }
+                }
+            }
+
+            // 아이콘 (RectMask2D 얼굴 크롭 — AspectRatioFitter로 비율 자동 조정)
             if (resultRankIcons[i] != null)
             {
                 if (charData != null)
@@ -140,16 +180,22 @@ public partial class SceneBootstrapper
                     if (spr != null)
                     {
                         resultRankIcons[i].sprite = spr;
-                        resultRankIcons[i].color = Color.white;
+                        resultRankIcons[i].color  = Color.white;
+                        // 스프라이트 실제 비율로 AspectRatioFitter 갱신
+                        // → 너비(30px) 고정, 높이를 비율에 맞게 늘려 마스크 밖으로 뻗게 함
+                        var fitter = resultRankIcons[i].GetComponent<AspectRatioFitter>();
+                        if (fitter != null && spr.rect.height > 0f)
+                            fitter.aspectRatio = spr.rect.width / spr.rect.height;
                     }
                     else
                     {
                         resultRankIcons[i].sprite = null;
-                        resultRankIcons[i].color = new Color(0.3f, 0.3f, 0.3f);
+                        resultRankIcons[i].color  = new Color(0.3f, 0.3f, 0.3f);
                     }
                 }
             }
 
+            // 이름
             if (resultRankNames[i] != null)
             {
                 string displayName = charData != null
@@ -157,52 +203,39 @@ public partial class SceneBootstrapper
                     : rankings[i].racerName;
                 resultRankNames[i].text = displayName;
             }
+
+            // 화살표 기본 숨김
+            if (resultRankArrows[i] != null)
+                resultRankArrows[i].gameObject.SetActive(false);
         }
 
-        // ── BetResultSection ──
-        if (resultBetTypeLabel != null && bet != null)
+        // ── 내 픽 → 화살표 표시 ──
+        bool isHit = score > 0;
+
+        if (bet != null)
         {
-            string typeName = BettingCalculator.GetTypeName(bet.type);
-            string typeDesc = BettingCalculator.GetTypeDesc(bet.type);
-            resultBetTypeLabel.text = Loc.Get("str.result.bet_type", typeName, typeDesc);
-        }
-        else if (resultBetTypeLabel != null)
-        {
-            resultBetTypeLabel.text = "";
-        }
-
-        // Pick Row
-        for (int i = 0; i < 3; i++)
-        {
-            bool active = bet != null && i < bet.selections.Count;
-            if (resultPickRows[i] != null)
-                resultPickRows[i].SetActive(active);
-
-            if (!active) continue;
-
-            int selIdx = bet.selections[i];
-
-            if (resultPickLabels[i] != null)
-                resultPickLabels[i].text = bet.GetSelectionLabel(i) + ":";
-
-            CharacterData selChar = null;
-            if (db != null && selIdx >= 0 && selIdx < db.AllCharacters.Count)
-                selChar = db.AllCharacters[selIdx];
-            if (resultPickNames[i] != null)
-                resultPickNames[i].text = selChar != null
-                    ? selChar.DisplayName
-                    : GameConstants.RACER_NAMES[selIdx];
-
-            int actualRank = -1;
-            for (int r = 0; r < rankings.Count; r++)
+            for (int si = 0; si < bet.selections.Count; si++)
             {
-                if (rankings[r].racerIndex == selIdx) { actualRank = r + 1; break; }
-            }
-            if (resultPickResults[i] != null)
-            {
-                bool isHit = score > 0;
-                resultPickResults[i].text  = actualRank > 0 ? "→ " + GetOrdinal(actualRank) : "→ ?";
-                resultPickResults[i].color = isHit ? COLOR_PICK_HIT : COLOR_PICK_MISS;
+                int selIdx = bet.selections[si];
+
+                // 이 캐릭터의 실제 도달 순위 찾기
+                int actualRank = -1;
+                for (int r = 0; r < rankings.Count; r++)
+                {
+                    if (rankings[r].racerIndex == selIdx)
+                    {
+                        actualRank = r;
+                        break;
+                    }
+                }
+
+                if (actualRank >= 0 && actualRank < MAX_RANK_ROWS && resultRankArrows[actualRank] != null)
+                {
+                    var arrowText = resultRankArrows[actualRank];
+                    arrowText.gameObject.SetActive(true);
+                    arrowText.text  = "← " + bet.GetSelectionLabel(si);
+                    arrowText.color = isHit ? COLOR_PICK_HIT : COLOR_PICK_MISS;
+                }
             }
         }
 
@@ -293,4 +326,3 @@ public partial class SceneBootstrapper
             Vector2.zero, new Vector2(250, 60), 26, TextAnchor.MiddleCenter, Color.white);
     }
 }
-
