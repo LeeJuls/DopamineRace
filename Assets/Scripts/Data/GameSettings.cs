@@ -323,6 +323,16 @@ public class GameSettings : ScriptableObject
     [Tooltip("hpLapReference 초과 시 Chaser/Reckoner peakBoost 증폭 계수")]
     [Range(0f, 0.5f)] public float longRaceLateBoostAmp = 0.15f;
 
+    [Header("═══ HP: 마지막 바퀴 기준 스프린트 (SPEC-RC-002) ═══")]
+    [Tooltip("선행(Leader): 마지막 바퀴의 X% 남으면 스프린트 (0.20 = 20% 남으면)")]
+    [Range(0.05f, 0.60f)] public float leaderSprintLastLapThreshold = 0.20f;
+    [Tooltip("선입(Chaser): 마지막 바퀴의 X% 남으면 스프린트 (0.30 = 30% 남으면)")]
+    [Range(0.05f, 0.60f)] public float chaserSprintLastLapThreshold = 0.30f;
+    [Tooltip("추입(Reckoner): 마지막 바퀴의 X% 남으면 스프린트 (0.40 = 40% 남으면)")]
+    [Range(0.05f, 0.60f)] public float reckonerSprintLastLapThreshold = 0.40f;
+    [Tooltip("스프린트 진입 순간 speedLerp 배율 (2.5 = 즉각 가속 효과)")]
+    [Range(1f, 5f)] public float sprintBurstLerpMult = 2.5f;
+
     // ── 레거시 포지션 보정 (deprecated, 시리얼 유지) ──
     [HideInInspector] public float paceLeadReduction = 0.15f;
     [HideInInspector] public float paceLeadFadeStart = 0.7f;
