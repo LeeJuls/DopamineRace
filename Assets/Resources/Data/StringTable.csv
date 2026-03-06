@@ -82,7 +82,7 @@ str.hud.lap,{0}바퀴,{0} Laps,{0}周,{0}圈,{0} Runden,{0} Vueltas,{0} Voltas
 str.hud.this_race,이번 경기: {0}바퀴,This Race: {0} Laps,このレース: {0}周,本场比赛: {0}圈,Dieses Rennen: {0} Runden,Esta Carrera: {0} Vueltas,Esta Corrida: {0} Voltas
 str.hud.total_score,총점: {0},Total: {0},合計: {0},总分: {0},Gesamt: {0},Total: {0},Total: {0}
 str.hud.timer,{0}초,{0}s,{0}秒,{0}秒,{0}s,{0}s,{0}s
-str.hud.rank,{0}위,{0}th,{0}位,第{0}名,{0}.,{0}º,{0}º
+str.hud.rank,{0}위,{0}.,{0}位,{0}名,{0}.,{0}º,{0}º
 str.hud.lap_progress,{0}/{1}바퀴,{0}/{1} Laps,{0}/{1}周,{0}/{1}圈,{0}/{1} Runden,{0}/{1} Vueltas,{0}/{1} Voltas
 str.hud.finished,완주,Finished,完走,完赛,Ziel,Meta,Chegada
 str.hud.my_bet,내 배팅 ▶ {0} | {1},My Bet ▶ {0} | {1},マイベット ▶ {0} | {1},我的投注 ▶ {0} | {1},Meine Wette ▶ {0} | {1},Mi Apuesta ▶ {0} | {1},Minha Aposta ▶ {0} | {1}

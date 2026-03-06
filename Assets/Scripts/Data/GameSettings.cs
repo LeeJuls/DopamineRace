@@ -147,6 +147,8 @@ public class GameSettings : ScriptableObject
     public GameObject bettingPanelPrefab;
     [Tooltip("캐릭터 아이템 프리팹 (BettingUIPrefabCreator로 자동 생성)")]
     public GameObject characterItemPrefab;
+    [Tooltip("결과 패널 프리팹 (ResultUIPrefabCreator로 자동 생성)")]
+    public GameObject resultPanelPrefab;
 
     /// <summary>
     /// 바퀴 수 → 거리 구분 Loc 키 반환

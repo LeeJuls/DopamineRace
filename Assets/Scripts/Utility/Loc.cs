@@ -105,32 +105,12 @@ public static class Loc
     }
 
     /// <summary>
-    /// 등수 표기 전용. 영어는 1st/2nd/3rd/4th... 올바른 서수 반환.
-    /// 다른 언어는 StringTable의 str.hud.rank 포맷 사용.
+    /// 등수 표기 전용. StringTable의 str.hud.rank 포맷 사용.
+    /// 모든 언어 공통: 숫자+1자리 접미사 형태 (1위, 1., 1位 등)
     /// </summary>
     public static string GetRank(int rank)
     {
-        if (CurrentLang == "en")
-            return rank + GetEnglishOrdinalSuffix(rank);
         return Get("str.hud.rank", rank);
-    }
-
-    /// <summary>
-    /// 영어 서수 접미사 반환 (1→st, 2→nd, 3→rd, 4+→th)
-    /// 11/12/13은 예외적으로 th 사용 (11th, 12th, 13th)
-    /// </summary>
-    private static string GetEnglishOrdinalSuffix(int n)
-    {
-        int mod100 = n % 100;
-        if (mod100 >= 11 && mod100 <= 13)
-            return "th";
-        switch (n % 10)
-        {
-            case 1: return "st";
-            case 2: return "nd";
-            case 3: return "rd";
-            default: return "th";
-        }
     }
 
     /// <summary>

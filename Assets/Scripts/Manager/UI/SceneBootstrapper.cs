@@ -72,11 +72,23 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text racingRoundText;
 
     // ── 결과 UI ──
+    private Transform resultPanelRoot;
     private Text resultTitleText;
-    private Text resultDetailText;
-    private Text resultScoreText;
+    // RankSection (1~3위 캐릭터)
+    private Image[] resultRankIcons  = new Image[3];
+    private Text[]  resultRankNames  = new Text[3];
+    // BetResultSection (내 배팅 선택)
+    private Text            resultBetTypeLabel;
+    private GameObject[]    resultPickRows    = new GameObject[3];
+    private Text[]          resultPickLabels  = new Text[3];
+    private Text[]          resultPickNames   = new Text[3];
+    private Text[]          resultPickResults = new Text[3];
+    // ScoreSection
+    private Text resultScoreFormulaText;
+    private Text resultTotalScoreText;
+    // 버튼
     private Button nextRoundButton;
-    private Text nextRoundBtnText;
+    private Text   nextRoundBtnText;
 
     // ── Finish UI ──
     private Text finishTitleText;
