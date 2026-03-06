@@ -104,6 +104,19 @@ public partial class SceneBootstrapper
                 nextRoundButton.onClick.AddListener(() => GameManager.Instance?.NextRound());
             nextRoundBtnText = FindText(btnT, "BtnText");
         }
+
+        // ── 필수 참조 null 체크 (프리팹 구조 깨졌을 때 빠른 발견) ──
+        if (resultTitleText == null)
+            Debug.LogWarning("[ResultUI] TitleText 참조 없음 — 프리팹 구조 확인 필요");
+        if (nextRoundButton == null)
+            Debug.LogWarning("[ResultUI] NextRoundBtn 참조 없음 — 다음 라운드 버튼 작동 안 함");
+        int cachedRows = 0;
+        for (int i = 0; i < MAX_RANK_ROWS; i++)
+            if (resultRankRows[i] != null) cachedRows++;
+        if (cachedRows == 0)
+            Debug.LogWarning("[ResultUI] RankSection 행이 하나도 캐싱되지 않음 — 프리팹 RankSection 구조 확인");
+        else
+            Debug.Log($"[ResultUI] 초기화 완료 — {cachedRows}개 순위 행 캐싱됨");
     }
 
     // ══════════════════════════════════════
