@@ -45,7 +45,7 @@ public partial class SceneBootstrapper
         Transform rankSection = root.Find("RankSection");
         if (rankSection != null)
         {
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < MAX_RANK_ROWS; i++)
             {
                 Transform row = rankSection.Find("Rank" + (i + 1) + "Row");
                 if (row != null)
@@ -122,9 +122,9 @@ public partial class SceneBootstrapper
             resultTitleText.color = score > 0 ? COLOR_RESULT_WIN : COLOR_RESULT_LOSE;
         }
 
-        // ── RankSection: 1~3위 캐릭터 아이콘 + 이름 ──
+        // ── RankSection: 전체 순위 캐릭터 아이콘 + 이름 ──
         var db = CharacterDatabase.Instance;
-        for (int i = 0; i < 3 && i < rankings.Count; i++)
+        for (int i = 0; i < MAX_RANK_ROWS && i < rankings.Count; i++)
         {
             int racerIdx = rankings[i].racerIndex;
 
