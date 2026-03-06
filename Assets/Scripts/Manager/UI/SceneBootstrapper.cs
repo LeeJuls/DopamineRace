@@ -71,6 +71,20 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text myBetText;
     private Text racingRoundText;
 
+    // ── 트랙 프로그레스 바 ──
+    private struct RacerCircleUI
+    {
+        public RectTransform rect;
+        public Image circleImage;
+        public Image outlineImage;   // 배팅 마커 노란 테두리 (null이면 비배팅)
+        public Text numberText;
+        public int racerIndex;
+    }
+    private RacerCircleUI[] racerCircles;
+    private RectTransform trackBarRect;
+    private List<GameObject> lapDividers = new List<GameObject>();
+    private HashSet<int> myPickIndices = new HashSet<int>();
+
     // ── 결과 UI ──
     private Transform resultPanelRoot;
     private Text resultTitleText;
