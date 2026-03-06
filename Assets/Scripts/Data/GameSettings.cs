@@ -151,6 +151,10 @@ public class GameSettings : ScriptableObject
     public GameObject resultPanelPrefab;
     [Tooltip("최종결산 패널 프리팹 (FinishUIPrefabCreator로 자동 생성)")]
     public GameObject finishPanelPrefab;
+    [Tooltip("리더보드 팝업 프리팹 (FinishLeaderboardUIPrefabCreator로 자동 생성)")]
+    public GameObject leaderboardPanelPrefab;
+    [Tooltip("트랙 프로그레스 바 프리팹 (추후 디자인 적용 시 사용)")]
+    public GameObject trackProgressBarPrefab;
 
     /// <summary>
     /// 바퀴 수 → 거리 구분 Loc 키 반환
