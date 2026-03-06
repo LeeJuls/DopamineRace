@@ -150,7 +150,7 @@ MonoBehaviour:
   chaserSprintLastLapThreshold: 0.3
   reckonerSprintLastLapThreshold: 0.4
   sprintBurstLerpMult: 2.5
-  sprintHPDrainMultiplier: 3
+  sprintHPDrainMultiplier: 2
   paceLeadReduction: 0.15
   paceLeadFadeStart: 0.7
   paceLeadMaxRank: 3
@@ -165,7 +165,7 @@ MonoBehaviour:
   chaser_targetZone: 0.7
   chaser_inZoneRate: 0.8
   chaser_outZoneRate: 1.5
-  reckoner_baseRate: 1.1
+  reckoner_baseRate: 0.7
   leaderSpurtMinHP: 0.3
   hp_earlyBonus_Runner: 0.25
   hp_earlyBonus_Leader: 0.04
