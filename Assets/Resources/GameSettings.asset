@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GameSettings
   m_EditorClassIdentifier: Assembly-CSharp::GameSettings
   racerCount: 9
-  roundLaps: 0100000001000000
+  roundLaps: 0200000002000000
   payoutWin: 8
   payoutPlace: 3
   payoutQuinella: 31
@@ -91,6 +91,7 @@ MonoBehaviour:
   resultPanelPrefab: {fileID: 8567012208848269126, guid: be432a661f51cfd42be4d64449198572, type: 3}
   finishPanelPrefab: {fileID: 8787253541604398564, guid: 996934117f1431047812b05bf40ec784, type: 3}
   leaderboardPanelPrefab: {fileID: 588526348272800763, guid: fe2555fdfd8ecef4e9a46d3c4e389ac1, type: 3}
+  trackProgressBarPrefab: {fileID: 0}
   pathDeviation: 0.7
   characterScale: 1.2
   laneOffset: 0.05

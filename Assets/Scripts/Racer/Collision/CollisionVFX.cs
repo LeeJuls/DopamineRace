@@ -6,56 +6,44 @@ using UnityEngine;
 
 public enum CollisionVFXType
 {
-    Hit,        // 💥 충돌
-    Dodge,      // 🛡️ 회피
-    Slingshot,  // 🚀 슬링샷 (추격)
-    Crit        // ⭐ Lucky 크리티컬
+    Hit,        // 충돌
+    Dodge,      // 회피
+    Slingshot,  // 슬링샷 (추격)
+    Crit        // Lucky 크리티컬
 }
 
 // ══════════════════════════════════════════
-//  충돌 VFX 표시 컴포넌트 (SpriteRenderer 기반)
+//  충돌 VFX 표시 컴포넌트 (v2 — Resources 기반)
 //
-//  TextMesh는 이모지를 렌더링할 수 없으므로
-//  런타임 생성 스프라이트 + 텍스트로 대체
-//
-//  스프라이트 생성은 CollisionSpriteFactory에 위임
+//  스프라이트를 Resources/VFX/ PNG 에셋에서 로드.
+//  런타임 Texture2D/Sprite.Create() 사용하지 않음.
+//  Editor 도구 DopamineRace > Generate Collision VFX Sprites 로
+//  PNG 에셋을 사전 생성해야 함.
 // ══════════════════════════════════════════
 
 public class CollisionVFX : MonoBehaviour
 {
+    // ── Resources에서 로드한 스프라이트 (static 캐시) ──
+    private static Sprite s_circle;
+    private static Sprite s_star6;
+    private static Sprite s_star5;
+    private static Sprite s_arrow;
+    private static Sprite s_shield;
+
+    // ── 인스턴스 오브젝트 ──
     private GameObject vfxRoot;
     private SpriteRenderer bgSprite;
     private SpriteRenderer iconSprite;
     private TextMesh label;
 
-    private float timer = 0f;
-    private float totalDuration = 0f;
+    // ── 애니메이션 상태 ──
+    private float timer;
+    private float totalDuration;
     private Vector3 startLocalPos;
     private float floatSpeed = 1.5f;
-
-    // ── 캐싱된 텍스처/스프라이트 (static으로 1번만 생성) ──
-    private static Sprite circleSprite;
-    private static Sprite starSprite;      // 6각 별 (Hit용)
-    private static Sprite star5Sprite;     // 5각 별 (Crit용)
-    private static Sprite arrowSprite;
-    private static Sprite shieldSprite;
-    private static bool spritesCreated = false;
-
-    private static void EnsureSprites()
-    {
-        if (spritesCreated) return;
-        circleSprite = CollisionSpriteFactory.CreateCircleSprite(32, Color.white);
-        starSprite = CollisionSpriteFactory.CreateStarSprite(32, Color.white, 6);
-        star5Sprite = CollisionSpriteFactory.CreateStarSprite(32, Color.white, 5);
-        arrowSprite = CollisionSpriteFactory.CreateArrowSprite(32, Color.white);
-        shieldSprite = CollisionSpriteFactory.CreateShieldSprite(32, Color.white);
-        spritesCreated = true;
-    }
-
-    // ── 현재 표시 중인 VFX 타입 ──
     private CollisionVFXType currentType;
 
-    // 우선순위: Crit > Hit > Dodge > Slingshot
+    // ── 우선순위 (높을수록 우선) ──
     private static int GetPriority(CollisionVFXType type)
     {
         switch (type)
@@ -68,20 +56,44 @@ public class CollisionVFX : MonoBehaviour
         }
     }
 
+    // ══════════════════════════════════════════
+    //  스프라이트 로드 (Resources 에셋 — GC 안전)
+    // ══════════════════════════════════════════
+
+    private static void LoadSprites()
+    {
+        // Resources.Load 결과는 Unity 에셋 파이프라인 관리 → Reload Scene에서도 유지
+        if (s_circle != null) return;
+
+        s_circle = Resources.Load<Sprite>("VFX/vfx_circle");
+        s_star6  = Resources.Load<Sprite>("VFX/vfx_star6");
+        s_star5  = Resources.Load<Sprite>("VFX/vfx_star5");
+        s_arrow  = Resources.Load<Sprite>("VFX/vfx_arrow");
+        s_shield = Resources.Load<Sprite>("VFX/vfx_shield");
+
+        if (s_circle == null)
+            Debug.LogError("[CollisionVFX] Resources/VFX/ 스프라이트 없음! " +
+                           "DopamineRace > Generate Collision VFX Sprites 실행 필요");
+    }
+
+    // ══════════════════════════════════════════
+    //  VFX 표시
+    // ══════════════════════════════════════════
+
     public void Show(CollisionVFXType type, float duration)
     {
-        // ★ 우선순위 보호: 높은 VFX 표시 중이면 낮은 건 스킵
+        // 우선순위 보호: 높은 VFX 표시 중이면 낮은 건 스킵
         if (timer > 0f && GetPriority(type) < GetPriority(currentType))
             return;
 
         currentType = type;
-
-        EnsureSprites();
+        LoadSprites();
 
         var gs = GameSettings.Instance;
 
+        // vfxRoot 없으면 생성
         if (vfxRoot == null)
-            CreateVFXObjects(gs);
+            BuildVFX(gs);
 
         // ── GameSettings에서 크기 읽기 ──
         float iconScale = gs.vfxIconScale;
@@ -98,37 +110,37 @@ public class CollisionVFX : MonoBehaviour
         switch (type)
         {
             case CollisionVFXType.Hit:
-                bgColor = new Color(1f, 0.2f, 0.1f, 0.9f);    // 빨강
-                iconColor = new Color(1f, 1f, 0.3f, 1f);        // 노랑
-                icon = gs.vfxHitIcon != null ? gs.vfxHitIcon : starSprite;
+                bgColor = new Color(1f, 0.2f, 0.1f, 0.9f);
+                iconColor = new Color(1f, 1f, 0.3f, 1f);
+                icon = gs.vfxHitIcon != null ? gs.vfxHitIcon : s_star6;
                 text = "HIT!";
                 break;
 
             case CollisionVFXType.Dodge:
-                bgColor = new Color(0.2f, 0.6f, 1f, 0.9f);     // 파랑
-                iconColor = new Color(0.8f, 1f, 1f, 1f);        // 연하늘
-                icon = gs.vfxDodgeIcon != null ? gs.vfxDodgeIcon : shieldSprite;
+                bgColor = new Color(0.2f, 0.6f, 1f, 0.9f);
+                iconColor = new Color(0.8f, 1f, 1f, 1f);
+                icon = gs.vfxDodgeIcon != null ? gs.vfxDodgeIcon : s_shield;
                 text = "DODGE!";
                 break;
 
             case CollisionVFXType.Slingshot:
-                bgColor = new Color(0.1f, 0.9f, 0.3f, 0.9f);   // 초록
-                iconColor = new Color(1f, 1f, 0.5f, 1f);        // 연노랑
-                icon = gs.vfxSlingshotIcon != null ? gs.vfxSlingshotIcon : arrowSprite;
+                bgColor = new Color(0.1f, 0.9f, 0.3f, 0.9f);
+                iconColor = new Color(1f, 1f, 0.5f, 1f);
+                icon = gs.vfxSlingshotIcon != null ? gs.vfxSlingshotIcon : s_arrow;
                 text = "CHASE!";
                 break;
 
             case CollisionVFXType.Crit:
-                bgColor = new Color(0.5f, 0.1f, 0.8f, 0.9f);   // 보라
-                iconColor = new Color(1f, 1f, 0.3f, 1f);        // 노랑
-                icon = star5Sprite;                               // ⭐ 5각 별
+                bgColor = new Color(0.5f, 0.1f, 0.8f, 0.9f);
+                iconColor = new Color(1f, 1f, 0.3f, 1f);
+                icon = s_star5;
                 text = "BOOST!";
                 break;
 
             default:
                 bgColor = Color.white;
                 iconColor = Color.white;
-                icon = circleSprite;
+                icon = s_circle;
                 text = "?";
                 break;
         }
@@ -139,7 +151,7 @@ public class CollisionVFX : MonoBehaviour
             || (type == CollisionVFXType.Slingshot && gs.vfxSlingshotIcon != null);
 
         // ── 적용 ──
-        bgSprite.sprite = circleSprite;
+        bgSprite.sprite = s_circle;
         bgSprite.color = bgColor;
         bgSprite.transform.localScale = Vector3.one * iconScale;
 
@@ -159,11 +171,14 @@ public class CollisionVFX : MonoBehaviour
         timer = duration;
         totalDuration = duration;
 
-        // 부모 스케일 반전 보정
         FixFlip();
     }
 
-    private void CreateVFXObjects(GameSettings gs)
+    // ══════════════════════════════════════════
+    //  VFX 오브젝트 생성
+    // ══════════════════════════════════════════
+
+    private void BuildVFX(GameSettings gs)
     {
         float height = gs != null ? gs.vfxHeight : 1.8f;
         float labelCharSize = gs != null ? gs.vfxLabelSize : 0.08f;
@@ -178,6 +193,7 @@ public class CollisionVFX : MonoBehaviour
         bgObj.transform.localPosition = Vector3.zero;
         bgSprite = bgObj.AddComponent<SpriteRenderer>();
         bgSprite.sortingOrder = 100;
+        bgSprite.sprite = s_circle;
 
         // 아이콘
         var iconObj = new GameObject("Icon");
@@ -198,9 +214,12 @@ public class CollisionVFX : MonoBehaviour
         label.fontStyle = FontStyle.Bold;
         label.color = Color.white;
 
-        // 폰트 적용
         FontHelper.ApplyToTextMesh(label, 102);
     }
+
+    // ══════════════════════════════════════════
+    //  업데이트 (떠오르기 + 페이드 + 스케일 팝)
+    // ══════════════════════════════════════════
 
     private void Update()
     {
@@ -213,7 +232,7 @@ public class CollisionVFX : MonoBehaviour
             return;
         }
 
-        float progress = 1f - (timer / totalDuration); // 0 → 1
+        float progress = 1f - (timer / totalDuration);
 
         // ── 위로 떠오르기 ──
         Vector3 pos = startLocalPos;
@@ -246,10 +265,10 @@ public class CollisionVFX : MonoBehaviour
         }
         vfxRoot.transform.localScale = Vector3.one * scale;
 
-        // 부모 반전 보정
         FixFlip();
     }
 
+    // ── 부모 flip 보정 ──
     private void FixFlip()
     {
         if (vfxRoot == null) return;

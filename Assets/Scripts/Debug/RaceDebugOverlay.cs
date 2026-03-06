@@ -366,7 +366,6 @@ public class RaceDebugOverlay : MonoBehaviour
 
     private void Update()
     {
-#if UNITY_EDITOR
         if (Input.GetKeyDown(KeyCode.F1)) showDebug = !showDebug;
         if (Input.GetKeyDown(KeyCode.F2)) showDetail = !showDetail;
         if (Input.GetKeyDown(KeyCode.F3))
@@ -380,7 +379,6 @@ public class RaceDebugOverlay : MonoBehaviour
                 if (viewingRound > currentRound) viewingRound = -1;
             }
         }
-#endif
 
         refreshTimer -= Time.deltaTime;
         if (refreshTimer <= 0f)
@@ -439,10 +437,11 @@ public class RaceDebugOverlay : MonoBehaviour
             prevCritState[idx] = isCrit;
         }
 
-        // 이벤트 탭 활성화 시 자동 스크롤 (최신 이벤트 하단 표시)
-        if (viewingRound == -1 && activeTab == 2)
+        // 현재 라운드 보기 시 자동 스크롤
+        if (viewingRound == -1)
         {
-            tabContentScroll.y = float.MaxValue;
+            raceLogScroll.y = float.MaxValue;
+            finishLogScroll.y = float.MaxValue;
         }
     }
 
@@ -699,9 +698,6 @@ public class RaceDebugOverlay : MonoBehaviour
 
     private void OnGUI()
     {
-#if !UNITY_EDITOR
-        return; // 릴리즈 빌드에서는 오버레이 완전 비활성
-#endif
         if (!showDebug) return;
         var rm = RaceManager.Instance;
         if (rm == null) return;
@@ -723,7 +719,7 @@ public class RaceDebugOverlay : MonoBehaviour
 
         GUILayout.Label("🏇 Race Debug [F1:토글 F2:상세 F3:라운드]", headerStyle);
 
-        // 라운드 표시
+        // 라운드 탭 표시
         string roundLabel = viewingRound == -1
             ? "<color=#66FF66>R" + currentRound + "(LIVE)</color>"
             : "<color=#88CCFF>R" + viewingRound + "(기록)</color>";

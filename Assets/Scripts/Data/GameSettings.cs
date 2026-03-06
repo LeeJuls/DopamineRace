@@ -7,9 +7,9 @@ using UnityEngine;
 public class GameSettings : ScriptableObject
 {
     [Header("═══ 레이서 설정 ═══")]
-    [Tooltip("한 레이스당 참가 레이서 수 (고정: 9명)")]
-    [Range(9, 9)]
-    public int racerCount = 9;
+    [Tooltip("한 레이스당 참가 레이서 수 (2~12)")]
+    [Range(2, 12)]
+    public int racerCount = 8;
 
     [Header("═══ 라운드 설정 ═══")]
     [Tooltip("라운드별 바퀴 수 (배열 길이 = 총 라운드 수)\n예: [1,2,1,5,3,1,4] → 7라운드")]
@@ -149,12 +149,6 @@ public class GameSettings : ScriptableObject
     public GameObject characterItemPrefab;
     [Tooltip("결과 패널 프리팹 (ResultUIPrefabCreator로 자동 생성)")]
     public GameObject resultPanelPrefab;
-    [Tooltip("최종 결산 패널 프리팹 (FinishLeaderboardUIPrefabCreator로 자동 생성)")]
-    public GameObject finishPanelPrefab;
-    [Tooltip("리더보드 팝업 프리팹 (FinishLeaderboardUIPrefabCreator로 자동 생성)")]
-    public GameObject leaderboardPanelPrefab;
-    [Tooltip("트랙 프로그레스 바 프리팹 (추후 디자인 적용 시 사용)")]
-    public GameObject trackProgressBarPrefab;
 
     /// <summary>
     /// 바퀴 수 → 거리 구분 Loc 키 반환

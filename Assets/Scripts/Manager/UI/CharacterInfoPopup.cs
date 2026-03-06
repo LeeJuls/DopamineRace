@@ -447,7 +447,7 @@ public class CharacterInfoPopup : MonoBehaviour
 
     // ═══ 최근 경기기록 텍스트 ═══
 
-    private const int MAX_DIST_DISPLAY = 6;
+    private const int MAX_DIST_DISPLAY = 5;
 
     /// <summary>
     /// 최근 경기기록을 거리별(단/중/장)로 분류하여 텍스트 갱신

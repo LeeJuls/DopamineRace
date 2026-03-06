@@ -67,34 +67,22 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ── 레이싱 UI ──
     private Text countdownText;
     private Text raceTimerText;
+    private Text[] rankTexts;
     private Text myBetText;
     private Text racingRoundText;
-
-    // ── 트랙 프로그레스 바 ──
-    private struct RacerCircleUI
-    {
-        public RectTransform rect;
-        public Image circleImage;
-        public Image outlineImage;   // 배팅 마커 노란 테두리 (null이면 비배팅)
-        public Text numberText;
-        public int racerIndex;
-    }
-    private RacerCircleUI[] racerCircles;
-    private RectTransform trackBarRect;
-    private List<GameObject> lapDividers = new List<GameObject>();
-    private HashSet<int> myPickIndices = new HashSet<int>();
 
     // ── 결과 UI ──
     private Transform resultPanelRoot;
     private Text resultTitleText;
-    // RankSection — 9명 고정 (레이서 수 항상 9)
-    private const int MAX_RANK_ROWS = 9;
-    private Text         resultSectionLabel;                          // "순위" / "Rankings" / "順位"
-    private GameObject[] resultRankRows   = new GameObject[MAX_RANK_ROWS];
-    private Image[]      resultRankIcons  = new Image[MAX_RANK_ROWS];
-    private Text[]       resultRankNames  = new Text[MAX_RANK_ROWS];
-    private Text[]       resultRankBadges = new Text[MAX_RANK_ROWS];
-    private Text[]       resultRankArrows = new Text[MAX_RANK_ROWS];
+    // RankSection (1~3위 캐릭터)
+    private Image[] resultRankIcons  = new Image[3];
+    private Text[]  resultRankNames  = new Text[3];
+    // BetResultSection (내 배팅 선택)
+    private Text            resultBetTypeLabel;
+    private GameObject[]    resultPickRows    = new GameObject[3];
+    private Text[]          resultPickLabels  = new Text[3];
+    private Text[]          resultPickNames   = new Text[3];
+    private Text[]          resultPickResults = new Text[3];
     // ScoreSection
     private Text resultScoreFormulaText;
     private Text resultTotalScoreText;
@@ -103,29 +91,17 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text   nextRoundBtnText;
 
     // ── Finish UI ──
-    private Transform  finishPanelRoot;
-    private Text       finishTitleText;
-    private Text       finishRoundDetailText;
-    private Text       finishTotalScoreText;
-    private Button     finishNewGameButton;
-    private Text       finishNewGameBtnText;
-    private Button     finishTop100Button;
-    private Text       finishTop100BtnText;
-    private ScrollRect finishScrollRect;      // 라운드 목록 스크롤
+    private Text finishTitleText;
+    private Text finishRoundDetailText;
+    private Text finishTotalScoreText;
 
     // ── 리더보드 ──
-    private Transform  leaderboardPanelRoot;
-    private Text       leaderboardTitleText;
-    private Text       leaderboardHeaderText;
-    private ScrollRect leaderboardScrollRect;
-    private Transform  leaderboardEntryContainer;   // EntryContainer (VLG 내용)
-    private GameObject leaderboardEntryTemplate;    // EntryTemplate (disabled 클론 소스)
-    private Button     leaderboardCloseButton;
-    private Text       leaderboardCloseBtnText;
-    private Text       leaderboardContentText;      // Legacy 폴백 전용 (null 허용)
+    private Text leaderboardContentText;
+    private Text leaderboardTitleText;
 
     // ── 런타임 ──
     private float raceTimer;
+    private float rankUpdateTimer;
     private List<GameObject> betArrows = new List<GameObject>();
 
     // ══════════════════════════════════════
@@ -214,12 +190,14 @@ public partial class SceneBootstrapper : MonoBehaviour
             raceTimer += Time.deltaTime;
             if (raceTimerText != null) raceTimerText.text = Loc.Get("str.hud.timer", raceTimer.ToString("F1"));
 
-            UpdateTrackProgressBar();
+            rankUpdateTimer -= Time.deltaTime;
+            if (rankUpdateTimer <= 0f)
+            {
+                UpdateLiveRankings();
+                rankUpdateTimer = 0.3f;
+            }
             UpdateArrowPositions();
         }
-#if UNITY_EDITOR
-        UpdateDebugInput();
-#endif
     }
 
     // ══════════════════════════════════════
@@ -324,7 +302,6 @@ public partial class SceneBootstrapper : MonoBehaviour
             case GameManager.GameState.Racing:
                 racingUI.SetActive(true);
                 raceTimer = 0f;
-                InitTrackBarForRace();
                 UpdateMyBet();
                 UpdateRacingRoundInfo();
                 HideAllRaceLabels();
