@@ -763,31 +763,6 @@ public class RacerController : MonoBehaviour
             || charData.charType == CharacterType.Leader;
     }
 
-    // ─── 헬퍼: 상행 그룹 최하위 TotalProgress (캐싱 버전) ───────────
-    // [SPEC-RC-001] RaceManager.LastUpperTrackProgress 캐시로 교체됨.
-    // 이전 코드: 매 프레임 O(n) 순회 → 현재: O(1) 프로퍼티 읽기.
-    // RaceManager.LateUpdate()에서 1회 계산 → 모든 레이서 동일 값 참조.
-    [System.Obsolete("SPEC-RC-001: RaceManager.Instance.LastUpperTrackProgress 사용. Phase3에서 삭제 예정.")]
-    private float GetLastUpperTrackProgress()
-    {
-        float minProg = float.MaxValue;
-        if (RaceManager.Instance == null) return TotalProgress - 0.1f;
-
-        foreach (var r in RaceManager.Instance.Racers)
-        {
-            if (r == null || r.IsFinished) continue;
-            var type = r.CharData?.charType ?? CharacterType.Runner;
-            if (type == CharacterType.Runner || type == CharacterType.Leader)
-            {
-                float prog = r.TotalProgress;
-                if (prog < minProg) minProg = prog;
-            }
-        }
-
-        // 상행 캐릭터가 없으면 현재 위치 근처 폴백 (하행 보존 유도)
-        return minProg == float.MaxValue ? TotalProgress - 0.1f : minProg;
-    }
-
     /// <summary>
     /// HP 소모 비율 기반 속도 부스트 계산.
     /// 가속구간(0~60%): peakBoost × t^accelExp
