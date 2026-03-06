@@ -105,13 +105,26 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text   nextRoundBtnText;
 
     // ── Finish UI ──
-    private Text finishTitleText;
-    private Text finishRoundDetailText;
-    private Text finishTotalScoreText;
+    private Transform  finishPanelRoot;
+    private Text       finishTitleText;
+    private Text       finishRoundDetailText;
+    private Text       finishTotalScoreText;
+    private Button     finishNewGameButton;
+    private Text       finishNewGameBtnText;
+    private Button     finishTop100Button;
+    private Text       finishTop100BtnText;
+    private ScrollRect finishScrollRect;
 
     // ── 리더보드 ──
-    private Text leaderboardContentText;
-    private Text leaderboardTitleText;
+    private Transform  leaderboardPanelRoot;
+    private Text       leaderboardTitleText;
+    private Text       leaderboardHeaderText;
+    private ScrollRect leaderboardScrollRect;
+    private Transform  leaderboardEntryContainer;
+    private GameObject leaderboardEntryTemplate;
+    private Button     leaderboardCloseButton;
+    private Text       leaderboardCloseBtnText;
+    private Text       leaderboardContentText;
 
     // ── 런타임 ──
     private float raceTimer;
@@ -204,12 +217,7 @@ public partial class SceneBootstrapper : MonoBehaviour
             raceTimer += Time.deltaTime;
             if (raceTimerText != null) raceTimerText.text = Loc.Get("str.hud.timer", raceTimer.ToString("F1"));
 
-            rankUpdateTimer -= Time.deltaTime;
-            if (rankUpdateTimer <= 0f)
-            {
-                UpdateLiveRankings();
-                rankUpdateTimer = 0.3f;
-            }
+            UpdateTrackProgressBar();
             UpdateArrowPositions();
         }
     }
@@ -316,6 +324,7 @@ public partial class SceneBootstrapper : MonoBehaviour
             case GameManager.GameState.Racing:
                 racingUI.SetActive(true);
                 raceTimer = 0f;
+                InitTrackBarForRace();
                 UpdateMyBet();
                 UpdateRacingRoundInfo();
                 HideAllRaceLabels();

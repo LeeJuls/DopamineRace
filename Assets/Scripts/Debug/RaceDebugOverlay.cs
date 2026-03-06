@@ -440,8 +440,7 @@ public class RaceDebugOverlay : MonoBehaviour
         // 현재 라운드 보기 시 자동 스크롤
         if (viewingRound == -1)
         {
-            raceLogScroll.y = float.MaxValue;
-            finishLogScroll.y = float.MaxValue;
+            tabContentScroll.y = float.MaxValue;
         }
     }
 
