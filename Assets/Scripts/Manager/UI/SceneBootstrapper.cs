@@ -67,7 +67,6 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ── 레이싱 UI ──
     private Text countdownText;
     private Text raceTimerText;
-    private Text[] rankTexts;
     private Text myBetText;
     private Text racingRoundText;
 
@@ -90,7 +89,7 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text resultTitleText;
     // RankSection — 9명 고정 (레이서 수 항상 9)
     private const int MAX_RANK_ROWS = 9;
-    private Text         resultSectionLabel;
+    private Text         resultSectionLabel;                          // "순위" / "Rankings" / "順位"
     private GameObject[] resultRankRows   = new GameObject[MAX_RANK_ROWS];
     private Image[]      resultRankIcons  = new Image[MAX_RANK_ROWS];
     private Text[]       resultRankNames  = new Text[MAX_RANK_ROWS];
@@ -112,22 +111,21 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text       finishNewGameBtnText;
     private Button     finishTop100Button;
     private Text       finishTop100BtnText;
-    private ScrollRect finishScrollRect;
+    private ScrollRect finishScrollRect;      // 라운드 목록 스크롤
 
     // ── 리더보드 ──
     private Transform  leaderboardPanelRoot;
     private Text       leaderboardTitleText;
     private Text       leaderboardHeaderText;
     private ScrollRect leaderboardScrollRect;
-    private Transform  leaderboardEntryContainer;
-    private GameObject leaderboardEntryTemplate;
+    private Transform  leaderboardEntryContainer;   // EntryContainer (VLG 내용)
+    private GameObject leaderboardEntryTemplate;    // EntryTemplate (disabled 클론 소스)
     private Button     leaderboardCloseButton;
     private Text       leaderboardCloseBtnText;
-    private Text       leaderboardContentText;
+    private Text       leaderboardContentText;      // Legacy 폴백 전용 (null 허용)
 
     // ── 런타임 ──
     private float raceTimer;
-    private float rankUpdateTimer;
     private List<GameObject> betArrows = new List<GameObject>();
 
     // ══════════════════════════════════════
@@ -219,6 +217,9 @@ public partial class SceneBootstrapper : MonoBehaviour
             UpdateTrackProgressBar();
             UpdateArrowPositions();
         }
+#if UNITY_EDITOR
+        UpdateDebugInput();
+#endif
     }
 
     // ══════════════════════════════════════
