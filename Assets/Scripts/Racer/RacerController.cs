@@ -614,7 +614,7 @@ public class RacerController : MonoBehaviour
             }
             else
             {
-                float gap = GetLastUpperTrackProgress() - TotalProgress;
+                float gap = RaceManager.Instance.LastUpperTrackProgress - TotalProgress;
 
                 // 2. 간격 너무 벌어짐 → 스프린트 (상행 따라잡기)
                 if (gap > gs.formationGapMax)
@@ -763,7 +763,11 @@ public class RacerController : MonoBehaviour
             || charData.charType == CharacterType.Leader;
     }
 
-    // ─── 헬퍼: 상행 그룹 중 가장 낮은 TotalProgress ──────────────────
+    // ─── 헬퍼: 상행 그룹 최하위 TotalProgress (캐싱 버전) ───────────
+    // [SPEC-RC-001] RaceManager.LastUpperTrackProgress 캐시로 교체됨.
+    // 이전 코드: 매 프레임 O(n) 순회 → 현재: O(1) 프로퍼티 읽기.
+    // RaceManager.LateUpdate()에서 1회 계산 → 모든 레이서 동일 값 참조.
+    [System.Obsolete("SPEC-RC-001: RaceManager.Instance.LastUpperTrackProgress 사용. Phase3에서 삭제 예정.")]
     private float GetLastUpperTrackProgress()
     {
         float minProg = float.MaxValue;
