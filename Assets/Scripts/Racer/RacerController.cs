@@ -56,6 +56,7 @@ public class RacerController : MonoBehaviour
     private float hpBoostValue;                // 현재 프레임의 HP 부스트 값 (디버그용)
     private float slipstreamBlend;             // 슬립스트림 페이드 0~1 (전체 타입, 거리 기반)
     private int currentRank;                   // 현재 순위 1~12 (Phase 4)
+    private bool isSprintMode = false;         // 전력질주 상태 (SPEC-RC-002: Burst Lerp용)
 
     // ── CP 시스템 (Calm Points) ──
     private float calmPoints;                  // 현재 CP
@@ -302,7 +303,11 @@ public class RacerController : MonoBehaviour
 
         // ── 1) 스탯 기반 속도 계산 ──
         float finalSpeed = CalculateSpeed(gs);
-        currentSpeed = Mathf.Lerp(currentSpeed, finalSpeed, Time.deltaTime * gs.raceSpeedLerp);
+        // [SPEC-RC-002] 스프린트 진입 시 Burst Lerp로 즉각 가속 연출
+        float effectiveLerp = isSprintMode
+            ? gs.raceSpeedLerp * gs.sprintBurstLerpMult
+            : gs.raceSpeedLerp;
+        currentSpeed = Mathf.Lerp(currentSpeed, finalSpeed, Time.deltaTime * effectiveLerp);
 
         // ── 2) 경로 이탈 업데이트 ──
         UpdateDeviation();
@@ -650,57 +655,56 @@ public class RacerController : MonoBehaviour
     private void ConsumeHP_Strategy(GameSettings gs, TrackData track, float deltaTime)
     {
         gs.GetHPParams(charData.charType,
-            out float spurtStart, out float activeRate, out _,
+            out _, out float activeRate, out _,
             out _, out _, out _);
         gs.GetZoneParams(charData.charType,
             out _, out float inZoneRate, out float outZoneRate);
 
-        float remaining = 1f - OverallProgress;
         int total = RaceManager.Instance != null ? RaceManager.Instance.Racers.Count : 12;
         float rate;
+        bool sprintThisFrame = false;
 
         switch (charData.charType)
         {
             case CharacterType.Runner:
             {
-                // 전략 구간: 선두권이면 HP 보존, 뒤처지면 스프린트로 탈환
-                // → 초반 리드를 최대한 오래 유지하는 전략
-                int topRunnerRank = Mathf.Max(1, Mathf.CeilToInt(total * 0.25f));
-                if (currentRank <= topRunnerRank)
-                    rate = inZoneRate;  // top25% 유지 → 보존 (리드 방어)
-                else
-                    rate = activeRate;  // 뒤처짐 → 스프린트 (포지션 탈환)
+                // [SPEC-RC-002] 도주: 항상 전력질주 — HP 신경 안 씀
+                rate = activeRate;
+                sprintThisFrame = true;
                 break;
             }
 
             case CharacterType.Leader:
             {
-                bool inNearEnd = remaining <= spurtStart; // 마지막 10% (spurtStart=0.10)
+                // [SPEC-RC-002] 선행: 마지막 바퀴 20% 남으면 전력질주
+                bool inSprint = IsLastLapSprintZone(gs.leaderSprintLastLapThreshold);
                 int top30Rank = Mathf.Max(1, Mathf.CeilToInt(total * 0.30f));
                 bool isOutOfPos = (currentRank > top30Rank);
 
-                if (inNearEnd)
+                if (inSprint)
                 {
-                    // Lerp 스퍼트: inZoneRate → activeRate (leaderSpurtMinHP 체크 제거)
-                    float spurtProg = spurtStart > 0f
-                        ? Mathf.Clamp01((spurtStart - remaining) / spurtStart) : 1f;
-                    rate = Mathf.Lerp(inZoneRate, activeRate, spurtProg);
+                    rate = activeRate;
+                    sprintThisFrame = true;
                 }
                 else if (isOutOfPos)
                     rate = outZoneRate; // top30% 이탈 → 추격
                 else
-                    rate = inZoneRate; // top30% 이내 → 보존
+                    rate = inZoneRate;  // top30% 이내 → 보존
                 break;
             }
 
             case CharacterType.Chaser:
             {
-                bool inNearEnd = remaining <= spurtStart;
+                // [SPEC-RC-002] 선입: 마지막 바퀴 30% 남으면 전력질주
+                bool inSprint = IsLastLapSprintZone(gs.chaserSprintLastLapThreshold);
                 int top70Rank = Mathf.Max(1, Mathf.CeilToInt(total * 0.70f));
                 bool isOutOfPos = (currentRank > top70Rank);
 
-                if (inNearEnd)
-                    rate = activeRate;  // 즉시 전력질주 (Lerp 제거)
+                if (inSprint)
+                {
+                    rate = activeRate;
+                    sprintThisFrame = true;
+                }
                 else if (isOutOfPos)
                     rate = outZoneRate; // top70% 이탈 → 추격
                 else
@@ -710,17 +714,40 @@ public class RacerController : MonoBehaviour
 
             default: // Reckoner
             {
-                bool inNearEnd = remaining <= spurtStart;
+                // [SPEC-RC-002] 추입: 마지막 바퀴 40% 남으면 전력질주, 그 전까지 극보존
+                bool inSprint = IsLastLapSprintZone(gs.reckonerSprintLastLapThreshold);
 
-                if (inNearEnd)
-                    rate = activeRate;  // 즉시 전력질주 (Lerp 제거)
+                if (inSprint)
+                {
+                    rate = activeRate;
+                    sprintThisFrame = true;
+                }
                 else
-                    rate = inZoneRate;  // 완전 보존
+                    rate = inZoneRate;  // 극보존 (reckoner_baseRate = 0.15)
                 break;
             }
         }
 
+        isSprintMode = sprintThisFrame;
         ApplyHPConsumption(gs, track, deltaTime, rate);
+    }
+
+    // ─── 헬퍼: 마지막 바퀴 기준 스프린트 판정 (SPEC-RC-002) ────────
+    /// <summary>
+    /// 마지막 바퀴의 X% 남았는지 판정.
+    /// threshold=0.40 → 마지막 바퀴 40% 이하 남으면 true.
+    /// 마지막 바퀴 진입 전이면 항상 false.
+    /// </summary>
+    private bool IsLastLapSprintZone(float threshold)
+    {
+        int totalLaps = GetTotalLaps();
+        if (totalLaps < 2) return false; // 1랩 이하: Legacy 페이즈 처리
+        float lastLapStart = (float)(totalLaps - 1) / totalLaps;
+        if (OverallProgress < lastLapStart) return false; // 마지막 바퀴 아직 안 됨
+        float lastLapLen = 1f / totalLaps;
+        float lastLapProg = (OverallProgress - lastLapStart) / lastLapLen; // 0~1
+        float lastLapRemaining = 1f - lastLapProg;                         // 0~1
+        return lastLapRemaining <= threshold;
     }
 
     // ─── 공통 tail: boostAmp / speedRatio / condMul / leadPaceTax ─────
