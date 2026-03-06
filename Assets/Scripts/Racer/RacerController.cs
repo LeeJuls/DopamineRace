@@ -614,7 +614,7 @@ public class RacerController : MonoBehaviour
             }
             else
             {
-                float gap = GetLastUpperTrackProgress() - TotalProgress;
+                float gap = RaceManager.Instance.LastUpperTrackProgress - TotalProgress;
 
                 // 2. 간격 너무 벌어짐 → 스프린트 (상행 따라잡기)
                 if (gap > gs.formationGapMax)
@@ -761,27 +761,6 @@ public class RacerController : MonoBehaviour
     {
         return charData.charType == CharacterType.Runner
             || charData.charType == CharacterType.Leader;
-    }
-
-    // ─── 헬퍼: 상행 그룹 중 가장 낮은 TotalProgress ──────────────────
-    private float GetLastUpperTrackProgress()
-    {
-        float minProg = float.MaxValue;
-        if (RaceManager.Instance == null) return TotalProgress - 0.1f;
-
-        foreach (var r in RaceManager.Instance.Racers)
-        {
-            if (r == null || r.IsFinished) continue;
-            var type = r.CharData?.charType ?? CharacterType.Runner;
-            if (type == CharacterType.Runner || type == CharacterType.Leader)
-            {
-                float prog = r.TotalProgress;
-                if (prog < minProg) minProg = prog;
-            }
-        }
-
-        // 상행 캐릭터가 없으면 현재 위치 근처 폴백 (하행 보존 유도)
-        return minProg == float.MaxValue ? TotalProgress - 0.1f : minProg;
     }
 
     /// <summary>
