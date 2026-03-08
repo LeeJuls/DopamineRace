@@ -803,9 +803,12 @@ public class RacerController : MonoBehaviour
                 v2IsSprintActive = true; // 한번 시작하면 멈추지 않음
         }
 
+        // globalSpeedMultiplier = 게임 배속 → HP/가속도 게임시간 기준으로 스케일
+        float gameDt = dt * gs.globalSpeedMultiplier;
+
         // 그라데이션 가속 (감속 없음 — 스프린트는 비가역)
         if (v2IsSprintActive)
-            v2SprintAccelProgress = Mathf.MoveTowards(v2SprintAccelProgress, 1f, dt / gs.v2_sprintAccelTime);
+            v2SprintAccelProgress = Mathf.MoveTowards(v2SprintAccelProgress, 1f, gameDt / gs.v2_sprintAccelTime);
 
         // HP 소모
         if (enduranceHP > 0f)
@@ -816,7 +819,7 @@ public class RacerController : MonoBehaviour
             else
                 drain = gs.v2_baseDrain;
 
-            float consumption = drain * dt;
+            float consumption = drain * gameDt;
             consumption = Mathf.Min(consumption, enduranceHP);
             enduranceHP -= consumption;
             totalConsumedHP += consumption;
@@ -824,7 +827,7 @@ public class RacerController : MonoBehaviour
             // 선두 HP 택스 (V1과 공유)
             if (currentRank <= gs.leadPaceTaxRank && enduranceHP > 0f)
             {
-                float tax = gs.leadPaceTaxRate * dt;
+                float tax = gs.leadPaceTaxRate * gameDt;
                 tax = Mathf.Min(tax, enduranceHP);
                 enduranceHP -= tax;
             }

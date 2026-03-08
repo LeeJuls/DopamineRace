@@ -955,9 +955,12 @@ public class RaceBacktestWindow : EditorWindow
                 r.v2IsSprintActive = true;
         }
 
+        // globalSpeedMultiplier = 게임 배속 → HP/가속도 게임시간 기준으로 스케일
+        float gameDt = simTimeStep * gs.globalSpeedMultiplier;
+
         // 그라데이션 가속 (비가역)
         if (r.v2IsSprintActive)
-            r.v2SprintAccelProgress = Mathf.MoveTowards(r.v2SprintAccelProgress, 1f, simTimeStep / gs.v2_sprintAccelTime);
+            r.v2SprintAccelProgress = Mathf.MoveTowards(r.v2SprintAccelProgress, 1f, gameDt / gs.v2_sprintAccelTime);
 
         // HP 소모
         if (r.enduranceHP > 0f)
@@ -968,7 +971,7 @@ public class RaceBacktestWindow : EditorWindow
             else
                 drain = gs.v2_baseDrain;
 
-            float consumption = drain * simTimeStep;
+            float consumption = drain * gameDt;
             consumption = Mathf.Min(consumption, r.enduranceHP);
             r.enduranceHP -= consumption;
             r.totalConsumedHP += consumption;
@@ -976,7 +979,7 @@ public class RaceBacktestWindow : EditorWindow
             // 선두 HP 택스
             if (r.currentRank <= gs.leadPaceTaxRank && r.enduranceHP > 0f)
             {
-                float tax = gs.leadPaceTaxRate * simTimeStep;
+                float tax = gs.leadPaceTaxRate * gameDt;
                 r.enduranceHP = Mathf.Max(0f, r.enduranceHP - tax);
             }
         }
