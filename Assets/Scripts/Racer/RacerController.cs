@@ -227,6 +227,10 @@ public class RacerController : MonoBehaviour
         deviationTarget = 0f;
         deviationTimer = 0f;
 
+        // V2 스프린트 상태 리셋 (라운드 간 이월 방지)
+        v2SprintAccelProgress = 0f;
+        v2IsSprintActive = false;
+
         // HP 시스템 초기화
         if (charData != null && GameSettings.Instance.useHPSystem)
         {
