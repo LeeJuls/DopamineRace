@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GameSettings
   m_EditorClassIdentifier: Assembly-CSharp::GameSettings
   racerCount: 9
-  roundLaps: 0200000002000000
+  roundLaps: 020000000300000005000000
   payoutWin: 8
   payoutPlace: 3
   payoutQuinella: 31
@@ -185,8 +185,8 @@ MonoBehaviour:
   chaser_posTarget: 0.75
   formationGapMax: 0.3
   formationGapMin: 0.05
-  leadPaceTaxRank: 2
-  leadPaceTaxRate: 2.5
+  leadPaceTaxRank: 3
+  leadPaceTaxRate: 0.3
   cpMultiplier: 10
   cpBasicDrain: 0.5
   cpSlipstreamDrain: 2.5
