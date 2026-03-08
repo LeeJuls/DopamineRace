@@ -817,6 +817,54 @@ public class GameSettings : ScriptableObject
     [Range(0.3f, 2.0f)]
     public float uiFontScale = 1.0f;
 
+    // ══════════════════════════════════════
+    //  Race V2 시스템 (Type 2)
+    // ══════════════════════════════════════
+
+    [Header("═══ Race V2: 시스템 전환 ═══")]
+    [Tooltip("V2 레이스 시스템 사용 여부.\ntrue = Type 2 (전력질주+탈진), false = Type 1 (기존 HP 부스트)")]
+    public bool useV2RaceSystem = false;
+
+    [Header("═══ Race V2: 속도 ═══")]
+    [Tooltip("전력질주 최대 속도 배율 (1.3 = 30% 가속)")]
+    [Range(1.1f, 1.5f)] public float v2_sprintSpeedMul = 1.3f;
+    [Tooltip("탈진(HP=0) 감속 배율 (0.90 = 10% 감속). 속도감 유지를 위해 0.85 이하로 내리지 않을 것")]
+    [Range(0.85f, 0.95f)] public float v2_exhaustSpeedMul = 0.90f;
+
+    [Header("═══ Race V2: HP 소모 (전 캐릭터 동일) ═══")]
+    [Tooltip("일반 달리기 HP 소모율 (/초)")]
+    [Range(0.3f, 3.0f)] public float v2_baseDrain = 1.0f;
+    [Tooltip("전력질주 시 HP 소모 배율 (5.0 = baseDrain의 5배)")]
+    [Range(2f, 8f)] public float v2_sprintDrainMul = 5.0f;
+
+    [Header("═══ Race V2: 가속 곡선 ═══")]
+    [Tooltip("전력질주 0→최대 도달 시간(초). 자동차 가속처럼 점진적")]
+    [Range(1f, 5f)] public float v2_sprintAccelTime = 2.5f;
+
+    [Header("═══ Race V2: 타입별 전략 (전력질주 시작 시점) ═══")]
+    [Tooltip("도주(Runner): Strategy 구간 시작 즉시 전력질주")]
+    [Range(0f, 0.95f)] public float v2_sprintStart_Runner   = 0.00f;
+    [Tooltip("선행(Leader): Strategy 구간의 25% 진행 시 전력질주")]
+    [Range(0f, 0.95f)] public float v2_sprintStart_Leader   = 0.25f;
+    [Tooltip("선입(Chaser): Strategy 구간의 50% 진행 시 전력질주")]
+    [Range(0f, 0.95f)] public float v2_sprintStart_Chaser   = 0.50f;
+    [Tooltip("추입(Reckoner): Strategy 구간의 75% 진행 시 전력질주")]
+    [Range(0f, 0.95f)] public float v2_sprintStart_Reckoner = 0.75f;
+
+    /// <summary>
+    /// V2: 타입별 전력질주 시작 시점 반환 (Strategy 구간의 0~1 비율)
+    /// </summary>
+    public float GetV2SprintStart(CharacterType type)
+    {
+        return type switch
+        {
+            CharacterType.Runner   => v2_sprintStart_Runner,
+            CharacterType.Leader   => v2_sprintStart_Leader,
+            CharacterType.Chaser   => v2_sprintStart_Chaser,
+            _                      => v2_sprintStart_Reckoner
+        };
+    }
+
     [Header("═══ 디버그 ═══")]
     [Tooltip("레이스 디버그 오버레이 (F1:토글 F2:상세 F3:캐릭터선택)")]
     public bool enableRaceDebug = false;

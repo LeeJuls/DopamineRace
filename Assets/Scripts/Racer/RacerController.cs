@@ -58,6 +58,10 @@ public class RacerController : MonoBehaviour
     private int currentRank;                   // 현재 순위 1~12 (Phase 4)
     private bool isSprintMode = false;         // 전력질주 상태 (SPEC-RC-002: Burst Lerp용)
 
+    // ── Race V2 시스템 ──
+    private float v2SprintAccelProgress = 0f;  // 전력질주 가속 진행률 0~1
+    private bool v2IsSprintActive = false;     // V2 전력질주 활성 여부
+
     // ── CP 시스템 (Calm Points) ──
     private float calmPoints;                  // 현재 CP
     private float maxCP;                       // 최대 CP (calm × cpMultiplier)
@@ -74,6 +78,8 @@ public class RacerController : MonoBehaviour
     public int SkillCollisionCount => skillCollisionCount;
     public float CollisionPenalty => collisionPenalty;
     public float SlingshotBoost => slingshotBoost;
+    public bool V2IsSprintActive => v2IsSprintActive;
+    public float V2SprintAccelProgress => v2SprintAccelProgress;
 
     // ── HP 시스템 외부 접근 ──
     public float EnduranceHP => enduranceHP;
@@ -372,22 +378,43 @@ public class RacerController : MonoBehaviour
 
         if (gs.useHPSystem)
         {
-            // ═══ HP 시스템 (SPEC-006) ═══
-            // 속도 압축: 캐릭터 간 속도 차이를 줄여 HP 부스트가 역전 가능하게
-            // 중간점 = 0.905 (SpeedMultiplier 범위 0.81~1.0의 중앙값)
+            // ═══ 속도 압축 (V1/V2 공유) ═══
+            // 캐릭터 간 기본 속도 차이를 줄여 부스트/전력질주가 역전 가능하게
             if (gs.hpSpeedCompress > 0f)
             {
                 float trackSpeedMul = track != null ? track.speedMultiplier : 1f;
                 float midSpeed = 0.905f * gs.globalSpeedMultiplier * trackSpeedMul;
                 speed = Mathf.Lerp(speed, midSpeed, gs.hpSpeedCompress);
             }
-            ConsumeHP(gs, track, Time.deltaTime);
-            float hpBoost = CalcHPBoost(gs);
-            float earlyBonus = gs.GetHPEarlyBonus(charData.charType, OverallProgress);
-            float cpEff = gs.GetCPEfficiency(CPRatio);
-            float ssBonus = gs.GetSlipstreamBonus(charData.charType, slipstreamBlend, cpEff);
-            speed *= (1f + (hpBoost + earlyBonus + ssBonus + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
-            speed += GetNoiseValue(gs, track) * condMul;
+
+            if (gs.useV2RaceSystem)
+            {
+                // ═══ Race V2: 전력질주/탈진 속도 ═══
+                ConsumeHP_V2(gs, track, Time.deltaTime);
+
+                float v2SpeedMul;
+                if (enduranceHP <= 0f)
+                    v2SpeedMul = gs.v2_exhaustSpeedMul;      // 0.9× 탈진
+                else
+                    v2SpeedMul = Mathf.Lerp(1f, gs.v2_sprintSpeedMul, v2SprintAccelProgress);
+
+                // 공유: 슬립스트림 + 보조 스탯
+                float cpEff = gs.GetCPEfficiency(CPRatio);
+                float ssBonus = gs.GetSlipstreamBonus(charData.charType, slipstreamBlend, cpEff);
+                speed *= v2SpeedMul * (1f + (ssBonus + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
+                speed += GetNoiseValue(gs, track) * condMul;
+            }
+            else
+            {
+                // ═══ Type 1: 기존 HP 부스트 경로 ═══
+                ConsumeHP(gs, track, Time.deltaTime);
+                float hpBoost = CalcHPBoost(gs);
+                float earlyBonus = gs.GetHPEarlyBonus(charData.charType, OverallProgress);
+                float cpEff = gs.GetCPEfficiency(CPRatio);
+                float ssBonus = gs.GetSlipstreamBonus(charData.charType, slipstreamBlend, cpEff);
+                speed *= (1f + (hpBoost + earlyBonus + ssBonus + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
+                speed += GetNoiseValue(gs, track) * condMul;
+            }
         }
         else
         {
@@ -748,6 +775,64 @@ public class RacerController : MonoBehaviour
         float lastLapProg = (OverallProgress - lastLapStart) / lastLapLen; // 0~1
         float lastLapRemaining = 1f - lastLapProg;                         // 0~1
         return lastLapRemaining <= threshold;
+    }
+
+    // ═══════════════════════════════════════
+    //  Race V2: 전력질주 HP 소모 (전 캐릭터 동일 소모율)
+    // ═══════════════════════════════════════
+
+    /// <summary>
+    /// V2 HP 소모. 타입별 차이 = 전력질주 시작 시점만.
+    /// HP 소모율은 전 캐릭터 동일 (v2_baseDrain × drainMul).
+    /// </summary>
+    private void ConsumeHP_V2(GameSettings gs, TrackData track, float dt)
+    {
+        if (enduranceHP <= 0f) return;
+
+        int totalLaps = GetTotalLaps();
+        float strategyStart = gs.formationHoldLapEnd / totalLaps; // OverallProgress 기준
+        float progress = OverallProgress;
+
+        // 전력질주 시작 판정: Strategy 구간의 X% 지점
+        if (progress >= strategyStart)
+        {
+            float strategyProg = Mathf.InverseLerp(strategyStart, 1f, progress);
+            float sprintStart = gs.GetV2SprintStart(charData.charType);
+            v2IsSprintActive = (strategyProg >= sprintStart);
+        }
+        else
+        {
+            v2IsSprintActive = false;
+        }
+
+        // 그라데이션 가속/감속
+        if (v2IsSprintActive && enduranceHP > 0f)
+            v2SprintAccelProgress = Mathf.MoveTowards(v2SprintAccelProgress, 1f, dt / gs.v2_sprintAccelTime);
+        else if (!v2IsSprintActive)
+            v2SprintAccelProgress = Mathf.MoveTowards(v2SprintAccelProgress, 0f, dt / gs.v2_sprintAccelTime);
+
+        // HP 소모 (baseDrain × drainMul, 전 캐릭터 동일)
+        float drainMul = Mathf.Lerp(1f, gs.v2_sprintDrainMul, v2SprintAccelProgress);
+        float consumption = gs.v2_baseDrain * drainMul * dt;
+
+        // HP 랩 스케일링 적용 (긴 레이스에서 HP 풀 증가분 반영)
+        // → CalcMaxHP(endurance, laps)에서 이미 maxHP에 반영됨, 소모율은 그대로
+
+        consumption = Mathf.Min(consumption, enduranceHP);
+        enduranceHP -= consumption;
+        totalConsumedHP += consumption;
+
+        // 선두 HP 택스 (V1과 공유)
+        if (currentRank <= gs.leadPaceTaxRank && enduranceHP > 0f)
+        {
+            float tax = gs.leadPaceTaxRate * dt;
+            tax = Mathf.Min(tax, enduranceHP);
+            enduranceHP -= tax;
+            // leadPaceTax는 totalConsumedHP에 미포함 (순수 탈진 가속용)
+        }
+
+        // Burst Lerp 호환: V2 전력질주 → isSprintMode 설정
+        isSprintMode = v2IsSprintActive && v2SprintAccelProgress > 0.1f;
     }
 
     // ─── 공통 tail: boostAmp / speedRatio / condMul / leadPaceTax ─────
