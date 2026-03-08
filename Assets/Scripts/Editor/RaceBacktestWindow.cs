@@ -450,7 +450,9 @@ public class RaceBacktestWindow : EditorWindow
                 // HP 시스템 초기화
                 if (gs.useHPSystem)
                 {
-                    racer.maxHP = gs.CalcMaxHP(cd.charBaseEndurance, simLaps);
+                    racer.maxHP = gs.useV2RaceSystem
+                        ? gs.CalcMaxHP(cd.charBaseEndurance)        // V2: 랩 스케일링 없음
+                        : gs.CalcMaxHP(cd.charBaseEndurance, simLaps);
                     racer.enduranceHP = racer.maxHP;
                     racer.totalConsumedHP = 0f;
                     racer.hpBoostValue = 0f;

@@ -231,7 +231,10 @@ public class RacerController : MonoBehaviour
         if (charData != null && GameSettings.Instance.useHPSystem)
         {
             int totalLaps = GetTotalLaps();
-            maxHP = GameSettings.Instance.CalcMaxHP(charData.charBaseEndurance, totalLaps);
+            if (GameSettings.Instance.useV2RaceSystem)
+                maxHP = GameSettings.Instance.CalcMaxHP(charData.charBaseEndurance); // V2: 랩 스케일링 없음 — 절대 시간 기반 소모
+            else
+                maxHP = GameSettings.Instance.CalcMaxHP(charData.charBaseEndurance, totalLaps);
             enduranceHP = maxHP;
             totalConsumedHP = 0f;
             hpBoostValue = 0f;
