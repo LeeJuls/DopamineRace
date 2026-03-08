@@ -252,7 +252,7 @@ MonoBehaviour:
   useV2RaceSystem: 1
   v2_sprintMaxBoost: 0.3
   v2_sprintThreshold: 0.25
-  v2_exhaustFloor: 0.75
+  v2_exhaustFloor: 0.7
   v2_baseDrain: 0.2
   v2_sprintDrainRate: 5
   v2_sprintAccelTime: 2.5
