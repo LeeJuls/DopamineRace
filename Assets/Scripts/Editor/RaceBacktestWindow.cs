@@ -1804,35 +1804,6 @@ public class RaceBacktestWindow : EditorWindow
         float sumSqDiff = values.Sum(v => (v - mean) * (v - mean));
         return Mathf.Sqrt(sumSqDiff / values.Count);
     }
-}
-
-// ══════════════════════════════════════════
-//  캐릭터 기록 초기화 메뉴
-// ══════════════════════════════════════════
-
-public static class CharacterRecordResetMenu
-{
-    [MenuItem("DopamineRace/캐릭터 기록 초기화")]
-    public static void ResetCharacterRecords()
-    {
-        bool confirm = EditorUtility.DisplayDialog(
-            "캐릭터 기록 초기화",
-            "모든 캐릭터의 성적 기록(승률, 순위, 출전 횟수 등)을 초기화합니다.\n이 작업은 되돌릴 수 없습니다.\n\n계속하시겠습니까?",
-            "초기화", "취소");
-
-        if (!confirm) return;
-
-        PlayerPrefs.DeleteKey("DopamineRace_CharRecords");
-        PlayerPrefs.Save();
-        Debug.Log("[DopamineRace] 캐릭터 성적 기록 전체 초기화 완료");
-
-        // 런타임 ScoreManager가 있으면 동기화
-        var sm = Object.FindObjectOfType<ScoreManager>();
-        if (sm != null)
-            sm.ResetCharacterRecords("all");
-
-        EditorUtility.DisplayDialog("완료", "캐릭터 기록이 초기화되었습니다.", "확인");
-    }
 
     // ══════════════════════════════════════
     //  V2 파라미터 스윕 — 최적 계수 자동 탐색
@@ -2089,6 +2060,35 @@ public static class CharacterRecordResetMenu
         System.IO.File.WriteAllText(logPath, sb.ToString());
         lastLogPath = logPath;
         Debug.Log($"[V2 파라미터 스윕] 완료. {results.Count}개 조합 테스트. 로그: {logPath}");
+    }
+}
+
+// ══════════════════════════════════════════
+//  캐릭터 기록 초기화 메뉴
+// ══════════════════════════════════════════
+
+public static class CharacterRecordResetMenu
+{
+    [MenuItem("DopamineRace/캐릭터 기록 초기화")]
+    public static void ResetCharacterRecords()
+    {
+        bool confirm = EditorUtility.DisplayDialog(
+            "캐릭터 기록 초기화",
+            "모든 캐릭터의 성적 기록(승률, 순위, 출전 횟수 등)을 초기화합니다.\n이 작업은 되돌릴 수 없습니다.\n\n계속하시겠습니까?",
+            "초기화", "취소");
+
+        if (!confirm) return;
+
+        PlayerPrefs.DeleteKey("DopamineRace_CharRecords");
+        PlayerPrefs.Save();
+        Debug.Log("[DopamineRace] 캐릭터 성적 기록 전체 초기화 완료");
+
+        // 런타임 ScoreManager가 있으면 동기화
+        var sm = Object.FindObjectOfType<ScoreManager>();
+        if (sm != null)
+            sm.ResetCharacterRecords("all");
+
+        EditorUtility.DisplayDialog("완료", "캐릭터 기록이 초기화되었습니다.", "확인");
     }
 }
 #endif
