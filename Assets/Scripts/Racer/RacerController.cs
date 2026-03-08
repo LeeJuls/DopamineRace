@@ -396,19 +396,29 @@ public class RacerController : MonoBehaviour
 
             if (gs.useV2RaceSystem)
             {
-                // ═══ Race V2: HP 비례 스프린트 속도 ═══
-                ConsumeHP_V2(gs, track, Time.deltaTime);
+                // ═══ Race V2: 우마무스메 방식 — 구간 속도 계수 + 속도 비례 HP 소모 ═══
 
-                // HP 비례 속도 계산
+                // Step 1: 스프린트 상태 업데이트
+                UpdateV2Sprint(gs, Time.deltaTime);
+
+                // Step 2: 구간 계수 + HP 비례 속도
+                int v2Phase = gs.GetV2Phase(OverallProgress);
+                float phaseCoeff = gs.GetV2PhaseCoeff(charData.charType, v2Phase);
                 float hpRatio = maxHP > 0f ? Mathf.Clamp01(enduranceHP / maxHP) : 0f;
                 float targetSpeed = gs.GetV2SpeedFromHP(hpRatio);
-                // 비스프린트 시 v2SprintAccelProgress=0 → v2SpeedMul=1.0
                 float v2SpeedMul = Mathf.Lerp(1f, targetSpeed, v2SprintAccelProgress);
 
-                // 공유: 슬립스트림 + 보조 스탯
+                // Step 3: 보너스 (슬립스트림, 파워, 용맹)
                 float cpEff = gs.GetCPEfficiency(CPRatio);
                 float ssBonus = gs.GetSlipstreamBonus(charData.charType, slipstreamBlend, cpEff);
-                speed *= v2SpeedMul * (1f + (ssBonus + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
+                float miscBonus = (ssBonus + GetPowerBonus(track) + GetBraveBonus(track)) * condMul;
+
+                // Step 4: speedRatio → HP 소모 (속도 비례)
+                float speedRatio = phaseCoeff * v2SpeedMul * (1f + miscBonus);
+                ConsumeHP_V2(gs, speedRatio, Time.deltaTime);
+
+                // Step 5: 최종 속도
+                speed *= speedRatio;
                 speed += GetNoiseValue(gs, track) * condMul;
             }
             else
@@ -792,7 +802,10 @@ public class RacerController : MonoBehaviour
     /// V2 HP 소모. 타입별 차이 = 전력질주 시작 시점만.
     /// 비스프린트: baseDrain, 스프린트: sprintDrainRate (절대값).
     /// </summary>
-    private void ConsumeHP_V2(GameSettings gs, TrackData track, float dt)
+    /// <summary>
+    /// V2: 스프린트 판정 + 가속 진행 (ConsumeHP_V2에서 분리)
+    /// </summary>
+    private void UpdateV2Sprint(GameSettings gs, float dt)
     {
         int totalLaps = GetTotalLaps();
         float strategyStart = gs.formationHoldLapEnd / totalLaps;
@@ -807,28 +820,29 @@ public class RacerController : MonoBehaviour
                 v2IsSprintActive = true; // 한번 시작하면 멈추지 않음
         }
 
-        // globalSpeedMultiplier = 게임 배속 → HP/가속도 게임시간 기준으로 스케일
-        float gameDt = dt * gs.globalSpeedMultiplier;
-
         // 그라데이션 가속 (감속 없음 — 스프린트는 비가역)
+        float gameDt = dt * gs.globalSpeedMultiplier;
         if (v2IsSprintActive)
             v2SprintAccelProgress = Mathf.MoveTowards(v2SprintAccelProgress, 1f, gameDt / gs.v2_sprintAccelTime);
+    }
 
-        // HP 소모
+    /// <summary>
+    /// V2: 속도 비례 HP 소모 (우마무스메 방식 — drain ∝ speedRatio²)
+    /// speedRatio = phaseCoeff × v2SpeedMul × (1 + bonuses)
+    /// </summary>
+    private void ConsumeHP_V2(GameSettings gs, float speedRatio, float dt)
+    {
+        float gameDt = dt * gs.globalSpeedMultiplier;
+
         if (enduranceHP > 0f)
         {
-            float drain;
-            if (v2IsSprintActive)
-                drain = Mathf.Lerp(gs.v2_baseDrain, gs.v2_sprintDrainRate, v2SprintAccelProgress);
-            else
-                drain = gs.v2_baseDrain;
-
+            float drain = gs.CalcV2SpeedDrain(speedRatio);
             float consumption = drain * gameDt;
             consumption = Mathf.Min(consumption, enduranceHP);
             enduranceHP -= consumption;
             totalConsumedHP += consumption;
 
-            // 선두 HP 택스 (V1과 공유)
+            // 선두 HP 택스
             if (currentRank <= gs.leadPaceTaxRank && enduranceHP > 0f)
             {
                 float tax = gs.leadPaceTaxRate * gameDt;

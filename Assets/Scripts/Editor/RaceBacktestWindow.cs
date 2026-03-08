@@ -838,17 +838,29 @@ public class RaceBacktestWindow : EditorWindow
 
             if (gs.useV2RaceSystem)
             {
-                // ═══ Race V2: HP 비례 스프린트 속도 ═══
-                SimConsumeHP_V2(r, gs, progress);
+                // ═══ Race V2: 우마무스메 방식 — 구간 속도 계수 + 속도 비례 HP 소모 ═══
 
+                // Step 1: 스프린트 상태 업데이트
+                SimUpdateV2Sprint(r, gs, progress);
+
+                // Step 2: 구간 계수 + HP 비례 속도
+                int v2Phase = gs.GetV2Phase(progress);
+                float phaseCoeff = gs.GetV2PhaseCoeff(cd.charType, v2Phase);
                 float hpRatio = r.maxHP > 0f ? Mathf.Clamp01(r.enduranceHP / r.maxHP) : 0f;
                 float targetSpeed = gs.GetV2SpeedFromHP(hpRatio);
                 float v2SpeedMul = Mathf.Lerp(1f, targetSpeed, r.v2SprintAccelProgress);
 
+                // Step 3: 보너스
                 float cpRatioCalc = r.maxCP > 0f ? r.calmPoints / r.maxCP : 0f;
                 float cpEff = gs.GetCPEfficiency(cpRatioCalc);
                 float ssBonus = gs.GetSlipstreamBonus(cd.charType, r.slipstreamBlend, cpEff);
-                typeBonus = (v2SpeedMul - 1f) + ssBonus;
+
+                // Step 4: speedRatio → HP 소모
+                float speedRatio = phaseCoeff * v2SpeedMul * (1f + ssBonus);
+                SimConsumeHP_V2(r, gs, speedRatio);
+
+                // Step 5: 기여도
+                typeBonus = (speedRatio - 1f);
                 r.contrib_type += baseSpeed * typeBonus * simTimeStep;
             }
             else
@@ -944,8 +956,8 @@ public class RaceBacktestWindow : EditorWindow
     //  Race V2 HP 소모 미러
     // ══════════════════════════════════════
 
-    /// <summary>V2 HP 소모 (RacerController.ConsumeHP_V2 미러)</summary>
-    private void SimConsumeHP_V2(SimRacer r, GameSettings gs, float progress)
+    /// <summary>V2 스프린트 판정 (RacerController.UpdateV2Sprint 미러)</summary>
+    private void SimUpdateV2Sprint(SimRacer r, GameSettings gs, float progress)
     {
         float strategyStart = gs.formationHoldLapEnd / simLaps;
 
@@ -958,22 +970,20 @@ public class RaceBacktestWindow : EditorWindow
                 r.v2IsSprintActive = true;
         }
 
-        // globalSpeedMultiplier = 게임 배속 → HP/가속도 게임시간 기준으로 스케일
-        float gameDt = simTimeStep * gs.globalSpeedMultiplier;
-
         // 그라데이션 가속 (비가역)
+        float gameDt = simTimeStep * gs.globalSpeedMultiplier;
         if (r.v2IsSprintActive)
             r.v2SprintAccelProgress = Mathf.MoveTowards(r.v2SprintAccelProgress, 1f, gameDt / gs.v2_sprintAccelTime);
+    }
 
-        // HP 소모
+    /// <summary>V2 속도 비례 HP 소모 (RacerController.ConsumeHP_V2 미러)</summary>
+    private void SimConsumeHP_V2(SimRacer r, GameSettings gs, float speedRatio)
+    {
+        float gameDt = simTimeStep * gs.globalSpeedMultiplier;
+
         if (r.enduranceHP > 0f)
         {
-            float drain;
-            if (r.v2IsSprintActive)
-                drain = Mathf.Lerp(gs.v2_baseDrain, gs.v2_sprintDrainRate, r.v2SprintAccelProgress);
-            else
-                drain = gs.v2_baseDrain;
-
+            float drain = gs.CalcV2SpeedDrain(speedRatio);
             float consumption = drain * gameDt;
             consumption = Mathf.Min(consumption, r.enduranceHP);
             r.enduranceHP -= consumption;

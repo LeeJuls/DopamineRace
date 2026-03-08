@@ -887,6 +887,90 @@ public class GameSettings : ScriptableObject
         }
     }
 
+    [Header("═══ Race V2: 타입별 구간 속도 계수 ═══")]
+    [Tooltip("도주(Runner) 초반 속도 계수. 1.0 = 기본")]
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Runner_early   = 1.000f;
+    [Tooltip("도주(Runner) 중반 속도 계수")]
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Runner_mid     = 0.985f;
+    [Tooltip("도주(Runner) 후반(스프린트) 속도 계수")]
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Runner_late    = 0.970f;
+
+    [Tooltip("선행(Leader) 초반 속도 계수")]
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Leader_early   = 0.985f;
+    [Tooltip("선행(Leader) 중반 속도 계수")]
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Leader_mid     = 0.993f;
+    [Tooltip("선행(Leader) 후반(스프린트) 속도 계수")]
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Leader_late    = 0.980f;
+
+    [Tooltip("선입(Chaser) 초반 속도 계수")]
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Chaser_early   = 0.965f;
+    [Tooltip("선입(Chaser) 중반 속도 계수")]
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Chaser_mid     = 1.000f;
+    [Tooltip("선입(Chaser) 후반(스프린트) 속도 계수")]
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Chaser_late    = 0.995f;
+
+    [Tooltip("추입(Reckoner) 초반 속도 계수")]
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Reckoner_early = 0.950f;
+    [Tooltip("추입(Reckoner) 중반 속도 계수")]
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Reckoner_mid   = 1.000f;
+    [Tooltip("추입(Reckoner) 후반(스프린트) 속도 계수")]
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Reckoner_late  = 1.000f;
+
+    [Header("═══ Race V2: 속도 비례 HP 소모 ═══")]
+    [Tooltip("기본 HP 소모율 (/초, 속도비 1.0 기준)")]
+    [Range(0.5f, 5.0f)] public float v2_drainBaseRate = 2.0f;
+    [Tooltip("속도-소모 지수 (2.0 = 속도비 제곱에 비례)")]
+    [Range(1.0f, 3.0f)] public float v2_drainExponent = 2.0f;
+
+    [Header("═══ Race V2: 구간 구분 ═══")]
+    [Tooltip("초반→중반 전환 진행률 (0.33 = 33%)")]
+    [Range(0.15f, 0.50f)] public float v2_phaseEarlyEnd = 0.33f;
+    [Tooltip("중반→후반 전환 진행률 (0.66 = 66%)")]
+    [Range(0.40f, 0.85f)] public float v2_phaseMidEnd   = 0.66f;
+
+    /// <summary>
+    /// V2: 타입 + 구간 → 속도 계수 반환
+    /// phase: 0=early, 1=mid, 2=late
+    /// </summary>
+    public float GetV2PhaseCoeff(CharacterType type, int phase)
+    {
+        return (type, phase) switch
+        {
+            (CharacterType.Runner,   0) => v2_phaseCoeff_Runner_early,
+            (CharacterType.Runner,   1) => v2_phaseCoeff_Runner_mid,
+            (CharacterType.Runner,   _) => v2_phaseCoeff_Runner_late,
+            (CharacterType.Leader,   0) => v2_phaseCoeff_Leader_early,
+            (CharacterType.Leader,   1) => v2_phaseCoeff_Leader_mid,
+            (CharacterType.Leader,   _) => v2_phaseCoeff_Leader_late,
+            (CharacterType.Chaser,   0) => v2_phaseCoeff_Chaser_early,
+            (CharacterType.Chaser,   1) => v2_phaseCoeff_Chaser_mid,
+            (CharacterType.Chaser,   _) => v2_phaseCoeff_Chaser_late,
+            (CharacterType.Reckoner, 0) => v2_phaseCoeff_Reckoner_early,
+            (CharacterType.Reckoner, 1) => v2_phaseCoeff_Reckoner_mid,
+            _                           => v2_phaseCoeff_Reckoner_late,
+        };
+    }
+
+    /// <summary>
+    /// V2: 현재 진행률 → 구간 번호 (0=early, 1=mid, 2=late)
+    /// </summary>
+    public int GetV2Phase(float overallProgress)
+    {
+        if (overallProgress < v2_phaseEarlyEnd) return 0;
+        if (overallProgress < v2_phaseMidEnd)   return 1;
+        return 2;
+    }
+
+    /// <summary>
+    /// V2: 속도 비례 HP 소모율 계산.
+    /// speedRatio = 실효 속도 / 기본 속도. drain ∝ ratio^exponent
+    /// </summary>
+    public float CalcV2SpeedDrain(float speedRatio)
+    {
+        speedRatio = Mathf.Clamp(speedRatio, 0.5f, 2.0f);
+        return v2_drainBaseRate * Mathf.Pow(speedRatio, v2_drainExponent);
+    }
+
     [Header("═══ 디버그 ═══")]
     [Tooltip("레이스 디버그 오버레이 (F1:토글 F2:상세 F3:캐릭터선택)")]
     public bool enableRaceDebug = false;
