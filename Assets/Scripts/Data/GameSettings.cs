@@ -825,17 +825,19 @@ public class GameSettings : ScriptableObject
     [Tooltip("V2 레이스 시스템 사용 여부.\ntrue = Type 2 (전력질주+탈진), false = Type 1 (기존 HP 부스트)")]
     public bool useV2RaceSystem = false;
 
-    [Header("═══ Race V2: 속도 ═══")]
-    [Tooltip("전력질주 최대 속도 배율 (1.3 = 30% 가속)")]
-    [Range(1.1f, 1.5f)] public float v2_sprintSpeedMul = 1.3f;
-    [Tooltip("탈진(HP=0) 감속 배율 (0.90 = 10% 감속). 속도감 유지를 위해 0.85 이하로 내리지 않을 것")]
-    [Range(0.85f, 0.95f)] public float v2_exhaustSpeedMul = 0.90f;
+    [Header("═══ Race V2: HP 비례 속도 ═══")]
+    [Tooltip("HP 100%일 때 스프린트 최대 보너스 (0.3 = +30% → 1.3×)")]
+    [Range(0.1f, 0.5f)] public float v2_sprintMaxBoost = 0.30f;
+    [Tooltip("탈진 경계 HP% (이 아래는 기본속도 미만). 0.25 = HP 25%에서 1.0×")]
+    [Range(0.1f, 0.5f)] public float v2_sprintThreshold = 0.25f;
+    [Tooltip("HP 0%일 때 최저 속도 배율 (0.75 = 25% 감속)")]
+    [Range(0.5f, 0.95f)] public float v2_exhaustFloor = 0.75f;
 
-    [Header("═══ Race V2: HP 소모 (전 캐릭터 동일) ═══")]
-    [Tooltip("일반 달리기 HP 소모율 (/초)")]
-    [Range(0.3f, 3.0f)] public float v2_baseDrain = 1.0f;
-    [Tooltip("전력질주 시 HP 소모 배율 (5.0 = baseDrain의 5배)")]
-    [Range(2f, 8f)] public float v2_sprintDrainMul = 5.0f;
+    [Header("═══ Race V2: HP 소모 ═══")]
+    [Tooltip("비스프린트 HP 소모율 (/초). 0이면 대기 중 소모 없음")]
+    [Range(0f, 1.0f)] public float v2_baseDrain = 0.2f;
+    [Tooltip("스프린트 HP 소모율 (/초, 절대값)")]
+    [Range(1f, 10f)] public float v2_sprintDrainRate = 5.0f;
 
     [Header("═══ Race V2: 가속 곡선 ═══")]
     [Tooltip("전력질주 0→최대 도달 시간(초). 자동차 가속처럼 점진적")]
@@ -863,6 +865,26 @@ public class GameSettings : ScriptableObject
             CharacterType.Chaser   => v2_sprintStart_Chaser,
             _                      => v2_sprintStart_Reckoner
         };
+    }
+
+    /// <summary>
+    /// V2: HP 비율 → 속도 배율 변환 (2구간 선형)
+    /// HP ≥ threshold: 1.0 → 1.0+sprintMaxBoost (스프린트 존)
+    /// HP &lt; threshold: exhaustFloor → 1.0 (탈진 존)
+    /// </summary>
+    public float GetV2SpeedFromHP(float hpRatio)
+    {
+        hpRatio = Mathf.Clamp01(hpRatio);
+        if (hpRatio >= v2_sprintThreshold)
+        {
+            float t = (hpRatio - v2_sprintThreshold) / (1f - v2_sprintThreshold);
+            return 1f + v2_sprintMaxBoost * t;
+        }
+        else
+        {
+            float t = hpRatio / v2_sprintThreshold;
+            return v2_exhaustFloor + (1f - v2_exhaustFloor) * t;
+        }
     }
 
     [Header("═══ 디버그 ═══")]

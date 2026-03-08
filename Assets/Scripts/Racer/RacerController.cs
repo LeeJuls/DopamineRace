@@ -392,14 +392,14 @@ public class RacerController : MonoBehaviour
 
             if (gs.useV2RaceSystem)
             {
-                // ═══ Race V2: 전력질주/탈진 속도 ═══
+                // ═══ Race V2: HP 비례 스프린트 속도 ═══
                 ConsumeHP_V2(gs, track, Time.deltaTime);
 
-                float v2SpeedMul;
-                if (enduranceHP <= 0f)
-                    v2SpeedMul = gs.v2_exhaustSpeedMul;      // 0.9× 탈진
-                else
-                    v2SpeedMul = Mathf.Lerp(1f, gs.v2_sprintSpeedMul, v2SprintAccelProgress);
+                // HP 비례 속도 계산
+                float hpRatio = maxHP > 0f ? Mathf.Clamp01(enduranceHP / maxHP) : 0f;
+                float targetSpeed = gs.GetV2SpeedFromHP(hpRatio);
+                // 비스프린트 시 v2SprintAccelProgress=0 → v2SpeedMul=1.0
+                float v2SpeedMul = Mathf.Lerp(1f, targetSpeed, v2SprintAccelProgress);
 
                 // 공유: 슬립스트림 + 보조 스탯
                 float cpEff = gs.GetCPEfficiency(CPRatio);
@@ -786,14 +786,12 @@ public class RacerController : MonoBehaviour
 
     /// <summary>
     /// V2 HP 소모. 타입별 차이 = 전력질주 시작 시점만.
-    /// HP 소모율은 전 캐릭터 동일 (v2_baseDrain × drainMul).
+    /// 비스프린트: baseDrain, 스프린트: sprintDrainRate (절대값).
     /// </summary>
     private void ConsumeHP_V2(GameSettings gs, TrackData track, float dt)
     {
-        if (enduranceHP <= 0f) return;
-
         int totalLaps = GetTotalLaps();
-        float strategyStart = gs.formationHoldLapEnd / totalLaps; // OverallProgress 기준
+        float strategyStart = gs.formationHoldLapEnd / totalLaps;
         float progress = OverallProgress;
 
         // 전력질주 시작 판정: Strategy 구간의 X% 지점
@@ -801,37 +799,35 @@ public class RacerController : MonoBehaviour
         {
             float strategyProg = Mathf.InverseLerp(strategyStart, 1f, progress);
             float sprintStart = gs.GetV2SprintStart(charData.charType);
-            v2IsSprintActive = (strategyProg >= sprintStart);
-        }
-        else
-        {
-            v2IsSprintActive = false;
+            if (!v2IsSprintActive && strategyProg >= sprintStart)
+                v2IsSprintActive = true; // 한번 시작하면 멈추지 않음
         }
 
-        // 그라데이션 가속/감속
-        if (v2IsSprintActive && enduranceHP > 0f)
+        // 그라데이션 가속 (감속 없음 — 스프린트는 비가역)
+        if (v2IsSprintActive)
             v2SprintAccelProgress = Mathf.MoveTowards(v2SprintAccelProgress, 1f, dt / gs.v2_sprintAccelTime);
-        else if (!v2IsSprintActive)
-            v2SprintAccelProgress = Mathf.MoveTowards(v2SprintAccelProgress, 0f, dt / gs.v2_sprintAccelTime);
 
-        // HP 소모 (baseDrain × drainMul, 전 캐릭터 동일)
-        float drainMul = Mathf.Lerp(1f, gs.v2_sprintDrainMul, v2SprintAccelProgress);
-        float consumption = gs.v2_baseDrain * drainMul * dt;
-
-        // HP 랩 스케일링 적용 (긴 레이스에서 HP 풀 증가분 반영)
-        // → CalcMaxHP(endurance, laps)에서 이미 maxHP에 반영됨, 소모율은 그대로
-
-        consumption = Mathf.Min(consumption, enduranceHP);
-        enduranceHP -= consumption;
-        totalConsumedHP += consumption;
-
-        // 선두 HP 택스 (V1과 공유)
-        if (currentRank <= gs.leadPaceTaxRank && enduranceHP > 0f)
+        // HP 소모
+        if (enduranceHP > 0f)
         {
-            float tax = gs.leadPaceTaxRate * dt;
-            tax = Mathf.Min(tax, enduranceHP);
-            enduranceHP -= tax;
-            // leadPaceTax는 totalConsumedHP에 미포함 (순수 탈진 가속용)
+            float drain;
+            if (v2IsSprintActive)
+                drain = Mathf.Lerp(gs.v2_baseDrain, gs.v2_sprintDrainRate, v2SprintAccelProgress);
+            else
+                drain = gs.v2_baseDrain;
+
+            float consumption = drain * dt;
+            consumption = Mathf.Min(consumption, enduranceHP);
+            enduranceHP -= consumption;
+            totalConsumedHP += consumption;
+
+            // 선두 HP 택스 (V1과 공유)
+            if (currentRank <= gs.leadPaceTaxRank && enduranceHP > 0f)
+            {
+                float tax = gs.leadPaceTaxRate * dt;
+                tax = Mathf.Min(tax, enduranceHP);
+                enduranceHP -= tax;
+            }
         }
 
         // Burst Lerp 호환: V2 전력질주 → isSprintMode 설정

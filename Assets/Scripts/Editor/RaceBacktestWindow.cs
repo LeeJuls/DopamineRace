@@ -836,19 +836,17 @@ public class RaceBacktestWindow : EditorWindow
 
             if (gs.useV2RaceSystem)
             {
-                // ═══ Race V2: 전력질주/탈진 속도 ═══
+                // ═══ Race V2: HP 비례 스프린트 속도 ═══
                 SimConsumeHP_V2(r, gs, progress);
 
-                float v2SpeedMul;
-                if (r.enduranceHP <= 0f)
-                    v2SpeedMul = gs.v2_exhaustSpeedMul;
-                else
-                    v2SpeedMul = Mathf.Lerp(1f, gs.v2_sprintSpeedMul, r.v2SprintAccelProgress);
+                float hpRatio = r.maxHP > 0f ? Mathf.Clamp01(r.enduranceHP / r.maxHP) : 0f;
+                float targetSpeed = gs.GetV2SpeedFromHP(hpRatio);
+                float v2SpeedMul = Mathf.Lerp(1f, targetSpeed, r.v2SprintAccelProgress);
 
                 float cpRatioCalc = r.maxCP > 0f ? r.calmPoints / r.maxCP : 0f;
                 float cpEff = gs.GetCPEfficiency(cpRatioCalc);
                 float ssBonus = gs.GetSlipstreamBonus(cd.charType, r.slipstreamBlend, cpEff);
-                typeBonus = (v2SpeedMul - 1f) + ssBonus; // V2 속도 배율을 보너스로 변환
+                typeBonus = (v2SpeedMul - 1f) + ssBonus;
                 r.contrib_type += baseSpeed * typeBonus * simTimeStep;
             }
             else
@@ -946,40 +944,41 @@ public class RaceBacktestWindow : EditorWindow
     /// <summary>V2 HP 소모 (RacerController.ConsumeHP_V2 미러)</summary>
     private void SimConsumeHP_V2(SimRacer r, GameSettings gs, float progress)
     {
-        if (r.enduranceHP <= 0f) return;
+        float strategyStart = gs.formationHoldLapEnd / simLaps;
 
-        float strategyStart = gs.formationHoldLapEnd / simLaps; // OverallProgress 기준
-
-        // 전력질주 시작 판정
+        // 전력질주 시작 판정 (한번 시작하면 멈추지 않음)
         if (progress >= strategyStart)
         {
             float strategyProg = Mathf.InverseLerp(strategyStart, 1f, progress);
             float sprintStart = gs.GetV2SprintStart(r.data.charType);
-            r.v2IsSprintActive = (strategyProg >= sprintStart);
-        }
-        else
-        {
-            r.v2IsSprintActive = false;
+            if (!r.v2IsSprintActive && strategyProg >= sprintStart)
+                r.v2IsSprintActive = true;
         }
 
-        // 그라데이션 가속/감속
-        if (r.v2IsSprintActive && r.enduranceHP > 0f)
+        // 그라데이션 가속 (비가역)
+        if (r.v2IsSprintActive)
             r.v2SprintAccelProgress = Mathf.MoveTowards(r.v2SprintAccelProgress, 1f, simTimeStep / gs.v2_sprintAccelTime);
-        else if (!r.v2IsSprintActive)
-            r.v2SprintAccelProgress = Mathf.MoveTowards(r.v2SprintAccelProgress, 0f, simTimeStep / gs.v2_sprintAccelTime);
 
-        // HP 소모 (전 캐릭터 동일)
-        float drainMul = Mathf.Lerp(1f, gs.v2_sprintDrainMul, r.v2SprintAccelProgress);
-        float consumption = gs.v2_baseDrain * drainMul * simTimeStep;
-        consumption = Mathf.Min(consumption, r.enduranceHP);
-        r.enduranceHP -= consumption;
-        r.totalConsumedHP += consumption;
-
-        // 선두 HP 택스
-        if (r.currentRank <= gs.leadPaceTaxRank && r.enduranceHP > 0f)
+        // HP 소모
+        if (r.enduranceHP > 0f)
         {
-            float tax = gs.leadPaceTaxRate * simTimeStep;
-            r.enduranceHP = Mathf.Max(0f, r.enduranceHP - tax);
+            float drain;
+            if (r.v2IsSprintActive)
+                drain = Mathf.Lerp(gs.v2_baseDrain, gs.v2_sprintDrainRate, r.v2SprintAccelProgress);
+            else
+                drain = gs.v2_baseDrain;
+
+            float consumption = drain * simTimeStep;
+            consumption = Mathf.Min(consumption, r.enduranceHP);
+            r.enduranceHP -= consumption;
+            r.totalConsumedHP += consumption;
+
+            // 선두 HP 택스
+            if (r.currentRank <= gs.leadPaceTaxRank && r.enduranceHP > 0f)
+            {
+                float tax = gs.leadPaceTaxRate * simTimeStep;
+                r.enduranceHP = Mathf.Max(0f, r.enduranceHP - tax);
+            }
         }
 
         // Burst Lerp 호환

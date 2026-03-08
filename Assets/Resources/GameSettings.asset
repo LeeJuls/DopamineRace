@@ -249,11 +249,12 @@ MonoBehaviour:
   mainFont: {fileID: 12800000, guid: d33d11b90102e7042ad01b77a72b3fe6, type: 3}
   koreanFont: {fileID: 0}
   uiFontScale: 1
-  useV2RaceSystem: 0
-  v2_sprintSpeedMul: 1.3
-  v2_exhaustSpeedMul: 0.9
-  v2_baseDrain: 1
-  v2_sprintDrainMul: 5
+  useV2RaceSystem: 1
+  v2_sprintMaxBoost: 0.3
+  v2_sprintThreshold: 0.25
+  v2_exhaustFloor: 0.75
+  v2_baseDrain: 0.2
+  v2_sprintDrainRate: 5
   v2_sprintAccelTime: 2.5
   v2_sprintStart_Runner: 0
   v2_sprintStart_Leader: 0.25
