@@ -831,7 +831,7 @@ public class GameSettings : ScriptableObject
     [Tooltip("탈진 경계 HP% (이 아래는 기본속도 미만). 0.25 = HP 25%에서 1.0×")]
     [Range(0.1f, 0.5f)] public float v2_sprintThreshold = 0.25f;
     [Tooltip("HP 0%일 때 최저 속도 배율 (0.75 = 25% 감속)")]
-    [Range(0.5f, 0.95f)] public float v2_exhaustFloor = 0.75f;
+    [Range(0.5f, 0.95f)] public float v2_exhaustFloor = 0.70f;
 
     [Header("═══ Race V2: HP 소모 ═══")]
     [Tooltip("비스프린트 HP 소모율 (/초). 0이면 대기 중 소모 없음")]
@@ -907,18 +907,18 @@ public class GameSettings : ScriptableObject
     [Tooltip("선입(Chaser) 중반 속도 계수")]
     [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Chaser_mid     = 1.000f;
     [Tooltip("선입(Chaser) 후반(스프린트) 속도 계수")]
-    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Chaser_late    = 0.995f;
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Chaser_late    = 0.990f;
 
     [Tooltip("추입(Reckoner) 초반 속도 계수")]
     [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Reckoner_early = 0.950f;
     [Tooltip("추입(Reckoner) 중반 속도 계수")]
     [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Reckoner_mid   = 1.000f;
     [Tooltip("추입(Reckoner) 후반(스프린트) 속도 계수")]
-    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Reckoner_late  = 1.000f;
+    [Range(0.90f, 1.10f)] public float v2_phaseCoeff_Reckoner_late  = 1.015f;
 
     [Header("═══ Race V2: 속도 비례 HP 소모 ═══")]
     [Tooltip("기본 HP 소모율 (/초, 속도비 1.0 기준)")]
-    [Range(0.5f, 5.0f)] public float v2_drainBaseRate = 2.0f;
+    [Range(0.5f, 5.0f)] public float v2_drainBaseRate = 1.0f;
     [Tooltip("속도-소모 지수 (2.0 = 속도비 제곱에 비례)")]
     [Range(1.0f, 3.0f)] public float v2_drainExponent = 2.0f;
 
