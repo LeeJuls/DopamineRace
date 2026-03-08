@@ -30,6 +30,7 @@ public class RaceBacktestWindow : EditorWindow
     private bool isRunning = false;
     private bool cancelRequested = false;
     private List<SimRacer> _activeRacers; // SimConsumeHP_FormationHold 에서 상행 그룹 탐색용
+    private int sweepSimsPerLap = 50;
 
     // ★ 구간별 포지션 추적 체크포인트
     private static readonly float[] segCheckpoints = { 0.10f, 0.20f, 0.35f, 0.50f, 0.65f, 0.80f, 0.90f };
@@ -81,6 +82,17 @@ public class RaceBacktestWindow : EditorWindow
                 RunAllTracksSimulation();
             else
                 RunSingleTrackSimulation();
+        }
+        // ═══ V2 파라미터 스윕 ═══
+        if (gameSettings != null && gameSettings.useV2RaceSystem)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("━━━ V2 파라미터 스윕 ━━━");
+            sweepSimsPerLap = EditorGUILayout.IntSlider("스윕 시뮬/바퀴", sweepSimsPerLap, 20, 200);
+            if (GUILayout.Button(isRunning ? "스윕 중..." : "▶ V2 파라미터 스윕 (최적값 탐색)", GUILayout.Height(30)))
+            {
+                RunParameterSweep();
+            }
         }
         GUI.enabled = true;
 
@@ -1820,6 +1832,263 @@ public static class CharacterRecordResetMenu
             sm.ResetCharacterRecords("all");
 
         EditorUtility.DisplayDialog("완료", "캐릭터 기록이 초기화되었습니다.", "확인");
+    }
+
+    // ══════════════════════════════════════
+    //  V2 파라미터 스윕 — 최적 계수 자동 탐색
+    // ══════════════════════════════════════
+
+    private struct SweepResult
+    {
+        public float drainRate;
+        public float runnerLate, leaderLate, chaserLate, reckonerLate;
+        public float score;
+        public string detail;
+    }
+
+    private void RunParameterSweep()
+    {
+        isRunning = true;
+        lastLogPath = "";
+
+        // 원본 값 백업
+        var gs = gameSettings;
+        float origDrainRate       = gs.v2_drainBaseRate;
+        float origRunnerLate      = gs.v2_phaseCoeff_Runner_late;
+        float origLeaderLate      = gs.v2_phaseCoeff_Leader_late;
+        float origChaserLate      = gs.v2_phaseCoeff_Chaser_late;
+        float origReckonerLate    = gs.v2_phaseCoeff_Reckoner_late;
+        int   origSimLaps         = simLaps;
+        int   origSimRacers       = simRacers;
+        int   origSimCount        = simCount;
+        bool  origEqualStats      = equalStats;
+        int   origEqualStatValue  = equalStatValue;
+        bool  origShowPerRace     = showPerRace;
+        bool  origSaveLog         = saveLog;
+
+        try
+        {
+            RunParameterSweepInternal();
+        }
+        catch (System.Exception e)
+        {
+            resultText = "❌ 스윕 에러: " + e.Message + "\n" + e.StackTrace;
+            Debug.LogError("[파라미터 스윕] " + e);
+        }
+        finally
+        {
+            // 원본 복원 (반드시 실행)
+            gs.v2_drainBaseRate            = origDrainRate;
+            gs.v2_phaseCoeff_Runner_late   = origRunnerLate;
+            gs.v2_phaseCoeff_Leader_late   = origLeaderLate;
+            gs.v2_phaseCoeff_Chaser_late   = origChaserLate;
+            gs.v2_phaseCoeff_Reckoner_late = origReckonerLate;
+            simLaps          = origSimLaps;
+            simRacers        = origSimRacers;
+            simCount         = origSimCount;
+            equalStats       = origEqualStats;
+            equalStatValue   = origEqualStatValue;
+            showPerRace      = origShowPerRace;
+            saveLog          = origSaveLog;
+
+            EditorUtility.ClearProgressBar();
+            isRunning = false;
+        }
+    }
+
+    private void RunParameterSweepInternal()
+    {
+        var gs = gameSettings;
+
+        // 스윕 조건 고정
+        equalStats = true;
+        equalStatValue = 20;
+        simRacers = 12;
+        showPerRace = false;
+        saveLog = false;
+
+        // ═══ 스윕 그리드 정의 ═══
+        float[] drainRates    = { 0.20f, 0.30f, 0.40f, 0.50f };
+        float[] runnerLates   = { 0.935f, 0.950f, 0.960f, 0.970f };
+        float[] leaderLates   = { 0.970f, 0.980f, 0.990f };
+        float[] chaserLates   = { 0.985f, 0.995f, 1.005f };
+        float[] reckonerLates = { 1.000f, 1.010f, 1.020f, 1.030f };
+
+        // 목표: (바퀴수, 목표 타입)
+        int[] testLaps = { 2, 3, 4, 5 };
+        CharacterType[] targetTypes = {
+            CharacterType.Runner,
+            CharacterType.Leader,
+            CharacterType.Chaser,
+            CharacterType.Reckoner
+        };
+        string[] targetTypeNames = { "도주", "선행", "선입", "추입" };
+
+        int totalCombos = drainRates.Length * runnerLates.Length * leaderLates.Length
+                        * chaserLates.Length * reckonerLates.Length;
+
+        List<CharacterData> allChars = LoadAllCharacters();
+        if (allChars == null || allChars.Count == 0) return;
+
+        // 조합 사전 생성 (단일 루프 → 안전한 취소)
+        var paramSets = new List<float[]>();
+        foreach (float dr in drainRates)
+        foreach (float rl in runnerLates)
+        foreach (float ll in leaderLates)
+        foreach (float cl in chaserLates)
+        foreach (float rcl in reckonerLates)
+            paramSets.Add(new float[] { dr, rl, ll, cl, rcl });
+
+        List<SweepResult> results = new List<SweepResult>();
+        cancelRequested = false;
+
+        for (int combo = 0; combo < paramSets.Count; combo++)
+        {
+            float dr  = paramSets[combo][0];
+            float rl  = paramSets[combo][1];
+            float ll  = paramSets[combo][2];
+            float cl  = paramSets[combo][3];
+            float rcl = paramSets[combo][4];
+
+            if (combo % 5 == 0)
+            {
+                bool cancelled = EditorUtility.DisplayCancelableProgressBar(
+                    "V2 파라미터 스윕",
+                    $"조합 {combo + 1}/{totalCombos} | drain={dr:F2} RL={rl:F3} LL={ll:F3} CL={cl:F3} RCL={rcl:F3}",
+                    (float)(combo + 1) / totalCombos);
+                if (cancelled) { cancelRequested = true; break; }
+            }
+
+            // 파라미터 적용
+            gs.v2_drainBaseRate            = dr;
+            gs.v2_phaseCoeff_Runner_late   = rl;
+            gs.v2_phaseCoeff_Leader_late   = ll;
+            gs.v2_phaseCoeff_Chaser_late   = cl;
+            gs.v2_phaseCoeff_Reckoner_late = rcl;
+
+            float score = 0f;
+            StringBuilder detail = new StringBuilder();
+
+            for (int li = 0; li < testLaps.Length; li++)
+            {
+                simLaps = testLaps[li];
+                simCount = sweepSimsPerLap;
+
+                // 시뮬레이션 실행
+                var result = RunSimulationCore(allChars, 0, 1, "sweep");
+
+                // 타입별 승수 집계
+                var typeWinCount = new Dictionary<CharacterType, int>();
+                foreach (CharacterType ct in System.Enum.GetValues(typeof(CharacterType)))
+                    typeWinCount[ct] = 0;
+
+                foreach (var kv in result.stats)
+                {
+                    var cd = allChars.Find(c => c.charId == kv.Key);
+                    if (cd != null)
+                        typeWinCount[cd.charType] += kv.Value.winCount;
+                }
+
+                float totalWins = sweepSimsPerLap;
+                CharacterType targetType = targetTypes[li];
+                float targetRate = typeWinCount[targetType] / totalWins;
+
+                // 최고 승률 타입 찾기
+                float maxOtherRate = 0f;
+                string maxOtherName = "";
+                foreach (var kv in typeWinCount)
+                {
+                    if (kv.Key != targetType)
+                    {
+                        float rate = kv.Value / totalWins;
+                        if (rate > maxOtherRate)
+                        {
+                            maxOtherRate = rate;
+                            maxOtherName = kv.Key.ToString();
+                        }
+                    }
+                }
+
+                // 스코어링
+                if (targetRate >= maxOtherRate && targetRate > 0f)
+                    score += 100f + (targetRate - maxOtherRate) * 300f;
+                else if (targetRate >= maxOtherRate * 0.8f)
+                    score += 30f - (maxOtherRate - targetRate) * 200f;
+                else
+                    score -= (maxOtherRate - targetRate) * 300f;
+
+                detail.AppendFormat("{0}L:{1}={2:F0}%",
+                    testLaps[li], targetTypeNames[li], targetRate * 100f);
+                if (targetRate < maxOtherRate)
+                    detail.AppendFormat("(X {0}={1:F0}%)", maxOtherName, maxOtherRate * 100f);
+                else
+                    detail.Append("(O)");
+                if (li < testLaps.Length - 1) detail.Append("  ");
+            }
+
+            results.Add(new SweepResult
+            {
+                drainRate = dr,
+                runnerLate = rl,
+                leaderLate = ll,
+                chaserLate = cl,
+                reckonerLate = rcl,
+                score = score,
+                detail = detail.ToString()
+            });
+
+            if (cancelRequested) break;
+        }
+
+        // 점수 내림차순 정렬
+        results.Sort((a, b) => b.score.CompareTo(a.score));
+
+        // 결과 출력
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("══════════════════════════════════════════════");
+        sb.AppendLine("  V2 파라미터 스윕 결과");
+        sb.AppendLine("══════════════════════════════════════════════");
+        sb.AppendLine($"조건: equalStats={equalStatValue}, 시뮬={sweepSimsPerLap}회/바퀴, 총 {totalCombos} 조합");
+        sb.AppendLine($"목표: 2L→도주  3L→선행  4L→선입  5L→추입");
+        sb.AppendLine();
+
+        int showCount = Mathf.Min(30, results.Count);
+        for (int i = 0; i < showCount; i++)
+        {
+            var r = results[i];
+            sb.AppendFormat("#{0,-2} score={1,7:F1} | drain={2:F2}  RunL={3:F3}  LeadL={4:F3}  ChasL={5:F3}  ReckL={6:F3}\n",
+                i + 1, r.score, r.drainRate, r.runnerLate, r.leaderLate, r.chaserLate, r.reckonerLate);
+            sb.AppendLine($"     {r.detail}");
+        }
+
+        // 최적 파라미터 요약
+        if (results.Count > 0)
+        {
+            var best = results[0];
+            sb.AppendLine();
+            sb.AppendLine("══════════════════════════════════════════════");
+            sb.AppendLine("  BEST 파라미터 (Inspector에 복사)");
+            sb.AppendLine("══════════════════════════════════════════════");
+            sb.AppendLine($"v2_drainBaseRate            = {best.drainRate:F2}");
+            sb.AppendLine($"v2_phaseCoeff_Runner_late   = {best.runnerLate:F3}");
+            sb.AppendLine($"v2_phaseCoeff_Leader_late   = {best.leaderLate:F3}");
+            sb.AppendLine($"v2_phaseCoeff_Chaser_late   = {best.chaserLate:F3}");
+            sb.AppendLine($"v2_phaseCoeff_Reckoner_late = {best.reckonerLate:F3}");
+            sb.AppendLine($"Score = {best.score:F1}");
+            sb.AppendLine(best.detail);
+        }
+
+        resultText = sb.ToString();
+
+        // 로그 파일 저장
+        string logDir = "Assets/BacktestLogs";
+        if (!System.IO.Directory.Exists(logDir))
+            System.IO.Directory.CreateDirectory(logDir);
+        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string logPath = $"{logDir}/V2_Sweep_{timestamp}.txt";
+        System.IO.File.WriteAllText(logPath, sb.ToString());
+        lastLogPath = logPath;
+        Debug.Log($"[V2 파라미터 스윕] 완료. {results.Count}개 조합 테스트. 로그: {logPath}");
     }
 }
 #endif
