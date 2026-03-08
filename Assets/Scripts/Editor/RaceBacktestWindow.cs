@@ -1811,7 +1811,7 @@ public class RaceBacktestWindow : EditorWindow
 
     private struct SweepResult
     {
-        public float drainRate;
+        public float drainRate, exhaustFloor;
         public float runnerLate, leaderLate, chaserLate, reckonerLate;
         public float score;
         public string detail;
@@ -1825,6 +1825,7 @@ public class RaceBacktestWindow : EditorWindow
         // 원본 값 백업
         var gs = gameSettings;
         float origDrainRate       = gs.v2_drainBaseRate;
+        float origExhaustFloor    = gs.v2_exhaustFloor;
         float origRunnerLate      = gs.v2_phaseCoeff_Runner_late;
         float origLeaderLate      = gs.v2_phaseCoeff_Leader_late;
         float origChaserLate      = gs.v2_phaseCoeff_Chaser_late;
@@ -1850,6 +1851,7 @@ public class RaceBacktestWindow : EditorWindow
         {
             // 원본 복원 (반드시 실행)
             gs.v2_drainBaseRate            = origDrainRate;
+            gs.v2_exhaustFloor             = origExhaustFloor;
             gs.v2_phaseCoeff_Runner_late   = origRunnerLate;
             gs.v2_phaseCoeff_Leader_late   = origLeaderLate;
             gs.v2_phaseCoeff_Chaser_late   = origChaserLate;
@@ -1878,12 +1880,15 @@ public class RaceBacktestWindow : EditorWindow
         showPerRace = false;
         saveLog = false;
 
-        // ═══ 스윕 그리드 정의 ═══
-        float[] drainRates    = { 0.20f, 0.30f, 0.40f, 0.50f };
-        float[] runnerLates   = { 0.935f, 0.950f, 0.960f, 0.970f };
+        // ═══ 스윕 그리드 정의 (v2: 높은 드레인 + 탈진 패널티 강화) ═══
+        // 이전 스윕에서 drainRate가 너무 낮아 5바퀴에서 HP가 거의 안 줄었음
+        // → drainRate 대폭 상향, exhaustFloor 강화로 장거리 타입 역전 가능성 확보
+        float[] drainRates    = { 0.50f, 1.00f, 1.50f, 2.00f };
+        float[] exhaustFloors = { 0.60f, 0.70f };
+        float[] runnerLates   = { 0.940f, 0.955f, 0.970f };
         float[] leaderLates   = { 0.970f, 0.980f, 0.990f };
-        float[] chaserLates   = { 0.985f, 0.995f, 1.005f };
-        float[] reckonerLates = { 1.000f, 1.010f, 1.020f, 1.030f };
+        float[] chaserLates   = { 0.990f, 1.000f, 1.010f };
+        float[] reckonerLates = { 1.000f, 1.015f, 1.030f };
 
         // 목표: (바퀴수, 목표 타입)
         int[] testLaps = { 2, 3, 4, 5 };
@@ -1895,20 +1900,21 @@ public class RaceBacktestWindow : EditorWindow
         };
         string[] targetTypeNames = { "도주", "선행", "선입", "추입" };
 
-        int totalCombos = drainRates.Length * runnerLates.Length * leaderLates.Length
-                        * chaserLates.Length * reckonerLates.Length;
+        int totalCombos = drainRates.Length * exhaustFloors.Length * runnerLates.Length
+                        * leaderLates.Length * chaserLates.Length * reckonerLates.Length;
 
         List<CharacterData> allChars = LoadAllCharacters();
         if (allChars == null || allChars.Count == 0) return;
 
         // 조합 사전 생성 (단일 루프 → 안전한 취소)
         var paramSets = new List<float[]>();
-        foreach (float dr in drainRates)
-        foreach (float rl in runnerLates)
-        foreach (float ll in leaderLates)
-        foreach (float cl in chaserLates)
+        foreach (float dr  in drainRates)
+        foreach (float ef  in exhaustFloors)
+        foreach (float rl  in runnerLates)
+        foreach (float ll  in leaderLates)
+        foreach (float cl  in chaserLates)
         foreach (float rcl in reckonerLates)
-            paramSets.Add(new float[] { dr, rl, ll, cl, rcl });
+            paramSets.Add(new float[] { dr, ef, rl, ll, cl, rcl });
 
         List<SweepResult> results = new List<SweepResult>();
         cancelRequested = false;
@@ -1916,22 +1922,24 @@ public class RaceBacktestWindow : EditorWindow
         for (int combo = 0; combo < paramSets.Count; combo++)
         {
             float dr  = paramSets[combo][0];
-            float rl  = paramSets[combo][1];
-            float ll  = paramSets[combo][2];
-            float cl  = paramSets[combo][3];
-            float rcl = paramSets[combo][4];
+            float ef  = paramSets[combo][1];
+            float rl  = paramSets[combo][2];
+            float ll  = paramSets[combo][3];
+            float cl  = paramSets[combo][4];
+            float rcl = paramSets[combo][5];
 
             if (combo % 5 == 0)
             {
                 bool cancelled = EditorUtility.DisplayCancelableProgressBar(
-                    "V2 파라미터 스윕",
-                    $"조합 {combo + 1}/{totalCombos} | drain={dr:F2} RL={rl:F3} LL={ll:F3} CL={cl:F3} RCL={rcl:F3}",
+                    "V2 파라미터 스윕 v2",
+                    $"조합 {combo + 1}/{totalCombos} | drain={dr:F2} floor={ef:F2} RL={rl:F3} RCL={rcl:F3}",
                     (float)(combo + 1) / totalCombos);
                 if (cancelled) { cancelRequested = true; break; }
             }
 
             // 파라미터 적용
             gs.v2_drainBaseRate            = dr;
+            gs.v2_exhaustFloor             = ef;
             gs.v2_phaseCoeff_Runner_late   = rl;
             gs.v2_phaseCoeff_Leader_late   = ll;
             gs.v2_phaseCoeff_Chaser_late   = cl;
@@ -2000,6 +2008,7 @@ public class RaceBacktestWindow : EditorWindow
             results.Add(new SweepResult
             {
                 drainRate = dr,
+                exhaustFloor = ef,
                 runnerLate = rl,
                 leaderLate = ll,
                 chaserLate = cl,
@@ -2019,7 +2028,7 @@ public class RaceBacktestWindow : EditorWindow
         sb.AppendLine("══════════════════════════════════════════════");
         sb.AppendLine("  V2 파라미터 스윕 결과");
         sb.AppendLine("══════════════════════════════════════════════");
-        sb.AppendLine($"조건: equalStats={equalStatValue}, 시뮬={sweepSimsPerLap}회/바퀴, 총 {totalCombos} 조합");
+        sb.AppendLine($"조건: equalStats={equalStatValue}, 시뮬={sweepSimsPerLap}회/바퀴, 총 {totalCombos} 조합 (v2 스윕: 높은드레인+탈진패널티)");
         sb.AppendLine($"목표: 2L→도주  3L→선행  4L→선입  5L→추입");
         sb.AppendLine();
 
@@ -2027,8 +2036,8 @@ public class RaceBacktestWindow : EditorWindow
         for (int i = 0; i < showCount; i++)
         {
             var r = results[i];
-            sb.AppendFormat("#{0,-2} score={1,7:F1} | drain={2:F2}  RunL={3:F3}  LeadL={4:F3}  ChasL={5:F3}  ReckL={6:F3}\n",
-                i + 1, r.score, r.drainRate, r.runnerLate, r.leaderLate, r.chaserLate, r.reckonerLate);
+            sb.AppendFormat("#{0,-2} score={1,7:F1} | drain={2:F2} floor={3:F2}  RunL={4:F3}  LeadL={5:F3}  ChasL={6:F3}  ReckL={7:F3}\n",
+                i + 1, r.score, r.drainRate, r.exhaustFloor, r.runnerLate, r.leaderLate, r.chaserLate, r.reckonerLate);
             sb.AppendLine($"     {r.detail}");
         }
 
@@ -2041,6 +2050,7 @@ public class RaceBacktestWindow : EditorWindow
             sb.AppendLine("  BEST 파라미터 (Inspector에 복사)");
             sb.AppendLine("══════════════════════════════════════════════");
             sb.AppendLine($"v2_drainBaseRate            = {best.drainRate:F2}");
+            sb.AppendLine($"v2_exhaustFloor             = {best.exhaustFloor:F2}");
             sb.AppendLine($"v2_phaseCoeff_Runner_late   = {best.runnerLate:F3}");
             sb.AppendLine($"v2_phaseCoeff_Leader_late   = {best.leaderLate:F3}");
             sb.AppendLine($"v2_phaseCoeff_Chaser_late   = {best.chaserLate:F3}");
