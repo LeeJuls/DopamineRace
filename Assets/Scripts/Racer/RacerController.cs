@@ -874,7 +874,8 @@ public class RacerController : MonoBehaviour
             effectiveRate *= gs.sprintHPDrainMultiplier * lapFactor;
         }
 
-        float consumption = effectiveRate * speedMul * deltaTime;
+        float gameDt = deltaTime * gs.globalSpeedMultiplier;
+        float consumption = effectiveRate * speedMul * gameDt;
         consumption = Mathf.Min(consumption, enduranceHP);
 
         enduranceHP -= consumption;
@@ -883,7 +884,7 @@ public class RacerController : MonoBehaviour
         // 선두 페이스 택스: 바람막이 추가 소모 (totalConsumedHP 미포함 → 순수 탈진 가속)
         if (currentRank <= gs.leadPaceTaxRank && enduranceHP > 0f)
         {
-            float paceTax = gs.leadPaceTaxRate * Mathf.Sqrt(speedRatio) * deltaTime;
+            float paceTax = gs.leadPaceTaxRate * Mathf.Sqrt(speedRatio) * gameDt;
             enduranceHP = Mathf.Max(0f, enduranceHP - paceTax);
         }
     }
@@ -984,7 +985,7 @@ public class RacerController : MonoBehaviour
             ? 1f - (closestGap / gs.universalSlipstreamRange)
             : 0f;
         float fadeTime = Mathf.Max(gs.slipstreamFadeTime, 0.01f);
-        slipstreamBlend = Mathf.MoveTowards(slipstreamBlend, target, deltaTime / fadeTime);
+        slipstreamBlend = Mathf.MoveTowards(slipstreamBlend, target, deltaTime * gs.globalSpeedMultiplier / fadeTime);
     }
 
     // ═══ CP 소모 ═══
@@ -994,7 +995,7 @@ public class RacerController : MonoBehaviour
         float drain = gs.cpBasicDrain;
         if (slipstreamBlend > 0f)
             drain += gs.cpSlipstreamDrain * slipstreamBlend;
-        calmPoints = Mathf.Max(0f, calmPoints - drain * deltaTime);
+        calmPoints = Mathf.Max(0f, calmPoints - drain * deltaTime * gs.globalSpeedMultiplier);
     }
 
     // ── 트랙 중반 감속 구간 ──
@@ -1023,7 +1024,7 @@ public class RacerController : MonoBehaviour
     // ── calm 기반 noise ──
     private void UpdateNoise(GameSettings gs, float trackNoiseMul)
     {
-        noiseTimer -= Time.deltaTime;
+        noiseTimer -= Time.deltaTime * gs.globalSpeedMultiplier;
         if (noiseTimer <= 0f)
         {
             float calm = Mathf.Max(charData.charBaseCalm, 1f);
@@ -1042,17 +1043,19 @@ public class RacerController : MonoBehaviour
     // ── luck 크리티컬 판정 ──
     private float UpdateLuckCrit(GameSettings gs, TrackData track)
     {
+        float gameDt = Time.deltaTime * gs.globalSpeedMultiplier;
+
         // 크리티컬 진행 중
         if (critBoostRemaining > 0f)
         {
-            critBoostRemaining -= Time.deltaTime;
+            critBoostRemaining -= gameDt;
             if (critBoostRemaining <= 0f)
                 isCritActive = false;
             return gs.luckCritBoost;
         }
 
         // 새 판정
-        luckTimer -= Time.deltaTime;
+        luckTimer -= gameDt;
         if (luckTimer <= 0f)
         {
             luckTimer = gs.luckCheckInterval;
@@ -1082,16 +1085,18 @@ public class RacerController : MonoBehaviour
     // ── 충돌 타이머 감소 (값은 A-3 CollisionSystem에서 세팅) ──
     private void UpdateCollisionTimers()
     {
+        float gameDt = Time.deltaTime * GameSettings.Instance.globalSpeedMultiplier;
+
         if (collisionPenaltyTimer > 0f)
         {
-            collisionPenaltyTimer -= Time.deltaTime;
+            collisionPenaltyTimer -= gameDt;
             if (collisionPenaltyTimer <= 0f)
                 collisionPenalty = 0f;
         }
 
         if (slingshotTimer > 0f)
         {
-            slingshotTimer -= Time.deltaTime;
+            slingshotTimer -= gameDt;
             if (slingshotTimer <= 0f)
                 slingshotBoost = 0f;
         }
@@ -1099,7 +1104,7 @@ public class RacerController : MonoBehaviour
         // 공격 쿨다운 감소 + 공격 끝나면 Run으로 복귀
         if (attackCooldown > 0f)
         {
-            attackCooldown -= Time.deltaTime;
+            attackCooldown -= gameDt;
             if (attackCooldown <= 0f && animator != null && !isFinished)
             {
                 // ★ 잔여 Attack Trigger 제거 후 Run 복귀
@@ -1116,7 +1121,7 @@ public class RacerController : MonoBehaviour
         // ★ 스킬 타이머
         if (skillActive)
         {
-            skillRemainingTime -= Time.deltaTime;
+            skillRemainingTime -= gameDt;
             if (skillRemainingTime <= 0f)
             {
                 DeactivateSkill();
@@ -1369,16 +1374,18 @@ public class RacerController : MonoBehaviour
 
     private void UpdateDeviation()
     {
-        float weight = GameSettings.Instance.pathDeviation;
+        var gs = GameSettings.Instance;
+        float weight = gs.pathDeviation;
         if (weight <= 0f) { deviationOffset = 0f; return; }
 
-        deviationTimer -= Time.deltaTime;
+        float gameDt = Time.deltaTime * gs.globalSpeedMultiplier;
+        deviationTimer -= gameDt;
         if (deviationTimer <= 0f)
         {
             deviationTarget = UnityEngine.Random.Range(-weight, weight);
             deviationTimer = UnityEngine.Random.Range(0.3f, 1.0f);
         }
-        deviationOffset = Mathf.Lerp(deviationOffset, deviationTarget, Time.deltaTime * 3f);
+        deviationOffset = Mathf.Lerp(deviationOffset, deviationTarget, gameDt * 3f);
     }
 
     private void FlipSprite()

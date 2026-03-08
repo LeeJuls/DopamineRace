@@ -505,8 +505,9 @@ public class RaceBacktestWindow : EditorWindow
                         float ssTarget = (closestGap < gs.universalSlipstreamRange)
                             ? 1f - (closestGap / gs.universalSlipstreamRange) : 0f;
                         float fadeTime = Mathf.Max(gs.slipstreamFadeTime, 0.01f);
+                        float gameDtSS = simTimeStep * gs.globalSpeedMultiplier;
                         racers[ri].slipstreamBlend = Mathf.MoveTowards(
-                            racers[ri].slipstreamBlend, ssTarget, simTimeStep / fadeTime);
+                            racers[ri].slipstreamBlend, ssTarget, gameDtSS / fadeTime);
 
                         // CP 소모
                         if (racers[ri].calmPoints > 0f)
@@ -515,7 +516,7 @@ public class RaceBacktestWindow : EditorWindow
                             if (racers[ri].slipstreamBlend > 0f)
                                 drain += gs.cpSlipstreamDrain * racers[ri].slipstreamBlend;
                             racers[ri].calmPoints = Mathf.Max(0f,
-                                racers[ri].calmPoints - drain * simTimeStep);
+                                racers[ri].calmPoints - drain * gameDtSS);
                         }
                     }
                 }
@@ -528,10 +529,11 @@ public class RaceBacktestWindow : EditorWindow
                     float baseTarget = CalcSpeed(r, progress, simTime);
 
                     // 충돌 감속
+                    float gameDtTimer = simTimeStep * gs.globalSpeedMultiplier;
                     float penaltyMul = 1f;
                     if (r.collisionTimer > 0f)
                     {
-                        r.collisionTimer -= simTimeStep;
+                        r.collisionTimer -= gameDtTimer;
                         penaltyMul = 1f - r.collisionPenalty;
                         float distLost = r.currentSpeed * r.collisionPenalty * simTimeStep;
                         r.totalDistLost += distLost;
@@ -543,7 +545,7 @@ public class RaceBacktestWindow : EditorWindow
                     float slingshotMul = 1f;
                     if (r.slingshotTimer > 0f)
                     {
-                        r.slingshotTimer -= simTimeStep;
+                        r.slingshotTimer -= gameDtTimer;
                         slingshotMul = 1f + r.slingshotBoost;
                         float distGained = r.currentSpeed * r.slingshotBoost * simTimeStep;
                         r.totalDistGained += distGained;
@@ -803,7 +805,7 @@ public class RaceBacktestWindow : EditorWindow
         r.contrib_speed += speedContrib;
 
         // noise (calm) + CP/HP 불안정 배율
-        r.noiseTimer -= simTimeStep;
+        r.noiseTimer -= simTimeStep * globalMul;
         if (r.noiseTimer <= 0f)
         {
             float calm = Mathf.Max(cd.charBaseCalm, 1f);
@@ -897,9 +899,10 @@ public class RaceBacktestWindow : EditorWindow
 
         // luck crit
         float critMul = 1f;
+        float gameDtLuck = simTimeStep * globalMul;
         if (r.critRemaining > 0f)
         {
-            r.critRemaining -= simTimeStep;
+            r.critRemaining -= gameDtLuck;
             critMul = gs.luckCritBoost;
             float critGain = r.currentSpeed * (gs.luckCritBoost - 1f) * simTimeStep;
             r.totalDistGained += critGain;
@@ -908,7 +911,7 @@ public class RaceBacktestWindow : EditorWindow
         }
         else
         {
-            r.luckTimer -= simTimeStep;
+            r.luckTimer -= gameDtLuck;
             if (r.luckTimer <= 0f)
             {
                 r.luckTimer = gs.luckCheckInterval;
@@ -1257,7 +1260,8 @@ public class RaceBacktestWindow : EditorWindow
             effectiveRate *= gs.sprintHPDrainMultiplier * lapFactor;
         }
 
-        float consumption = effectiveRate * speedMul * simTimeStep;
+        float gameDtHP = simTimeStep * gs.globalSpeedMultiplier;
+        float consumption = effectiveRate * speedMul * gameDtHP;
         consumption = Mathf.Min(consumption, r.enduranceHP);
 
         r.enduranceHP -= consumption;
@@ -1266,7 +1270,7 @@ public class RaceBacktestWindow : EditorWindow
         // 선두 페이스 택스: 바람막이 추가 소모
         if (r.currentRank <= gs.leadPaceTaxRank && r.enduranceHP > 0f)
         {
-            float paceTax = gs.leadPaceTaxRate * Mathf.Sqrt(speedRatio) * simTimeStep;
+            float paceTax = gs.leadPaceTaxRate * Mathf.Sqrt(speedRatio) * gameDtHP;
             r.enduranceHP = Mathf.Max(0f, r.enduranceHP - paceTax);
         }
     }
