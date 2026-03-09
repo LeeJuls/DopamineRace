@@ -468,14 +468,12 @@ public partial class SceneBootstrapper
 
             if (betTypeBtnTexts != null && i < betTypeBtnTexts.Length && betTypeBtnTexts[i] != null)
             {
-                Color baseColor = (tabTextBaseColors != null && i < tabTextBaseColors.Length)
+                // Inspector 설정값 그대로 — 선택/비선택 모두 동일 색
+                betTypeBtnTexts[i].color = (tabTextBaseColors != null && i < tabTextBaseColors.Length)
                     ? tabTextBaseColors[i] : Color.white;
-                FontStyle baseStyle = (tabTextBaseStyles != null && i < tabTextBaseStyles.Length)
-                    ? tabTextBaseStyles[i] : FontStyle.Normal;
-
-                betTypeBtnTexts[i].color     = isActive ? baseColor
-                    : new Color(baseColor.r, baseColor.g, baseColor.b, baseColor.a * 0.5f);
-                betTypeBtnTexts[i].fontStyle = isActive ? FontStyle.Bold : baseStyle;
+                betTypeBtnTexts[i].fontStyle = isActive ? FontStyle.Bold
+                    : (tabTextBaseStyles != null && i < tabTextBaseStyles.Length
+                        ? tabTextBaseStyles[i] : FontStyle.Normal);
             }
         }
 
