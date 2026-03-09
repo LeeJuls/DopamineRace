@@ -67,6 +67,16 @@ Assets/Scripts/.claude/
 # MCP 브릿지 로그
 unity_code_mcp_bridge.log
 
+# MCP 재시작 스크립트 (로컬 전용)
+Docs/setup/
+
+# C# 언어서버 설정 (로컬 전용)
+.lsp.json
+
+# Python 캐시 (MCP STDIO 서버)
+__pycache__/
+*.pyc
+
 # 백테스팅 로그 (Docs/logs/)
 Docs/logs/
 

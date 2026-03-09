@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc087597b8911e547bfa008df77a4b6c, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: Assembly-CSharp::GameSettings
-  racerCount: 8
-  roundLaps: 0100000002000000030000000200000004000000
+  racerCount: 9
+  roundLaps: 020000000300000005000000
   payoutWin: 8
   payoutPlace: 3
   payoutQuinella: 31
@@ -88,6 +88,10 @@ MonoBehaviour:
   midDistanceMax: 4
   bettingPanelPrefab: {fileID: 5633231458979343494, guid: fef3be23b6c277c46bc725f43e7daa89, type: 3}
   characterItemPrefab: {fileID: 5916920405917991211, guid: 39d93f93d300bd5428eea2e210d9d88f, type: 3}
+  resultPanelPrefab: {fileID: 8567012208848269126, guid: be432a661f51cfd42be4d64449198572, type: 3}
+  finishPanelPrefab: {fileID: 8787253541604398564, guid: 996934117f1431047812b05bf40ec784, type: 3}
+  leaderboardPanelPrefab: {fileID: 588526348272800763, guid: fe2555fdfd8ecef4e9a46d3c4e389ac1, type: 3}
+  trackProgressBarPrefab: {fileID: 0}
   pathDeviation: 0.7
   characterScale: 1.2
   laneOffset: 0.05
@@ -140,8 +144,13 @@ MonoBehaviour:
   reckoner_peakBoost: 0.24
   reckoner_accelExp: 1.8
   reckoner_decelExp: 0.4
-  reckoner_exhaustionFloor: -0.01
-  longRaceLateBoostAmp: 0.15
+  reckoner_exhaustionFloor: -0.08
+  longRaceLateBoostAmp: 0.3
+  leaderSprintLastLapThreshold: 0.2
+  chaserSprintLastLapThreshold: 0.3
+  reckonerSprintLastLapThreshold: 0.4
+  sprintBurstLerpMult: 2.5
+  sprintHPDrainMultiplier: 2
   paceLeadReduction: 0.15
   paceLeadFadeStart: 0.7
   paceLeadMaxRank: 3
@@ -156,7 +165,7 @@ MonoBehaviour:
   chaser_targetZone: 0.7
   chaser_inZoneRate: 0.8
   chaser_outZoneRate: 1.5
-  reckoner_baseRate: 1.1
+  reckoner_baseRate: 0.7
   leaderSpurtMinHP: 0.3
   hp_earlyBonus_Runner: 0.25
   hp_earlyBonus_Leader: 0.04
@@ -176,8 +185,8 @@ MonoBehaviour:
   chaser_posTarget: 0.75
   formationGapMax: 0.3
   formationGapMin: 0.05
-  leadPaceTaxRank: 2
-  leadPaceTaxRate: 2.5
+  leadPaceTaxRank: 3
+  leadPaceTaxRate: 0.3
   cpMultiplier: 10
   cpBasicDrain: 0.5
   cpSlipstreamDrain: 2.5
@@ -240,4 +249,15 @@ MonoBehaviour:
   mainFont: {fileID: 12800000, guid: d33d11b90102e7042ad01b77a72b3fe6, type: 3}
   koreanFont: {fileID: 0}
   uiFontScale: 1
+  useV2RaceSystem: 1
+  v2_sprintMaxBoost: 0.3
+  v2_sprintThreshold: 0.25
+  v2_exhaustFloor: 0.7
+  v2_baseDrain: 0.2
+  v2_sprintDrainRate: 5
+  v2_sprintAccelTime: 2.5
+  v2_sprintStart_Runner: 0
+  v2_sprintStart_Leader: 0.25
+  v2_sprintStart_Chaser: 0.5
+  v2_sprintStart_Reckoner: 0.75
   enableRaceDebug: 0

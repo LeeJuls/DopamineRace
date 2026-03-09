@@ -26,6 +26,7 @@ public class SpawnEditor : MonoBehaviour
 
     private void Update()
     {
+#if UNITY_EDITOR
         if (Input.GetKeyDown(KeyCode.R))
         {
             editMode = !editMode;
@@ -57,6 +58,7 @@ public class SpawnEditor : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.S))
             SaveToFile();
+#endif
     }
 
     private void InitEditor()

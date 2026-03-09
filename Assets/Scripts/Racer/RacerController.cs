@@ -56,6 +56,11 @@ public class RacerController : MonoBehaviour
     private float hpBoostValue;                // 현재 프레임의 HP 부스트 값 (디버그용)
     private float slipstreamBlend;             // 슬립스트림 페이드 0~1 (전체 타입, 거리 기반)
     private int currentRank;                   // 현재 순위 1~12 (Phase 4)
+    private bool isSprintMode = false;         // 전력질주 상태 (SPEC-RC-002: Burst Lerp용)
+
+    // ── Race V2 시스템 ──
+    private float v2SprintAccelProgress = 0f;  // 전력질주 가속 진행률 0~1
+    private bool v2IsSprintActive = false;     // V2 전력질주 활성 여부
 
     // ── CP 시스템 (Calm Points) ──
     private float calmPoints;                  // 현재 CP
@@ -73,6 +78,8 @@ public class RacerController : MonoBehaviour
     public int SkillCollisionCount => skillCollisionCount;
     public float CollisionPenalty => collisionPenalty;
     public float SlingshotBoost => slingshotBoost;
+    public bool V2IsSprintActive => v2IsSprintActive;
+    public float V2SprintAccelProgress => v2SprintAccelProgress;
 
     // ── HP 시스템 외부 접근 ──
     public float EnduranceHP => enduranceHP;
@@ -85,6 +92,13 @@ public class RacerController : MonoBehaviour
     public float CalmPoints => calmPoints;
     public float MaxCPValue => maxCP;
     public float CPRatio => maxCP > 0f ? calmPoints / maxCP : 0f;
+
+    // ── 트랙바 좌우 흔들림 ──
+    /// <summary>
+    /// 캐릭터의 레인 오프셋 + 경로 이탈값.
+    /// 트랙바 원의 X 좌표에 그대로 매핑하여 좌우로 펼치기.
+    /// </summary>
+    public float LateralOffset => laneOffset + deviationOffset;
 
     public float TotalProgress => isFinished ? float.MaxValue :
         (waypoints == null || waypoints.Count == 0) ? 0 :
@@ -102,6 +116,43 @@ public class RacerController : MonoBehaviour
             int totalLaps = GetTotalLaps();
             float lapProgress = (float)currentWP / waypoints.Count;
             return (currentLap + lapProgress) / totalLaps;
+        }
+    }
+
+    // ── 트랙바 진행률: 이동 거리 누적 방식 ──
+    private float _cumulativeDistance = 0f;  // 누적 이동 거리
+    private float _oneLapDistance = 0f;      // 1바퀴 트랙 총 거리
+
+    /// <summary>
+    /// 트랙바 UI용 진행률 (0~1).
+    /// ★ 캐릭터의 실제 이동 거리를 그대로 누적 → 별도 계산 없음.
+    ///   - 캐릭터 움직임과 100% 동기화
+    ///   - 바퀴 수가 늘면 자동으로 압축 (같은 바 높이, 더 긴 총 거리)
+    /// </summary>
+    public float SmoothProgress
+    {
+        get
+        {
+            if (isFinished) return 1f;
+            float totalDist = _oneLapDistance * GetTotalLaps();
+            if (totalDist <= 0f) return 0f;
+            return Mathf.Clamp01(_cumulativeDistance / totalDist);
+        }
+    }
+
+    /// <summary>
+    /// 1바퀴 트랙 거리 계산 (웨이포인트 중심선 기준).
+    /// Initialize 후 한 번만 호출.
+    /// </summary>
+    private void CalculateOneLapDistance()
+    {
+        _oneLapDistance = 0f;
+        if (waypoints == null || waypoints.Count < 2) return;
+        for (int i = 0; i < waypoints.Count; i++)
+        {
+            int next = (i + 1) % waypoints.Count;
+            _oneLapDistance += Vector3.Distance(
+                waypoints[i].position, waypoints[next].position);
         }
     }
 
@@ -145,6 +196,8 @@ public class RacerController : MonoBehaviour
     {
         isRacing = true; isFinished = false; headingToFinish = false; FinishOrder = -1;
         currentLap = 0; currentWP = 0;
+        _cumulativeDistance = 0f;       // 누적 거리 리셋
+        CalculateOneLapDistance();       // 1바퀴 트랙 거리 계산
         lastPosition = transform.position;
 
         // 스탯 기반 초기 속도
@@ -174,11 +227,18 @@ public class RacerController : MonoBehaviour
         deviationTarget = 0f;
         deviationTimer = 0f;
 
+        // V2 스프린트 상태 리셋 (라운드 간 이월 방지)
+        v2SprintAccelProgress = 0f;
+        v2IsSprintActive = false;
+
         // HP 시스템 초기화
         if (charData != null && GameSettings.Instance.useHPSystem)
         {
             int totalLaps = GetTotalLaps();
-            maxHP = GameSettings.Instance.CalcMaxHP(charData.charBaseEndurance, totalLaps);
+            if (GameSettings.Instance.useV2RaceSystem)
+                maxHP = GameSettings.Instance.CalcMaxHP(charData.charBaseEndurance); // V2: 랩 스케일링 없음 — 절대 시간 기반 소모
+            else
+                maxHP = GameSettings.Instance.CalcMaxHP(charData.charBaseEndurance, totalLaps);
             enduranceHP = maxHP;
             totalConsumedHP = 0f;
             hpBoostValue = 0f;
@@ -256,7 +316,11 @@ public class RacerController : MonoBehaviour
 
         // ── 1) 스탯 기반 속도 계산 ──
         float finalSpeed = CalculateSpeed(gs);
-        currentSpeed = Mathf.Lerp(currentSpeed, finalSpeed, Time.deltaTime * gs.raceSpeedLerp);
+        // [SPEC-RC-002] 스프린트 진입 시 Burst Lerp로 즉각 가속 연출
+        float effectiveLerp = isSprintMode
+            ? gs.raceSpeedLerp * gs.sprintBurstLerpMult
+            : gs.raceSpeedLerp;
+        currentSpeed = Mathf.Lerp(currentSpeed, finalSpeed, Time.deltaTime * effectiveLerp);
 
         // ── 2) 경로 이탈 업데이트 ──
         UpdateDeviation();
@@ -291,7 +355,9 @@ public class RacerController : MonoBehaviour
         else
         {
             float step = currentSpeed * Time.deltaTime;
-            transform.position += dir.normalized * Mathf.Min(step, dist);
+            float actualStep = Mathf.Min(step, dist);
+            transform.position += dir.normalized * actualStep;
+            _cumulativeDistance += actualStep;   // ★ 실제 이동 거리 누적
         }
 
         FlipSprite();
@@ -319,22 +385,53 @@ public class RacerController : MonoBehaviour
 
         if (gs.useHPSystem)
         {
-            // ═══ HP 시스템 (SPEC-006) ═══
-            // 속도 압축: 캐릭터 간 속도 차이를 줄여 HP 부스트가 역전 가능하게
-            // 중간점 = 0.905 (SpeedMultiplier 범위 0.81~1.0의 중앙값)
+            // ═══ 속도 압축 (V1/V2 공유) ═══
+            // 캐릭터 간 기본 속도 차이를 줄여 부스트/전력질주가 역전 가능하게
             if (gs.hpSpeedCompress > 0f)
             {
                 float trackSpeedMul = track != null ? track.speedMultiplier : 1f;
                 float midSpeed = 0.905f * gs.globalSpeedMultiplier * trackSpeedMul;
                 speed = Mathf.Lerp(speed, midSpeed, gs.hpSpeedCompress);
             }
-            ConsumeHP(gs, track, Time.deltaTime);
-            float hpBoost = CalcHPBoost(gs);
-            float earlyBonus = gs.GetHPEarlyBonus(charData.charType, OverallProgress);
-            float cpEff = gs.GetCPEfficiency(CPRatio);
-            float ssBonus = gs.GetSlipstreamBonus(charData.charType, slipstreamBlend, cpEff);
-            speed *= (1f + (hpBoost + earlyBonus + ssBonus + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
-            speed += GetNoiseValue(gs, track) * condMul;
+
+            if (gs.useV2RaceSystem)
+            {
+                // ═══ Race V2: 우마무스메 방식 — 구간 속도 계수 + 속도 비례 HP 소모 ═══
+
+                // Step 1: 스프린트 상태 업데이트
+                UpdateV2Sprint(gs, Time.deltaTime);
+
+                // Step 2: 구간 계수 + HP 비례 속도
+                int v2Phase = gs.GetV2Phase(OverallProgress);
+                float phaseCoeff = gs.GetV2PhaseCoeff(charData.charType, v2Phase);
+                float hpRatio = maxHP > 0f ? Mathf.Clamp01(enduranceHP / maxHP) : 0f;
+                float targetSpeed = gs.GetV2SpeedFromHP(hpRatio);
+                float v2SpeedMul = Mathf.Lerp(1f, targetSpeed, v2SprintAccelProgress);
+
+                // Step 3: 보너스 (슬립스트림, 파워, 용맹)
+                float cpEff = gs.GetCPEfficiency(CPRatio);
+                float ssBonus = gs.GetSlipstreamBonus(charData.charType, slipstreamBlend, cpEff);
+                float miscBonus = (ssBonus + GetPowerBonus(track) + GetBraveBonus(track)) * condMul;
+
+                // Step 4: speedRatio → HP 소모 (속도 비례)
+                float speedRatio = phaseCoeff * v2SpeedMul * (1f + miscBonus);
+                ConsumeHP_V2(gs, speedRatio, Time.deltaTime);
+
+                // Step 5: 최종 속도
+                speed *= speedRatio;
+                speed += GetNoiseValue(gs, track) * condMul;
+            }
+            else
+            {
+                // ═══ Type 1: 기존 HP 부스트 경로 ═══
+                ConsumeHP(gs, track, Time.deltaTime);
+                float hpBoost = CalcHPBoost(gs);
+                float earlyBonus = gs.GetHPEarlyBonus(charData.charType, OverallProgress);
+                float cpEff = gs.GetCPEfficiency(CPRatio);
+                float ssBonus = gs.GetSlipstreamBonus(charData.charType, slipstreamBlend, cpEff);
+                speed *= (1f + (hpBoost + earlyBonus + ssBonus + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
+                speed += GetNoiseValue(gs, track) * condMul;
+            }
         }
         else
         {
@@ -566,7 +663,7 @@ public class RacerController : MonoBehaviour
             }
             else
             {
-                float gap = GetLastUpperTrackProgress() - TotalProgress;
+                float gap = RaceManager.Instance.LastUpperTrackProgress - TotalProgress;
 
                 // 2. 간격 너무 벌어짐 → 스프린트 (상행 따라잡기)
                 if (gap > gs.formationGapMax)
@@ -602,57 +699,56 @@ public class RacerController : MonoBehaviour
     private void ConsumeHP_Strategy(GameSettings gs, TrackData track, float deltaTime)
     {
         gs.GetHPParams(charData.charType,
-            out float spurtStart, out float activeRate, out _,
+            out _, out float activeRate, out _,
             out _, out _, out _);
         gs.GetZoneParams(charData.charType,
             out _, out float inZoneRate, out float outZoneRate);
 
-        float remaining = 1f - OverallProgress;
         int total = RaceManager.Instance != null ? RaceManager.Instance.Racers.Count : 12;
         float rate;
+        bool sprintThisFrame = false;
 
         switch (charData.charType)
         {
             case CharacterType.Runner:
             {
-                // 전략 구간: 선두권이면 HP 보존, 뒤처지면 스프린트로 탈환
-                // → 초반 리드를 최대한 오래 유지하는 전략
-                int topRunnerRank = Mathf.Max(1, Mathf.CeilToInt(total * 0.25f));
-                if (currentRank <= topRunnerRank)
-                    rate = inZoneRate;  // top25% 유지 → 보존 (리드 방어)
-                else
-                    rate = activeRate;  // 뒤처짐 → 스프린트 (포지션 탈환)
+                // [SPEC-RC-002] 도주: 항상 전력질주 — HP 신경 안 씀
+                rate = activeRate;
+                sprintThisFrame = true;
                 break;
             }
 
             case CharacterType.Leader:
             {
-                bool inNearEnd = remaining <= spurtStart; // 마지막 10% (spurtStart=0.10)
+                // [SPEC-RC-002] 선행: 마지막 바퀴 20% 남으면 전력질주
+                bool inSprint = IsLastLapSprintZone(gs.leaderSprintLastLapThreshold);
                 int top30Rank = Mathf.Max(1, Mathf.CeilToInt(total * 0.30f));
                 bool isOutOfPos = (currentRank > top30Rank);
 
-                if (inNearEnd)
+                if (inSprint)
                 {
-                    // Lerp 스퍼트: inZoneRate → activeRate (leaderSpurtMinHP 체크 제거)
-                    float spurtProg = spurtStart > 0f
-                        ? Mathf.Clamp01((spurtStart - remaining) / spurtStart) : 1f;
-                    rate = Mathf.Lerp(inZoneRate, activeRate, spurtProg);
+                    rate = activeRate;
+                    sprintThisFrame = true;
                 }
                 else if (isOutOfPos)
                     rate = outZoneRate; // top30% 이탈 → 추격
                 else
-                    rate = inZoneRate; // top30% 이내 → 보존
+                    rate = inZoneRate;  // top30% 이내 → 보존
                 break;
             }
 
             case CharacterType.Chaser:
             {
-                bool inNearEnd = remaining <= spurtStart;
+                // [SPEC-RC-002] 선입: 마지막 바퀴 30% 남으면 전력질주
+                bool inSprint = IsLastLapSprintZone(gs.chaserSprintLastLapThreshold);
                 int top70Rank = Mathf.Max(1, Mathf.CeilToInt(total * 0.70f));
                 bool isOutOfPos = (currentRank > top70Rank);
 
-                if (inNearEnd)
-                    rate = activeRate;  // 즉시 전력질주 (Lerp 제거)
+                if (inSprint)
+                {
+                    rate = activeRate;
+                    sprintThisFrame = true;
+                }
                 else if (isOutOfPos)
                     rate = outZoneRate; // top70% 이탈 → 추격
                 else
@@ -662,17 +758,101 @@ public class RacerController : MonoBehaviour
 
             default: // Reckoner
             {
-                bool inNearEnd = remaining <= spurtStart;
+                // [SPEC-RC-002] 추입: 마지막 바퀴 40% 남으면 전력질주, 그 전까지 극보존
+                bool inSprint = IsLastLapSprintZone(gs.reckonerSprintLastLapThreshold);
 
-                if (inNearEnd)
-                    rate = activeRate;  // 즉시 전력질주 (Lerp 제거)
+                if (inSprint)
+                {
+                    rate = activeRate;
+                    sprintThisFrame = true;
+                }
                 else
-                    rate = inZoneRate;  // 완전 보존
+                    rate = inZoneRate;  // 극보존 (reckoner_baseRate = 0.15)
                 break;
             }
         }
 
+        isSprintMode = sprintThisFrame;
         ApplyHPConsumption(gs, track, deltaTime, rate);
+    }
+
+    // ─── 헬퍼: 마지막 바퀴 기준 스프린트 판정 (SPEC-RC-002) ────────
+    /// <summary>
+    /// 마지막 바퀴의 X% 남았는지 판정.
+    /// threshold=0.40 → 마지막 바퀴 40% 이하 남으면 true.
+    /// 마지막 바퀴 진입 전이면 항상 false.
+    /// </summary>
+    private bool IsLastLapSprintZone(float threshold)
+    {
+        int totalLaps = GetTotalLaps();
+        if (totalLaps < 2) return false; // 1랩 이하: Legacy 페이즈 처리
+        float lastLapStart = (float)(totalLaps - 1) / totalLaps;
+        if (OverallProgress < lastLapStart) return false; // 마지막 바퀴 아직 안 됨
+        float lastLapLen = 1f / totalLaps;
+        float lastLapProg = (OverallProgress - lastLapStart) / lastLapLen; // 0~1
+        float lastLapRemaining = 1f - lastLapProg;                         // 0~1
+        return lastLapRemaining <= threshold;
+    }
+
+    // ═══════════════════════════════════════
+    //  Race V2: 전력질주 HP 소모 (전 캐릭터 동일 소모율)
+    // ═══════════════════════════════════════
+
+    /// <summary>
+    /// V2 HP 소모. 타입별 차이 = 전력질주 시작 시점만.
+    /// 비스프린트: baseDrain, 스프린트: sprintDrainRate (절대값).
+    /// </summary>
+    /// <summary>
+    /// V2: 스프린트 판정 + 가속 진행 (ConsumeHP_V2에서 분리)
+    /// </summary>
+    private void UpdateV2Sprint(GameSettings gs, float dt)
+    {
+        int totalLaps = GetTotalLaps();
+        float strategyStart = gs.formationHoldLapEnd / totalLaps;
+        float progress = OverallProgress;
+
+        // 전력질주 시작 판정: Strategy 구간의 X% 지점
+        if (progress >= strategyStart)
+        {
+            float strategyProg = Mathf.InverseLerp(strategyStart, 1f, progress);
+            float sprintStart = gs.GetV2SprintStart(charData.charType);
+            if (!v2IsSprintActive && strategyProg >= sprintStart)
+                v2IsSprintActive = true; // 한번 시작하면 멈추지 않음
+        }
+
+        // 그라데이션 가속 (감속 없음 — 스프린트는 비가역)
+        float gameDt = dt * gs.globalSpeedMultiplier;
+        if (v2IsSprintActive)
+            v2SprintAccelProgress = Mathf.MoveTowards(v2SprintAccelProgress, 1f, gameDt / gs.v2_sprintAccelTime);
+    }
+
+    /// <summary>
+    /// V2: 속도 비례 HP 소모 (우마무스메 방식 — drain ∝ speedRatio²)
+    /// speedRatio = phaseCoeff × v2SpeedMul × (1 + bonuses)
+    /// </summary>
+    private void ConsumeHP_V2(GameSettings gs, float speedRatio, float dt)
+    {
+        float gameDt = dt * gs.globalSpeedMultiplier;
+
+        if (enduranceHP > 0f)
+        {
+            float drain = gs.CalcV2SpeedDrain(speedRatio);
+            float consumption = drain * gameDt;
+            consumption = Mathf.Min(consumption, enduranceHP);
+            enduranceHP -= consumption;
+            totalConsumedHP += consumption;
+
+            // 선두 HP 택스
+            if (currentRank <= gs.leadPaceTaxRank && enduranceHP > 0f)
+            {
+                float tax = gs.leadPaceTaxRate * gameDt;
+                tax = Mathf.Min(tax, enduranceHP);
+                enduranceHP -= tax;
+            }
+        }
+
+        // Burst Lerp 호환: V2 전력질주 → isSprintMode 설정
+        isSprintMode = v2IsSprintActive && v2SprintAccelProgress > 0.1f;
     }
 
     // ─── 공통 tail: boostAmp / speedRatio / condMul / leadPaceTax ─────
@@ -694,7 +874,26 @@ public class RacerController : MonoBehaviour
         condMul = Mathf.Max(condMul, 0.3f);
         effectiveRate /= condMul;
 
-        float consumption = effectiveRate * Mathf.Sqrt(speedRatio) * deltaTime;
+        // [SPEC-RC-002 v2] 스프린트 HP 급소모 시스템
+        // ① speedRatio 바이패스: 스프린트 시 속도 무관 풀 소모
+        float speedMul = isSprintMode
+            ? Mathf.Max(1f, Mathf.Sqrt(speedRatio))   // 스프린트: 최소 1.0 보장
+            : Mathf.Sqrt(speedRatio);                   // 보존: 기존 감쇄 유지
+
+        // ② 스프린트 급소모 배율 (Runner 제외: Runner는 Strategy 전체가 스프린트)
+        // lapFactor = hpLapReference / totalLaps → 단거리일수록 높음
+        // 2바퀴: 1.5배 / 3바퀴: 1.0배 / 5바퀴: 0.6배
+        // → 단거리 추입: 극한 소모 → 탈진 → 꼴찌
+        // → 장거리 추입: 완만 소모 → HP 충분 → 부스트 폭발 → 역전
+        if (isSprintMode && charData.charType != CharacterType.Runner)
+        {
+            int totalLaps = GetTotalLaps();
+            float lapFactor = (float)gs.hpLapReference / Mathf.Max(1, totalLaps);
+            effectiveRate *= gs.sprintHPDrainMultiplier * lapFactor;
+        }
+
+        float gameDt = deltaTime * gs.globalSpeedMultiplier;
+        float consumption = effectiveRate * speedMul * gameDt;
         consumption = Mathf.Min(consumption, enduranceHP);
 
         enduranceHP -= consumption;
@@ -703,7 +902,7 @@ public class RacerController : MonoBehaviour
         // 선두 페이스 택스: 바람막이 추가 소모 (totalConsumedHP 미포함 → 순수 탈진 가속)
         if (currentRank <= gs.leadPaceTaxRank && enduranceHP > 0f)
         {
-            float paceTax = gs.leadPaceTaxRate * Mathf.Sqrt(speedRatio) * deltaTime;
+            float paceTax = gs.leadPaceTaxRate * Mathf.Sqrt(speedRatio) * gameDt;
             enduranceHP = Mathf.Max(0f, enduranceHP - paceTax);
         }
     }
@@ -713,27 +912,6 @@ public class RacerController : MonoBehaviour
     {
         return charData.charType == CharacterType.Runner
             || charData.charType == CharacterType.Leader;
-    }
-
-    // ─── 헬퍼: 상행 그룹 중 가장 낮은 TotalProgress ──────────────────
-    private float GetLastUpperTrackProgress()
-    {
-        float minProg = float.MaxValue;
-        if (RaceManager.Instance == null) return TotalProgress - 0.1f;
-
-        foreach (var r in RaceManager.Instance.Racers)
-        {
-            if (r == null || r.IsFinished) continue;
-            var type = r.CharData?.charType ?? CharacterType.Runner;
-            if (type == CharacterType.Runner || type == CharacterType.Leader)
-            {
-                float prog = r.TotalProgress;
-                if (prog < minProg) minProg = prog;
-            }
-        }
-
-        // 상행 캐릭터가 없으면 현재 위치 근처 폴백 (하행 보존 유도)
-        return minProg == float.MaxValue ? TotalProgress - 0.1f : minProg;
     }
 
     /// <summary>
@@ -825,7 +1003,7 @@ public class RacerController : MonoBehaviour
             ? 1f - (closestGap / gs.universalSlipstreamRange)
             : 0f;
         float fadeTime = Mathf.Max(gs.slipstreamFadeTime, 0.01f);
-        slipstreamBlend = Mathf.MoveTowards(slipstreamBlend, target, deltaTime / fadeTime);
+        slipstreamBlend = Mathf.MoveTowards(slipstreamBlend, target, deltaTime * gs.globalSpeedMultiplier / fadeTime);
     }
 
     // ═══ CP 소모 ═══
@@ -835,7 +1013,7 @@ public class RacerController : MonoBehaviour
         float drain = gs.cpBasicDrain;
         if (slipstreamBlend > 0f)
             drain += gs.cpSlipstreamDrain * slipstreamBlend;
-        calmPoints = Mathf.Max(0f, calmPoints - drain * deltaTime);
+        calmPoints = Mathf.Max(0f, calmPoints - drain * deltaTime * gs.globalSpeedMultiplier);
     }
 
     // ── 트랙 중반 감속 구간 ──
@@ -864,7 +1042,7 @@ public class RacerController : MonoBehaviour
     // ── calm 기반 noise ──
     private void UpdateNoise(GameSettings gs, float trackNoiseMul)
     {
-        noiseTimer -= Time.deltaTime;
+        noiseTimer -= Time.deltaTime * gs.globalSpeedMultiplier;
         if (noiseTimer <= 0f)
         {
             float calm = Mathf.Max(charData.charBaseCalm, 1f);
@@ -883,17 +1061,19 @@ public class RacerController : MonoBehaviour
     // ── luck 크리티컬 판정 ──
     private float UpdateLuckCrit(GameSettings gs, TrackData track)
     {
+        float gameDt = Time.deltaTime * gs.globalSpeedMultiplier;
+
         // 크리티컬 진행 중
         if (critBoostRemaining > 0f)
         {
-            critBoostRemaining -= Time.deltaTime;
+            critBoostRemaining -= gameDt;
             if (critBoostRemaining <= 0f)
                 isCritActive = false;
             return gs.luckCritBoost;
         }
 
         // 새 판정
-        luckTimer -= Time.deltaTime;
+        luckTimer -= gameDt;
         if (luckTimer <= 0f)
         {
             luckTimer = gs.luckCheckInterval;
@@ -923,16 +1103,18 @@ public class RacerController : MonoBehaviour
     // ── 충돌 타이머 감소 (값은 A-3 CollisionSystem에서 세팅) ──
     private void UpdateCollisionTimers()
     {
+        float gameDt = Time.deltaTime * GameSettings.Instance.globalSpeedMultiplier;
+
         if (collisionPenaltyTimer > 0f)
         {
-            collisionPenaltyTimer -= Time.deltaTime;
+            collisionPenaltyTimer -= gameDt;
             if (collisionPenaltyTimer <= 0f)
                 collisionPenalty = 0f;
         }
 
         if (slingshotTimer > 0f)
         {
-            slingshotTimer -= Time.deltaTime;
+            slingshotTimer -= gameDt;
             if (slingshotTimer <= 0f)
                 slingshotBoost = 0f;
         }
@@ -940,7 +1122,7 @@ public class RacerController : MonoBehaviour
         // 공격 쿨다운 감소 + 공격 끝나면 Run으로 복귀
         if (attackCooldown > 0f)
         {
-            attackCooldown -= Time.deltaTime;
+            attackCooldown -= gameDt;
             if (attackCooldown <= 0f && animator != null && !isFinished)
             {
                 // ★ 잔여 Attack Trigger 제거 후 Run 복귀
@@ -957,7 +1139,7 @@ public class RacerController : MonoBehaviour
         // ★ 스킬 타이머
         if (skillActive)
         {
-            skillRemainingTime -= Time.deltaTime;
+            skillRemainingTime -= gameDt;
             if (skillRemainingTime <= 0f)
             {
                 DeactivateSkill();
@@ -1210,16 +1392,18 @@ public class RacerController : MonoBehaviour
 
     private void UpdateDeviation()
     {
-        float weight = GameSettings.Instance.pathDeviation;
+        var gs = GameSettings.Instance;
+        float weight = gs.pathDeviation;
         if (weight <= 0f) { deviationOffset = 0f; return; }
 
-        deviationTimer -= Time.deltaTime;
+        float gameDt = Time.deltaTime * gs.globalSpeedMultiplier;
+        deviationTimer -= gameDt;
         if (deviationTimer <= 0f)
         {
             deviationTarget = UnityEngine.Random.Range(-weight, weight);
             deviationTimer = UnityEngine.Random.Range(0.3f, 1.0f);
         }
-        deviationOffset = Mathf.Lerp(deviationOffset, deviationTarget, Time.deltaTime * 3f);
+        deviationOffset = Mathf.Lerp(deviationOffset, deviationTarget, gameDt * 3f);
     }
 
     private void FlipSprite()

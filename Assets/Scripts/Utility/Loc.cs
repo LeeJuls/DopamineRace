@@ -106,10 +106,20 @@ public static class Loc
 
     /// <summary>
     /// 등수 표기 전용. StringTable의 str.hud.rank 포맷 사용.
-    /// 모든 언어 공통: 숫자+1자리 접미사 형태 (1위, 1., 1位 등)
+    /// 영어(en)는 서수 접미사 자동 생성: 1st. 2nd. 3rd. 4th. 8th. ...
     /// </summary>
     public static string GetRank(int rank)
     {
+        if (CurrentLang == "en")
+        {
+            int abs = Mathf.Abs(rank);
+            string suffix;
+            if (abs % 100 >= 11 && abs % 100 <= 13)
+                suffix = "th";
+            else
+                suffix = (abs % 10) switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" };
+            return rank + suffix + ".";
+        }
         return Get("str.hud.rank", rank);
     }
 

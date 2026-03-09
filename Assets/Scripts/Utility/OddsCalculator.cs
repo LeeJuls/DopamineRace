@@ -290,7 +290,7 @@ public static class OddsCalculator
                 return rankings[0] == s[0];
 
             case BetType.Place:
-                int placeCount = GameSettings.Instance.racerCount <= 7 ? 2 : 3;
+                const int placeCount = 3; // 9명 고정 → 항상 3위 이내
                 for (int i = 0; i < placeCount && i < rankings.Count; i++)
                     if (rankings[i] == s[0]) return true;
                 return false;

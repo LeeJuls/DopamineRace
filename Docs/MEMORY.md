@@ -210,6 +210,60 @@ roundLaps=[2,2,3,5,3,2,4]
 - EasyChart 순위 차트 런타임 테스트 (이전 세션 미완료)
 - 런타임 전체 흐름 테스트 (charId 기반 배팅/결과/세이브)
 
+## Completed (as of 2026-03-05)
+
+### ResultPanel Phase 2 — 전체 순위 + 화살표 표시 (커밋 `94e2da7`)
+- **결과 화면 구조 변경**: 3섹션(Top3 순위 / 내결과 / 점수) → 2섹션(전체 순위 / 점수)
+- **BetResultSection 완전 제거**: resultBetTypeLabel, resultPickRows[] 등 모두 삭제
+- **전체 N위 표시**: 최대 12행, 레이서 수만큼 동적 활성화 (`resultRankRows[i].SetActive`)
+- **화살표 마커 (PickArrow)**:
+  - 내가 선택한 캐릭터의 **실제 도달 순위** 행에 `← 1st` 형식으로 표시
+  - 배팅 타입별 레이블: Win→"1st", Exacta→"1st"/"2nd", Trio/Quinella→"pick"
+  - 적중(score>0) → 초록, 미적중 → 빨강
+- **배지 색상**: 1위=금 / 2위=은 / 3위=동 / 4위~=회색 (0.45,0.45,0.45)
+- **StringTable**: `str.result.rank_header` 7개 언어 추가 (순위/Rankings/順位/排名/Rang/Posición/Classificação)
+- **수정 파일**: `ResultUIPrefabCreator.cs`, `SceneBootstrapper.Result.cs`, `SceneBootstrapper.cs`, `StringTable.csv`, `ResultPanel.prefab` (MCP 재생성, 20/20 검증)
+
+### 결과창 디버그 단축키 F8/F9/F10 (커밋 `294569d`)
+- **목적**: 결과 화면 수정 시 1판 플레이 없이 즉시 결과 확인
+- **신규 파일**: `Assets/Scripts/Manager/UI/SceneBootstrapper.Debug.cs` (`#if UNITY_EDITOR`)
+  - F8 → Win 배팅 (1위 캐릭터 선택, 무조건 적중)
+  - F9 → Exacta 배팅 (1·2위 선택, 무조건 적중)
+  - F10 → Trio 배팅 (1·2·3위 선택, 무조건 적중)
+  - Fisher-Yates 셔플로 매번 랜덤 순위 생성
+- **수정 파일**:
+  - `GameManager.cs`: `DebugSetCurrentBet()` 추가 (CurrentBet private set 우회)
+  - `RaceManager.cs`: `DebugSetFinalRankings()` 추가 (finalRankings private field 우회)
+  - `SceneBootstrapper.cs`: Update()에 `#if UNITY_EDITOR UpdateDebugInput(); #endif` 추가
+
+### CheatGuideWindow (커밋 `331eada`, `98757ba`)
+- **신규 파일**: `Assets/Scripts/Editor/CheatGuideWindow.cs`
+- **메뉴**: `DopamineRace > 치트 기능 보기 (Ctrl+Shift+D)`
+- **6개 섹션**:
+  1. 결과창 미리보기 단축키 (F8/F9/F10)
+  2. 레이스 디버그 오버레이 (F1/F2/F3)
+  3. 트랙 & 스폰 위치 편집기 (E/R/S/D)
+  4. Editor 메뉴 — 프리팹 관리
+  5. 기타 기능 & 주요 설정값
+  6. 향후 추가될 치트 기능 (슬롯)
+- **배지**: `editorOnly=true` → 파란 `[Editor Only]`, `false` → 주황 `[항상 활성]`
+- **규칙**: 새 치트 기능 추가 시 이 파일에도 반드시 기재할 것
+
+### 디버그 키 릴리즈 빌드 제거 (커밋 `5553482`)
+- **목적**: 릴리즈 빌드에서 디버그 기능 완전 제거
+- `RaceDebugOverlay.cs`: F1/F2/F3 키 `#if UNITY_EDITOR` 가드 + OnGUI `#if !UNITY_EDITOR return` 추가
+- `WaypointEditor.cs`: Update() 전체 `#if UNITY_EDITOR` 가드 (E/S 키 + 마우스)
+- `SpawnEditor.cs`: Update() 전체 `#if UNITY_EDITOR` 가드 (R/S 키 + 마우스)
+- `TrackDebugPath.cs`: D 키 `#if UNITY_EDITOR` 가드 추가
+- CheatGuideWindow 배지 업데이트 (F1-F3/E/R/S/D 모두 `[Editor Only]`로 정정)
+
+### 전체 Push (2026-03-05)
+- 6개 커밋 push: `1500d61` → `5553482`
+- 브랜치: `main`
+
+## Detail docs
+- See [history/ResultPanel_디버그치트가이드_히스토리_20260305.md](./history/ResultPanel_디버그치트가이드_히스토리_20260305.md) for 2026-03-05 handover
+
 ## Completed (as of 2026-03-02)
 - **BetOrderLabel 클릭 차단 버그 수정**
   - 원인: BettingPanel.prefab에서 CharacterInfoPopup이 active=True → Image(raycast=True)가 캐릭터 리스트 덮음
@@ -255,9 +309,57 @@ roundLaps=[2,2,3,5,3,2,4]
 - Layout2_Left의 HorizontalLayoutGroup 제거 → CharTypeLabel 자유 배치 가능
 - IllustrationMask 높이 조절로 크롭 범위 조절
 
+## Completed (as of 2026-03-05 session 2)
+
+### ResultPanel 5~9위 행간 균등 조정 (커밋 `4fecd39`)
+- 5위(-90) / 9위(-552) 고정, 6위→-205.5, 7위→-321, 8위→-436.5
+
+### FinishPanel 프리팹 전환 + F4 디버그 메뉴 (커밋 `cca998b` ~ `503410b`)
+- **프리팹 기반 전환**: `GameSettings.finishPanelPrefab` 참조 → `BuildFinishUI()` 분기 + Legacy 폴백
+- **FinishPanel.prefab 구조**:
+  - `FinishPanel` (880×650) → `TitleText` / `RoundScrollView(ScrollRect)` > `Viewport(RectMask2D)` > `RoundDetailText(Text+ContentSizeFitter)` / `TotalScoreText` / `NewGameBtn` / `Top100Btn`
+  - ScrollRect: vertical only, Clamped, sensitivity=30, ContentSizeFitter.VerticalPreferred
+  - 폰트: neodgm (GameSettings.mainFont) 5개 Text 전체 적용
+- **F4 디버그 메뉴** (`SceneBootstrapper.Debug.cs`):
+  - F4 토글 → IMGUI 박스 (`#if UNITY_EDITOR`)
+  - 1=Win결과 / 2=Exacta결과 / 3=Trio결과 / 4=Finish강제표시
+  - 기존 F8/F9/F10 단축키 유지
+- **신규 파일**: `Assets/Scripts/Editor/FinishLeaderboardUIPrefabCreator.cs`
+- 최신 커밋: `503410b` (push 완료)
+
+### 프리팹 시스템 (FinishPanel 추가)
+- `GameSettings.finishPanelPrefab` — FinishPanel.prefab 참조
+- `DopamineRace > Create Finish UI Prefab` 메뉴로 재생성 가능
+- MCP 생성 시 Font null 우회 → Reflection 패치 스크립트 별도 실행 필요
+
+## Completed (as of 2026-03-05 session 3)
+
+### LeaderboardPanel UI 1차 완료 (커밋 `6cc5c7f` ~ `b9ee49c`)
+- **LeaderboardPanel.prefab 프리팹 전환 완료**:
+  - `GameSettings.leaderboardPanelPrefab` 필드 추가
+  - `FinishLeaderboardUIPrefabCreator.CreateLeaderboardPanelPrefab()` EntryTemplate 구조로 추가
+  - `SceneBootstrapper.Leaderboard.cs` 전면 재작성 — 프리팹 분기 + `CacheLeaderboardUIReferences()`
+  - F4 디버그 메뉴 5번 → `DebugShowLeaderboard()` 추가
+- **LeaderboardPanel.prefab 구조**:
+  - `LeaderboardPanel` (880×800) → `TitleText` / `HeaderText` / `ContentScrollView(ScrollRect)` > `Viewport(RectMask2D)` > `EntryContainer(VLG+CSF)` > `EntryTemplate[active=false]` (InfoText 36pt + SummaryText 28pt) / `CloseBtn`
+  - `EntryTemplate`: `active=false` GO → `Instantiate()`로 클론 (top3 금색, 이하 흰색)
+- **버그 수정**:
+  1. `HorizontalWrapMode.Overflow` — ContentSizeFitter+Wrap 조합 너비=0 계산 버그 수정
+  2. `rootRt.sizeDelta` 강제 재설정 — Unity가 자식 추가 중 (880,800)→(1200,5) 덮어쓰는 버그 수정
+- **영어 서수 표기 수정**: `GetEnOrdinal()` (11/12/13 예외 포함)
+- **헤더 Summary 컬럼 텍스트 제거** (StringTable 7개 언어)
+- 최신 커밋: `b9ee49c`
+
+### 알려진 Unity 패턴 (프리팹 에디터 스크립트)
+- **rootRt.sizeDelta 자동 변경**: 자식 GO 추가 완료 후 루트 RT 강제 재설정 필수 (`PrefabUtility.SaveAsPrefabAsset()` 직전)
+- **ContentSizeFitter + HorizontalWrapMode.Wrap**: 너비=0 계산 버그 → `Overflow` + 코드에서 `\n` 명시 삽입
+
 ## Detail docs
-- See [history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md](./history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md) for latest handover (2026-03-03)
-- See [history/버그수정_MCP안정화_다국어_인수인계_20260302.md](./history/버그수정_MCP안정화_다국어_인수인계_20260302.md) for latest handover (2026-03-02)
+- See [history/LeaderboardPanel_리더보드UI1차_히스토리_20260305.md](./history/LeaderboardPanel_리더보드UI1차_히스토리_20260305.md) for latest handover (2026-03-05 session 3)
+- See [history/FinishPanel프리팹전환_F4디버그_히스토리_20260305.md](./history/FinishPanel프리팹전환_F4디버그_히스토리_20260305.md) for previous handover (2026-03-05 session 2)
+- See [history/ResultPanel_디버그치트가이드_히스토리_20260305.md](./history/ResultPanel_디버그치트가이드_히스토리_20260305.md) for previous handover (2026-03-05)
+- See [history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md](./history/캐릭터정보창UI개선_TrackTypeLabel_히스토리_20260303.md) for previous handover (2026-03-03)
+- See [history/버그수정_MCP안정화_다국어_인수인계_20260302.md](./history/버그수정_MCP안정화_다국어_인수인계_20260302.md) for previous handover (2026-03-02)
 - See [SPEC-007_인수인계서_20260227.md](./SPEC-007_인수인계서_20260227.md) for SPEC-007 handover
 - See [SPEC-007_프리팹수정가이드_20260227.md](./SPEC-007_프리팹수정가이드_20260227.md) for prefab manual editing guide
 - See [2026-02-22_EasyChart순위그래프전환_인수인계.md](./2026-02-22_EasyChart순위그래프전환_인수인계.md) for EasyChart handover

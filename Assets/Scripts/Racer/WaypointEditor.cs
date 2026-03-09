@@ -30,6 +30,7 @@ public class WaypointEditor : MonoBehaviour
 
     private void Update()
     {
+#if UNITY_EDITOR
         if (Input.GetKeyDown(KeyCode.E))
         {
             editMode = !editMode;
@@ -65,6 +66,7 @@ public class WaypointEditor : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.S))
             SaveToFile();
+#endif
     }
 
     /// <summary>

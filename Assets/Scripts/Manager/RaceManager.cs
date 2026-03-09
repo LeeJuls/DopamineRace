@@ -45,6 +45,18 @@ public class RaceManager : MonoBehaviour
     private CollisionSystem collisionSystem;
     private RaceDebugOverlay debugOverlay;
 
+    // ═══ FormationHold 캐시 (SPEC-RC-001) ═══
+    // Runner/Leader 그룹 최하위 TotalProgress — LateUpdate에서 1회 계산
+    // → Chaser/Reckoner 매 프레임 O(n) 순회 제거용
+    private float _lastUpperTrackProgress = 0f;
+
+    /// <summary>
+    /// Runner/Leader 중 가장 낮은 TotalProgress (캐싱값).
+    /// ConsumeHP_FormationHold()에서 사용.
+    /// LateUpdate에서 갱신 → 같은 프레임 모든 레이서가 동일 값 참조.
+    /// </summary>
+    public float LastUpperTrackProgress => _lastUpperTrackProgress;
+
     // ══════════════════════════════════════
     //  순위 엔트리
     // ══════════════════════════════════════
@@ -489,4 +501,48 @@ public class RaceManager : MonoBehaviour
 
         return result;
     }
+
+    // ══════════════════════════════════════
+    //  LateUpdate: 프레임 말 캐시 갱신
+    // ══════════════════════════════════════
+
+    private void LateUpdate()
+    {
+        if (raceActive)
+            UpdateLastUpperTrackProgress();
+    }
+
+    /// <summary>
+    /// Runner/Leader 그룹 최하위 TotalProgress 계산 후 캐싱.
+    /// 레이스 중 LateUpdate에서 1회만 호출 (모든 Update 완료 후 실행).
+    /// 상행 레이서가 전원 완주했으면 0f → Chaser/Reckoner gap 음수 → 보존 모드 유지.
+    /// </summary>
+    private void UpdateLastUpperTrackProgress()
+    {
+        float minProg = float.MaxValue;
+        for (int i = 0; i < racers.Count; i++)
+        {
+            var r = racers[i];
+            if (r == null || r.IsFinished) continue;
+            var type = r.CharData?.charType ?? CharacterType.Runner;
+            if (type == CharacterType.Runner || type == CharacterType.Leader)
+            {
+                float prog = r.TotalProgress;
+                if (prog < minProg) minProg = prog;
+            }
+        }
+        // 상행 전원 완주 시 0f → Chaser/Reckoner gap = 0 - TotalProgress < 0 → 보존 유지
+        _lastUpperTrackProgress = (minProg == float.MaxValue) ? 0f : minProg;
+    }
+
+#if UNITY_EDITOR
+    // ══════════════════════════════════════
+    //  디버그 전용 (Editor 빌드에서만 활성)
+    // ══════════════════════════════════════
+    /// <summary>[DEBUG] 결과창 미리보기용 — 최종 순위 강제 설정</summary>
+    public void DebugSetFinalRankings(System.Collections.Generic.List<RankingEntry> fakeRankings)
+    {
+        finalRankings = fakeRankings;
+    }
+#endif
 }
