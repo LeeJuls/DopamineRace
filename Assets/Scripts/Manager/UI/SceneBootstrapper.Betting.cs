@@ -150,6 +150,22 @@ public partial class SceneBootstrapper
         BetType[] types = { BetType.Win, BetType.Place, BetType.Quinella,
                             BetType.Exacta, BetType.Trio, BetType.Wide };
 
+        // 탭 스프라이트 세트 로드 (비선택/선택 각 4상태)
+        tabNormalSprites = new Sprite[]
+        {
+            Resources.Load<Sprite>("UI/Btn_Menu_Normal_01"),
+            Resources.Load<Sprite>("UI/Btn_Menu_Normal_02"),
+            Resources.Load<Sprite>("UI/Btn_Menu_Normal_03"),
+            Resources.Load<Sprite>("UI/Btn_Menu_Normal_04"),
+        };
+        tabSelectSprites = new Sprite[]
+        {
+            Resources.Load<Sprite>("UI/Btn_Menu_Select_01"),
+            Resources.Load<Sprite>("UI/Btn_Menu_Select_02"),
+            Resources.Load<Sprite>("UI/Btn_Menu_Select_03"),
+            Resources.Load<Sprite>("UI/Btn_Menu_Select_04"),
+        };
+
         int tabCount = Mathf.Min(types.Length, tabArea.childCount);
         betTypeBtns = new Button[tabCount];
         betTypeBtnTexts = new Text[tabCount];
@@ -288,6 +304,12 @@ public partial class SceneBootstrapper
         // 토글 버튼 초기화
         if (trackInfoToggleBtn != null)
         {
+            trackInfoToggleBtnImage = trackInfoToggleBtn.GetComponent<Image>();
+            trackToggleNormalSprite = Resources.Load<Sprite>("UI/Btn_ToggleA_01");
+            trackToggleOpenSprite   = Resources.Load<Sprite>("UI/Btn_ToggleB_01");
+
+            trackInfoToggleBtn.transition = UnityEngine.UI.Selectable.Transition.SpriteSwap;
+
             trackInfoToggleBtn.onClick.AddListener(() =>
             {
                 trackPanelOpen = !trackPanelOpen;
@@ -349,6 +371,19 @@ public partial class SceneBootstrapper
         if (trackTypeLabel != null)  trackTypeLabel.gameObject.SetActive(trackPanelOpen);
         if (trackDescLabel != null)  trackDescLabel.gameObject.SetActive(trackPanelOpen);
 
+        // 토글 버튼 스프라이트 갱신 (ToggleA=닫힘, ToggleB=열림)
+        if (trackInfoToggleBtnImage != null)
+        {
+            trackInfoToggleBtnImage.sprite = trackPanelOpen ? trackToggleOpenSprite : trackToggleNormalSprite;
+            if (trackInfoToggleBtn != null)
+                trackInfoToggleBtn.spriteState = new SpriteState
+                {
+                    highlightedSprite = Resources.Load<Sprite>(trackPanelOpen ? "UI/Btn_ToggleB_02" : "UI/Btn_ToggleA_02"),
+                    pressedSprite     = Resources.Load<Sprite>(trackPanelOpen ? "UI/Btn_ToggleB_03" : "UI/Btn_ToggleA_03"),
+                    disabledSprite    = Resources.Load<Sprite>(trackPanelOpen ? "UI/Btn_ToggleB_04" : "UI/Btn_ToggleA_04"),
+                };
+        }
+
         // 토글 버튼 텍스트 갱신
         if (trackToggleBtnText != null)
             trackToggleBtnText.text = trackPanelOpen
@@ -408,17 +443,31 @@ public partial class SceneBootstrapper
     {
         if (betTypeBtnBGs == null) return;
 
-        Color activeColor = new Color(0.3f, 0.4f, 0.7f);
-        Color inactiveColor = new Color(0.2f, 0.2f, 0.3f, 0.9f);
-
         for (int i = 0; i < betTypeBtnBGs.Length; i++)
         {
-            if (betTypeBtnBGs[i] != null)
-                betTypeBtnBGs[i].color = (i == activeIndex) ? activeColor : inactiveColor;
+            bool isActive = (i == activeIndex);
+            Sprite[] sprites = isActive ? tabSelectSprites : tabNormalSprites;
+
+            if (betTypeBtnBGs[i] != null && sprites != null && sprites[0] != null)
+            {
+                betTypeBtnBGs[i].sprite = sprites[0];
+                betTypeBtnBGs[i].color  = Color.white;
+
+                // SpriteState 동적 교체 (선택/비선택 상태별 4상태)
+                if (betTypeBtns[i] != null)
+                    betTypeBtns[i].spriteState = new SpriteState
+                    {
+                        highlightedSprite = sprites[1],
+                        pressedSprite     = sprites[2],
+                        selectedSprite    = sprites[0],
+                        disabledSprite    = sprites[3],
+                    };
+            }
+
             if (betTypeBtnTexts != null && i < betTypeBtnTexts.Length && betTypeBtnTexts[i] != null)
             {
-                betTypeBtnTexts[i].fontStyle = (i == activeIndex) ? FontStyle.Bold : FontStyle.Normal;
-                betTypeBtnTexts[i].color = (i == activeIndex) ? Color.white : new Color(0.6f, 0.6f, 0.6f);
+                betTypeBtnTexts[i].fontStyle = isActive ? FontStyle.Bold : FontStyle.Normal;
+                betTypeBtnTexts[i].color = Color.white;
             }
         }
 
