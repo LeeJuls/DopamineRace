@@ -52,6 +52,9 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text trackDescLabel;            // Phase 2: 트랙 설명
     private Button trackInfoToggleBtn;      // Phase 2: 패널 접기/펼치기
     private Text trackToggleBtnText;        // Phase 2: 토글 버튼 텍스트
+    private Image trackInfoToggleBtnImage;  // Phase 2: 토글 버튼 이미지
+    private Sprite trackToggleNormalSprite; // Btn_ToggleA_01 (기본/닫힘)
+    private Sprite trackToggleOpenSprite;   // Btn_ToggleB_01 (열림)
     private Image trackPanelBg;             // Phase 2: 패널 배경 Image (닫힐 때 숨김)
     private static bool trackPanelOpen = true;  // static → 라운드 간 유지
     private Toggle hideInfoToggle;
@@ -63,6 +66,8 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Image[] betTypeBtnBGs;
     private BetType currentTabType = BetType.Win;
     private int currentTabIndex = 0;
+    private Sprite[] tabNormalSprites; // Btn_Menu_Normal_01~04
+    private Sprite[] tabSelectSprites; // Btn_Menu_Select_01~04
 
     // ── 레이싱 UI ──
     private Text countdownText;
