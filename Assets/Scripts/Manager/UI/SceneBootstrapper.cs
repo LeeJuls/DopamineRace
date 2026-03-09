@@ -53,8 +53,8 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Button trackInfoToggleBtn;      // Phase 2: 패널 접기/펼치기
     private Text trackToggleBtnText;        // Phase 2: 토글 버튼 텍스트
     private Image trackInfoToggleBtnImage;  // Phase 2: 토글 버튼 이미지
-    private Sprite trackToggleNormalSprite; // Btn_ToggleA_01 (기본/닫힘)
-    private Sprite trackToggleOpenSprite;   // Btn_ToggleB_01 (열림)
+    private Sprite trackToggleNormalSprite; // Btn_ToggleA_02 (기본/닫힘)
+    private Sprite trackToggleOpenSprite;   // Btn_ToggleA_01 (열림)
     private Image trackPanelBg;             // Phase 2: 패널 배경 Image (닫힐 때 숨김)
     private static bool trackPanelOpen = true;  // static → 라운드 간 유지
     private Toggle hideInfoToggle;
