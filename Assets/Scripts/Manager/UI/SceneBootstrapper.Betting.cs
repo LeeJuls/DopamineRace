@@ -51,9 +51,7 @@ public partial class SceneBootstrapper
             betTitleText = FindText(topArea, "TitleText");
             betDescText  = FindText(topArea, "BetDescText");
 
-            // Best Fit: 다국어 텍스트 오버플로 방지
-            if (betRoundText != null) { betRoundText.resizeTextForBestFit = true; betRoundText.resizeTextMinSize = 12; betRoundText.resizeTextMaxSize = 18; }
-            if (betTitleText != null) { betTitleText.resizeTextForBestFit = true; betTitleText.resizeTextMinSize = 16; betTitleText.resizeTextMaxSize = 26; }
+            // Best Fit 설정은 Inspector에서 제어 (코드 하드코딩 제거)
 
             Transform oddsArea = topArea.Find("OddsArea");
             if (oddsArea != null)
@@ -167,9 +165,11 @@ public partial class SceneBootstrapper
         };
 
         int tabCount = Mathf.Min(types.Length, tabArea.childCount);
-        betTypeBtns = new Button[tabCount];
-        betTypeBtnTexts = new Text[tabCount];
-        betTypeBtnBGs = new Image[tabCount];
+        betTypeBtns      = new Button[tabCount];
+        betTypeBtnTexts  = new Text[tabCount];
+        betTypeBtnBGs    = new Image[tabCount];
+        tabTextBaseColors = new Color[tabCount];
+        tabTextBaseStyles = new FontStyle[tabCount];
 
         for (int i = 0; i < tabCount; i++)
         {
@@ -188,7 +188,9 @@ public partial class SceneBootstrapper
             if (tabText != null)
             {
                 tabText.text = BettingCalculator.GetTypeName(types[i]);
-                betTypeBtnTexts[i] = tabText;
+                betTypeBtnTexts[i]  = tabText;
+                tabTextBaseColors[i] = tabText.color;      // Inspector 값 캐싱
+                tabTextBaseStyles[i] = tabText.fontStyle;  // Inspector 값 캐싱
             }
 
             int idx = i;
@@ -466,8 +468,14 @@ public partial class SceneBootstrapper
 
             if (betTypeBtnTexts != null && i < betTypeBtnTexts.Length && betTypeBtnTexts[i] != null)
             {
-                betTypeBtnTexts[i].fontStyle = isActive ? FontStyle.Bold : FontStyle.Normal;
-                betTypeBtnTexts[i].color = Color.white;
+                Color baseColor = (tabTextBaseColors != null && i < tabTextBaseColors.Length)
+                    ? tabTextBaseColors[i] : Color.white;
+                FontStyle baseStyle = (tabTextBaseStyles != null && i < tabTextBaseStyles.Length)
+                    ? tabTextBaseStyles[i] : FontStyle.Normal;
+
+                betTypeBtnTexts[i].color     = isActive ? baseColor
+                    : new Color(baseColor.r, baseColor.g, baseColor.b, baseColor.a * 0.5f);
+                betTypeBtnTexts[i].fontStyle = isActive ? FontStyle.Bold : baseStyle;
             }
         }
 

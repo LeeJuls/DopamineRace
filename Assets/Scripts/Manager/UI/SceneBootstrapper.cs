@@ -66,8 +66,10 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Image[] betTypeBtnBGs;
     private BetType currentTabType = BetType.Win;
     private int currentTabIndex = 0;
-    private Sprite[] tabNormalSprites; // Btn_Menu_Normal_01~04
-    private Sprite[] tabSelectSprites; // Btn_Menu_Select_01~04
+    private Sprite[] tabNormalSprites;   // Btn_Menu_Normal_01~04
+    private Sprite[] tabSelectSprites;   // Btn_Menu_Select_01~04
+    private Color[] tabTextBaseColors;   // Inspector에서 읽은 탭 텍스트 기본 색
+    private FontStyle[] tabTextBaseStyles; // Inspector에서 읽은 탭 텍스트 기본 스타일
 
     // ── 레이싱 UI ──
     private Text countdownText;
