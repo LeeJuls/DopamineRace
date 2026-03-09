@@ -1,0 +1,78 @@
+══════════════════════════════════════════════
+  V2 파라미터 스윕 결과
+══════════════════════════════════════════════
+조건: equalStats=20, 시뮬=50회/바퀴, 총 648 조합 (v2 스윕: 높은드레인+탈진패널티)
+목표: 2L→도주  3L→선행  4L→선입  5L→추입
+
+#1  score=  808.0 | drain=1.00 floor=0.70  RunL=0.970  LeadL=0.980  ChasL=0.990  ReckL=1.015
+     2L:도주=56%(O)  3L:선행=64%(O)  4L:선입=40%(O)  5L:추입=74%(O)
+#2  score=  718.0 | drain=1.00 floor=0.60  RunL=0.970  LeadL=0.990  ChasL=1.010  ReckL=1.030
+     2L:도주=42%(O)  3L:선행=50%(O)  4L:선입=46%(O)  5L:추입=80%(O)
+#3  score=  712.0 | drain=1.00 floor=0.70  RunL=0.970  LeadL=0.970  ChasL=0.990  ReckL=1.015
+     2L:도주=56%(O)  3L:선행=48%(O)  4L:선입=38%(O)  5L:추입=74%(O)
+#4  score=  640.0 | drain=1.00 floor=0.70  RunL=0.955  LeadL=0.970  ChasL=0.990  ReckL=1.015
+     2L:도주=44%(O)  3L:선행=54%(O)  4L:선입=34%(O)  5L:추입=72%(O)
+#5  score=  630.0 | drain=1.00 floor=0.60  RunL=0.970  LeadL=0.990  ChasL=1.000  ReckL=1.015
+     2L:도주=44%(O)  3L:선행=58%(O)  4L:선입=36%(X Leader=42%)  5L:추입=84%(O)
+#6  score=  628.0 | drain=1.00 floor=0.60  RunL=0.970  LeadL=0.970  ChasL=0.990  ReckL=1.000
+     2L:도주=60%(O)  3L:선행=36%(O)  4L:선입=54%(O)  5L:추입=64%(O)
+#7  score=  616.0 | drain=1.00 floor=0.60  RunL=0.970  LeadL=0.980  ChasL=1.010  ReckL=1.030
+     2L:도주=50%(O)  3L:선행=40%(O)  4L:선입=44%(O)  5L:추입=68%(O)
+#8  score=  598.0 | drain=1.00 floor=0.60  RunL=0.955  LeadL=0.980  ChasL=1.010  ReckL=1.030
+     2L:도주=38%(O)  3L:선행=38%(O)  4L:선입=46%(O)  5L:추입=74%(O)
+#9  score=  598.0 | drain=1.00 floor=0.60  RunL=0.970  LeadL=0.970  ChasL=0.990  ReckL=1.015
+     2L:도주=44%(O)  3L:선행=32%(O)  4L:선입=34%(O)  5L:추입=74%(O)
+#10 score=  580.0 | drain=1.00 floor=0.60  RunL=0.970  LeadL=0.970  ChasL=1.000  ReckL=1.000
+     2L:도주=56%(O)  3L:선행=38%(O)  4L:선입=44%(O)  5L:추입=62%(O)
+#11 score=  576.0 | drain=1.00 floor=0.60  RunL=0.970  LeadL=0.980  ChasL=0.990  ReckL=1.015
+     2L:도주=28%(X Leader=56%)  3L:선행=54%(O)  4L:선입=38%(O)  5L:추입=86%(O)
+#12 score=  564.0 | drain=1.00 floor=0.60  RunL=0.970  LeadL=0.970  ChasL=1.010  ReckL=1.015
+     2L:도주=60%(O)  3L:선행=26%(X Chaser=48%)  4L:선입=60%(O)  5L:추입=64%(O)
+#13 score=  544.0 | drain=1.00 floor=0.60  RunL=0.970  LeadL=0.970  ChasL=1.000  ReckL=1.015
+     2L:도주=50%(O)  3L:선행=32%(X Chaser=36%)  4L:선입=52%(O)  5L:추입=68%(O)
+#14 score=  540.0 | drain=1.00 floor=0.70  RunL=0.970  LeadL=0.970  ChasL=1.000  ReckL=1.030
+     2L:도주=54%(O)  3L:선행=22%(X Runner=34%)  4L:선입=42%(O)  5L:추입=78%(O)
+#15 score=  514.0 | drain=1.00 floor=0.70  RunL=0.970  LeadL=0.970  ChasL=0.990  ReckL=1.030
+     2L:도주=50%(O)  3L:선행=34%(O)  4L:선입=28%(X Leader=32%)  5L:추입=72%(O)
+#16 score=  510.0 | drain=1.00 floor=0.60  RunL=0.970  LeadL=0.980  ChasL=0.990  ReckL=1.030
+     2L:도주=52%(O)  3L:선행=42%(O)  4L:선입=26%(X Leader=46%)  5L:추입=82%(O)
+#17 score=  510.0 | drain=1.00 floor=0.60  RunL=0.940  LeadL=0.980  ChasL=1.000  ReckL=1.030
+     2L:도주=22%(X Leader=42%)  3L:선행=44%(O)  4L:선입=48%(O)  5L:추입=84%(O)
+#18 score=  508.0 | drain=1.00 floor=0.70  RunL=0.970  LeadL=0.980  ChasL=1.010  ReckL=1.000
+     2L:도주=42%(O)  3L:선행=38%(O)  4L:선입=42%(O)  5L:추입=60%(O)
+#19 score=  502.0 | drain=1.00 floor=0.60  RunL=0.955  LeadL=0.980  ChasL=0.990  ReckL=1.015
+     2L:도주=38%(X Leader=46%)  3L:선행=50%(O)  4L:선입=34%(X Leader=40%)  5L:추입=86%(O)
+#20 score=  498.0 | drain=1.00 floor=0.60  RunL=0.940  LeadL=0.970  ChasL=1.000  ReckL=1.015
+     2L:도주=34%(X Leader=46%)  3L:선행=38%(X Chaser=42%)  4L:선입=54%(O)  5L:추입=86%(O)
+#21 score=  498.0 | drain=1.00 floor=0.70  RunL=0.970  LeadL=0.970  ChasL=1.010  ReckL=1.030
+     2L:도주=46%(O)  3L:선행=26%(X Chaser=48%)  4L:선입=60%(O)  5L:추입=66%(O)
+#22 score=  498.0 | drain=1.00 floor=0.60  RunL=0.970  LeadL=0.970  ChasL=1.010  ReckL=1.000
+     2L:도주=46%(O)  3L:선행=38%(X Chaser=44%)  4L:선입=64%(O)  5L:추입=56%(O)
+#23 score=  492.0 | drain=1.00 floor=0.70  RunL=0.955  LeadL=0.980  ChasL=1.000  ReckL=1.030
+     2L:도주=34%(X Leader=40%)  3L:선행=44%(O)  4L:선입=42%(O)  5L:추입=68%(O)
+#24 score=  486.0 | drain=1.00 floor=0.70  RunL=0.955  LeadL=0.990  ChasL=0.990  ReckL=1.015
+     2L:도주=30%(X Leader=62%)  3L:선행=68%(O)  4L:선입=40%(O)  5L:추입=70%(O)
+#25 score=  484.0 | drain=1.00 floor=0.70  RunL=0.955  LeadL=0.990  ChasL=1.010  ReckL=1.030
+     2L:도주=38%(X Leader=42%)  3L:선행=56%(O)  4L:선입=40%(O)  5L:추입=62%(O)
+#26 score=  480.0 | drain=1.00 floor=0.70  RunL=0.940  LeadL=0.980  ChasL=0.990  ReckL=1.015
+     2L:도주=30%(X Leader=56%)  3L:선행=46%(O)  4L:선입=42%(O)  5L:추입=78%(O)
+#27 score=  480.0 | drain=1.00 floor=0.60  RunL=0.940  LeadL=0.980  ChasL=0.990  ReckL=1.030
+     2L:도주=22%(X Leader=46%)  3L:선행=50%(O)  4L:선입=38%(O)  5L:추입=74%(O)
+#28 score=  476.0 | drain=1.00 floor=0.60  RunL=0.955  LeadL=0.970  ChasL=0.990  ReckL=1.000
+     2L:도주=40%(X Leader=48%)  3L:선행=40%(O)  4L:선입=50%(O)  5L:추입=64%(O)
+#29 score=  474.0 | drain=1.00 floor=0.70  RunL=0.970  LeadL=0.980  ChasL=0.990  ReckL=1.030
+     2L:도주=34%(X Leader=54%)  3L:선행=42%(O)  4L:선입=36%(O)  5L:추입=82%(O)
+#30 score=  470.0 | drain=1.00 floor=0.60  RunL=0.970  LeadL=0.980  ChasL=1.000  ReckL=1.030
+     2L:도주=52%(O)  3L:선행=32%(X Chaser=36%)  4L:선입=36%(X Leader=38%)  5L:추입=78%(O)
+
+══════════════════════════════════════════════
+  BEST 파라미터 (Inspector에 복사)
+══════════════════════════════════════════════
+v2_drainBaseRate            = 1.00
+v2_exhaustFloor             = 0.70
+v2_phaseCoeff_Runner_late   = 0.970
+v2_phaseCoeff_Leader_late   = 0.980
+v2_phaseCoeff_Chaser_late   = 0.990
+v2_phaseCoeff_Reckoner_late = 1.015
+Score = 808.0
+2L:도주=56%(O)  3L:선행=64%(O)  4L:선입=40%(O)  5L:추입=74%(O)
