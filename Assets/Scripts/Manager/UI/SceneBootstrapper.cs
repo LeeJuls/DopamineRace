@@ -183,6 +183,7 @@ public partial class SceneBootstrapper : MonoBehaviour
         track.AddComponent<SpawnEditor>();
 
         BuildUI();
+        ApplyFontToAllText();
         Debug.Log("도파민 경마 - 씬 구성 완료!");
     }
 
