@@ -63,7 +63,7 @@ public class CharacterInfoPopup : MonoBehaviour
         Transform layout1 = transform.Find("Layout1_TopArea");
         if (layout1 != null)
         {
-            charTypeLabel = FindText("Layout2_Left/CharTypeLabel");
+            charTypeLabel = FindText("Layout2_Left/CharTypeLabel/Text");
 
             Transform closeBtnObj = layout1.Find("CloseBtn");
             if (closeBtnObj != null)
