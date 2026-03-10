@@ -1,23 +1,16 @@
 using UnityEngine;
 using UnityEngine.UI;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 /// <summary>
 /// 정적 물방울 장식 컴포넌트.
 /// CharacterItem 패널 우 하단에 원형 방울을 배치.
 /// 렌더링 순서: 배경 다음 → 모든 label보다 뒤 (sibling index 1).
 ///
-/// Inspector 조절 항목:
+/// Inspector 조절 항목 (변경 후 Play 모드 진입 시 반영):
 ///   dropCount  — 표시할 방울 수 (최대 8)
 ///   dropColor  — 기본 색상 (알파는 ALPHAS 배열로 각각 조정)
 ///   sizeMin/Max — 방울 크기 범위(px)
-///
-/// [ExecuteAlways] 덕분에 프리팹 에디터에서도 미리보기 가능.
-/// Inspector 값 수정 시 OnValidate()가 즉시 리빌드.
 /// </summary>
-[ExecuteAlways]
 public class WaterDropDecor : MonoBehaviour
 {
     [Header("물방울 설정")]
@@ -58,35 +51,6 @@ public class WaterDropDecor : MonoBehaviour
 
     private void Awake()
     {
-        Rebuild();
-    }
-
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-        // Inspector 값 변경 시 즉시 리빌드
-        // delayCall: Awake/OnValidate 중첩 호출 방지
-        EditorApplication.delayCall += () =>
-        {
-            if (this != null) Rebuild();
-        };
-    }
-#endif
-
-    private void Rebuild()
-    {
-        // 기존 컨테이너 제거 후 재생성
-        Transform existing = transform.Find("WaterDropContainer");
-        if (existing != null)
-        {
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-                DestroyImmediate(existing.gameObject);
-            else
-#endif
-                Destroy(existing.gameObject);
-        }
-
         BuildDrops();
     }
 
