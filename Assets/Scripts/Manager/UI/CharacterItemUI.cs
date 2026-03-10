@@ -43,13 +43,13 @@ public class CharacterItemUI : MonoBehaviour
 
         icon            = FindImage("IconContainer/Icon");
         conditionIcon   = FindImage("ConditionIcon");
-        popularityLabel = FindText("PopularityLabel");
+        popularityLabel = FindText("PopularityLabel/Text");
         nameLabel       = FindText("NameLabel");
         recordLabel     = FindText("RecordLabel");
         secondLabel     = FindText("SecondLabel");
-        oddsLabel       = FindText("OddsLabel");
+        oddsLabel       = FindText("OddsLabel/Text");
         oddsLabelBaseColor    = oddsLabel     != null ? oddsLabel.color     : Color.white;
-        betOrderLabel   = FindText("BetOrderLabel");
+        betOrderLabel   = FindText("BetOrderLabel/Text");
         betOrderLabelBaseColor = betOrderLabel != null ? betOrderLabel.color : Color.white;
     }
 
@@ -152,9 +152,11 @@ public class CharacterItemUI : MonoBehaviour
     {
         if (betOrderLabel != null)
         {
+            // BetOrderLabel 오브젝트는 Image(배경) 컨테이너 → 부모를 on/off
+            GameObject container = betOrderLabel.transform.parent.gameObject;
             if (order > 0)
             {
-                betOrderLabel.gameObject.SetActive(true);
+                container.SetActive(true);
                 // BetInfo에서 라벨 가져오기
                 var bet = GameManager.Instance?.CurrentBet;
                 if (bet != null)
@@ -165,7 +167,7 @@ public class CharacterItemUI : MonoBehaviour
             }
             else
             {
-                betOrderLabel.gameObject.SetActive(false);
+                container.SetActive(false);
             }
         }
 
