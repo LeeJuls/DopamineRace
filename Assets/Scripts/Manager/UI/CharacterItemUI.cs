@@ -20,6 +20,7 @@ public class CharacterItemUI : MonoBehaviour
     private Text recordLabel;
     private Text secondLabel;
     private Text oddsLabel;          // Phase 4: 단승 배당률 배지
+    private Color oddsLabelBaseColor; // Inspector 설정 색상 캐싱 (ApplyFontToAllText 재빌드 후 복원용)
     private Text betOrderLabel;
 
     // ── 외부에서 사용하는 데이터 ──
@@ -47,6 +48,7 @@ public class CharacterItemUI : MonoBehaviour
         recordLabel     = FindText("RecordLabel");
         secondLabel     = FindText("SecondLabel");
         oddsLabel       = FindText("OddsLabel");
+        oddsLabelBaseColor = oddsLabel != null ? oddsLabel.color : Color.white;
         betOrderLabel   = FindText("BetOrderLabel");
     }
 
@@ -130,6 +132,7 @@ public class CharacterItemUI : MonoBehaviour
         // Phase 4: 단승 배당률 배지 (모든 캐릭터 항상 표시)
         if (oddsLabel != null)
         {
+            oddsLabel.color = oddsLabelBaseColor; // Inspector 설정 색 복원
             if (oddsInfo != null && oddsInfo.winOdds > 0f)
                 oddsLabel.text = oddsInfo.winOdds.ToString("F1") + "x";
             else
