@@ -307,8 +307,8 @@ public partial class SceneBootstrapper
         if (trackInfoToggleBtn != null)
         {
             trackInfoToggleBtnImage = trackInfoToggleBtn.GetComponent<Image>();
-            trackToggleNormalSprite = Resources.Load<Sprite>("UI/Btn_ToggleA_02"); // 기본(닫힘)
-            trackToggleOpenSprite   = Resources.Load<Sprite>("UI/Btn_ToggleA_01"); // 열림(누르면)
+            trackToggleNormalSprite = Resources.Load<Sprite>("UI/Btn_ToggleB_01"); // 기본(닫힘) — ToggleB 세트
+            trackToggleOpenSprite   = Resources.Load<Sprite>("UI/Btn_ToggleA_01"); // 열림(눌렀을 때) — ToggleA 세트
 
             trackInfoToggleBtn.transition = UnityEngine.UI.Selectable.Transition.SpriteSwap;
 
@@ -373,17 +373,20 @@ public partial class SceneBootstrapper
         if (trackTypeLabel != null)  trackTypeLabel.gameObject.SetActive(trackPanelOpen);
         if (trackDescLabel != null)  trackDescLabel.gameObject.SetActive(trackPanelOpen);
 
-        // 토글 버튼 스프라이트 갱신 (열림=A_01, 닫힘=A_02, 나머지는 A_03~04)
+        // 토글 버튼 스프라이트 갱신 (기본=ToggleB 세트, 열림=ToggleA 세트)
         if (trackInfoToggleBtnImage != null)
         {
             trackInfoToggleBtnImage.sprite = trackPanelOpen ? trackToggleOpenSprite : trackToggleNormalSprite;
             if (trackInfoToggleBtn != null)
+            {
+                string prefix = trackPanelOpen ? "UI/Btn_ToggleA" : "UI/Btn_ToggleB";
                 trackInfoToggleBtn.spriteState = new SpriteState
                 {
-                    highlightedSprite = Resources.Load<Sprite>(trackPanelOpen ? "UI/Btn_ToggleA_02" : "UI/Btn_ToggleA_03"),
-                    pressedSprite     = Resources.Load<Sprite>(trackPanelOpen ? "UI/Btn_ToggleA_03" : "UI/Btn_ToggleA_04"),
-                    disabledSprite    = Resources.Load<Sprite>("UI/Btn_ToggleA_04"),
+                    highlightedSprite = Resources.Load<Sprite>($"{prefix}_02"),
+                    pressedSprite     = Resources.Load<Sprite>($"{prefix}_03"),
+                    disabledSprite    = Resources.Load<Sprite>($"{prefix}_04"),
                 };
+            }
         }
 
         // 토글 버튼 텍스트 갱신
