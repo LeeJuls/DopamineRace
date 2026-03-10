@@ -1770,8 +1770,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -141.5, y: 0}
+  m_SizeDelta: {x: -317, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4229965393379812938
 CanvasRenderer:
@@ -2298,8 +2298,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 191.5, y: 0}
+  m_SizeDelta: {x: -417, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &46271184474397057
 CanvasRenderer:
@@ -2949,7 +2949,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.75}
   m_AnchorMax: {x: 0.5, y: 0.75}
-  m_AnchoredPosition: {x: -477, y: -35.356}
+  m_AnchoredPosition: {x: -474, y: -26}
   m_SizeDelta: {x: 200, y: 32.2858}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6783123402061942077
@@ -2982,7 +2982,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 12800000, guid: 967a67b8c17c46b4295390c687d1c8a1, type: 3}
-    m_FontSize: 32
+    m_FontSize: 36
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 3
@@ -3132,6 +3132,7 @@ GameObject:
   - component: {fileID: 3687515578250183428}
   - component: {fileID: 1824349721488815454}
   - component: {fileID: 3560550658994119359}
+  - component: {fileID: 3610042126977729449}
   m_Layer: 0
   m_Name: BetDescText
   m_TagString: Untagged
@@ -3156,7 +3157,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.05, y: 0.05}
   m_AnchorMax: {x: 0.65, y: 0.3}
-  m_AnchoredPosition: {x: 200, y: 14.267}
+  m_AnchoredPosition: {x: 224, y: 14.267}
   m_SizeDelta: {x: -400, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1824349721488815454
@@ -3180,7 +3181,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3201,6 +3202,21 @@ MonoBehaviour:
     m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: BetDescText
+--- !u!114 &3610042126977729449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5492287592056082770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 0.9}
+  m_EffectDistance: {x: 1, y: -1}
+  m_UseGraphicAlpha: 1
 --- !u!1 &5532428363532458129
 GameObject:
   m_ObjectHideFlags: 0
