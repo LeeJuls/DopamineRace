@@ -19,18 +19,18 @@ public class CharacterItemUI : MonoBehaviour
     private Text nameLabel;
     private Text recordLabel;
     private Text secondLabel;
-    private Text oddsLabel;          // Phase 4: 단승 배당률 배지
-    private Color oddsLabelBaseColor; // Inspector 설정 색상 캐싱 (ApplyFontToAllText 재빌드 후 복원용)
+    private Text oddsLabel;           // Phase 4: 단승 배당률 배지
+    private Color oddsLabelBaseColor;  // Inspector 색상 캐싱
     private Text betOrderLabel;
+    private Color betOrderLabelBaseColor; // Inspector 색상 캐싱
 
     // ── 외부에서 사용하는 데이터 ──
     public CharacterData CharData { get; private set; }
     public int RacerIndex { get; set; }
 
-    // ── 색상 상수 ──
+    // ── 배경 색상 상수 ──
     private static readonly Color COLOR_DEFAULT  = new Color(0.15f, 0.15f, 0.2f, 0.9f);
     private static readonly Color COLOR_SELECTED = new Color(0.25f, 0.3f, 0.5f, 0.95f);
-    private static readonly Color COLOR_BET_ORDER = new Color(1f, 0.85f, 0.2f);
 
     /// <summary>
     /// transform.Find로 자식 캐싱. BuildPrefab 이후 한 번 호출.
@@ -48,8 +48,9 @@ public class CharacterItemUI : MonoBehaviour
         recordLabel     = FindText("RecordLabel");
         secondLabel     = FindText("SecondLabel");
         oddsLabel       = FindText("OddsLabel");
-        oddsLabelBaseColor = oddsLabel != null ? oddsLabel.color : Color.white;
+        oddsLabelBaseColor    = oddsLabel     != null ? oddsLabel.color     : Color.white;
         betOrderLabel   = FindText("BetOrderLabel");
+        betOrderLabelBaseColor = betOrderLabel != null ? betOrderLabel.color : Color.white;
     }
 
     /// <summary>
@@ -160,7 +161,7 @@ public class CharacterItemUI : MonoBehaviour
                     betOrderLabel.text = bet.GetSelectionLabel(order - 1);
                 else
                     betOrderLabel.text = order.ToString();
-                betOrderLabel.color = COLOR_BET_ORDER;
+                betOrderLabel.color = betOrderLabelBaseColor; // Inspector 설정 색 사용
             }
             else
             {
