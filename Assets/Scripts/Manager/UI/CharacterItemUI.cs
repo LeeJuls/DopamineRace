@@ -29,8 +29,8 @@ public class CharacterItemUI : MonoBehaviour
     public int RacerIndex { get; set; }
 
     // ── 배경 색상 상수 ──
-    private static readonly Color COLOR_DEFAULT  = new Color(0.15f, 0.15f, 0.2f, 0.9f);
-    private static readonly Color COLOR_SELECTED = new Color(0.25f, 0.3f, 0.5f, 0.95f);
+    private static readonly Color COLOR_DEFAULT  = Color.white;                          // 스프라이트 원색 유지
+    private static readonly Color COLOR_SELECTED = new Color(0.6f, 0.85f, 1f, 1f);      // 선택 시 하늘색 틴트
 
     /// <summary>
     /// transform.Find로 자식 캐싱. BuildPrefab 이후 한 번 호출.
