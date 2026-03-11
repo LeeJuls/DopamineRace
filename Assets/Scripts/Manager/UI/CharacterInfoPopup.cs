@@ -327,8 +327,8 @@ public class CharacterInfoPopup : MonoBehaviour
         radar.splitNumber = 4; // 4구역 (5, 10, 15, 20)
         radar.startAngle = 90; // 상단부터 시작
         radar.center = new float[] { 0.5f, 0.5f }; // 차트 중앙
-        radar.axisName.labelStyle.textStyle.fontSize = 24; // 인디케이터 레이블 폰트 크기
-        radar.axisName.labelStyle.textStyle.color = Color.white; // 레이블 색상 흰색
+        radar.axisName.labelStyle.textStyle.fontSize = 28; // 인디케이터 레이블 폰트 크기
+        radar.axisName.labelStyle.textStyle.color = Color.black; // 레이블 색상
 
         // 반지름: 비율 기반 + 절대 상한 (과대 렌더링 방지)
         RectTransform chartRt = radarChartArea.GetComponent<RectTransform>();
@@ -385,10 +385,10 @@ public class CharacterInfoPopup : MonoBehaviour
 
         // 4색 배경 시리즈 (구역 표현: 큰 값부터 → 작은 값 위에 겹침)
         Color[] zoneColors = {
-            new Color(0f, 0.8f, 0.27f, 0.5f),   // 16~20: #00CC44
-            new Color(0.67f, 0.8f, 0f, 0.5f),    // 11~15: #AACC00
-            new Color(1f, 0.53f, 0f, 0.4f),       // 6~10:  #FF8800
-            new Color(0.8f, 0.2f, 0.2f, 0.4f),    // 1~5:   #CC3333
+            new Color(0f, 0.6f, 0.2f, 0.75f),    // 16~20: 진한 녹색
+            new Color(0.55f, 0.65f, 0f, 0.75f),  // 11~15: 진한 연두
+            new Color(0.85f, 0.4f, 0f, 0.65f),   // 6~10:  진한 주황
+            new Color(0.65f, 0.1f, 0.1f, 0.65f), // 1~5:   진한 빨강
         };
         float[] zoneValues = { 20f, 15f, 10f, 5f };
 
