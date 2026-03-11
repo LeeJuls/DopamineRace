@@ -381,6 +381,10 @@ public class CharacterInfoPopup : MonoBehaviour
                     label = "<color=#FFD700>" + label + "★</color>";
                 radar.AddIndicator(label, 0, 20);
             }
+
+            // RemoveData() 이후 axisName 스타일 재적용 (초기화 방지)
+            radar.axisName.labelStyle.textStyle.fontSize = 28;
+            radar.axisName.labelStyle.textStyle.color = Color.black;
         }
 
         // 4색 배경 시리즈 (구역 표현: 큰 값부터 → 작은 값 위에 겹침)
