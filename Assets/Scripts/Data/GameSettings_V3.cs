@@ -88,7 +88,7 @@ public class GameSettingsV3 : ScriptableObject
     // ──────────────────────────────────────────────────────────────
 
     /// <summary>speed 스탯 → maxSpeedMultiplier (1.0 + speed × perPoint)</summary>
-    public float GetV3MaxSpeedMul(int charSpeed)
+    public float GetV3MaxSpeedMul(float charSpeed)
         => 1f + charSpeed * v3_speedStatPerPoint;
 
     /// <summary>
