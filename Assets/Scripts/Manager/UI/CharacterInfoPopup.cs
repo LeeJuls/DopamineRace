@@ -309,6 +309,15 @@ public class CharacterInfoPopup : MonoBehaviour
         radarChart.Init();
         // stretch 앵커 → SetSize() 불가, 차트가 RectTransform에 자동 맞춤
 
+        // ★ XCharts theme-level 폰트 설정 (textStyle.font보다 확실)
+        // AddTextObject()에서 textStyle.font==null이면 theme.font를 사용하므로
+        // theme.common.font를 설정하면 모든 라벨에 자동 적용됨
+        Font chartFont = FontHelper.GetUIFont();
+        if (chartFont != null)
+        {
+            radarChart.theme.common.font = chartFont;
+        }
+
         // 배경 투명 (theme.transparentBackground → DrawBackground 폴백도 투명)
         radarChart.theme.transparentBackground = true;
         radarChart.raycastTarget = false; // 클릭 이벤트 통과
@@ -329,6 +338,7 @@ public class CharacterInfoPopup : MonoBehaviour
         radar.center = new float[] { 0.5f, 0.5f }; // 차트 중앙
         radar.axisName.labelStyle.textStyle.fontSize = 28; // 인디케이터 레이블 폰트 크기
         radar.axisName.labelStyle.textStyle.color = Color.black; // 레이블 색상
+        radar.axisName.labelStyle.textStyle.font = FontHelper.GetUIFont(); // XCharts 자체 폰트 적용
 
         // 반지름: 비율 기반 + 절대 상한 (과대 렌더링 방지)
         RectTransform chartRt = radarChartArea.GetComponent<RectTransform>();
@@ -353,6 +363,13 @@ public class CharacterInfoPopup : MonoBehaviour
         }
 
         radarChart.RemoveData();
+
+        // ★ RemoveData() 후 theme 폰트 재확인 (혹시 초기화될 수 있으므로)
+        Font chartFont = FontHelper.GetUIFont();
+        if (chartFont != null)
+        {
+            radarChart.theme.common.font = chartFont;
+        }
 
         // RemoveData()가 인디케이터도 삭제하므로 매번 재설정
         var radar = radarChart.GetChartComponent<RadarCoord>();
@@ -385,6 +402,7 @@ public class CharacterInfoPopup : MonoBehaviour
             // RemoveData() 이후 axisName 스타일 재적용 (초기화 방지)
             radar.axisName.labelStyle.textStyle.fontSize = 28;
             radar.axisName.labelStyle.textStyle.color = Color.black;
+            radar.axisName.labelStyle.textStyle.font = FontHelper.GetUIFont();
         }
 
         // 4색 배경 시리즈 (구역 표현: 큰 값부터 → 작은 값 위에 겹침)

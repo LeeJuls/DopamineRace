@@ -59,7 +59,6 @@ public partial class SceneBootstrapper : MonoBehaviour
     private static bool trackPanelOpen = true;  // static → 라운드 간 유지
     private Toggle hideInfoToggle;
     private Transform hideInfoCheckmark; // Btn_Check_02 — isOn 연동 수동 관리
-    private int lastClickedRacerIdx = -1; // toggle OFF 시 팝업 재표시용
     private CharacterInfoPopup charInfoPopup;
 
     // 배팅 타입 탭
@@ -145,8 +144,8 @@ public partial class SceneBootstrapper : MonoBehaviour
         // 다국어 초기화 (가장 먼저!)
         Loc.Init();
 
-        // 폰트 설정: FontHelper가 GameSettings → OS fallback 처리
-        font = FontHelper.GetUIFontWithFallback();
+        // 폰트 설정: 현재 언어에 따라 koreanFont/mainFont 자동 선택
+        font = FontHelper.GetUIFont();
 
         // ═══ 매니저 초기화 순서 (변경 시 주의!) ═══
         // 1단계: 데이터 (다른 매니저가 참조)

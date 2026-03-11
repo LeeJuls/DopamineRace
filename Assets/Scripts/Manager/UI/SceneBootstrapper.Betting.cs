@@ -407,43 +407,23 @@ public partial class SceneBootstrapper
         if (toggleLabel != null)
             toggleLabel.text = Loc.Get("str.ui.betting.hide_info");
 
-        // Checkmark (Btn_Check_02) 수동 관리 — Toggle.graphic 연결 없이 직접 제어
+        // Checkmark (Btn_Check_02) 수동 관리 — Toggle.graphic 미연결이라 직접 제어
         hideInfoCheckmark = hideInfoToggle.transform.Find("Checkmark");
 
-        bool saved = PlayerPrefs.GetInt("DR_HideCharInfo", 0) == 1;
-        hideInfoToggle.isOn = saved;
+        // 항상 OFF(정보 표시)로 시작 — 매 라운드 초기화
+        hideInfoToggle.isOn = false;
         if (hideInfoCheckmark != null)
-            hideInfoCheckmark.gameObject.SetActive(saved);
+            hideInfoCheckmark.gameObject.SetActive(false);
 
         hideInfoToggle.onValueChanged.AddListener(v =>
         {
-            PlayerPrefs.SetInt("DR_HideCharInfo", v ? 1 : 0);
-
             // Checkmark 비주얼 동기화
             if (hideInfoCheckmark != null)
                 hideInfoCheckmark.gameObject.SetActive(v);
 
-            if (v)
-            {
-                // ON → 팝업 닫기
-                if (charInfoPopup != null) charInfoPopup.Hide();
-            }
-            else
-            {
-                // OFF → 마지막 클릭 캐릭터 팝업 재표시
-                if (charInfoPopup != null && lastClickedRacerIdx >= 0)
-                {
-                    var db = CharacterDatabase.Instance;
-                    if (db != null && lastClickedRacerIdx < db.SelectedCharacters.Count)
-                    {
-                        var charData = db.SelectedCharacters[lastClickedRacerIdx];
-                        var oddsInfo = OddsCalculator.GetInfo(charData.charId);
-                        var record   = ScoreManager.Instance?.GetCharacterRecord(charData.charId);
-                        var trackInfo = TrackDatabase.Instance?.CurrentTrackInfo;
-                        charInfoPopup.Show(charData, oddsInfo, record, trackInfo);
-                    }
-                }
-            }
+            // ON → 팝업 닫기, OFF → 캐릭터 클릭 시 팝업 자동 표시 (별도 처리 불필요)
+            if (v && charInfoPopup != null)
+                charInfoPopup.Hide();
         });
     }
 
@@ -551,9 +531,6 @@ public partial class SceneBootstrapper
 
         UpdateButtonVisuals();
         UpdateBettingArrows();
-
-        // 마지막 클릭 캐릭터 기억 (toggle OFF 시 팝업 재표시용)
-        lastClickedRacerIdx = racerIdx;
 
         // 캐릭터 정보 팝업 (hideInfoToggle OFF일 때만 표시)
         bool hidePopup = hideInfoToggle != null && hideInfoToggle.isOn;

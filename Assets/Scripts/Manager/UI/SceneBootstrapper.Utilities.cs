@@ -185,26 +185,30 @@ public partial class SceneBootstrapper
     //  폰트 일괄 적용
     // ══════════════════════════════════════
     /// <summary>
-    /// 씬 내 모든 UI Text / TextMesh 컴포넌트에 GameSettings.mainFont 일괄 적용.
+    /// 씬 내 모든 UI Text / TextMesh 컴포넌트에 언어별 폰트 일괄 적용.
     /// BuildUI() 완료 후 Awake()에서 호출 — 프리팹 하드코딩 폰트 덮어쓰기.
+    /// 한국어 → koreanFont, 그 외 → mainFont. 텍스트 내용에 한글 포함 시 koreanFont 우선.
     /// </summary>
     private void ApplyFontToAllText()
     {
         if (font == null) return;
 
-        // UI Text (Legacy)
+        // UI Text (Legacy) — 텍스트 내용 기반 폰트 분기
         Text[] allTexts = Resources.FindObjectsOfTypeAll<Text>();
+        int koCount = 0;
         foreach (var t in allTexts)
         {
             if (t == null) continue;
-            t.font = font;
+            Font resolved = FontHelper.GetFontForText(t.text);
+            t.font = resolved ?? font;
+            if (resolved != font) koCount++;
         }
 
-        // TextMesh (3D 월드 공간)
+        // TextMesh (3D 월드 공간) — FontHelper 내부에서 언어 판별
         TextMesh[] allMeshTexts = Resources.FindObjectsOfTypeAll<TextMesh>();
         foreach (var tm in allMeshTexts)
             FontHelper.ApplyToTextMesh(tm);
 
-        Debug.Log($"[FontHelper] 전체 폰트 적용 — Text:{allTexts.Length}개, TextMesh:{allMeshTexts.Length}개 → {font.name}");
+        Debug.Log($"[FontHelper] 전체 폰트 적용 — Text:{allTexts.Length}개(한글폰트:{koCount}), TextMesh:{allMeshTexts.Length}개 → 기본:{font.name}");
     }
 }

@@ -216,7 +216,7 @@ public class TitleSceneManager : MonoBehaviour
 
         canvasObj.AddComponent<GraphicRaycaster>();
 
-        Font font = FontHelper.GetUIFontWithFallback();
+        Font font = FontHelper.GetUIFont();
 
         // ── 전체화면 오버레이 (외부 클릭 시 드롭다운 닫기) ──
         langOverlay = new GameObject("LangOverlay");
