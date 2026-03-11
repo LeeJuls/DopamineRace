@@ -58,6 +58,8 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Image trackPanelBg;             // Phase 2: 패널 배경 Image (닫힐 때 숨김)
     private static bool trackPanelOpen = true;  // static → 라운드 간 유지
     private Toggle hideInfoToggle;
+    private Transform hideInfoCheckmark; // Btn_Check_02 — isOn 연동 수동 관리
+    private int lastClickedRacerIdx = -1; // toggle OFF 시 팝업 재표시용
     private CharacterInfoPopup charInfoPopup;
 
     // 배팅 타입 탭
