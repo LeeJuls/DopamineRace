@@ -246,8 +246,8 @@ MonoBehaviour:
   waypointArrivalDist: 0.25
   initialSpeedMultiplier: 0.5
   attackAnimCooldown: 0.6
-  mainFont: {fileID: 12800000, guid: 967a67b8c17c46b4295390c687d1c8a1, type: 3}
-  koreanFont: {fileID: 0}
+  mainFont: {fileID: 12800000, guid: 80d111d8d567ca749a67ce59eaa9cb47, type: 3}
+  koreanFont: {fileID: 12800000, guid: 73394ff435373a34fa055a3de71aa430, type: 3}
   uiFontScale: 1
   useV2RaceSystem: 1
   v2_sprintMaxBoost: 0.3

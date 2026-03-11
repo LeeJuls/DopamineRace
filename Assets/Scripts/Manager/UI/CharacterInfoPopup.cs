@@ -309,6 +309,15 @@ public class CharacterInfoPopup : MonoBehaviour
         radarChart.Init();
         // stretch 앵커 → SetSize() 불가, 차트가 RectTransform에 자동 맞춤
 
+        // ★ XCharts theme-level 폰트 설정 (textStyle.font보다 확실)
+        // AddTextObject()에서 textStyle.font==null이면 theme.font를 사용하므로
+        // theme.common.font를 설정하면 모든 라벨에 자동 적용됨
+        Font chartFont = FontHelper.GetMainFont();
+        if (chartFont != null)
+        {
+            radarChart.theme.common.font = chartFont;
+        }
+
         // 배경 투명 (theme.transparentBackground → DrawBackground 폴백도 투명)
         radarChart.theme.transparentBackground = true;
         radarChart.raycastTarget = false; // 클릭 이벤트 통과
@@ -353,6 +362,13 @@ public class CharacterInfoPopup : MonoBehaviour
         }
 
         radarChart.RemoveData();
+
+        // ★ RemoveData() 후 theme 폰트 재확인 (혹시 초기화될 수 있으므로)
+        Font chartFont = FontHelper.GetMainFont();
+        if (chartFont != null)
+        {
+            radarChart.theme.common.font = chartFont;
+        }
 
         // RemoveData()가 인디케이터도 삭제하므로 매번 재설정
         var radar = radarChart.GetChartComponent<RadarCoord>();
