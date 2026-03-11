@@ -58,7 +58,13 @@ public class CharacterRecord
     public List<RaceEntry> recentRaceEntries = new List<RaceEntry>();  // 최근 경기기록 (거리별 필터링용)
 
     private const int MAX_RECENT = 10;
-    private const int MAX_RACE_ENTRIES = 30;  // 거리별 6개씩 표시하기 위해 충분한 버퍼
+    private const int MAX_RACE_ENTRIES = 30;
+    private const int MAX_DIST_RECORDS = 30;  // 거리별 최근 순위 보관 개수
+
+    // ── 거리별 최근 순위 (각각 독립 슬라이딩 윈도우) ──
+    public List<int> recentShortRanks = new List<int>();
+    public List<int> recentMidRanks   = new List<int>();
+    public List<int> recentLongRanks  = new List<int>();
 
     // ── 거리별 누적 카운터 (영구 저장) ──
     // 이유: recentRaceEntries(MAX=30) 슬라이딩 윈도우로는 장기 누적 승률 계산 불가
@@ -178,6 +184,25 @@ public class CharacterRecord
                 if (rank == 1) longDistWins++;
                 break;
         }
+    }
+
+    /// <summary>
+    /// 거리별 최근 순위 추가 (ScoreManager.RecordRound에서 호출)
+    /// distKey: "str.ui.track.short" / "str.ui.track.mid" / "str.ui.track.long"
+    /// </summary>
+    public void AddDistanceRank(string distKey, int rank)
+    {
+        List<int> target;
+        switch (distKey)
+        {
+            case "str.ui.track.short": target = recentShortRanks; break;
+            case "str.ui.track.mid":   target = recentMidRanks;   break;
+            case "str.ui.track.long":  target = recentLongRanks;  break;
+            default: return;
+        }
+        target.Insert(0, rank);
+        if (target.Count > MAX_DIST_RECORDS)
+            target.RemoveAt(target.Count - 1);
     }
 
     /// <summary>거리별 1착 승률 (0~1). 출전 0이면 0 반환.</summary>
