@@ -493,7 +493,7 @@ public class CharacterInfoPopup : MonoBehaviour
     private string FormatRankList(List<int> ranks)
     {
         if (ranks.Count == 0)
-            return Loc.Get("str.ui.char.no_dist_record");
+            return "<color=#000000>" + Loc.Get("str.ui.char.no_dist_record") + "</color>";
 
         var parts = new List<string>();
         foreach (int rank in ranks)
