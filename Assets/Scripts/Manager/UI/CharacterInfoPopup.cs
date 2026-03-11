@@ -519,7 +519,7 @@ public class CharacterInfoPopup : MonoBehaviour
             case 1:  return "<color=#FFD700>" + rankText + "</color>";
             case 2:  return "<color=#C0C0C0>" + rankText + "</color>";
             case 3:  return "<color=#CD7F32>" + rankText + "</color>";
-            default: return "<color=#CCCCCC>" + rankText + "</color>";
+            default: return "<color=#000000>" + rankText + "</color>";
         }
     }
 
