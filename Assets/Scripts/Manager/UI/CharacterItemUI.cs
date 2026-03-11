@@ -19,17 +19,18 @@ public class CharacterItemUI : MonoBehaviour
     private Text nameLabel;
     private Text recordLabel;
     private Text secondLabel;
-    private Text oddsLabel;          // Phase 4: 단승 배당률 배지
+    private Text oddsLabel;           // Phase 4: 단승 배당률 배지
+    private Color oddsLabelBaseColor;  // Inspector 색상 캐싱
     private Text betOrderLabel;
+    private Color betOrderLabelBaseColor; // Inspector 색상 캐싱
 
     // ── 외부에서 사용하는 데이터 ──
     public CharacterData CharData { get; private set; }
     public int RacerIndex { get; set; }
 
-    // ── 색상 상수 ──
-    private static readonly Color COLOR_DEFAULT  = new Color(0.15f, 0.15f, 0.2f, 0.9f);
-    private static readonly Color COLOR_SELECTED = new Color(0.25f, 0.3f, 0.5f, 0.95f);
-    private static readonly Color COLOR_BET_ORDER = new Color(1f, 0.85f, 0.2f);
+    // ── 배경 색상 상수 ──
+    private static readonly Color COLOR_DEFAULT  = Color.white;                          // 스프라이트 원색 유지
+    private static readonly Color COLOR_SELECTED = new Color(0.6f, 0.85f, 1f, 1f);      // 선택 시 하늘색 틴트
 
     /// <summary>
     /// transform.Find로 자식 캐싱. BuildPrefab 이후 한 번 호출.
@@ -42,12 +43,14 @@ public class CharacterItemUI : MonoBehaviour
 
         icon            = FindImage("IconContainer/Icon");
         conditionIcon   = FindImage("ConditionIcon");
-        popularityLabel = FindText("PopularityLabel");
+        popularityLabel = FindText("PopularityLabel/Text");
         nameLabel       = FindText("NameLabel");
         recordLabel     = FindText("RecordLabel");
         secondLabel     = FindText("SecondLabel");
-        oddsLabel       = FindText("OddsLabel");
-        betOrderLabel   = FindText("BetOrderLabel");
+        oddsLabel       = FindText("OddsLabel/Text");
+        oddsLabelBaseColor    = oddsLabel     != null ? oddsLabel.color     : Color.white;
+        betOrderLabel   = FindText("BetOrderLabel/Text");
+        betOrderLabelBaseColor = betOrderLabel != null ? betOrderLabel.color : Color.white;
     }
 
     /// <summary>
@@ -130,6 +133,7 @@ public class CharacterItemUI : MonoBehaviour
         // Phase 4: 단승 배당률 배지 (모든 캐릭터 항상 표시)
         if (oddsLabel != null)
         {
+            oddsLabel.color = oddsLabelBaseColor; // Inspector 설정 색 복원
             if (oddsInfo != null && oddsInfo.winOdds > 0f)
                 oddsLabel.text = oddsInfo.winOdds.ToString("F1") + "x";
             else
@@ -148,20 +152,22 @@ public class CharacterItemUI : MonoBehaviour
     {
         if (betOrderLabel != null)
         {
+            // BetOrderLabel 오브젝트는 Image(배경) 컨테이너 → 부모를 on/off
+            GameObject container = betOrderLabel.transform.parent.gameObject;
             if (order > 0)
             {
-                betOrderLabel.gameObject.SetActive(true);
+                container.SetActive(true);
                 // BetInfo에서 라벨 가져오기
                 var bet = GameManager.Instance?.CurrentBet;
                 if (bet != null)
                     betOrderLabel.text = bet.GetSelectionLabel(order - 1);
                 else
                     betOrderLabel.text = order.ToString();
-                betOrderLabel.color = COLOR_BET_ORDER;
+                betOrderLabel.color = betOrderLabelBaseColor; // Inspector 설정 색 사용
             }
             else
             {
-                betOrderLabel.gameObject.SetActive(false);
+                container.SetActive(false);
             }
         }
 

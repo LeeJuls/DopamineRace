@@ -63,7 +63,7 @@ public class CharacterInfoPopup : MonoBehaviour
         Transform layout1 = transform.Find("Layout1_TopArea");
         if (layout1 != null)
         {
-            charTypeLabel = FindText("Layout2_Left/CharTypeLabel");
+            charTypeLabel = FindText("Layout2_Left/CharTypeLabel/Text");
 
             Transform closeBtnObj = layout1.Find("CloseBtn");
             if (closeBtnObj != null)
@@ -84,21 +84,21 @@ public class CharacterInfoPopup : MonoBehaviour
             if (shortRow != null)
             {
                 shortDistLabel = FindText(shortRow, "ShortDistLabel");
-                shortDistRanks = FindText(shortRow, "ShortDistRanks");
+                shortDistRanks = FindText(shortRow, "RanksScroll/ShortDistRanks");
             }
 
             Transform midRow = layout1.Find("MidDistRow");
             if (midRow != null)
             {
                 midDistLabel = FindText(midRow, "MidDistLabel");
-                midDistRanks = FindText(midRow, "MidDistRanks");
+                midDistRanks = FindText(midRow, "RanksScroll/MidDistRanks");
             }
 
             Transform longRow = layout1.Find("LongDistRow");
             if (longRow != null)
             {
                 longDistLabel = FindText(longRow, "LongDistLabel");
-                longDistRanks = FindText(longRow, "LongDistRanks");
+                longDistRanks = FindText(longRow, "RanksScroll/LongDistRanks");
             }
         }
 
@@ -309,6 +309,15 @@ public class CharacterInfoPopup : MonoBehaviour
         radarChart.Init();
         // stretch 앵커 → SetSize() 불가, 차트가 RectTransform에 자동 맞춤
 
+        // ★ XCharts theme-level 폰트 설정 (textStyle.font보다 확실)
+        // AddTextObject()에서 textStyle.font==null이면 theme.font를 사용하므로
+        // theme.common.font를 설정하면 모든 라벨에 자동 적용됨
+        Font chartFont = FontHelper.GetMainFont();
+        if (chartFont != null)
+        {
+            radarChart.theme.common.font = chartFont;
+        }
+
         // 배경 투명 (theme.transparentBackground → DrawBackground 폴백도 투명)
         radarChart.theme.transparentBackground = true;
         radarChart.raycastTarget = false; // 클릭 이벤트 통과
@@ -327,8 +336,8 @@ public class CharacterInfoPopup : MonoBehaviour
         radar.splitNumber = 4; // 4구역 (5, 10, 15, 20)
         radar.startAngle = 90; // 상단부터 시작
         radar.center = new float[] { 0.5f, 0.5f }; // 차트 중앙
-        radar.axisName.labelStyle.textStyle.fontSize = 24; // 인디케이터 레이블 폰트 크기
-        radar.axisName.labelStyle.textStyle.color = Color.white; // 레이블 색상 흰색
+        radar.axisName.labelStyle.textStyle.fontSize = 28; // 인디케이터 레이블 폰트 크기
+        radar.axisName.labelStyle.textStyle.color = Color.black; // 레이블 색상
 
         // 반지름: 비율 기반 + 절대 상한 (과대 렌더링 방지)
         RectTransform chartRt = radarChartArea.GetComponent<RectTransform>();
@@ -353,6 +362,13 @@ public class CharacterInfoPopup : MonoBehaviour
         }
 
         radarChart.RemoveData();
+
+        // ★ RemoveData() 후 theme 폰트 재확인 (혹시 초기화될 수 있으므로)
+        Font chartFont = FontHelper.GetMainFont();
+        if (chartFont != null)
+        {
+            radarChart.theme.common.font = chartFont;
+        }
 
         // RemoveData()가 인디케이터도 삭제하므로 매번 재설정
         var radar = radarChart.GetChartComponent<RadarCoord>();
@@ -381,14 +397,18 @@ public class CharacterInfoPopup : MonoBehaviour
                     label = "<color=#FFD700>" + label + "★</color>";
                 radar.AddIndicator(label, 0, 20);
             }
+
+            // RemoveData() 이후 axisName 스타일 재적용 (초기화 방지)
+            radar.axisName.labelStyle.textStyle.fontSize = 28;
+            radar.axisName.labelStyle.textStyle.color = Color.black;
         }
 
         // 4색 배경 시리즈 (구역 표현: 큰 값부터 → 작은 값 위에 겹침)
         Color[] zoneColors = {
-            new Color(0f, 0.8f, 0.27f, 0.5f),   // 16~20: #00CC44
-            new Color(0.67f, 0.8f, 0f, 0.5f),    // 11~15: #AACC00
-            new Color(1f, 0.53f, 0f, 0.4f),       // 6~10:  #FF8800
-            new Color(0.8f, 0.2f, 0.2f, 0.4f),    // 1~5:   #CC3333
+            new Color(0f, 0.6f, 0.2f, 0.75f),    // 16~20: 진한 녹색
+            new Color(0.55f, 0.65f, 0f, 0.75f),  // 11~15: 진한 연두
+            new Color(0.85f, 0.4f, 0f, 0.65f),   // 6~10:  진한 주황
+            new Color(0.65f, 0.1f, 0.1f, 0.65f), // 1~5:   진한 빨강
         };
         float[] zoneValues = { 20f, 15f, 10f, 5f };
 
@@ -447,20 +467,18 @@ public class CharacterInfoPopup : MonoBehaviour
 
     // ═══ 최근 경기기록 텍스트 ═══
 
-    private const int MAX_DIST_DISPLAY = 5;
+    private const int MAX_DIST_DISPLAY = 10;
 
     /// <summary>
     /// 최근 경기기록을 거리별(단/중/장)로 분류하여 텍스트 갱신
     /// </summary>
     private void UpdateRecentRecords(CharacterRecord record)
     {
-        var gs = GameSettings.Instance;
-
         // 헤더
         if (recentRecordHeader != null)
             recentRecordHeader.text = Loc.Get("str.ui.char.recent_record");
 
-        // 거리별 라벨 (승률 표시 제거 — 순위 목록만 표시)
+        // 거리별 라벨
         if (shortDistLabel != null)
             shortDistLabel.text = Loc.Get("str.ui.track.short");
         if (midDistLabel != null)
@@ -468,26 +486,10 @@ public class CharacterInfoPopup : MonoBehaviour
         if (longDistLabel != null)
             longDistLabel.text = Loc.Get("str.ui.track.long");
 
-        // 거리별 순위 분류
-        List<int> shortRanks = new List<int>();
-        List<int> midRanks = new List<int>();
-        List<int> longRanks = new List<int>();
-
-        if (record != null && gs != null)
-        {
-            foreach (var entry in record.recentRaceEntries)
-            {
-                if (entry.laps <= 0) continue; // 레거시 마이그레이션 엔트리 스킵
-
-                string distKey = gs.GetDistanceKey(entry.laps);
-                if (distKey == "str.ui.track.short" && shortRanks.Count < MAX_DIST_DISPLAY)
-                    shortRanks.Add(entry.rank);
-                else if (distKey == "str.ui.track.mid" && midRanks.Count < MAX_DIST_DISPLAY)
-                    midRanks.Add(entry.rank);
-                else if (distKey == "str.ui.track.long" && longRanks.Count < MAX_DIST_DISPLAY)
-                    longRanks.Add(entry.rank);
-            }
-        }
+        // 거리별 독립 리스트에서 최대 MAX_DIST_DISPLAY개 추출
+        List<int> shortRanks = Slice(record != null ? record.recentShortRanks : null);
+        List<int> midRanks   = Slice(record != null ? record.recentMidRanks   : null);
+        List<int> longRanks  = Slice(record != null ? record.recentLongRanks  : null);
 
         // 텍스트 갱신
         if (shortDistRanks != null)
@@ -498,11 +500,20 @@ public class CharacterInfoPopup : MonoBehaviour
             longDistRanks.text = FormatRankList(longRanks);
     }
 
+    private List<int> Slice(List<int> src)
+    {
+        var result = new List<int>();
+        if (src == null) return result;
+        for (int i = 0; i < src.Count && i < MAX_DIST_DISPLAY; i++)
+            result.Add(src[i]);
+        return result;
+    }
+
     /// <summary>순위 리스트를 rich text 색상 코딩 문자열로 변환</summary>
     private string FormatRankList(List<int> ranks)
     {
         if (ranks.Count == 0)
-            return Loc.Get("str.ui.char.no_dist_record");
+            return "<color=#000000>" + Loc.Get("str.ui.char.no_dist_record") + "</color>";
 
         var parts = new List<string>();
         foreach (int rank in ranks)
@@ -519,7 +530,7 @@ public class CharacterInfoPopup : MonoBehaviour
             case 1:  return "<color=#FFD700>" + rankText + "</color>";
             case 2:  return "<color=#C0C0C0>" + rankText + "</color>";
             case 3:  return "<color=#CD7F32>" + rankText + "</color>";
-            default: return "<color=#CCCCCC>" + rankText + "</color>";
+            default: return "<color=#000000>" + rankText + "</color>";
         }
     }
 

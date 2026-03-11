@@ -51,9 +51,7 @@ public partial class SceneBootstrapper
             betTitleText = FindText(topArea, "TitleText");
             betDescText  = FindText(topArea, "BetDescText");
 
-            // Best Fit: 다국어 텍스트 오버플로 방지
-            if (betRoundText != null) { betRoundText.resizeTextForBestFit = true; betRoundText.resizeTextMinSize = 12; betRoundText.resizeTextMaxSize = 18; }
-            if (betTitleText != null) { betTitleText.resizeTextForBestFit = true; betTitleText.resizeTextMinSize = 16; betTitleText.resizeTextMaxSize = 26; }
+            // Best Fit 설정은 Inspector에서 제어 (코드 하드코딩 제거)
 
             Transform oddsArea = topArea.Find("OddsArea");
             if (oddsArea != null)
@@ -150,10 +148,28 @@ public partial class SceneBootstrapper
         BetType[] types = { BetType.Win, BetType.Place, BetType.Quinella,
                             BetType.Exacta, BetType.Trio, BetType.Wide };
 
+        // 탭 스프라이트 세트 로드 (비선택/선택 각 4상태)
+        tabNormalSprites = new Sprite[]
+        {
+            Resources.Load<Sprite>("UI/Btn_Menu_Normal_01"),
+            Resources.Load<Sprite>("UI/Btn_Menu_Normal_02"),
+            Resources.Load<Sprite>("UI/Btn_Menu_Normal_03"),
+            Resources.Load<Sprite>("UI/Btn_Menu_Normal_04"),
+        };
+        tabSelectSprites = new Sprite[]
+        {
+            Resources.Load<Sprite>("UI/Btn_Menu_Select_01"),
+            Resources.Load<Sprite>("UI/Btn_Menu_Select_02"),
+            Resources.Load<Sprite>("UI/Btn_Menu_Select_03"),
+            Resources.Load<Sprite>("UI/Btn_Menu_Select_04"),
+        };
+
         int tabCount = Mathf.Min(types.Length, tabArea.childCount);
-        betTypeBtns = new Button[tabCount];
-        betTypeBtnTexts = new Text[tabCount];
-        betTypeBtnBGs = new Image[tabCount];
+        betTypeBtns      = new Button[tabCount];
+        betTypeBtnTexts  = new Text[tabCount];
+        betTypeBtnBGs    = new Image[tabCount];
+        tabTextBaseColors = new Color[tabCount];
+        tabTextBaseStyles = new FontStyle[tabCount];
 
         for (int i = 0; i < tabCount; i++)
         {
@@ -172,7 +188,9 @@ public partial class SceneBootstrapper
             if (tabText != null)
             {
                 tabText.text = BettingCalculator.GetTypeName(types[i]);
-                betTypeBtnTexts[i] = tabText;
+                betTypeBtnTexts[i]  = tabText;
+                tabTextBaseColors[i] = tabText.color;      // Inspector 값 캐싱
+                tabTextBaseStyles[i] = tabText.fontStyle;  // Inspector 값 캐싱
             }
 
             int idx = i;
@@ -288,6 +306,12 @@ public partial class SceneBootstrapper
         // 토글 버튼 초기화
         if (trackInfoToggleBtn != null)
         {
+            trackInfoToggleBtnImage = trackInfoToggleBtn.GetComponent<Image>();
+            trackToggleNormalSprite = Resources.Load<Sprite>("UI/Btn_ToggleB_01"); // 기본(닫힘) — ToggleB 세트
+            trackToggleOpenSprite   = Resources.Load<Sprite>("UI/Btn_ToggleA_01"); // 열림(눌렀을 때) — ToggleA 세트
+
+            trackInfoToggleBtn.transition = UnityEngine.UI.Selectable.Transition.SpriteSwap;
+
             trackInfoToggleBtn.onClick.AddListener(() =>
             {
                 trackPanelOpen = !trackPanelOpen;
@@ -349,6 +373,22 @@ public partial class SceneBootstrapper
         if (trackTypeLabel != null)  trackTypeLabel.gameObject.SetActive(trackPanelOpen);
         if (trackDescLabel != null)  trackDescLabel.gameObject.SetActive(trackPanelOpen);
 
+        // 토글 버튼 스프라이트 갱신 (기본=ToggleB 세트, 열림=ToggleA 세트)
+        if (trackInfoToggleBtnImage != null)
+        {
+            trackInfoToggleBtnImage.sprite = trackPanelOpen ? trackToggleOpenSprite : trackToggleNormalSprite;
+            if (trackInfoToggleBtn != null)
+            {
+                string prefix = trackPanelOpen ? "UI/Btn_ToggleA" : "UI/Btn_ToggleB";
+                trackInfoToggleBtn.spriteState = new SpriteState
+                {
+                    highlightedSprite = Resources.Load<Sprite>($"{prefix}_02"),
+                    pressedSprite     = Resources.Load<Sprite>($"{prefix}_03"),
+                    disabledSprite    = Resources.Load<Sprite>($"{prefix}_04"),
+                };
+            }
+        }
+
         // 토글 버튼 텍스트 갱신
         if (trackToggleBtnText != null)
             trackToggleBtnText.text = trackPanelOpen
@@ -367,16 +407,43 @@ public partial class SceneBootstrapper
         if (toggleLabel != null)
             toggleLabel.text = Loc.Get("str.ui.betting.hide_info");
 
+        // Checkmark (Btn_Check_02) 수동 관리 — Toggle.graphic 연결 없이 직접 제어
+        hideInfoCheckmark = hideInfoToggle.transform.Find("Checkmark");
+
         bool saved = PlayerPrefs.GetInt("DR_HideCharInfo", 0) == 1;
         hideInfoToggle.isOn = saved;
+        if (hideInfoCheckmark != null)
+            hideInfoCheckmark.gameObject.SetActive(saved);
 
         hideInfoToggle.onValueChanged.AddListener(v =>
         {
             PlayerPrefs.SetInt("DR_HideCharInfo", v ? 1 : 0);
-            // ON = 캐릭터 클릭 시 정보 팝업 안뜸
-            // 현재 팝업이 열려있으면 닫기
-            if (v && charInfoPopup != null)
-                charInfoPopup.Hide();
+
+            // Checkmark 비주얼 동기화
+            if (hideInfoCheckmark != null)
+                hideInfoCheckmark.gameObject.SetActive(v);
+
+            if (v)
+            {
+                // ON → 팝업 닫기
+                if (charInfoPopup != null) charInfoPopup.Hide();
+            }
+            else
+            {
+                // OFF → 마지막 클릭 캐릭터 팝업 재표시
+                if (charInfoPopup != null && lastClickedRacerIdx >= 0)
+                {
+                    var db = CharacterDatabase.Instance;
+                    if (db != null && lastClickedRacerIdx < db.SelectedCharacters.Count)
+                    {
+                        var charData = db.SelectedCharacters[lastClickedRacerIdx];
+                        var oddsInfo = OddsCalculator.GetInfo(charData.charId);
+                        var record   = ScoreManager.Instance?.GetCharacterRecord(charData.charId);
+                        var trackInfo = TrackDatabase.Instance?.CurrentTrackInfo;
+                        charInfoPopup.Show(charData, oddsInfo, record, trackInfo);
+                    }
+                }
+            }
         });
     }
 
@@ -408,17 +475,35 @@ public partial class SceneBootstrapper
     {
         if (betTypeBtnBGs == null) return;
 
-        Color activeColor = new Color(0.3f, 0.4f, 0.7f);
-        Color inactiveColor = new Color(0.2f, 0.2f, 0.3f, 0.9f);
-
         for (int i = 0; i < betTypeBtnBGs.Length; i++)
         {
-            if (betTypeBtnBGs[i] != null)
-                betTypeBtnBGs[i].color = (i == activeIndex) ? activeColor : inactiveColor;
+            bool isActive = (i == activeIndex);
+            Sprite[] sprites = isActive ? tabSelectSprites : tabNormalSprites;
+
+            if (betTypeBtnBGs[i] != null && sprites != null && sprites[0] != null)
+            {
+                betTypeBtnBGs[i].sprite = sprites[0];
+                betTypeBtnBGs[i].color  = Color.white;
+
+                // SpriteState 동적 교체 (선택/비선택 상태별 4상태)
+                if (betTypeBtns[i] != null)
+                    betTypeBtns[i].spriteState = new SpriteState
+                    {
+                        highlightedSprite = sprites[1],
+                        pressedSprite     = sprites[2],
+                        selectedSprite    = sprites[0],
+                        disabledSprite    = sprites[3],
+                    };
+            }
+
             if (betTypeBtnTexts != null && i < betTypeBtnTexts.Length && betTypeBtnTexts[i] != null)
             {
-                betTypeBtnTexts[i].fontStyle = (i == activeIndex) ? FontStyle.Bold : FontStyle.Normal;
-                betTypeBtnTexts[i].color = (i == activeIndex) ? Color.white : new Color(0.6f, 0.6f, 0.6f);
+                // Inspector 설정값 그대로 — 선택/비선택 모두 동일 색
+                betTypeBtnTexts[i].color = (tabTextBaseColors != null && i < tabTextBaseColors.Length)
+                    ? tabTextBaseColors[i] : Color.white;
+                betTypeBtnTexts[i].fontStyle = isActive ? FontStyle.Bold
+                    : (tabTextBaseStyles != null && i < tabTextBaseStyles.Length
+                        ? tabTextBaseStyles[i] : FontStyle.Normal);
             }
         }
 
@@ -466,6 +551,9 @@ public partial class SceneBootstrapper
 
         UpdateButtonVisuals();
         UpdateBettingArrows();
+
+        // 마지막 클릭 캐릭터 기억 (toggle OFF 시 팝업 재표시용)
+        lastClickedRacerIdx = racerIdx;
 
         // 캐릭터 정보 팝업 (hideInfoToggle OFF일 때만 표시)
         bool hidePopup = hideInfoToggle != null && hideInfoToggle.isOn;
@@ -556,7 +644,7 @@ public partial class SceneBootstrapper
 
         if (pointsFormulaText != null)
             pointsFormulaText.text = string.Format(
-                "<color=#FFE000>{0}</color>x<color=#FF8C00>{1}</color> = {2}",
+                "<color=#FF3333>{0}</color>x<color=#FF8C00>{1}</color> = <color=#1A3FCC>{2}</color>",
                 basePt, odds.ToString("F1"), result);
 
         RefreshMyPoint();

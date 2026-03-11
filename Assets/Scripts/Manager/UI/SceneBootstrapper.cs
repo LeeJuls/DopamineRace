@@ -52,9 +52,14 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text trackDescLabel;            // Phase 2: 트랙 설명
     private Button trackInfoToggleBtn;      // Phase 2: 패널 접기/펼치기
     private Text trackToggleBtnText;        // Phase 2: 토글 버튼 텍스트
+    private Image trackInfoToggleBtnImage;  // Phase 2: 토글 버튼 이미지
+    private Sprite trackToggleNormalSprite; // Btn_ToggleB_01 (기본/닫힘)
+    private Sprite trackToggleOpenSprite;   // Btn_ToggleA_01 (열림)
     private Image trackPanelBg;             // Phase 2: 패널 배경 Image (닫힐 때 숨김)
     private static bool trackPanelOpen = true;  // static → 라운드 간 유지
     private Toggle hideInfoToggle;
+    private Transform hideInfoCheckmark; // Btn_Check_02 — isOn 연동 수동 관리
+    private int lastClickedRacerIdx = -1; // toggle OFF 시 팝업 재표시용
     private CharacterInfoPopup charInfoPopup;
 
     // 배팅 타입 탭
@@ -63,6 +68,10 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Image[] betTypeBtnBGs;
     private BetType currentTabType = BetType.Win;
     private int currentTabIndex = 0;
+    private Sprite[] tabNormalSprites;   // Btn_Menu_Normal_01~04
+    private Sprite[] tabSelectSprites;   // Btn_Menu_Select_01~04
+    private Color[] tabTextBaseColors;   // Inspector에서 읽은 탭 텍스트 기본 색
+    private FontStyle[] tabTextBaseStyles; // Inspector에서 읽은 탭 텍스트 기본 스타일
 
     // ── 레이싱 UI ──
     private Text countdownText;
@@ -183,6 +192,7 @@ public partial class SceneBootstrapper : MonoBehaviour
         track.AddComponent<SpawnEditor>();
 
         BuildUI();
+        ApplyFontToAllText();
         Debug.Log("도파민 경마 - 씬 구성 완료!");
     }
 

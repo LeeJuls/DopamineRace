@@ -246,8 +246,8 @@ MonoBehaviour:
   waypointArrivalDist: 0.25
   initialSpeedMultiplier: 0.5
   attackAnimCooldown: 0.6
-  mainFont: {fileID: 12800000, guid: d33d11b90102e7042ad01b77a72b3fe6, type: 3}
-  koreanFont: {fileID: 0}
+  mainFont: {fileID: 12800000, guid: 80d111d8d567ca749a67ce59eaa9cb47, type: 3}
+  koreanFont: {fileID: 12800000, guid: 73394ff435373a34fa055a3de71aa430, type: 3}
   uiFontScale: 1
   useV2RaceSystem: 1
   v2_sprintMaxBoost: 0.3
@@ -260,4 +260,20 @@ MonoBehaviour:
   v2_sprintStart_Leader: 0.25
   v2_sprintStart_Chaser: 0.5
   v2_sprintStart_Reckoner: 0.75
+  v2_phaseCoeff_Runner_early: 1
+  v2_phaseCoeff_Runner_mid: 0.985
+  v2_phaseCoeff_Runner_late: 0.97
+  v2_phaseCoeff_Leader_early: 0.985
+  v2_phaseCoeff_Leader_mid: 0.993
+  v2_phaseCoeff_Leader_late: 0.98
+  v2_phaseCoeff_Chaser_early: 0.965
+  v2_phaseCoeff_Chaser_mid: 1
+  v2_phaseCoeff_Chaser_late: 0.99
+  v2_phaseCoeff_Reckoner_early: 0.95
+  v2_phaseCoeff_Reckoner_mid: 1
+  v2_phaseCoeff_Reckoner_late: 1.015
+  v2_drainBaseRate: 1
+  v2_drainExponent: 2
+  v2_phaseEarlyEnd: 0.33
+  v2_phaseMidEnd: 0.66
   enableRaceDebug: 0

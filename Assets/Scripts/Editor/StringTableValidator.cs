@@ -8,18 +8,42 @@ using System.Text.RegularExpressions;
 /// StringTable 키 누락 검증 도구
 /// DopamineRace > Validate StringTable Keys
 ///
-/// 코드(.cs)에서 Loc.Get("str.xxx") 패턴을 스캔하여
-/// StringTable.csv에 없는 키를 Console에 출력한다.
+/// 자동 실행 타이밍:
+///   1) 스크립트 저장·컴파일 완료 시 (DidReloadScripts)
+///   2) Play 버튼 클릭 직전 (playModeStateChanged)
+/// 수동: DopamineRace > Validate StringTable Keys 메뉴
 /// </summary>
+[InitializeOnLoad]
 public class StringTableValidator : EditorWindow
 {
-    private static readonly string CSV_PATH  = "Assets/Resources/Data/StringTable.csv";
+    private static readonly string CSV_PATH     = "Assets/Resources/Data/StringTable.csv";
     private static readonly string SCRIPTS_PATH = "Assets/Scripts";
 
     private Vector2 scroll;
     private List<string> missingKeys = new List<string>();
     private List<string> unusedKeys  = new List<string>();
     private bool validated = false;
+
+    // ── 에디터 시작 / 도메인 리로드 시 Play 모드 감시 등록 ──
+    static StringTableValidator()
+    {
+        EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+        EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+    }
+
+    /// <summary>Play 버튼 클릭 직전에 누락 키 경고</summary>
+    private static void OnPlayModeStateChanged(PlayModeStateChange state)
+    {
+        if (state != PlayModeStateChange.ExitingEditMode) return;
+
+        var missing = FindMissingKeys(out _);
+        if (missing.Count > 0)
+        {
+            string keyList = string.Join("\n  • ", missing);
+            Debug.LogWarning($"[StringTable] ⚠️ Play 진입 전 누락 키 {missing.Count}개 발견!\n  • {keyList}\n" +
+                             "→ DopamineRace > Validate StringTable Keys 로 상세 확인");
+        }
+    }
 
     [MenuItem("DopamineRace/Validate StringTable Keys")]
     public static void ShowWindow()
@@ -29,11 +53,10 @@ public class StringTableValidator : EditorWindow
         w.RunValidation();
     }
 
-    /// <summary>빌드 전 자동 실행 (BuildPlayerProcessor)</summary>
+    /// <summary>스크립트 저장·컴파일 완료 시 자동 실행 (Console 경고만)</summary>
     [UnityEditor.Callbacks.DidReloadScripts]
     private static void OnScriptsReloaded()
     {
-        // 스크립트 리로드 시 자동 검증 (결과는 Console에만 출력)
         var missing = FindMissingKeys(out _);
         if (missing.Count > 0)
         {
