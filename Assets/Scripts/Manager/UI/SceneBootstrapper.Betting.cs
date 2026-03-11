@@ -621,7 +621,7 @@ public partial class SceneBootstrapper
 
         if (pointsFormulaText != null)
             pointsFormulaText.text = string.Format(
-                "<color=#FFE000>{0}</color>x<color=#FF8C00>{1}</color> = {2}",
+                "<color=#FF3333>{0}</color>x<color=#FF8C00>{1}</color> = <color=#1A3FCC>{2}</color>",
                 basePt, odds.ToString("F1"), result);
 
         RefreshMyPoint();
