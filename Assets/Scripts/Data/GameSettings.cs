@@ -1064,4 +1064,15 @@ public partial class GameSettings : ScriptableObject
             Debug.Log("  " + (i + 1) + "위: " + e.score + "점 (" + e.rounds + "R) " + e.date + " | " + e.summary);
         }
     }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Race V3 연결
+    // ══════════════════════════════════════════════════════════════
+
+    [Header("═══ Race V3 ═══")]
+    [Tooltip("V3 설정 에셋. 연결 시 V3 활성화, None이면 V2/V1 사용")]
+    public GameSettingsV3 v3Settings;
+
+    /// <summary>v3Settings가 연결되어 있으면 V3 활성. Inspector 슬롯으로 토글.</summary>
+    public bool useV3RaceSystem => v3Settings != null;
 }

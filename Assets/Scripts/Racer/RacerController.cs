@@ -248,7 +248,7 @@ public partial class RacerController : MonoBehaviour
             if (gsInst.useV3RaceSystem)
             {
                 // V3: 스태미나 = staminaBase + endurance × staminaPerEndurance
-                maxHP = gsInst.v3_staminaBase + charData.charBaseEndurance * gsInst.v3_staminaPerEndurance;
+                maxHP = gsInst.v3Settings.v3_staminaBase + charData.charBaseEndurance * gsInst.v3Settings.v3_staminaPerEndurance;
                 enduranceHP = maxHP;
                 totalConsumedHP = 0f;
                 hpBoostValue = 0f;

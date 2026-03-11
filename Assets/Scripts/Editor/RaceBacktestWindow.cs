@@ -467,7 +467,7 @@ public class RaceBacktestWindow : EditorWindow
                 if (gs.useV3RaceSystem)
                 {
                     // V3: 스태미나 = staminaBase + endurance × staminaPerEndurance
-                    racer.maxHP = gs.v3_staminaBase + cd.charBaseEndurance * gs.v3_staminaPerEndurance;
+                    racer.maxHP = gs.v3Settings.v3_staminaBase + cd.charBaseEndurance * gs.v3Settings.v3_staminaPerEndurance;
                     racer.enduranceHP = racer.maxHP;
                     racer.totalConsumedHP = 0f;
                     racer.hpBoostValue = 0f;
@@ -865,9 +865,9 @@ public class RaceBacktestWindow : EditorWindow
 
             SimUpdateV3Sprint(r, gs, progress);
 
-            float v3MaxSpeedMul = gs.GetV3MaxSpeedMul(cd.charBaseSpeed);
+            float v3MaxSpeedMul = gs.v3Settings.GetV3MaxSpeedMul(cd.charBaseSpeed);
             float v3HpRatio     = r.maxHP > 0f ? Mathf.Clamp01(r.enduranceHP / r.maxHP) : 0f;
-            float v3HpSpeedMul  = gs.GetV3SpeedFromHP(v3HpRatio);
+            float v3HpSpeedMul  = gs.v3Settings.GetV3SpeedFromHP(v3HpRatio);
             float v3SpeedRatio  = Mathf.Lerp(1.0f, v3MaxSpeedMul, r.v3SprintAccelProgress) * v3HpSpeedMul;
 
             float v3CpRatio = r.maxCP > 0f ? r.calmPoints / r.maxCP : 0f;
@@ -1066,14 +1066,14 @@ public class RaceBacktestWindow : EditorWindow
         if (progress < strategyStart) return;
 
         float strategyProg = Mathf.InverseLerp(strategyStart, 1f, progress);
-        if (!r.v3IsSprintActive && strategyProg >= gs.GetV3SprintStart(r.data.charType))
+        if (!r.v3IsSprintActive && strategyProg >= gs.v3Settings.GetV3SprintStart(r.data.charType))
             r.v3IsSprintActive = true;
 
         if (!r.v3IsSprintActive) return;
 
-        float accelRate = 1.0f + r.data.charBaseBrave * gs.v3_braveAccelPerPoint;
+        float accelRate = 1.0f + r.data.charBaseBrave * gs.v3Settings.v3_braveAccelPerPoint;
         float gameDt    = simTimeStep * gs.globalSpeedMultiplier;
-        float step      = gameDt * accelRate / gs.v3_sprintAccelTimeBase;
+        float step      = gameDt * accelRate / gs.v3Settings.v3_sprintAccelTimeBase;
         r.v3SprintAccelProgress = Mathf.MoveTowards(r.v3SprintAccelProgress, 1f, step);
         r.isSprintMode = r.v3SprintAccelProgress > 0.1f;
     }
@@ -1084,8 +1084,8 @@ public class RaceBacktestWindow : EditorWindow
         if (r.enduranceHP <= 0f) return;
 
         float gameDt      = simTimeStep * gs.globalSpeedMultiplier;
-        float drain       = gs.v3_drainBaseRate
-                            * Mathf.Pow(speedRatio, gs.v3_drainExponent)
+        float drain       = gs.v3Settings.v3_drainBaseRate
+                            * Mathf.Pow(speedRatio, gs.v3Settings.v3_drainExponent)
                             * zoneDrainMul;
         float consumption = Mathf.Min(drain * gameDt, r.enduranceHP);
         r.enduranceHP    -= consumption;
@@ -1106,13 +1106,13 @@ public class RaceBacktestWindow : EditorWindow
         if (progress >= strategyStart) return 1.0f;
         if (simRacers <= 1) return 1.0f;
 
-        float zoneTarget  = gs.GetV3ZoneTarget(r.data.charType);
+        float zoneTarget  = gs.v3Settings.GetV3ZoneTarget(r.data.charType);
         float myRankRatio = simRacers > 1
             ? (float)(r.currentRank - 1) / (simRacers - 1) : 0f;
         float diff = myRankRatio - zoneTarget;
 
-        if (diff >  gs.v3_zoneRange) return gs.v3_zoneDrainMul;
-        if (diff < -gs.v3_zoneRange) return gs.v3_zoneSaveMul;
+        if (diff >  gs.v3Settings.v3_zoneRange) return gs.v3Settings.v3_zoneDrainMul;
+        if (diff < -gs.v3Settings.v3_zoneRange) return gs.v3Settings.v3_zoneSaveMul;
         return 1.0f;
     }
 

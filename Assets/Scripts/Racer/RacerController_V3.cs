@@ -25,9 +25,9 @@ public partial class RacerController
         UpdateV3Sprint(gs, Time.deltaTime);
 
         // Step 2: Speed 스탯 → maxSpeedMul, HP → hpSpeedMul
-        float maxSpeedMul = gs.GetV3MaxSpeedMul(charData.charBaseSpeed);
+        float maxSpeedMul = gs.v3Settings.GetV3MaxSpeedMul(charData.charBaseSpeed);
         float hpRatio     = maxHP > 0f ? Mathf.Clamp01(enduranceHP / maxHP) : 0f;
-        float hpSpeedMul  = gs.GetV3SpeedFromHP(hpRatio);
+        float hpSpeedMul  = gs.v3Settings.GetV3SpeedFromHP(hpRatio);
 
         // Step 3: 스프린트 진행률로 속도 배율 결정
         //   v3SprintAccelProgress=0 → 1.0×hpSpeedMul (기본)
@@ -66,15 +66,15 @@ public partial class RacerController
 
         // 타입별 스프린트 발동 시점 판정
         float strategyProg = Mathf.InverseLerp(strategyStart, 1f, OverallProgress);
-        if (!v3IsSprintActive && strategyProg >= gs.GetV3SprintStart(charData.charType))
+        if (!v3IsSprintActive && strategyProg >= gs.v3Settings.GetV3SprintStart(charData.charType))
             v3IsSprintActive = true;
 
         if (!v3IsSprintActive) return;
 
         // brave → accelRate (높을수록 빠르게 최고속 도달)
-        float accelRate = 1.0f + charData.charBaseBrave * gs.v3_braveAccelPerPoint;
+        float accelRate = 1.0f + charData.charBaseBrave * gs.v3Settings.v3_braveAccelPerPoint;
         float gameDt    = dt * gs.globalSpeedMultiplier;
-        float step      = gameDt * accelRate / gs.v3_sprintAccelTimeBase;
+        float step      = gameDt * accelRate / gs.v3Settings.v3_sprintAccelTimeBase;
         v3SprintAccelProgress = Mathf.MoveTowards(v3SprintAccelProgress, 1f, step);
 
         isSprintMode = v3SprintAccelProgress > 0.1f;
@@ -97,12 +97,12 @@ public partial class RacerController
             ? RaceManager.Instance.Racers.Count : 9;
         if (totalRacers <= 1) return 1.0f;
 
-        float zoneTarget  = gs.GetV3ZoneTarget(charData.charType);
+        float zoneTarget  = gs.v3Settings.GetV3ZoneTarget(charData.charType);
         float myRankRatio = (float)(currentRank - 1) / (totalRacers - 1);  // 0=1위, 1=꼴찌
         float diff        = myRankRatio - zoneTarget;
 
-        if (diff >  gs.v3_zoneRange) return gs.v3_zoneDrainMul;  // 뒤처짐 → 추격 비용
-        if (diff < -gs.v3_zoneRange) return gs.v3_zoneSaveMul;   // 너무 앞 → 절약
+        if (diff >  gs.v3Settings.v3_zoneRange) return gs.v3Settings.v3_zoneDrainMul;  // 뒤처짐 → 추격 비용
+        if (diff < -gs.v3Settings.v3_zoneRange) return gs.v3Settings.v3_zoneSaveMul;   // 너무 앞 → 절약
         return 1.0f;                                               // 구역 내 → 정상
     }
 
@@ -120,8 +120,8 @@ public partial class RacerController
         if (enduranceHP <= 0f) return;
 
         float gameDt      = dt * gs.globalSpeedMultiplier;
-        float drain       = gs.v3_drainBaseRate
-                            * Mathf.Pow(speedRatio, gs.v3_drainExponent)
+        float drain       = gs.v3Settings.v3_drainBaseRate
+                            * Mathf.Pow(speedRatio, gs.v3Settings.v3_drainExponent)
                             * zoneDrainMul;
         float consumption = Mathf.Min(drain * gameDt, enduranceHP);
         enduranceHP      -= consumption;

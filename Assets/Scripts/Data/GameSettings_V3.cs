@@ -1,21 +1,14 @@
 using UnityEngine;
 
 /// <summary>
-/// Race V3 시스템 설정 블록.
-/// GameSettings partial class 확장 — V3 전용 필드와 헬퍼 메서드.
+/// Race V3 시스템 설정 블록 — 독립 ScriptableObject.
+/// GameSettings.asset의 v3Settings 슬롯에 연결하면 V3 활성화됨.
+/// Speed → maxSpeed, Endurance → 스태미나 지속력, Brave → 가속도
+/// 포지션 피드백(능동 전략) + 3구간 HP-속도 곡선
 /// </summary>
-public partial class GameSettings
+[CreateAssetMenu(fileName = "GameSettingsV3", menuName = "DopamineRace/GameSettingsV3")]
+public class GameSettingsV3 : ScriptableObject
 {
-    // ══════════════════════════════════════════════════════════════
-    //  Race V3 시스템
-    //  Speed → maxSpeed, Endurance → 스태미나 지속력, Brave → 가속도
-    //  포지션 피드백(능동 전략) + 3구간 HP-속도 곡선
-    // ══════════════════════════════════════════════════════════════
-
-    [Header("═══ Race V3: 시스템 전환 ═══")]
-    [Tooltip("V3 레이스 시스템 활성화 (V3 > V2 > V1 우선순위)")]
-    public bool useV3RaceSystem = false;
-
     [Header("═══ Race V3: 스태미나 (Endurance → maxHP) ═══")]
     [Tooltip("endurance=0일 때 기본 maxHP")]
     public float v3_staminaBase = 50f;
