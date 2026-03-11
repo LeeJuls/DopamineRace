@@ -84,21 +84,21 @@ public class CharacterInfoPopup : MonoBehaviour
             if (shortRow != null)
             {
                 shortDistLabel = FindText(shortRow, "ShortDistLabel");
-                shortDistRanks = FindText(shortRow, "ShortDistRanks");
+                shortDistRanks = FindText(shortRow, "RanksScroll/ShortDistRanks");
             }
 
             Transform midRow = layout1.Find("MidDistRow");
             if (midRow != null)
             {
                 midDistLabel = FindText(midRow, "MidDistLabel");
-                midDistRanks = FindText(midRow, "MidDistRanks");
+                midDistRanks = FindText(midRow, "RanksScroll/MidDistRanks");
             }
 
             Transform longRow = layout1.Find("LongDistRow");
             if (longRow != null)
             {
                 longDistLabel = FindText(longRow, "LongDistLabel");
-                longDistRanks = FindText(longRow, "LongDistRanks");
+                longDistRanks = FindText(longRow, "RanksScroll/LongDistRanks");
             }
         }
 
