@@ -447,20 +447,18 @@ public class CharacterInfoPopup : MonoBehaviour
 
     // ═══ 최근 경기기록 텍스트 ═══
 
-    private const int MAX_DIST_DISPLAY = 5;
+    private const int MAX_DIST_DISPLAY = 10;
 
     /// <summary>
     /// 최근 경기기록을 거리별(단/중/장)로 분류하여 텍스트 갱신
     /// </summary>
     private void UpdateRecentRecords(CharacterRecord record)
     {
-        var gs = GameSettings.Instance;
-
         // 헤더
         if (recentRecordHeader != null)
             recentRecordHeader.text = Loc.Get("str.ui.char.recent_record");
 
-        // 거리별 라벨 (승률 표시 제거 — 순위 목록만 표시)
+        // 거리별 라벨
         if (shortDistLabel != null)
             shortDistLabel.text = Loc.Get("str.ui.track.short");
         if (midDistLabel != null)
@@ -468,26 +466,10 @@ public class CharacterInfoPopup : MonoBehaviour
         if (longDistLabel != null)
             longDistLabel.text = Loc.Get("str.ui.track.long");
 
-        // 거리별 순위 분류
-        List<int> shortRanks = new List<int>();
-        List<int> midRanks = new List<int>();
-        List<int> longRanks = new List<int>();
-
-        if (record != null && gs != null)
-        {
-            foreach (var entry in record.recentRaceEntries)
-            {
-                if (entry.laps <= 0) continue; // 레거시 마이그레이션 엔트리 스킵
-
-                string distKey = gs.GetDistanceKey(entry.laps);
-                if (distKey == "str.ui.track.short" && shortRanks.Count < MAX_DIST_DISPLAY)
-                    shortRanks.Add(entry.rank);
-                else if (distKey == "str.ui.track.mid" && midRanks.Count < MAX_DIST_DISPLAY)
-                    midRanks.Add(entry.rank);
-                else if (distKey == "str.ui.track.long" && longRanks.Count < MAX_DIST_DISPLAY)
-                    longRanks.Add(entry.rank);
-            }
-        }
+        // 거리별 독립 리스트에서 최대 MAX_DIST_DISPLAY개 추출
+        List<int> shortRanks = Slice(record != null ? record.recentShortRanks : null);
+        List<int> midRanks   = Slice(record != null ? record.recentMidRanks   : null);
+        List<int> longRanks  = Slice(record != null ? record.recentLongRanks  : null);
 
         // 텍스트 갱신
         if (shortDistRanks != null)
@@ -496,6 +478,15 @@ public class CharacterInfoPopup : MonoBehaviour
             midDistRanks.text = FormatRankList(midRanks);
         if (longDistRanks != null)
             longDistRanks.text = FormatRankList(longRanks);
+    }
+
+    private List<int> Slice(List<int> src)
+    {
+        var result = new List<int>();
+        if (src == null) return result;
+        for (int i = 0; i < src.Count && i < MAX_DIST_DISPLAY; i++)
+            result.Add(src[i]);
+        return result;
     }
 
     /// <summary>순위 리스트를 rich text 색상 코딩 문자열로 변환</summary>
