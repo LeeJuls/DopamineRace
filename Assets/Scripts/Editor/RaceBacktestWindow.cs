@@ -175,6 +175,14 @@ public class RaceBacktestWindow : EditorWindow
 
         // ★ 구간별 포지션 추적
         public bool[] segRecorded;        // 각 체크포인트 통과 여부
+
+        // ★ 랩 구간별 순위 추적 (25%/50%/100%)
+        public bool[] lapCP25Done;
+        public bool[] lapCP50Done;
+        public bool[] lapCP100Done;
+        public int[]  lapRankAt25;
+        public int[]  lapRankAt50;
+        public int[]  lapRankAt100;
     }
 
     private struct SlingshotReserve
@@ -262,6 +270,11 @@ public class RaceBacktestWindow : EditorWindow
         // ★ 구간별 타입 순위 추적
         public Dictionary<string, float[]> typeSegRankSum;
         public Dictionary<string, int[]> typeSegRankCount;
+
+        // ★ 랩×구간 타입 순위 추적 (index = lap*3 + phase, phase: 0=25%, 1=50%, 2=100%)
+        public Dictionary<string, float[]> typeLapPhaseRankSum;
+        public Dictionary<string, int[]>   typeLapPhaseRankCount;
+        public int lapPhaseSimLaps;
     }
 
     // ══════════════════════════════════════
@@ -427,6 +440,16 @@ public class RaceBacktestWindow : EditorWindow
             typeSegRankCount[typeName] = new int[segCount];
         }
 
+        // ★ 랩×구간 순위 추적 초기화 (phase: 0=25%, 1=50%, 2=100%)
+        int lapPhaseCount = simLaps * 3;
+        Dictionary<string, float[]> typeLapPhaseRankSum   = new Dictionary<string, float[]>();
+        Dictionary<string, int[]>   typeLapPhaseRankCount = new Dictionary<string, int[]>();
+        foreach (string typeName in new[] { "도주", "선행", "선입", "추입" })
+        {
+            typeLapPhaseRankSum[typeName]   = new float[lapPhaseCount];
+            typeLapPhaseRankCount[typeName] = new int[lapPhaseCount];
+        }
+
         for (int race = 0; race < simCount; race++)
         {
             // 랜덤 선발
@@ -496,6 +519,14 @@ public class RaceBacktestWindow : EditorWindow
 
                 // 구간 추적 초기화
                 racer.segRecorded = new bool[segCheckpoints.Length];
+
+                // 랩 구간 순위 추적 초기화
+                racer.lapCP25Done  = new bool[simLaps];
+                racer.lapCP50Done  = new bool[simLaps];
+                racer.lapCP100Done = new bool[simLaps];
+                racer.lapRankAt25  = new int[simLaps];
+                racer.lapRankAt50  = new int[simLaps];
+                racer.lapRankAt100 = new int[simLaps];
 
                 racers.Add(racer);
                 stats[cd.charId].raceCount++;
@@ -591,6 +622,23 @@ public class RaceBacktestWindow : EditorWindow
                     r.currentSpeed = Mathf.Lerp(r.currentSpeed, targetSpeed, simTimeStep * effectiveLerp);
                     r.position += r.currentSpeed * simTimeStep;
 
+                    // ★ 랩 구간별 순위 기록 (25%/50%/100%)
+                    {
+                        float lapF = r.position / totalTrackLength;
+                        int   lapI = Mathf.Min((int)lapF, simLaps - 1);
+                        float frac = lapF - (int)lapF;
+                        if (lapI >= 0 && lapI < simLaps)
+                        {
+                            if (!r.lapCP25Done[lapI] && frac >= 0.25f) { r.lapRankAt25[lapI] = r.currentRank; r.lapCP25Done[lapI] = true; }
+                            if (!r.lapCP50Done[lapI] && frac >= 0.50f) { r.lapRankAt50[lapI] = r.currentRank; r.lapCP50Done[lapI] = true; }
+                        }
+                        // 완료된 이전 랩 100% 기록
+                        for (int prevLap = 0; prevLap < lapI && prevLap < simLaps; prevLap++)
+                        {
+                            if (!r.lapCP100Done[prevLap]) { r.lapRankAt100[prevLap] = r.currentRank; r.lapCP100Done[prevLap] = true; }
+                        }
+                    }
+
                     // ★ 구간별 포지션 기록
                     float prog = Mathf.Clamp01(r.position / finishDistance);
                     for (int si = 0; si < segCheckpoints.Length; si++)
@@ -662,6 +710,18 @@ public class RaceBacktestWindow : EditorWindow
                 if (r.finishOrder == 1) s.winCount++;
                 if (r.finishOrder <= 3) s.top3Count++;
 
+                // ★ 랩 구간별 순위 누적
+                string tname = r.data.GetTypeName();
+                if (typeLapPhaseRankSum.ContainsKey(tname))
+                {
+                    for (int lap = 0; lap < simLaps; lap++)
+                    {
+                        if (r.lapCP25Done[lap])  { typeLapPhaseRankSum[tname][lap*3+0] += r.lapRankAt25[lap];  typeLapPhaseRankCount[tname][lap*3+0]++; }
+                        if (r.lapCP50Done[lap])  { typeLapPhaseRankSum[tname][lap*3+1] += r.lapRankAt50[lap];  typeLapPhaseRankCount[tname][lap*3+1]++; }
+                        if (r.lapCP100Done[lap]) { typeLapPhaseRankSum[tname][lap*3+2] += r.lapRankAt100[lap]; typeLapPhaseRankCount[tname][lap*3+2]++; }
+                    }
+                }
+
                 globalCrits += r.critCount;
                 globalCollisions += r.collisionWins;
                 globalDodges += r.dodgeCount;
@@ -688,7 +748,10 @@ public class RaceBacktestWindow : EditorWindow
             globalDodges = globalDodges,
             globalSlingshots = globalSlingshots,
             typeSegRankSum = typeSegRankSum,
-            typeSegRankCount = typeSegRankCount
+            typeSegRankCount = typeSegRankCount,
+            typeLapPhaseRankSum   = typeLapPhaseRankSum,
+            typeLapPhaseRankCount = typeLapPhaseRankCount,
+            lapPhaseSimLaps       = simLaps,
         };
     }
 
@@ -1651,6 +1714,46 @@ public class RaceBacktestWindow : EditorWindow
                     }
                     display.AppendLine();
                     md.AppendLine();
+                }
+                md.AppendLine();
+            }
+
+            // ── 랩별 구간 타입 순위 (25%/50%/완료) ──
+            if (tr.typeLapPhaseRankSum != null && tr.lapPhaseSimLaps >= 1)
+            {
+                string[] lpTypeOrder  = { "도주", "선행", "선입", "추입" };
+                string[] phaseLabels  = { "25%", "50%", "완료" };
+
+                display.AppendFormat("\n──── [{0}] 랩별 구간 타입 순위 ────\n", tn);
+                display.Append("  구간          ");
+                foreach (var stn in lpTypeOrder) display.AppendFormat(" {0,-6}", stn);
+                display.AppendLine();
+
+                md.AppendLine("### 랩별 구간 타입 순위");
+                md.AppendLine();
+                md.AppendLine("| 구간 | 도주 | 선행 | 선입 | 추입 |");
+                md.AppendLine("|------|------|------|------|------|");
+
+                for (int lap = 0; lap < tr.lapPhaseSimLaps; lap++)
+                {
+                    for (int phase = 0; phase < 3; phase++)
+                    {
+                        string label = string.Format("{0}랩 {1}", lap + 1, phaseLabels[phase]);
+                        display.AppendFormat("  {0,-14}", label);
+                        md.AppendFormat("| {0} |", label);
+
+                        int idx = lap * 3 + phase;
+                        foreach (var stn in lpTypeOrder)
+                        {
+                            int cnt   = tr.typeLapPhaseRankCount.ContainsKey(stn) ? tr.typeLapPhaseRankCount[stn][idx] : 0;
+                            float avg = cnt > 0 ? tr.typeLapPhaseRankSum[stn][idx] / cnt : 0f;
+                            display.AppendFormat(" {0,5:F2} ", avg > 0 ? avg : 0f);
+                            md.AppendFormat(" {0:F2} |", avg > 0 ? avg : 0f);
+                        }
+                        display.AppendLine();
+                        md.AppendLine();
+                    }
+                    if (lap < tr.lapPhaseSimLaps - 1) { display.AppendLine(); md.AppendLine(); }
                 }
                 md.AppendLine();
             }

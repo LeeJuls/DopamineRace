@@ -58,9 +58,8 @@ public class RaceDebugOverlay : MonoBehaviour
 
     private Dictionary<int, bool> prevCritState = new Dictionary<int, bool>();
 
-    // ── 바퀴별 HP 스냅샷 추적 ──
-    private Dictionary<int, int> prevLapState = new Dictionary<int, int>();  // racerIndex → 마지막 기록된 lap
-    private int lastSnapshotLap = -1;  // 마지막으로 스냅샷을 찍은 바퀴
+    // ── 랩 구간별 스냅샷 추적 ──
+    private HashSet<string> recordedCheckpoints = new HashSet<string>(); // "L{lap}_{25|50|100}"
 
     // ── HP 탭 UI ──
     // (탭 시스템으로 전환 — 별도 스크롤 불필요)
@@ -106,10 +105,17 @@ public class RaceDebugOverlay : MonoBehaviour
         public List<LapSnapshot> lapSnapshots = new List<LapSnapshot>();
     }
 
-    /// <summary>바퀴 완료 시 전체 캐릭터 스냅샷</summary>
+    /// <summary>랩 구간별 전체 캐릭터 스냅샷 (25% / 50% / 100%)</summary>
     public class LapSnapshot
     {
         public int lap;
+        public float subProgress;  // 0.25, 0.50, or 1.00
+        public string GetLabel()
+        {
+            return subProgress >= 1f
+                ? string.Format("{0}바퀴 완료", lap)
+                : string.Format("{0}바퀴 {1}%", lap, (int)(subProgress * 100));
+        }
         public List<LapRacerInfo> racers = new List<LapRacerInfo>();
     }
 
@@ -160,8 +166,7 @@ public class RaceDebugOverlay : MonoBehaviour
         currentRound = round;
         viewingRound = -1;
         prevCritState.Clear();
-        prevLapState.Clear();
-        lastSnapshotLap = -1;
+        recordedCheckpoints.Clear();
 
         // 새 라운드 로그 생성 (덮어쓰기 아님, 새로 만듦)
         allRoundLogs[round] = new RoundLog { round = round };
@@ -298,14 +303,14 @@ public class RaceDebugOverlay : MonoBehaviour
         foreach (var e in log.finishEvents)
             sb.AppendLine(e.ToPlainText());
 
-        // HP 바퀴별 스냅샷
+        // HP 랩별 스냅샷 (25%/50%/100%)
         if (log.lapSnapshots.Count > 0)
         {
-            sb.AppendFormat("\n▶ HP 바퀴별 ({0}바퀴)\n", log.lapSnapshots.Count);
+            sb.AppendFormat("\n▶ 랩별 순위/HP ({0}개 구간)\n", log.lapSnapshots.Count);
             sb.AppendLine("────────────────────────");
             foreach (var snapshot in log.lapSnapshots)
             {
-                sb.AppendFormat("── {0}바퀴 완료 ──\n", snapshot.lap);
+                sb.AppendFormat("── {0} ──\n", snapshot.GetLabel());
                 foreach (var info in snapshot.racers)
                 {
                     sb.AppendFormat("  {0}위 {1} ({2})  HP:{3:F0}%\n",
@@ -447,47 +452,49 @@ public class RaceDebugOverlay : MonoBehaviour
     }
 
     /// <summary>
-    /// 바퀴 완료 시 HP 스냅샷 기록.
-    /// 선두 주자의 currentLap이 변할 때 전체 레이서 상태를 기록한다.
+    /// 랩 진행 중 25%/50%/100% 구간 도달 시 스냅샷 기록.
+    /// 선두 주자의 OverallProgress를 기준으로 구간 통과 여부를 감지한다.
     /// </summary>
     private void CheckLapSnapshots(RaceManager rm)
     {
-        // 선두 주자의 현재 바퀴 확인 (가장 높은 currentLap)
-        int maxLap = 0;
+        int totalLaps = rm.CurrentLaps;
+        if (totalLaps <= 0) return;
+
+        // 선두 주자 진행률
+        float maxProgress = 0f;
         foreach (var racer in rm.Racers)
         {
             if (racer.IsFinished) continue;
-            if (racer.CurrentLap > maxLap) maxLap = racer.CurrentLap;
+            float p = racer.OverallProgress;
+            if (p > maxProgress) maxProgress = p;
         }
 
-        // 바퀴가 넘어갔고, 아직 스냅샷을 안 찍은 바퀴가 있으면 기록
-        // (예: 0→1 넘어가면 "1바퀴 완료" 시점 스냅샷)
-        if (maxLap > 0 && maxLap > lastSnapshotLap)
+        float leaderLapProg = maxProgress * totalLaps; // e.g. 1.75 = 2번째 랩 75%
+
+        for (int lap = 1; lap <= totalLaps; lap++)
         {
-            // 중간에 놓친 바퀴가 있을 수 있으므로 루프
-            for (int lap = lastSnapshotLap + 1; lap <= maxLap; lap++)
+            // 25% / 50% / 100% (완료)
+            float[] subs = { 0.25f, 0.50f, 1.00f };
+            foreach (float sub in subs)
             {
-                if (lap <= 0) continue;
-                TakeLapSnapshot(rm, lap);
+                string key = string.Format("L{0}_{1}", lap, (int)(sub * 100));
+                float threshold = (lap - 1) + sub; // e.g. lap=1 sub=0.25 → 0.25
+                if (!recordedCheckpoints.Contains(key) && leaderLapProg >= threshold)
+                {
+                    recordedCheckpoints.Add(key);
+                    TakeLapSnapshot(rm, lap, sub);
+                }
             }
-            lastSnapshotLap = maxLap;
         }
     }
 
-    /// <summary>특정 바퀴 완료 시 전체 레이서 HP 스냅샷 기록</summary>
-    private void TakeLapSnapshot(RaceManager rm, int completedLap)
+    /// <summary>특정 랩의 구간(25%/50%/100%) 스냅샷 기록</summary>
+    private void TakeLapSnapshot(RaceManager rm, int lap, float subProgress)
     {
         var log = GetOrCreateLog(currentRound);
 
-        // 중복 방지
-        foreach (var existing in log.lapSnapshots)
-        {
-            if (existing.lap == completedLap) return;
-        }
+        var snapshot = new LapSnapshot { lap = lap, subProgress = subProgress };
 
-        var snapshot = new LapSnapshot { lap = completedLap };
-
-        // 현재 순위 기반 정렬
         var ranked = rm.GetLiveRankings();
         for (int i = 0; i < ranked.Count; i++)
         {
@@ -508,7 +515,7 @@ public class RaceDebugOverlay : MonoBehaviour
         }
 
         log.lapSnapshots.Add(snapshot);
-        Debug.Log(string.Format("[Debug] {0}바퀴 HP 스냅샷 기록 ({1}명)", completedLap, snapshot.racers.Count));
+        Debug.Log(string.Format("[Debug] {0} 스냅샷 기록 ({1}명)", snapshot.GetLabel(), snapshot.racers.Count));
     }
 
     // ══════════════════════════════════════
@@ -817,18 +824,21 @@ public class RaceDebugOverlay : MonoBehaviour
         }
     }
 
-    // ── 탭 1: HP 바퀴별 스냅샷 ──
+    // ── 탭 1: HP 랩별 스냅샷 ──
     private void DrawHPTabContent(RoundLog displayLog)
     {
         if (displayLog == null || displayLog.lapSnapshots.Count == 0)
         {
-            GUILayout.Label("  <color=#888888>(아직 바퀴 완료 데이터 없음)</color>", normalStyle);
+            GUILayout.Label("  <color=#888888>(아직 데이터 없음 — 선두가 25% 구간 도달 시 표시)</color>", normalStyle);
             return;
         }
 
         foreach (var snapshot in displayLog.lapSnapshots)
         {
-            GUILayout.Label(string.Format("<color=#FFDD44>── {0}바퀴 완료 ──</color>", snapshot.lap), normalStyle);
+            // 100% 완료는 노란색, 25%/50%는 하늘색
+            string labelColor = snapshot.subProgress >= 1f ? "#FFDD44" : "#88CCFF";
+            GUILayout.Label(string.Format("<color={0}>── {1} ──</color>", labelColor, snapshot.GetLabel()), normalStyle);
+
             foreach (var info in snapshot.racers)
             {
                 string hpColor = info.hpPercent > 50f ? "#66FF66"
@@ -844,7 +854,7 @@ public class RaceDebugOverlay : MonoBehaviour
                     info.rank, info.name, info.typeName,
                     hpColor, bar, info.hpPercent), normalStyle);
             }
-            GUILayout.Space(4);
+            GUILayout.Space(2);
         }
     }
 
