@@ -4,7 +4,7 @@ using UnityEngine;
 /// 게임 세팅 데이터 (Unity Inspector에서 편집 가능)
 /// </summary>
 [CreateAssetMenu(fileName = "GameSettings", menuName = "DopamineRace/GameSettings")]
-public class GameSettings : ScriptableObject
+public partial class GameSettings : ScriptableObject
 {
     [Header("═══ 레이서 설정 ═══")]
     [Tooltip("한 레이스당 참가 레이서 수 (고정: 9명)")]

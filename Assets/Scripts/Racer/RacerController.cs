@@ -2,7 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 
-public class RacerController : MonoBehaviour
+public partial class RacerController : MonoBehaviour
 {
     // ── 기본 정보 ──
     private int racerIndex;
@@ -62,6 +62,10 @@ public class RacerController : MonoBehaviour
     private float v2SprintAccelProgress = 0f;  // 전력질주 가속 진행률 0~1
     private bool v2IsSprintActive = false;     // V2 전력질주 활성 여부
 
+    // ── Race V3 시스템 ──
+    private float v3SprintAccelProgress = 0f;  // V3 전력질주 가속 진행률 0~1
+    private bool v3IsSprintActive = false;     // V3 전력질주 활성 여부
+
     // ── CP 시스템 (Calm Points) ──
     private float calmPoints;                  // 현재 CP
     private float maxCP;                       // 최대 CP (calm × cpMultiplier)
@@ -80,6 +84,8 @@ public class RacerController : MonoBehaviour
     public float SlingshotBoost => slingshotBoost;
     public bool V2IsSprintActive => v2IsSprintActive;
     public float V2SprintAccelProgress => v2SprintAccelProgress;
+    public bool V3IsSprintActive => v3IsSprintActive;
+    public float V3SprintAccelProgress => v3SprintAccelProgress;
 
     // ── HP 시스템 외부 접근 ──
     public float EnduranceHP => enduranceHP;
@@ -231,24 +237,40 @@ public class RacerController : MonoBehaviour
         v2SprintAccelProgress = 0f;
         v2IsSprintActive = false;
 
-        // HP 시스템 초기화
-        if (charData != null && GameSettings.Instance.useHPSystem)
-        {
-            int totalLaps = GetTotalLaps();
-            if (GameSettings.Instance.useV2RaceSystem)
-                maxHP = GameSettings.Instance.CalcMaxHP(charData.charBaseEndurance); // V2: 랩 스케일링 없음 — 절대 시간 기반 소모
-            else
-                maxHP = GameSettings.Instance.CalcMaxHP(charData.charBaseEndurance, totalLaps);
-            enduranceHP = maxHP;
-            totalConsumedHP = 0f;
-            hpBoostValue = 0f;
-            slipstreamBlend = 0f;
-            currentRank = racerIndex + 1;
+        // V3 스프린트 상태 리셋
+        v3SprintAccelProgress = 0f;
+        v3IsSprintActive = false;
 
-            // CP 시스템 초기화
-            var gs = GameSettings.Instance;
-            maxCP = charData.charBaseCalm * gs.cpMultiplier;
-            calmPoints = maxCP;
+        // HP / V3 스태미나 초기화
+        if (charData != null)
+        {
+            var gsInst = GameSettings.Instance;
+            if (gsInst.useV3RaceSystem)
+            {
+                // V3: 스태미나 = staminaBase + endurance × staminaPerEndurance
+                maxHP = gsInst.v3_staminaBase + charData.charBaseEndurance * gsInst.v3_staminaPerEndurance;
+                enduranceHP = maxHP;
+                totalConsumedHP = 0f;
+                hpBoostValue = 0f;
+                slipstreamBlend = 0f;
+                currentRank = racerIndex + 1;
+                maxCP = charData.charBaseCalm * gsInst.cpMultiplier;
+                calmPoints = maxCP;
+            }
+            else if (gsInst.useHPSystem)
+            {
+                int totalLaps = GetTotalLaps();
+                maxHP = gsInst.useV2RaceSystem
+                    ? gsInst.CalcMaxHP(charData.charBaseEndurance) // V2: 랩 스케일링 없음
+                    : gsInst.CalcMaxHP(charData.charBaseEndurance, totalLaps);
+                enduranceHP = maxHP;
+                totalConsumedHP = 0f;
+                hpBoostValue = 0f;
+                slipstreamBlend = 0f;
+                currentRank = racerIndex + 1;
+                maxCP = charData.charBaseCalm * gsInst.cpMultiplier;
+                calmPoints = maxCP;
+            }
         }
 
         if (animator != null) animator.SetTrigger("Run");
@@ -383,7 +405,12 @@ public class RacerController : MonoBehaviour
 
         float speed = GetBaseTrackSpeed(gs, track);
 
-        if (gs.useHPSystem)
+        if (gs.useV3RaceSystem)
+        {
+            // ═══ Race V3: 스탯 기반 재설계 ═══
+            speed = CalcSpeedV3(gs, track, condMul);
+        }
+        else if (gs.useHPSystem)
         {
             // ═══ 속도 압축 (V1/V2 공유) ═══
             // 캐릭터 간 기본 속도 차이를 줄여 부스트/전력질주가 역전 가능하게

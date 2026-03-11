@@ -169,6 +169,10 @@ public class RaceBacktestWindow : EditorWindow
         public float v2SprintAccelProgress; // 전력질주 가속 진행률 0~1
         public bool v2IsSprintActive;       // V2 전력질주 활성 여부
 
+        // ★ Race V3 시스템
+        public float v3SprintAccelProgress; // V3 전력질주 가속 진행률 0~1
+        public bool v3IsSprintActive;       // V3 전력질주 활성 여부
+
         // ★ 구간별 포지션 추적
         public bool[] segRecorded;        // 각 체크포인트 통과 여부
     }
@@ -459,8 +463,22 @@ public class RaceBacktestWindow : EditorWindow
                     finished = false, finishOrder = 0
                 };
 
-                // HP 시스템 초기화
-                if (gs.useHPSystem)
+                // HP / V3 스태미나 초기화
+                if (gs.useV3RaceSystem)
+                {
+                    // V3: 스태미나 = staminaBase + endurance × staminaPerEndurance
+                    racer.maxHP = gs.v3_staminaBase + cd.charBaseEndurance * gs.v3_staminaPerEndurance;
+                    racer.enduranceHP = racer.maxHP;
+                    racer.totalConsumedHP = 0f;
+                    racer.hpBoostValue = 0f;
+                    racer.currentRank = 0;
+                    racer.slipstreamBlend = 0f;
+                    racer.maxCP = cd.charBaseCalm * gs.cpMultiplier;
+                    racer.calmPoints = racer.maxCP;
+                    racer.v3SprintAccelProgress = 0f;
+                    racer.v3IsSprintActive = false;
+                }
+                else if (gs.useHPSystem)
                 {
                     racer.maxHP = gs.useV2RaceSystem
                         ? gs.CalcMaxHP(cd.charBaseEndurance)        // V2: 랩 스케일링 없음
@@ -839,7 +857,31 @@ public class RaceBacktestWindow : EditorWindow
         float typeBonus = 0f;
         float fatigue = 0f;
 
-        if (gs.useHPSystem)
+        if (gs.useV3RaceSystem)
+        {
+            // ═══ Race V3: 스탯 기반 재설계 ═══
+            // V3 base: 모든 캐릭터 동일 (speed 스탯은 maxSpeedMul에 반영)
+            baseSpeed = globalMul * trackSpeedMul;
+
+            SimUpdateV3Sprint(r, gs, progress);
+
+            float v3MaxSpeedMul = gs.GetV3MaxSpeedMul(cd.charBaseSpeed);
+            float v3HpRatio     = r.maxHP > 0f ? Mathf.Clamp01(r.enduranceHP / r.maxHP) : 0f;
+            float v3HpSpeedMul  = gs.GetV3SpeedFromHP(v3HpRatio);
+            float v3SpeedRatio  = Mathf.Lerp(1.0f, v3MaxSpeedMul, r.v3SprintAccelProgress) * v3HpSpeedMul;
+
+            float v3CpRatio = r.maxCP > 0f ? r.calmPoints / r.maxCP : 0f;
+            float v3CpEff   = gs.GetCPEfficiency(v3CpRatio);
+            float v3SsBonus = gs.GetSlipstreamBonus(cd.charType, r.slipstreamBlend, v3CpEff);
+            v3SpeedRatio *= (1f + v3SsBonus);
+
+            float v3ZoneDrainMul = SimCalcV3ZoneDrainMul(r, gs, progress);
+            SimConsumeHP_V3(r, gs, v3SpeedRatio, v3ZoneDrainMul);
+
+            typeBonus = v3SpeedRatio - 1f;
+            r.contrib_type += baseSpeed * typeBonus * simTimeStep;
+        }
+        else if (gs.useHPSystem)
         {
             // ═══ 속도 압축 (V1/V2 공유) ═══
             if (gs.hpSpeedCompress > 0f)
@@ -908,7 +950,7 @@ public class RaceBacktestWindow : EditorWindow
         }
 
         float powerBonus = 0f, braveBonus = 0f;
-        if (track != null)
+        if (track != null && !gs.useV3RaceSystem)
         {
             powerBonus = (cd.charBasePower / 20f) * track.powerSpeedBonus;
             braveBonus = (cd.charBaseBrave / 20f) * track.braveSpeedBonus;
@@ -953,7 +995,7 @@ public class RaceBacktestWindow : EditorWindow
 
         float speed = baseSpeed * (1f + typeBonus + powerBonus + braveBonus);
         speed += r.noiseValue;
-        if (!gs.useHPSystem) speed -= fatigue; // HP 시스템: fatigue 내장
+        if (!gs.useHPSystem && !gs.useV3RaceSystem) speed -= fatigue; // HP/V3 시스템: fatigue 내장
 
         // ═══ 초반 대형: 타입별 포지션 정렬 ═══
         float formationMod = gs.GetFormationModifier(
@@ -1011,6 +1053,67 @@ public class RaceBacktestWindow : EditorWindow
 
         // Burst Lerp 호환
         r.isSprintMode = r.v2IsSprintActive && r.v2SprintAccelProgress > 0.1f;
+    }
+
+    // ══════════════════════════════════════
+    //  Race V3 미러 (RacerController_V3 동일 로직)
+    // ══════════════════════════════════════
+
+    /// <summary>V3 스프린트 판정 (RacerController_V3.UpdateV3Sprint 미러)</summary>
+    private void SimUpdateV3Sprint(SimRacer r, GameSettings gs, float progress)
+    {
+        float strategyStart = gs.formationHoldLapEnd / simLaps;
+        if (progress < strategyStart) return;
+
+        float strategyProg = Mathf.InverseLerp(strategyStart, 1f, progress);
+        if (!r.v3IsSprintActive && strategyProg >= gs.GetV3SprintStart(r.data.charType))
+            r.v3IsSprintActive = true;
+
+        if (!r.v3IsSprintActive) return;
+
+        float accelRate = 1.0f + r.data.charBaseBrave * gs.v3_braveAccelPerPoint;
+        float gameDt    = simTimeStep * gs.globalSpeedMultiplier;
+        float step      = gameDt * accelRate / gs.v3_sprintAccelTimeBase;
+        r.v3SprintAccelProgress = Mathf.MoveTowards(r.v3SprintAccelProgress, 1f, step);
+        r.isSprintMode = r.v3SprintAccelProgress > 0.1f;
+    }
+
+    /// <summary>V3 HP 소모 (RacerController_V3.ConsumeHP_V3 미러)</summary>
+    private void SimConsumeHP_V3(SimRacer r, GameSettings gs, float speedRatio, float zoneDrainMul)
+    {
+        if (r.enduranceHP <= 0f) return;
+
+        float gameDt      = simTimeStep * gs.globalSpeedMultiplier;
+        float drain       = gs.v3_drainBaseRate
+                            * Mathf.Pow(speedRatio, gs.v3_drainExponent)
+                            * zoneDrainMul;
+        float consumption = Mathf.Min(drain * gameDt, r.enduranceHP);
+        r.enduranceHP    -= consumption;
+        r.totalConsumedHP += consumption;
+
+        // 선두 HP 택스
+        if (r.currentRank <= gs.leadPaceTaxRank && r.enduranceHP > 0f)
+        {
+            float tax = Mathf.Min(gs.leadPaceTaxRate * gameDt, r.enduranceHP);
+            r.enduranceHP -= tax;
+        }
+    }
+
+    /// <summary>V3 포지션 피드백 드레인 배율 (RacerController_V3.CalcV3ZoneDrainMul 미러)</summary>
+    private float SimCalcV3ZoneDrainMul(SimRacer r, GameSettings gs, float progress)
+    {
+        float strategyStart = gs.formationHoldLapEnd / simLaps;
+        if (progress >= strategyStart) return 1.0f;
+        if (simRacers <= 1) return 1.0f;
+
+        float zoneTarget  = gs.GetV3ZoneTarget(r.data.charType);
+        float myRankRatio = simRacers > 1
+            ? (float)(r.currentRank - 1) / (simRacers - 1) : 0f;
+        float diff = myRankRatio - zoneTarget;
+
+        if (diff >  gs.v3_zoneRange) return gs.v3_zoneDrainMul;
+        if (diff < -gs.v3_zoneRange) return gs.v3_zoneSaveMul;
+        return 1.0f;
     }
 
     // ══════════════════════════════════════
