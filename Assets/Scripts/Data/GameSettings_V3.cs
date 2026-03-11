@@ -70,6 +70,13 @@ public class GameSettingsV3 : ScriptableObject
     [Range(0.3f, 1.0f)]
     public float v3_zoneSaveMul  = 0.7f;
 
+    [Header("═══ Race V3: 포메이션 속도 캡 ═══")]
+    [Tooltip("포메이션 구간(positioningLapEnd)에서 목표 존보다 앞선 레이서의 속도 상한.\n" +
+             "속도 감소 → 드레인도 비례 감소 (HP 자동 절약).\n" +
+             "1.0 = 캡 없음, 0.90 = 10% 감속")]
+    [Range(0.7f, 1.0f)]
+    public float v3_formationSpeedCap = 0.92f;
+
     [Header("═══ Race V3: 스프린트 타이밍 ═══")]
     [Tooltip("스프린트 0→최대 가속 시간 (gameDt, 별도 파라미터 — v3_sprintAccelTimeBase와 구분)")]
     public float v3_sprintAccelTime      = 2.5f;

@@ -34,6 +34,10 @@ public partial class RacerController
         //   v3SprintAccelProgress=1 → maxSpeedMul×hpSpeedMul (전력질주)
         float speedRatio = Mathf.Lerp(1.0f, maxSpeedMul, v3SprintAccelProgress) * hpSpeedMul;
 
+        // Step 3.5: 포메이션 속도 캡 (positioningLapEnd 구간 내, 존보다 앞선 레이서만)
+        // 속도 감소 시 드레인도 speedRatio^exponent 공식에 의해 자동 감소 → HP 절약
+        speedRatio *= CalcV3FormationSpeedCap(gs);
+
         // Step 4: 슬립스트림 보너스 (CP 연동)
         float cpEff   = gs.GetCPEfficiency(CPRatio);
         float ssBonus = gs.GetSlipstreamBonus(charData.charType, slipstreamBlend, cpEff);
@@ -78,6 +82,36 @@ public partial class RacerController
         v3SprintAccelProgress = Mathf.MoveTowards(v3SprintAccelProgress, 1f, step);
 
         isSprintMode = v3SprintAccelProgress > 0.1f;
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  V3 포메이션 속도 캡
+    // ──────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 포메이션 구간(positioningLapEnd까지)에서 목표 존보다 앞선 레이서 속도 제한.
+    /// 속도 감소 → 드레인 공식(speedRatio^exponent)에 의해 HP 소모도 자동 감소.
+    /// Runner/Leader는 앞쪽 존이 목표라 페널티 잘 안 걸림.
+    /// Chaser/Reckoner가 선두 부근에 있으면 자연스럽게 대형 형성.
+    /// </summary>
+    private float CalcV3FormationSpeedCap(GameSettings gs)
+    {
+        // positioningLapEnd 이후 → OFF (TotalProgress 단위를 OverallProgress로 변환)
+        float posEnd = gs.positioningLapEnd / GetTotalLaps();
+        if (OverallProgress >= posEnd) return 1.0f;
+
+        int totalRacers = RaceManager.Instance != null
+            ? RaceManager.Instance.Racers.Count : 9;
+        if (totalRacers <= 1) return 1.0f;
+
+        float zoneTarget  = gs.v3Settings.GetV3ZoneTarget(charData.charType);
+        float myRankRatio = (float)(currentRank - 1) / (totalRacers - 1);  // 0=1위, 1=꼴찌
+        float diff        = myRankRatio - zoneTarget;
+
+        // 목표 존보다 앞서면(diff 음수, 절대값이 zoneRange 초과) → 속도 캡
+        if (diff < -gs.v3Settings.v3_zoneRange)
+            return gs.v3Settings.v3_formationSpeedCap;
+        return 1.0f;
     }
 
     // ──────────────────────────────────────────────────────────────

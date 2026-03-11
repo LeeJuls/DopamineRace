@@ -870,6 +870,9 @@ public class RaceBacktestWindow : EditorWindow
             float v3HpSpeedMul  = gs.v3Settings.GetV3SpeedFromHP(v3HpRatio);
             float v3SpeedRatio  = Mathf.Lerp(1.0f, v3MaxSpeedMul, r.v3SprintAccelProgress) * v3HpSpeedMul;
 
+            // 포메이션 속도 캡 (드레인도 자동 감소)
+            v3SpeedRatio *= SimCalcV3FormationSpeedCap(r, gs, progress);
+
             float v3CpRatio = r.maxCP > 0f ? r.calmPoints / r.maxCP : 0f;
             float v3CpEff   = gs.GetCPEfficiency(v3CpRatio);
             float v3SsBonus = gs.GetSlipstreamBonus(cd.charType, r.slipstreamBlend, v3CpEff);
@@ -1097,6 +1100,23 @@ public class RaceBacktestWindow : EditorWindow
             float tax = Mathf.Min(gs.leadPaceTaxRate * gameDt, r.enduranceHP);
             r.enduranceHP -= tax;
         }
+    }
+
+    /// <summary>V3 포메이션 속도 캡 (RacerController_V3.CalcV3FormationSpeedCap 미러)</summary>
+    private float SimCalcV3FormationSpeedCap(SimRacer r, GameSettings gs, float progress)
+    {
+        float posEnd = gs.positioningLapEnd / simLaps;
+        if (progress >= posEnd) return 1.0f;
+        if (simRacers <= 1) return 1.0f;
+
+        float zoneTarget  = gs.v3Settings.GetV3ZoneTarget(r.data.charType);
+        float myRankRatio = simRacers > 1
+            ? (float)(r.currentRank - 1) / (simRacers - 1) : 0f;
+        float diff = myRankRatio - zoneTarget;
+
+        if (diff < -gs.v3Settings.v3_zoneRange)
+            return gs.v3Settings.v3_formationSpeedCap;
+        return 1.0f;
     }
 
     /// <summary>V3 포지션 피드백 드레인 배율 (RacerController_V3.CalcV3ZoneDrainMul 미러)</summary>
