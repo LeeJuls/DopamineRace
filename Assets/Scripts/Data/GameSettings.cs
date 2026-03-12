@@ -4,7 +4,7 @@ using UnityEngine;
 /// 게임 세팅 데이터 (Unity Inspector에서 편집 가능)
 /// </summary>
 [CreateAssetMenu(fileName = "GameSettings", menuName = "DopamineRace/GameSettings")]
-public class GameSettings : ScriptableObject
+public partial class GameSettings : ScriptableObject
 {
     [Header("═══ 레이서 설정 ═══")]
     [Tooltip("한 레이스당 참가 레이서 수 (고정: 9명)")]
@@ -1064,4 +1064,15 @@ public class GameSettings : ScriptableObject
             Debug.Log("  " + (i + 1) + "위: " + e.score + "점 (" + e.rounds + "R) " + e.date + " | " + e.summary);
         }
     }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Race V3 연결
+    // ══════════════════════════════════════════════════════════════
+
+    [Header("═══ Race V3 ═══")]
+    [Tooltip("V3 설정 에셋. 연결 시 V3 활성화, None이면 V2/V1 사용")]
+    public GameSettingsV3 v3Settings;
+
+    /// <summary>v3Settings가 연결되어 있으면 V3 활성. Inspector 슬롯으로 토글.</summary>
+    public bool useV3RaceSystem => v3Settings != null;
 }

@@ -87,3 +87,6 @@ Docs/logs/
 # Unity 자동 복구 씬 (크래시 시 자동생성 임시파일)
 /[Aa]ssets/[_]Recovery/
 /[Aa]ssets/[_]Recovery.meta
+
+# UI 디자이너 파일 전달 임시 폴더 (적용 후 불필요, 히스토리 관리 없음)
+/[Aa]ssets/[Dd]esign/[Ii]ncoming/
