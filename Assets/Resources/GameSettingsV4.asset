@@ -16,7 +16,7 @@ MonoBehaviour:
   spurtTriggerLapRemain: 0.4
   v4_staminaBase: 80
   v4_staminaPerStat: 3
-  v4_drainBaseRate: 0.08
+  v4_drainBaseRate: 0.016
   v4_slipstreamDrainMul: 0.7
   v4_exhaustSpeedFloor: 0.5
   v4_exhaustDecel: 2
@@ -40,6 +40,17 @@ MonoBehaviour:
   v4_luckCritBoost: 1.3
   v4_luckCritDuration: 1.5
   v4_luckDodgeChance: 0.02
+  v4_normalSpeedRatio: 0.85
+  v4_burstSpeedRatio: 1
+  v4_finalSpurtStart: 0.8
+  v4_runnerBurstStart: 0
+  v4_runnerBurstEnd: 0.2
+  v4_leaderBurstStart: 0.2
+  v4_leaderBurstEnd: 0.4
+  v4_chaserBurstStart: 0.4
+  v4_chaserBurstEnd: 0.6
+  v4_reckonerBurstStart: 0.6
+  v4_reckonerBurstEnd: 0.8
   v4_runnerTargetRank: 1
   v4_leaderTargetMin: 2
   v4_leaderTargetMax: 4
