@@ -30,13 +30,10 @@
 ---
 
 ## 에이전트 공용 규칙
-1. **단계별 개발**: 개발 → 테스트 → 수정 → 테스트 사이클 반복
+1. **단계별 개발**: 계획 → 구현 → 검증 사이클 반복
 2. **사용자 호출**: 혼자 해결 불가 시 반드시 오너(LeeJuls) 호출
 3. **기획 분석 및 제안**: 더 좋은 안 있으면 적극 제안
-4. **에이전트 간 논의**: 각자 분석·논의하여 최적안 도출
-5. **push 전 확인**: 오너 확인 없이 절대 push 금지
-6. **핵심 목표 준수**: 우마무스메급 쫄깃한 레이싱 체감이 모든 개발의 기준
-7. **다국어 필수**: 모든 UI 문자열은 `StringTable.csv` 키 추가 필수 — 하드코딩 금지 (7개 언어)
+4. **다국어 필수**: 모든 UI 문자열은 `StringTable.csv` 키 추가 필수 — 하드코딩 금지 (7개 언어)
 
 ## 에이전트 구성
 | 에이전트 | 역할 |
@@ -48,12 +45,29 @@
 
 ---
 
+## 디버깅 원칙
+> 근본 원인 없이 절대 수정 금지
+
+1. **원인 먼저** — 에러 재현 → 로그·스택 확인 → 최근 변경 이력 추적 → 가설 수립
+2. **한 번에 하나** — 여러 곳 동시 수정 금지, 한 가지 변경 후 결과 확인
+3. **3회 실패 규칙** — 같은 문제 3회 이상 수정 실패 시 즉시 중단 → 아키텍처 재검토 + 오너 호출
+
+## 완료 전 검증 원칙
+> "됐습니다" 발언 전 반드시 실증
+
+- Unity 코드 변경 후 **컴파일 에러 없음** 확인 필수
+- MCP로 Play 가능한 상황이면 **실행 확인 후** 완료 보고
+- "아마 될 것", "should work" 발언 금지
+- `RaceBacktestWindow` 수정 시 **`RacerController`도 반드시 동시 수정** (미러링)
+
+---
+
 ## 주요 아키텍처 요약
 - **씬**: TitleScene(0) → SampleScene(1)
 - **레이스 자원**: HP(지구력/스프린트) + CP(침착/슬립스트림)
 - **캐릭터 타입**: Runner(도주) / Leader(선행) / Chaser(선입) / Reckoner(추입)
-- **ConsumeHP() 4단계**: Positioning(0~0.5랩) → FormationHold(0.5~1랩) → Strategy(1랩~) → Legacy
-- **hpSpeedCompress=0.85** → 기본속도 격차 ~0.83% 압축 (HP 부스트가 레이스 결과 결정)
+- **레이스 단계**: Positioning → FormationHold → Strategy (V3: `GameSettingsV3.asset` 기준)
+- **기본속도 격차 압축** → HP 부스트가 레이스 결과를 결정 (수치는 `GameSettings.asset` 참조)
 - **MCP**: `Assets/Plugins/UnityCodeMcpServer` (Unity ↔ Claude 직접 제어)
 - **프리팹**: 코드 자동생성 → `DopamineRace > Create Betting UI Prefabs` 필수
 - **다국어**: `Resources/Data/StringTable.csv` (7개 언어: ko·en·ja·zh_CN·de·es·br)
