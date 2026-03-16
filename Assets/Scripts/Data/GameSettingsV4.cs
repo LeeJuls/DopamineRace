@@ -37,7 +37,7 @@ public class GameSettingsV4 : ScriptableObject
              "maxHP에 비례하지 않으므로 지구력이 높을수록 유리\n" +
              "기준: 지구력20(HP140) Burst 19% = HP 41% 소모\n" +
              "drain = v4_drainAbsolutePerTrack × progressDelta × phaseMul")]
-    public float v4_drainAbsolutePerTrack = 120f;
+    public float v4_drainAbsolutePerTrack = 90f;
 
     [Tooltip("슬립스트림(앞 캐릭터 뒤) 효과: 드레인 감소 배율\n예: 0.7 = 30% 절약")]
     [Range(0.5f, 1.0f)]
@@ -163,7 +163,7 @@ public class GameSettingsV4 : ScriptableObject
 
     [Tooltip("최종 스퍼트 구간 HP 추가 소모 배율\n예: 2.0 = Spurt 구간에서 2배 소모")]
     [Range(1.0f, 4.0f)]
-    public float v4_spurtDrainMul = 1.0f;
+    public float v4_spurtDrainMul = 1.5f;
 
     [Header("  [타입별 부스트 구간 — 전체 진행도 0~1]")]
     [Tooltip("도주 부스트 시작 (0~5% 워밍업 후)")]
