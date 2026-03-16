@@ -32,12 +32,11 @@ public class GameSettingsV4 : ScriptableObject
     [Tooltip("스태미나 스탯 1당 추가 HP")]
     public float v4_staminaPerStat = 3f;
 
-    [Tooltip("진행도 기반 스태미나 절대 소모량 (HP 단위)\n" +
-             "전체 트랙(100%)을 기본 달리기로 완주 시 소모되는 고정 HP량\n" +
-             "maxHP에 비례하지 않으므로 지구력이 높을수록 유리\n" +
-             "기준: 지구력20(HP140) Burst 19% = HP 41% 소모\n" +
-             "drain = v4_drainAbsolutePerTrack × progressDelta × phaseMul")]
-    public float v4_drainAbsolutePerTrack = 112f;
+    [Tooltip("바퀴당 절대 HP 소모량\n" +
+             "1바퀴 기본 달리기 완주 시 소모되는 고정 HP량\n" +
+             "총 드레인 = drainPerLap × totalLaps\n" +
+             "기준: 22.4 × 5바퀴 = 112HP → 지구력20(HP140) 기준 20% 잔여")]
+    public float v4_drainPerLap = 22.4f;
 
     [Tooltip("슬립스트림(앞 캐릭터 뒤) 효과: 드레인 감소 배율\n예: 0.7 = 30% 절약")]
     [Range(0.5f, 1.0f)]

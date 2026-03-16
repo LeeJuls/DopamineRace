@@ -185,9 +185,10 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     }
 
     // ──────────────────────────────────────────────
-    //  V4 스태미나 소모 — 진행도(거리) 기반, 고정 절대량
-    //  drain = drainAbsolutePerTrack × progressDelta × phaseMul
-    //  → maxHP 비례 아님! 지구력 높을수록 HP% 소모 적음 = 지구력 이점
+    //  V4 스태미나 소모 — 바퀴당 절대량 기반
+    //  drain = drainPerLap × totalLaps × progressDelta × phaseMul
+    //  → 바퀴 수에 비례하여 총 드레인 증가 (진짜 절대 거리 소모)
+    //  → 단거리(2바퀴): HP 넉넉 / 장거리(5바퀴): HP 관리 필수
     // ──────────────────────────────────────────────
 
     private void ConsumeStaminaV4(float dt, GameSettingsV4 gs)
@@ -200,8 +201,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         if (progressDelta <= 0f) return;
 
-        // 기본 드레인: 고정 절대량 (maxHP 비례 아님 → 지구력 높을수록 유리)
-        float drain = gs.v4_drainAbsolutePerTrack * progressDelta;
+        // 바퀴당 절대 드레인 × 총 바퀴 수 (절대 거리 소모)
+        int totalLaps = GetTotalLaps();
+        float drain = gs.v4_drainPerLap * totalLaps * progressDelta;
 
         // 구간별 추가 소모
         if      (currentProgress >= gs.v4_finalSpurtStart) drain *= gs.v4_spurtDrainMul;
