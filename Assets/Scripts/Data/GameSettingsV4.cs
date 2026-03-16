@@ -156,13 +156,13 @@ public class GameSettingsV4 : ScriptableObject
     [Range(0.5f, 0.95f)]
     public float v4_finalSpurtStart = 0.86f;
 
-    [Tooltip("부스트 구간 HP 추가 소모 배율\n예: 2.5 = Burst 20%에서 HP 40% 소진 (Normal의 2.5배)")]
+    [Tooltip("부스트 구간 HP 추가 소모 배율\n예: 1.8 = Burst 구간에서 Normal의 1.8배 HP 소모")]
     [Range(1.0f, 5.0f)]
-    public float v4_burstDrainMul = 1.0f;
+    public float v4_burstDrainMul = 1.8f;
 
-    [Tooltip("최종 스퍼트 구간 HP 추가 소모 배율\n예: 2.0 = Spurt 구간에서 2배 소모")]
+    [Tooltip("최종 스퍼트 구간 HP 추가 소모 배율\n예: 2.5 = Spurt 구간에서 2.5배 소모 (HP 연소)")]
     [Range(1.0f, 4.0f)]
-    public float v4_spurtDrainMul = 1.0f;
+    public float v4_spurtDrainMul = 2.5f;
 
     [Header("  [타입별 부스트 구간 — 전체 진행도 0~1]")]
     [Tooltip("도주 부스트 시작 (0~5% 워밍업 후)")]
