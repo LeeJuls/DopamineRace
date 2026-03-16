@@ -37,6 +37,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
     private bool v4InSlipstream = false;
     private float v4ThinkTimer = 0f;
+    private float v4LastProgress = 0f;  // 진행도 기반 드레인용
 
     // ──────────────────────────────────────────────
     //  V4 페이즈 열거형 (로그/디버그용)
@@ -77,6 +78,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         v4IsPanicking = false;
         v4InSlipstream = false;
         v4ThinkTimer  = 0f;
+        v4LastProgress = 0f;
 
         Debug.Log($"[RacerController V4] InitV4 완료 — {charDataV4.charId} " +
                   $"Type={charDataV4.charType} Stamina={v4MaxStamina:F1}");
@@ -183,27 +185,32 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     }
 
     // ──────────────────────────────────────────────
-    //  V4 스태미나 소모
-    //  drain = maxHP × drainBaseRate × (currentSpeed / globalSpeedMultiplier)
+    //  V4 스태미나 소모 — 진행도(거리) 기반
+    //  drain = maxHP × drainPerFullTrack × progressDelta × phaseMul
+    //  → 바퀴 수 상관없이 트랙 20%를 달리면 동일한 HP% 소모
     // ──────────────────────────────────────────────
 
     private void ConsumeStaminaV4(float dt, GameSettingsV4 gs)
     {
         if (charDataV4 == null || v4CurrentStamina <= 0) return;
 
-        float baseSpeed  = GameSettings.Instance.globalSpeedMultiplier;
-        float speedRatio = baseSpeed > 0 ? currentSpeed / baseSpeed : 1f;
-        float drain      = v4MaxStamina * gs.v4_drainBaseRate * speedRatio;
+        float currentProgress = GetOverallProgress();
+        float progressDelta   = Mathf.Max(0f, currentProgress - v4LastProgress);
+        v4LastProgress = currentProgress;
 
-        // 구간별 추가 소모 (v4Phase 대신 progress 직접 계산 — phase는 CalcSpeedV4 후 갱신되므로 순서 문제 방지)
-        float p = GetOverallProgress();
-        if      (p >= gs.v4_finalSpurtStart) drain *= gs.v4_spurtDrainMul;
-        else if (IsInBurstZone(gs, p))       drain *= gs.v4_burstDrainMul;
+        if (progressDelta <= 0f) return;
+
+        // 기본 드레인: 100% 진행 시 maxHP × drainPerFullTrack 소모
+        float drain = v4MaxStamina * gs.v4_drainPerFullTrack * progressDelta;
+
+        // 구간별 추가 소모
+        if      (currentProgress >= gs.v4_finalSpurtStart) drain *= gs.v4_spurtDrainMul;
+        else if (IsInBurstZone(gs, currentProgress))       drain *= gs.v4_burstDrainMul;
 
         if (v4InSlipstream) drain *= gs.v4_slipstreamDrainMul;
         if (v4IsPanicking)  drain *= gs.v4_panicDrainMul;
 
-        v4CurrentStamina = Mathf.Max(0f, v4CurrentStamina - drain * dt);
+        v4CurrentStamina = Mathf.Max(0f, v4CurrentStamina - drain);
         enduranceHP      = v4CurrentStamina; // 디버그 시스템 호환
     }
 

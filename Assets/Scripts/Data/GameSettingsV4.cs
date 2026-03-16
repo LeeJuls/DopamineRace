@@ -32,11 +32,11 @@ public class GameSettingsV4 : ScriptableObject
     [Tooltip("스태미나 스탯 1당 추가 HP")]
     public float v4_staminaPerStat = 3f;
 
-    [Tooltip("스태미나 소모율 (Vmax 주행 시 초당 maxHP의 몇 %를 소모하는가)\n" +
-             "예: 0.016 = Vmax로 25초(3랩) 달리면 maxHP의 40% 소모\n" +
-             "     → 크루징 20초×0.016=32%, 스퍼트 5초×0.016×1.2=9.6% 소모\n" +
-             "drain = maxHP × drainBaseRate × (currentSpeed / globalSpeedMultiplier)")]
-    public float v4_drainBaseRate = 0.008f;
+    [Tooltip("진행도 기반 스태미나 소모율\n" +
+             "전체 트랙(100%)을 기본 달리기로 완주 시 maxHP의 몇 %를 소모하는가\n" +
+             "예: 0.80 = 전체 트랙 Normal 완주 시 HP 80% 소모\n" +
+             "drain = maxHP × drainPerFullTrack × progressDelta × phaseMul")]
+    public float v4_drainPerFullTrack = 0.80f;
 
     [Tooltip("슬립스트림(앞 캐릭터 뒤) 효과: 드레인 감소 배율\n예: 0.7 = 30% 절약")]
     [Range(0.5f, 1.0f)]
@@ -156,9 +156,9 @@ public class GameSettingsV4 : ScriptableObject
     [Range(0.5f, 0.95f)]
     public float v4_finalSpurtStart = 0.80f;
 
-    [Tooltip("부스트 구간 HP 추가 소모 배율\n예: 1.5 = Burst 구간에서 50% 추가 소모")]
-    [Range(1.0f, 3.0f)]
-    public float v4_burstDrainMul = 1.7f;
+    [Tooltip("부스트 구간 HP 추가 소모 배율\n예: 2.5 = Burst 20%에서 HP 40% 소진 (Normal의 2.5배)")]
+    [Range(1.0f, 5.0f)]
+    public float v4_burstDrainMul = 2.5f;
 
     [Tooltip("최종 스퍼트 구간 HP 추가 소모 배율\n예: 2.0 = Spurt 구간에서 2배 소모")]
     [Range(1.0f, 4.0f)]
