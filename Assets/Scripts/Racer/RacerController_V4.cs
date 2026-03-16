@@ -188,6 +188,10 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         float speedRatio = baseSpeed > 0 ? currentSpeed / baseSpeed : 1f;
         float drain      = v4MaxStamina * gs.v4_drainBaseRate * speedRatio;
 
+        // 구간별 추가 소모
+        if (v4Phase == V4Phase.Burst) drain *= gs.v4_burstDrainMul;
+        if (v4Phase == V4Phase.Spurt) drain *= gs.v4_spurtDrainMul;
+
         if (v4InSlipstream) drain *= gs.v4_slipstreamDrainMul;
         if (v4IsPanicking)  drain *= gs.v4_panicDrainMul;
 

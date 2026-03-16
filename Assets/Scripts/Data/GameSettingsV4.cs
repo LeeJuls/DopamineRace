@@ -145,8 +145,8 @@ public class GameSettingsV4 : ScriptableObject
     // ═══════════════════════════════════════════════
     [Header("═══ 구간별 속도 ═══")]
     [Tooltip("기본 달리기 속도 배율 (Vmax 대비)\n부스트/최종스퍼트 외 구간의 속도")]
-    [Range(0.6f, 1.0f)]
-    public float v4_normalSpeedRatio = 0.85f;
+    [Range(0.5f, 1.0f)]
+    public float v4_normalSpeedRatio = 0.70f;
 
     [Tooltip("부스트 구간 속도 배율 (Vmax 대비)\n각 타입 고유 구간에서 전력질주 속도")]
     [Range(0.9f, 1.2f)]
@@ -155,6 +155,14 @@ public class GameSettingsV4 : ScriptableObject
     [Tooltip("최종 스퍼트 시작 지점 (전체 진행도 기준)\n예: 0.80 = 마지막 20%부터 전원 스퍼트")]
     [Range(0.5f, 0.95f)]
     public float v4_finalSpurtStart = 0.80f;
+
+    [Tooltip("부스트 구간 HP 추가 소모 배율\n예: 1.5 = Burst 구간에서 50% 추가 소모")]
+    [Range(1.0f, 3.0f)]
+    public float v4_burstDrainMul = 1.5f;
+
+    [Tooltip("최종 스퍼트 구간 HP 추가 소모 배율\n예: 2.0 = Spurt 구간에서 2배 소모")]
+    [Range(1.0f, 4.0f)]
+    public float v4_spurtDrainMul = 2.0f;
 
     [Header("  [타입별 부스트 구간 — 전체 진행도 0~1]")]
     [Tooltip("도주 부스트 시작 (기본: 0.0 = 레이스 시작부터)")]
