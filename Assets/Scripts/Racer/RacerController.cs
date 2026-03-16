@@ -346,11 +346,19 @@ public partial class RacerController : MonoBehaviour
 
         // ── 1) 스탯 기반 속도 계산 ──
         float finalSpeed = CalculateSpeed(gs);
-        // [SPEC-RC-002] 스프린트 진입 시 Burst Lerp로 즉각 가속 연출
-        float effectiveLerp = isSprintMode
-            ? gs.raceSpeedLerp * gs.sprintBurstLerpMult
-            : gs.raceSpeedLerp;
-        currentSpeed = Mathf.Lerp(currentSpeed, finalSpeed, Time.deltaTime * effectiveLerp);
+        if (gs.useV4RaceSystem)
+        {
+            // V4: CalcSpeedV4 내부에서 Lerp 완료됨 — 이중 Lerp 방지
+            currentSpeed = finalSpeed;
+        }
+        else
+        {
+            // [SPEC-RC-002] 스프린트 진입 시 Burst Lerp로 즉각 가속 연출
+            float effectiveLerp = isSprintMode
+                ? gs.raceSpeedLerp * gs.sprintBurstLerpMult
+                : gs.raceSpeedLerp;
+            currentSpeed = Mathf.Lerp(currentSpeed, finalSpeed, Time.deltaTime * effectiveLerp);
+        }
 
         // ── 2) 경로 이탈 업데이트 ──
         UpdateDeviation();
