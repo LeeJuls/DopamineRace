@@ -146,10 +146,17 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             if (!v4IsSpurting) v4Phase = V4Phase.Normal;
         }
 
-        // ── 탈진: 스태미나 10% 미만이면 속도 강제 감소 ──
+        // ── HP 비율에 따라 vmax 점진적 감소 ──
+        // HP 100% → vmax×1.0, HP 0% → vmax×exhaustSpeedFloor (ex: ×0.8)
         float staminaRatio = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina : 0f;
-        if (staminaRatio < 0.1f)
-            target = Mathf.Lerp(vmax * gs.v4_exhaustSpeedFloor, target, staminaRatio / 0.1f);
+        vmax *= Mathf.Lerp(gs.v4_exhaustSpeedFloor, 1.0f, staminaRatio);
+        // target도 감소한 vmax 기준으로 재계산
+        if (progress >= gs.v4_finalSpurtStart)
+            target = vmax * gs.v4_spurtVmaxBonus;
+        else if (IsInBurstZone(gs, progress))
+            target = vmax * gs.v4_burstSpeedRatio;
+        else
+            target = vmax * gs.v4_normalSpeedRatio;
 
         // ── Accel 스탯 기반 Lerp ──────────────────
         currentSpeed  = Mathf.Lerp(currentSpeed, target, Time.deltaTime * accelRate);

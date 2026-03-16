@@ -36,7 +36,7 @@ public class GameSettingsV4 : ScriptableObject
              "예: 0.016 = Vmax로 25초(3랩) 달리면 maxHP의 40% 소모\n" +
              "     → 크루징 20초×0.016=32%, 스퍼트 5초×0.016×1.2=9.6% 소모\n" +
              "drain = maxHP × drainBaseRate × (currentSpeed / globalSpeedMultiplier)")]
-    public float v4_drainBaseRate = 0.016f;
+    public float v4_drainBaseRate = 0.008f;
 
     [Tooltip("슬립스트림(앞 캐릭터 뒤) 효과: 드레인 감소 배율\n예: 0.7 = 30% 절약")]
     [Range(0.5f, 1.0f)]
@@ -44,7 +44,7 @@ public class GameSettingsV4 : ScriptableObject
 
     [Tooltip("스태미나 0 도달 시 최고속도 강제 감소 배율\n예: 0.50 = 최고속의 50%로 제한")]
     [Range(0.3f, 0.7f)]
-    public float v4_exhaustSpeedFloor = 0.50f;
+    public float v4_exhaustSpeedFloor = 0.80f;
 
     [Tooltip("스태미나 고갈 후 추가 감속 (초당 속도 감소량)")]
     public float v4_exhaustDecel = 2.0f;
@@ -58,7 +58,7 @@ public class GameSettingsV4 : ScriptableObject
 
     [Tooltip("스퍼트 진입 시 Vmax 상승 배율\n예: 1.20 = 스퍼트 중 20% 더 빠름")]
     [Range(1.0f, 1.5f)]
-    public float v4_spurtVmaxBonus = 1.20f;
+    public float v4_spurtVmaxBonus = 1.30f;
 
     // ═══════════════════════════════════════════════
     //  가속도 (Accel)
@@ -146,11 +146,11 @@ public class GameSettingsV4 : ScriptableObject
     [Header("═══ 구간별 속도 ═══")]
     [Tooltip("기본 달리기 속도 배율 (Vmax 대비)\n부스트/최종스퍼트 외 구간의 속도")]
     [Range(0.5f, 1.0f)]
-    public float v4_normalSpeedRatio = 0.70f;
+    public float v4_normalSpeedRatio = 1.0f;
 
     [Tooltip("부스트 구간 속도 배율 (Vmax 대비)\n각 타입 고유 구간에서 전력질주 속도")]
-    [Range(0.9f, 1.2f)]
-    public float v4_burstSpeedRatio = 1.0f;
+    [Range(0.9f, 2.0f)]
+    public float v4_burstSpeedRatio = 1.5f;
 
     [Tooltip("최종 스퍼트 시작 지점 (전체 진행도 기준)\n예: 0.80 = 마지막 20%부터 전원 스퍼트")]
     [Range(0.5f, 0.95f)]
@@ -158,11 +158,11 @@ public class GameSettingsV4 : ScriptableObject
 
     [Tooltip("부스트 구간 HP 추가 소모 배율\n예: 1.5 = Burst 구간에서 50% 추가 소모")]
     [Range(1.0f, 3.0f)]
-    public float v4_burstDrainMul = 1.5f;
+    public float v4_burstDrainMul = 1.7f;
 
     [Tooltip("최종 스퍼트 구간 HP 추가 소모 배율\n예: 2.0 = Spurt 구간에서 2배 소모")]
     [Range(1.0f, 4.0f)]
-    public float v4_spurtDrainMul = 2.0f;
+    public float v4_spurtDrainMul = 1.0f;
 
     [Header("  [타입별 부스트 구간 — 전체 진행도 0~1]")]
     [Tooltip("도주 부스트 시작 (기본: 0.0 = 레이스 시작부터)")]
