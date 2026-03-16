@@ -1074,5 +1074,16 @@ public partial class GameSettings : ScriptableObject
     public GameSettingsV3 v3Settings;
 
     /// <summary>v3Settings가 연결되어 있으면 V3 활성. Inspector 슬롯으로 토글.</summary>
-    public bool useV3RaceSystem => v3Settings != null;
+    public bool useV3RaceSystem => v3Settings != null && v4Settings == null;
+
+    // ══════════════════════════════════════════════════════════════
+    //  Race V4 연결 (우선순위 최고: V4 > V3 > Legacy)
+    // ══════════════════════════════════════════════════════════════
+
+    [Header("═══ Race V4 ═══")]
+    [Tooltip("V4 설정 에셋. 연결 시 V4 활성화 (V3보다 우선).\n5대 스탯(Speed/Accel/Stamina/Power/Intelligence)+Luck 기반 완전 새 달리기 시스템")]
+    public GameSettingsV4 v4Settings;
+
+    /// <summary>v4Settings가 연결되어 있으면 V4 활성. V4 > V3 > Legacy 우선순위.</summary>
+    public bool useV4RaceSystem => v4Settings != null;
 }
