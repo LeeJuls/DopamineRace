@@ -32,11 +32,12 @@ public class GameSettingsV4 : ScriptableObject
     [Tooltip("스태미나 스탯 1당 추가 HP")]
     public float v4_staminaPerStat = 3f;
 
-    [Tooltip("진행도 기반 스태미나 소모율\n" +
-             "전체 트랙(100%)을 기본 달리기로 완주 시 maxHP의 몇 %를 소모하는가\n" +
-             "예: 0.80 = 전체 트랙 Normal 완주 시 HP 80% 소모\n" +
-             "drain = maxHP × drainPerFullTrack × progressDelta × phaseMul")]
-    public float v4_drainPerFullTrack = 0.80f;
+    [Tooltip("진행도 기반 스태미나 절대 소모량 (HP 단위)\n" +
+             "전체 트랙(100%)을 기본 달리기로 완주 시 소모되는 고정 HP량\n" +
+             "maxHP에 비례하지 않으므로 지구력이 높을수록 유리\n" +
+             "기준: 지구력20(HP140) Burst 19% = HP 41% 소모\n" +
+             "drain = v4_drainAbsolutePerTrack × progressDelta × phaseMul")]
+    public float v4_drainAbsolutePerTrack = 120f;
 
     [Tooltip("슬립스트림(앞 캐릭터 뒤) 효과: 드레인 감소 배율\n예: 0.7 = 30% 절약")]
     [Range(0.5f, 1.0f)]
@@ -152,9 +153,9 @@ public class GameSettingsV4 : ScriptableObject
     [Range(0.9f, 2.5f)]
     public float v4_burstSpeedRatio = 2.0f;
 
-    [Tooltip("최종 스퍼트 시작 지점 (전체 진행도 기준)\n예: 0.80 = 마지막 20%부터 전원 스퍼트")]
+    [Tooltip("최종 스퍼트 시작 지점 (전체 진행도 기준)\n예: 0.86 = 마지막 14%부터 전원 스퍼트")]
     [Range(0.5f, 0.95f)]
-    public float v4_finalSpurtStart = 0.80f;
+    public float v4_finalSpurtStart = 0.86f;
 
     [Tooltip("부스트 구간 HP 추가 소모 배율\n예: 2.5 = Burst 20%에서 HP 40% 소진 (Normal의 2.5배)")]
     [Range(1.0f, 5.0f)]
@@ -165,33 +166,33 @@ public class GameSettingsV4 : ScriptableObject
     public float v4_spurtDrainMul = 1.0f;
 
     [Header("  [타입별 부스트 구간 — 전체 진행도 0~1]")]
-    [Tooltip("도주 부스트 시작 (기본: 0.0 = 레이스 시작부터)")]
+    [Tooltip("도주 부스트 시작 (0~5% 워밍업 후)")]
     [Range(0f, 0.5f)]
-    public float v4_runnerBurstStart = 0.00f;
-    [Tooltip("도주 부스트 종료 (기본: 0.2 = 전체 20%까지)")]
+    public float v4_runnerBurstStart = 0.06f;
+    [Tooltip("도주 부스트 종료")]
     [Range(0.1f, 0.8f)]
-    public float v4_runnerBurstEnd = 0.20f;
+    public float v4_runnerBurstEnd = 0.25f;
 
     [Tooltip("선행 부스트 시작")]
     [Range(0f, 0.5f)]
-    public float v4_leaderBurstStart = 0.20f;
+    public float v4_leaderBurstStart = 0.26f;
     [Tooltip("선행 부스트 종료")]
     [Range(0.1f, 0.8f)]
-    public float v4_leaderBurstEnd = 0.40f;
+    public float v4_leaderBurstEnd = 0.45f;
 
     [Tooltip("선입 부스트 시작")]
     [Range(0f, 0.6f)]
-    public float v4_chaserBurstStart = 0.40f;
+    public float v4_chaserBurstStart = 0.46f;
     [Tooltip("선입 부스트 종료")]
     [Range(0.2f, 0.9f)]
-    public float v4_chaserBurstEnd = 0.60f;
+    public float v4_chaserBurstEnd = 0.65f;
 
     [Tooltip("추입 부스트 시작")]
     [Range(0f, 0.7f)]
-    public float v4_reckonerBurstStart = 0.60f;
+    public float v4_reckonerBurstStart = 0.66f;
     [Tooltip("추입 부스트 종료 (finalSpurtStart와 맞닿아야 함)")]
     [Range(0.3f, 1.0f)]
-    public float v4_reckonerBurstEnd = 0.80f;
+    public float v4_reckonerBurstEnd = 0.85f;
 
     // ═══════════════════════════════════════════════
     //  포지션별 목표 순위 범위

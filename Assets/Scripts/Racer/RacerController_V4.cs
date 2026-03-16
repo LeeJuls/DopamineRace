@@ -185,9 +185,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     }
 
     // ──────────────────────────────────────────────
-    //  V4 스태미나 소모 — 진행도(거리) 기반
-    //  drain = maxHP × drainPerFullTrack × progressDelta × phaseMul
-    //  → 바퀴 수 상관없이 트랙 20%를 달리면 동일한 HP% 소모
+    //  V4 스태미나 소모 — 진행도(거리) 기반, 고정 절대량
+    //  drain = drainAbsolutePerTrack × progressDelta × phaseMul
+    //  → maxHP 비례 아님! 지구력 높을수록 HP% 소모 적음 = 지구력 이점
     // ──────────────────────────────────────────────
 
     private void ConsumeStaminaV4(float dt, GameSettingsV4 gs)
@@ -200,8 +200,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         if (progressDelta <= 0f) return;
 
-        // 기본 드레인: 100% 진행 시 maxHP × drainPerFullTrack 소모
-        float drain = v4MaxStamina * gs.v4_drainPerFullTrack * progressDelta;
+        // 기본 드레인: 고정 절대량 (maxHP 비례 아님 → 지구력 높을수록 유리)
+        float drain = gs.v4_drainAbsolutePerTrack * progressDelta;
 
         // 구간별 추가 소모
         if      (currentProgress >= gs.v4_finalSpurtStart) drain *= gs.v4_spurtDrainMul;
