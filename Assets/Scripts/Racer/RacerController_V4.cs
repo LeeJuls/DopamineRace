@@ -195,9 +195,10 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         float speedRatio = baseSpeed > 0 ? currentSpeed / baseSpeed : 1f;
         float drain      = v4MaxStamina * gs.v4_drainBaseRate * speedRatio;
 
-        // 구간별 추가 소모
-        if (v4Phase == V4Phase.Burst) drain *= gs.v4_burstDrainMul;
-        if (v4Phase == V4Phase.Spurt) drain *= gs.v4_spurtDrainMul;
+        // 구간별 추가 소모 (v4Phase 대신 progress 직접 계산 — phase는 CalcSpeedV4 후 갱신되므로 순서 문제 방지)
+        float p = GetOverallProgress();
+        if      (p >= gs.v4_finalSpurtStart) drain *= gs.v4_spurtDrainMul;
+        else if (IsInBurstZone(gs, p))       drain *= gs.v4_burstDrainMul;
 
         if (v4InSlipstream) drain *= gs.v4_slipstreamDrainMul;
         if (v4IsPanicking)  drain *= gs.v4_panicDrainMul;
