@@ -37,7 +37,7 @@ public class GameSettingsV4 : ScriptableObject
              "maxHP에 비례하지 않으므로 지구력이 높을수록 유리\n" +
              "기준: 지구력20(HP140) Burst 19% = HP 41% 소모\n" +
              "drain = v4_drainAbsolutePerTrack × progressDelta × phaseMul")]
-    public float v4_drainAbsolutePerTrack = 120f;
+    public float v4_drainAbsolutePerTrack = 112f;
 
     [Tooltip("슬립스트림(앞 캐릭터 뒤) 효과: 드레인 감소 배율\n예: 0.7 = 30% 절약")]
     [Range(0.5f, 1.0f)]
