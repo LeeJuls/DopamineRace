@@ -72,11 +72,8 @@ public class GameSettingsV4 : ScriptableObject
     //  파워 (Power) — 충돌 & 코너링
     // ═══════════════════════════════════════════════
     [Header("═══ 파워 (Power 스탯) ═══")]
-    [Tooltip("충돌 기본 속도 감소 페널티\nV_drop = v4_collisionBasePenalty × (1 - Power/PowerMax)")]
+    [Tooltip("충돌 기본 속도 감소 페널티 (상대 비교 방식)\nV_drop = basePenalty × (1 - myPower/(myPower+opponentPower))")]
     public float v4_collisionBasePenalty = 0.35f;
-
-    [Tooltip("파워 스탯 최대값 (페널티 감소 계산 기준)")]
-    public float v4_powerStatMax = 20f;
 
     [Tooltip("코너 원심력 기본 강도 (파워 낮을수록 아웃코스로 밀림)")]
     public float v4_cornerDriftBase = 0.15f;
@@ -196,10 +193,15 @@ public class GameSettingsV4 : ScriptableObject
         => v4_thinkTickBase - (intelligenceStat / v4_intelligenceStatMax) * v4_thinkTickBonus;
 
     /// <summary>
-    /// 파워 기반 충돌 페널티 V_drop = BasePenalty × (1 - Power/PowerMax)
+    /// 파워 기반 충돌 페널티 (상대 비교 방식)
+    /// V_drop = BasePenalty × (1 - myPower / (myPower + opponentPower))
+    /// 양쪽 모두 피해를 받되, Power가 높은 쪽이 덜 받음.
     /// </summary>
-    public float GetV4CollisionPenalty(float powerStat)
-        => v4_collisionBasePenalty * (1f - Mathf.Clamp01(powerStat / v4_powerStatMax));
+    public float GetV4CollisionPenalty(float myPower, float opponentPower)
+    {
+        float total = Mathf.Max(1f, myPower + opponentPower); // 분모 0 방어
+        return v4_collisionBasePenalty * (1f - myPower / total);
+    }
 
     /// <summary>
     /// 타입별 크루징 구간 목표 순위 범위 반환 (min, max)

@@ -278,3 +278,4 @@ MonoBehaviour:
   v2_phaseMidEnd: 0.66
   enableRaceDebug: 0
   v3Settings: {fileID: 11400000, guid: 4425b7a30c2922a478d33b8e240bb9e0, type: 2}
+  v4Settings: {fileID: 11400000, guid: 834170f72f494a6fa50c0bc9d7edfbe8, type: 2}
