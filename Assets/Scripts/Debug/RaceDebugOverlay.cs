@@ -824,6 +824,46 @@ public class RaceDebugOverlay : MonoBehaviour
             else
                 GUILayout.Label("  (아직 리포트 없음)", normalStyle);
         }
+
+        // ── 캐릭터 V4 스탯 테이블 ──
+        DrawCharacterStatsSection();
+    }
+
+    private bool showStatsSection = true;
+
+    private void DrawCharacterStatsSection()
+    {
+        GUILayout.Label("─────────────────────────────────────", normalStyle);
+
+        GUILayout.BeginHorizontal();
+        string statsHeader = showStatsSection ? "▼ 📋 캐릭터 스탯 (V4)" : "▶ 📋 캐릭터 스탯 (V4)";
+        if (GUILayout.Button(statsHeader, normalStyle, GUILayout.ExpandWidth(true)))
+            showStatsSection = !showStatsSection;
+        GUILayout.EndHorizontal();
+
+        if (!showStatsSection) return;
+
+        var rm = RaceManager.Instance;
+        if (rm == null || rm.Racers == null || rm.Racers.Count == 0) return;
+
+        GUILayout.Label(
+            "<color=yellow>이름    SPD  ACC  STA  POW  INT  LCK  합계</color>",
+            normalStyle);
+
+        var rankings = rm.GetLiveRankings();
+        foreach (var racer in rankings)
+        {
+            if (racer.CharData == null) continue;
+            var v4 = CharacterDatabaseV4.FindById(racer.CharData.charId);
+            if (v4 == null) continue;
+
+            GUILayout.Label(string.Format(
+                "{0,-4}  {1,3:F0}  {2,3:F0}  {3,3:F0}  {4,3:F0}  {5,3:F0}  {6,3:F0}  <color=#888888>{7,3:F0}</color>",
+                racer.CharData.DisplayName,
+                v4.v4Speed, v4.v4Accel, v4.v4Stamina,
+                v4.v4Power, v4.v4Intelligence, v4.v4Luck,
+                v4.StatTotal), normalStyle);
+        }
     }
 
     // ── 탭 1: HP 랩별 스냅샷 ──
