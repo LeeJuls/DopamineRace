@@ -156,6 +156,9 @@ str.ui.char.stat.brave,Brave,Brave,Brave,Brave,Brave,Brave,Brave
 str.ui.char.stat.calm,Calm,Calm,Calm,Calm,Calm,Calm,Calm
 str.ui.char.stat.endurance,Endurance,Endurance,Endurance,Endurance,Endurance,Endurance,Endurance
 str.ui.char.stat.luck,Luck,Luck,Luck,Luck,Luck,Luck,Luck
+str.ui.char.stat.accel,가속,Accel,加速,加速,Beschl.,Aceler.,Aceler.
+str.ui.char.stat.stamina,지구력,Stamina,スタミナ,耐力,Ausdauer,Aguante,Resistência
+str.ui.char.stat.intelligence,지능,Int,知能,智力,Intelligenz,Inteligencia,Inteligência
 str.ui.char.recent_record,최근 경기기록,Recent Records,最近のレース記録,最近比赛记录,Letzte Rennen,Carreras Recientes,Corridas Recentes
 str.ui.char.no_dist_record,- 경기 기록 없음 -,- No record -,- 記録なし -,- 无比赛记录 -,- Kein Rekord -,- Sin registro -,- Sem registro -
 str.ui.press_start,아무 곳이나 눌러 시작,Press to Start,タッチしてスタート,点击任意处开始,Zum Starten tippen,Toca para empezar,Toque para começar

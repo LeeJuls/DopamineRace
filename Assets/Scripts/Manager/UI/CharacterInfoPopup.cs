@@ -372,19 +372,33 @@ public class CharacterInfoPopup : MonoBehaviour
 
         // RemoveData()가 인디케이터도 삭제하므로 매번 재설정
         var radar = radarChart.GetChartComponent<RadarCoord>();
+        bool useV4 = GameSettings.Instance != null && GameSettings.Instance.useV4RaceSystem;
         if (radar != null)
         {
             radar.indicatorList.Clear();
-            string[] statKeys = {
-                "str.ui.char.stat.speed", "str.ui.char.stat.power",
-                "str.ui.char.stat.brave", "str.ui.char.stat.calm",
-                "str.ui.char.stat.endurance", "str.ui.char.stat.luck"
-            };
+
+            string[] statKeys;
+            if (useV4)
+            {
+                statKeys = new string[] {
+                    "str.ui.char.stat.speed", "str.ui.char.stat.accel",
+                    "str.ui.char.stat.stamina", "str.ui.char.stat.power",
+                    "str.ui.char.stat.intelligence", "str.ui.char.stat.luck"
+                };
+            }
+            else
+            {
+                statKeys = new string[] {
+                    "str.ui.char.stat.speed", "str.ui.char.stat.power",
+                    "str.ui.char.stat.brave", "str.ui.char.stat.calm",
+                    "str.ui.char.stat.endurance", "str.ui.char.stat.luck"
+                };
+            }
 
             // Phase 5: 트랙 보너스 스탯 하이라이트 (노란색 ★)
             // TrackDB bonus 필드 > 0인 스탯 자동 노란색
-            bool[] highlights = new bool[6]; // speed, power, brave, calm, endurance, luck
-            if (trackInfo != null)
+            bool[] highlights = new bool[6];
+            if (!useV4 && trackInfo != null)
             {
                 highlights[1] = trackInfo.powerSpeedBonus > 0f;  // power
                 highlights[2] = trackInfo.braveSpeedBonus > 0f;  // brave
@@ -450,15 +464,32 @@ public class CharacterInfoPopup : MonoBehaviour
             statSerie.label.show = false;
         }
 
-        var statValues = new List<double>
+        List<double> statValues;
+        if (useV4)
         {
-            data.charBaseSpeed, // 모든 스탯 1~20 통일 스케일
-            data.charBasePower,
-            data.charBaseBrave,
-            data.charBaseCalm,
-            data.charBaseEndurance,
-            data.charBaseLuck
-        };
+            var v4 = CharacterDatabaseV4.FindById(data.charId);
+            if (v4 != null)
+            {
+                statValues = new List<double>
+                {
+                    v4.v4Speed, v4.v4Accel, v4.v4Stamina,
+                    v4.v4Power, v4.v4Intelligence, v4.v4Luck
+                };
+            }
+            else
+            {
+                statValues = new List<double> { 10, 10, 10, 10, 10, 10 };
+            }
+        }
+        else
+        {
+            statValues = new List<double>
+            {
+                data.charBaseSpeed, data.charBasePower,
+                data.charBaseBrave, data.charBaseCalm,
+                data.charBaseEndurance, data.charBaseLuck
+            };
+        }
         radarChart.AddData(statIdx, statValues);
         Debug.Log($"[CharInfoPopup] UpdateRadarChart: stats=[{string.Join(",", statValues)}], series={radarChart.series.Count}");
 
