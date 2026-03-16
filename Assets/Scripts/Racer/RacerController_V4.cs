@@ -63,6 +63,10 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         v4MaxStamina = gs.v4_staminaBase + charDataV4.v4Stamina * gs.v4_staminaPerStat;
         v4CurrentStamina = v4MaxStamina;
         v4CurrentSpeed = GameSettings.Instance.globalSpeedMultiplier;
+
+        // 디버그 시스템 호환 (enduranceHP = V4 스태미나 미러링)
+        maxHP = v4MaxStamina;
+        enduranceHP = v4MaxStamina;
         v4Phase = V4Phase.Positioning;
         v4IsSpurting = false;
         v4IsPanicking = false;
@@ -154,6 +158,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         if (v4IsPanicking)  drain *= gs.v4_panicDrainMul;
 
         v4CurrentStamina = Mathf.Max(0f, v4CurrentStamina - drain * dt);
+        enduranceHP = v4CurrentStamina; // 디버그 시스템 호환
     }
 
     // ──────────────────────────────────────────────
