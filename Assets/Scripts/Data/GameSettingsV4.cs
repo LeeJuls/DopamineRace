@@ -33,9 +33,10 @@ public class GameSettingsV4 : ScriptableObject
     public float v4_staminaPerStat = 3f;
 
     [Tooltip("스태미나 소모율 (Vmax 주행 시 초당 maxHP의 몇 %를 소모하는가)\n" +
-             "예: 0.025 = Vmax로 30초 달리면 maxHP의 75% 소모\n" +
+             "예: 0.016 = Vmax로 25초(3랩) 달리면 maxHP의 40% 소모\n" +
+             "     → 크루징 20초×0.016=32%, 스퍼트 5초×0.016×1.2=9.6% 소모\n" +
              "drain = maxHP × drainBaseRate × (currentSpeed / globalSpeedMultiplier)")]
-    public float v4_drainBaseRate = 0.025f;
+    public float v4_drainBaseRate = 0.016f;
 
     [Tooltip("슬립스트림(앞 캐릭터 뒤) 효과: 드레인 감소 배율\n예: 0.7 = 30% 절약")]
     [Range(0.5f, 1.0f)]
@@ -139,55 +140,50 @@ public class GameSettingsV4 : ScriptableObject
     public float v4_luckDodgeChance = 0.02f;
 
     // ═══════════════════════════════════════════════
-    //  크루징 / 페이스메이커 (M2)
+    //  구간제 속도 시스템 (M2 개편)
+    //  전체 진행도(0~1) 기준 구간별 목표 속도
     // ═══════════════════════════════════════════════
-    [Header("═══ 크루징 / 페이스메이커 (M2) ═══")]
-    [Tooltip("페이스메이커 기준 속도 배율 (Vmax 대비)\n선행·선입의 크루징 기준점")]
-    [Range(0.7f, 1.05f)]
-    public float v4_pacemakerSpeedRatio = 0.95f;
+    [Header("═══ 구간별 속도 ═══")]
+    [Tooltip("기본 달리기 속도 배율 (Vmax 대비)\n부스트/최종스퍼트 외 구간의 속도")]
+    [Range(0.6f, 1.0f)]
+    public float v4_normalSpeedRatio = 0.85f;
 
-    [Tooltip("도주 페이스메이커 오프셋 (음수 = 더 빠름)\n크루징 목표 = Vmax × (pacemaker + offset)")]
-    public float v4_runnerOffset = -0.02f;
+    [Tooltip("부스트 구간 속도 배율 (Vmax 대비)\n각 타입 고유 구간에서 전력질주 속도")]
+    [Range(0.9f, 1.2f)]
+    public float v4_burstSpeedRatio = 1.0f;
 
-    [Tooltip("선행 페이스메이커 오프셋")]
-    public float v4_leaderOffset = 0.0f;
+    [Tooltip("최종 스퍼트 시작 지점 (전체 진행도 기준)\n예: 0.80 = 마지막 20%부터 전원 스퍼트")]
+    [Range(0.5f, 0.95f)]
+    public float v4_finalSpurtStart = 0.80f;
 
-    [Tooltip("선입 페이스메이커 오프셋 (약간 뒤처짐)")]
-    public float v4_chaserOffset = 0.05f;
+    [Header("  [타입별 부스트 구간 — 전체 진행도 0~1]")]
+    [Tooltip("도주 부스트 시작 (기본: 0.0 = 레이스 시작부터)")]
+    [Range(0f, 0.5f)]
+    public float v4_runnerBurstStart = 0.00f;
+    [Tooltip("도주 부스트 종료 (기본: 0.2 = 전체 20%까지)")]
+    [Range(0.1f, 0.8f)]
+    public float v4_runnerBurstEnd = 0.20f;
 
-    [Tooltip("추입 페이스메이커 오프셋 (많이 뒤처짐 — 스태미나 비축)")]
-    public float v4_reckonerOffset = 0.15f;
+    [Tooltip("선행 부스트 시작")]
+    [Range(0f, 0.5f)]
+    public float v4_leaderBurstStart = 0.20f;
+    [Tooltip("선행 부스트 종료")]
+    [Range(0.1f, 0.8f)]
+    public float v4_leaderBurstEnd = 0.40f;
 
-    [Header("  [도주 Phase 2 체력 안배]")]
-    [Tooltip("도주 크루징 최소 속도 비율 (Vmax 대비)")]
-    [Range(0.7f, 1.0f)]
-    public float v4_runnerCruiseSpeedMin = 0.80f;
+    [Tooltip("선입 부스트 시작")]
+    [Range(0f, 0.6f)]
+    public float v4_chaserBurstStart = 0.40f;
+    [Tooltip("선입 부스트 종료")]
+    [Range(0.2f, 0.9f)]
+    public float v4_chaserBurstEnd = 0.60f;
 
-    [Tooltip("도주 크루징 최대 속도 비율 (Vmax 대비)")]
-    [Range(0.7f, 1.0f)]
-    public float v4_runnerCruiseSpeedMax = 0.90f;
-
-    [Header("  [추입 Phase 2 스태미나 비축]")]
-    [Tooltip("추입 크루징 최소 속도 비율 (Vmax 대비)")]
-    [Range(0.5f, 0.9f)]
-    public float v4_reckonerCruiseSpeedMin = 0.70f;
-
-    [Tooltip("추입 크루징 최대 속도 비율 (Vmax 대비)")]
-    [Range(0.5f, 0.9f)]
-    public float v4_reckonerCruiseSpeedMax = 0.80f;
-
-    [Header("  [타입별 스퍼트 트리거 — 마지막 랩 남은 비율]")]
-    [Tooltip("선행 스퍼트 트리거 (마지막 랩의 이 비율 남으면 스퍼트)")]
-    [Range(0.1f, 0.5f)]
-    public float v4_leaderSpurtRatio = 0.20f;
-
-    [Tooltip("선입 스퍼트 트리거")]
-    [Range(0.1f, 0.5f)]
-    public float v4_chaserSpurtRatio = 0.30f;
-
-    [Tooltip("추입 스퍼트 트리거")]
-    [Range(0.1f, 0.5f)]
-    public float v4_reckonerSpurtRatio = 0.40f;
+    [Tooltip("추입 부스트 시작")]
+    [Range(0f, 0.7f)]
+    public float v4_reckonerBurstStart = 0.60f;
+    [Tooltip("추입 부스트 종료 (finalSpurtStart와 맞닿아야 함)")]
+    [Range(0.3f, 1.0f)]
+    public float v4_reckonerBurstEnd = 0.80f;
 
     // ═══════════════════════════════════════════════
     //  포지션별 목표 순위 범위
