@@ -169,9 +169,9 @@ public class GameSettingsV4 : ScriptableObject
     [Tooltip("도주 부스트 시작 (0~5% 워밍업 후)")]
     [Range(0f, 0.5f)]
     public float v4_runnerBurstStart = 0.06f;
-    [Tooltip("도주 부스트 종료")]
-    [Range(0.1f, 0.8f)]
-    public float v4_runnerBurstEnd = 0.25f;
+    [Tooltip("도주 부스트 종료 (테스트: HP 소진까지 풀버스트)")]
+    [Range(0.1f, 1.0f)]
+    public float v4_runnerBurstEnd = 0.86f;
 
     [Tooltip("선행 부스트 시작")]
     [Range(0f, 0.5f)]
