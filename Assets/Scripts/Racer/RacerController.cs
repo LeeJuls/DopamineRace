@@ -241,11 +241,15 @@ public partial class RacerController : MonoBehaviour
         v3SprintAccelProgress = 0f;
         v3IsSprintActive = false;
 
-        // HP / V3 스태미나 초기화
+        // HP / V3 / V4 스태미나 초기화
         if (charData != null)
         {
             var gsInst = GameSettings.Instance;
-            if (gsInst.useV3RaceSystem)
+            if (gsInst.useV4RaceSystem)
+            {
+                InitV4();
+            }
+            else if (gsInst.useV3RaceSystem)
             {
                 // V3: 스태미나 = staminaBase + endurance × staminaPerEndurance
                 maxHP = gsInst.v3Settings.v3_staminaBase + charData.charBaseEndurance * gsInst.v3Settings.v3_staminaPerEndurance;
@@ -328,8 +332,12 @@ public partial class RacerController : MonoBehaviour
 
         var gs = GameSettings.Instance;
 
-        // ── 0) HP 시스템: 실시간 순위 + 슬립스트림 블렌드 + CP 소모 ──
-        if (gs.useHPSystem && charData != null)
+        // ── 0) V4 업데이트 또는 HP 시스템 ──
+        if (gs.useV4RaceSystem)
+        {
+            UpdateV4(Time.deltaTime);
+        }
+        else if (gs.useHPSystem && charData != null)
         {
             UpdateRank();
             UpdateSlipstreamBlend(Time.deltaTime);
@@ -405,7 +413,12 @@ public partial class RacerController : MonoBehaviour
 
         float speed = GetBaseTrackSpeed(gs, track);
 
-        if (gs.useV3RaceSystem)
+        if (gs.useV4RaceSystem)
+        {
+            // ═══ Race V4: 5대 스탯 기반 ═══
+            return CalcSpeedV4(gs.v4Settings);
+        }
+        else if (gs.useV3RaceSystem)
         {
             // ═══ Race V3: 스탯 기반 재설계 ═══
             speed = CalcSpeedV3(gs, track, condMul);
