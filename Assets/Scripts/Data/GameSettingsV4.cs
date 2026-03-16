@@ -58,7 +58,7 @@ public class GameSettingsV4 : ScriptableObject
 
     [Tooltip("스퍼트 진입 시 Vmax 상승 배율\n예: 1.20 = 스퍼트 중 20% 더 빠름")]
     [Range(1.0f, 1.5f)]
-    public float v4_spurtVmaxBonus = 1.30f;
+    public float v4_spurtVmaxBonus = 1.50f;
 
     // ═══════════════════════════════════════════════
     //  가속도 (Accel)
@@ -149,8 +149,8 @@ public class GameSettingsV4 : ScriptableObject
     public float v4_normalSpeedRatio = 1.0f;
 
     [Tooltip("부스트 구간 속도 배율 (Vmax 대비)\n각 타입 고유 구간에서 전력질주 속도")]
-    [Range(0.9f, 2.0f)]
-    public float v4_burstSpeedRatio = 1.5f;
+    [Range(0.9f, 2.5f)]
+    public float v4_burstSpeedRatio = 2.0f;
 
     [Tooltip("최종 스퍼트 시작 지점 (전체 진행도 기준)\n예: 0.80 = 마지막 20%부터 전원 스퍼트")]
     [Range(0.5f, 0.95f)]
