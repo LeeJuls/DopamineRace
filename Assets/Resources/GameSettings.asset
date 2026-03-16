@@ -92,9 +92,9 @@ MonoBehaviour:
   finishPanelPrefab: {fileID: 8787253541604398564, guid: 996934117f1431047812b05bf40ec784, type: 3}
   leaderboardPanelPrefab: {fileID: 588526348272800763, guid: fe2555fdfd8ecef4e9a46d3c4e389ac1, type: 3}
   trackProgressBarPrefab: {fileID: 0}
-  pathDeviation: 0.7
+  pathDeviation: 0.4
   characterScale: 1.2
-  laneOffset: 0.05
+  laneOffset: 0.19
   labelSize: 0.07
   labelHeight: 0.8
   betMarkerSize: 0.07
@@ -178,7 +178,7 @@ MonoBehaviour:
   formationTarget_Leader: 0.35
   formationTarget_Chaser: 0.65
   formationTarget_Reckoner: 0.85
-  positioningLapEnd: 0.5
+  positioningLapEnd: 0.25
   formationHoldLapEnd: 1
   runner_posTarget: 0.25
   leader_posTarget: 0.5
@@ -278,3 +278,4 @@ MonoBehaviour:
   v2_phaseMidEnd: 0.66
   enableRaceDebug: 0
   v3Settings: {fileID: 11400000, guid: 4425b7a30c2922a478d33b8e240bb9e0, type: 2}
+  v4Settings: {fileID: 11400000, guid: 834170f72f494a6fa50c0bc9d7edfbe8, type: 2}
