@@ -32,8 +32,10 @@ public class GameSettingsV4 : ScriptableObject
     [Tooltip("스태미나 스탯 1당 추가 HP")]
     public float v4_staminaPerStat = 3f;
 
-    [Tooltip("매 프레임 기본 스태미나 소모율 (현재속도 × 이 값)")]
-    public float v4_drainBaseRate = 0.08f;
+    [Tooltip("스태미나 소모율 (Vmax 주행 시 초당 maxHP의 몇 %를 소모하는가)\n" +
+             "예: 0.025 = Vmax로 30초 달리면 maxHP의 75% 소모\n" +
+             "drain = maxHP × drainBaseRate × (currentSpeed / globalSpeedMultiplier)")]
+    public float v4_drainBaseRate = 0.025f;
 
     [Tooltip("슬립스트림(앞 캐릭터 뒤) 효과: 드레인 감소 배율\n예: 0.7 = 30% 절약")]
     [Range(0.5f, 1.0f)]
@@ -135,6 +137,57 @@ public class GameSettingsV4 : ScriptableObject
 
     [Tooltip("Luck 스탯 → 충돌 회피 확률 변환 (luck × 이 값 = 회피 확률)")]
     public float v4_luckDodgeChance = 0.02f;
+
+    // ═══════════════════════════════════════════════
+    //  크루징 / 페이스메이커 (M2)
+    // ═══════════════════════════════════════════════
+    [Header("═══ 크루징 / 페이스메이커 (M2) ═══")]
+    [Tooltip("페이스메이커 기준 속도 배율 (Vmax 대비)\n선행·선입의 크루징 기준점")]
+    [Range(0.7f, 1.05f)]
+    public float v4_pacemakerSpeedRatio = 0.95f;
+
+    [Tooltip("도주 페이스메이커 오프셋 (음수 = 더 빠름)\n크루징 목표 = Vmax × (pacemaker + offset)")]
+    public float v4_runnerOffset = -0.02f;
+
+    [Tooltip("선행 페이스메이커 오프셋")]
+    public float v4_leaderOffset = 0.0f;
+
+    [Tooltip("선입 페이스메이커 오프셋 (약간 뒤처짐)")]
+    public float v4_chaserOffset = 0.05f;
+
+    [Tooltip("추입 페이스메이커 오프셋 (많이 뒤처짐 — 스태미나 비축)")]
+    public float v4_reckonerOffset = 0.15f;
+
+    [Header("  [도주 Phase 2 체력 안배]")]
+    [Tooltip("도주 크루징 최소 속도 비율 (Vmax 대비)")]
+    [Range(0.7f, 1.0f)]
+    public float v4_runnerCruiseSpeedMin = 0.80f;
+
+    [Tooltip("도주 크루징 최대 속도 비율 (Vmax 대비)")]
+    [Range(0.7f, 1.0f)]
+    public float v4_runnerCruiseSpeedMax = 0.90f;
+
+    [Header("  [추입 Phase 2 스태미나 비축]")]
+    [Tooltip("추입 크루징 최소 속도 비율 (Vmax 대비)")]
+    [Range(0.5f, 0.9f)]
+    public float v4_reckonerCruiseSpeedMin = 0.70f;
+
+    [Tooltip("추입 크루징 최대 속도 비율 (Vmax 대비)")]
+    [Range(0.5f, 0.9f)]
+    public float v4_reckonerCruiseSpeedMax = 0.80f;
+
+    [Header("  [타입별 스퍼트 트리거 — 마지막 랩 남은 비율]")]
+    [Tooltip("선행 스퍼트 트리거 (마지막 랩의 이 비율 남으면 스퍼트)")]
+    [Range(0.1f, 0.5f)]
+    public float v4_leaderSpurtRatio = 0.20f;
+
+    [Tooltip("선입 스퍼트 트리거")]
+    [Range(0.1f, 0.5f)]
+    public float v4_chaserSpurtRatio = 0.30f;
+
+    [Tooltip("추입 스퍼트 트리거")]
+    [Range(0.1f, 0.5f)]
+    public float v4_reckonerSpurtRatio = 0.40f;
 
     // ═══════════════════════════════════════════════
     //  포지션별 목표 순위 범위
