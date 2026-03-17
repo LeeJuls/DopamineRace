@@ -122,7 +122,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         float accelRate = charDataV4.v4Accel * gs.v4_accelStatFactor;
 
         // ── 구간 판별 ──────────────────────────────
-        if (progress >= gs.v4_finalSpurtStart)
+        bool burstActive = !gs.v4_disableBurst; // 테스트 옵션: OFF 시 순수 노말 달리기
+        if (burstActive && progress >= gs.v4_finalSpurtStart)
         {
             // 최종 스퍼트 (80~100%): 전원 남은 HP 연소
             target   = vmax * gs.v4_spurtVmaxBonus;
@@ -135,7 +136,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
                 Debug.Log($"[V4 Spurt] {charDataV4.charId} 최종 스퍼트! progress={progress:P0}");
             }
         }
-        else if (IsInBurstZone(gs, progress))
+        else if (burstActive && IsInBurstZone(gs, progress))
         {
             // 타입별 부스트 구간: Vmax 전력질주
             target  = vmax * gs.v4_burstSpeedRatio;
@@ -143,7 +144,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         }
         else
         {
-            // 기본 달리기: 체력 비축
+            // 기본 달리기: 체력 비축 (또는 v4_disableBurst=true 시 항상 여기)
             target  = vmax * gs.v4_normalSpeedRatio;
             if (!v4IsSpurting) v4Phase = V4Phase.Normal;
         }
@@ -153,9 +154,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         float staminaRatio = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina : 0f;
         vmax *= Mathf.Lerp(gs.v4_exhaustSpeedFloor, 1.0f, staminaRatio);
         // target도 감소한 vmax 기준으로 재계산
-        if (progress >= gs.v4_finalSpurtStart)
+        if (burstActive && progress >= gs.v4_finalSpurtStart)
             target = vmax * gs.v4_spurtVmaxBonus;
-        else if (IsInBurstZone(gs, progress))
+        else if (burstActive && IsInBurstZone(gs, progress))
             target = vmax * gs.v4_burstSpeedRatio;
         else
             target = vmax * gs.v4_normalSpeedRatio;
@@ -205,9 +206,12 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         int totalLaps = GetTotalLaps();
         float drain = gs.v4_drainPerLap * totalLaps * progressDelta;
 
-        // 구간별 추가 소모
-        if      (currentProgress >= gs.v4_finalSpurtStart) drain *= gs.v4_spurtDrainMul;
-        else if (IsInBurstZone(gs, currentProgress))       drain *= gs.v4_burstDrainMul;
+        // 구간별 추가 소모 (v4_disableBurst=true 시 배율 1.0 고정 — 순수 노말 테스트)
+        if (!gs.v4_disableBurst)
+        {
+            if      (currentProgress >= gs.v4_finalSpurtStart) drain *= gs.v4_spurtDrainMul;
+            else if (IsInBurstZone(gs, currentProgress))       drain *= gs.v4_burstDrainMul;
+        }
 
         if (v4InSlipstream) drain *= gs.v4_slipstreamDrainMul;
         if (v4IsPanicking)  drain *= gs.v4_panicDrainMul;
