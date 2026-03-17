@@ -407,9 +407,6 @@ public class RaceDebugOverlay : MonoBehaviour
         var rm = RaceManager.Instance;
         if (rm == null || !rm.RaceActive) return;
 
-        // ── 바퀴별 HP 스냅샷 체크 ──
-        CheckLapSnapshots(rm);
-
         foreach (var racer in rm.Racers)
         {
             if (racer.CharData == null) continue;
@@ -455,71 +452,59 @@ public class RaceDebugOverlay : MonoBehaviour
     }
 
     /// <summary>
-    /// 랩 진행 중 25%/50%/100% 구간 도달 시 스냅샷 기록.
-    /// 선두 주자의 OverallProgress를 기준으로 구간 통과 여부를 감지한다.
+    /// 각 캐릭터가 자기 자신의 진행도 25%/50%/100% 구간을 통과하는 순간 호출.
+    /// RacerController_V4.UpdateV4()에서 직접 호출됨.
+    /// → 선두 기준 스냅샷이 아닌 "해당 캐릭터가 실제로 그 거리를 달렸을 때"의 HP를 기록.
     /// </summary>
-    private void CheckLapSnapshots(RaceManager rm)
+    public void RecordRacerCheckpoint(RacerController racer, int lap, float subProgress, float hpPct, float speed)
     {
-        int totalLaps = rm.CurrentLaps;
-        if (totalLaps <= 0) return;
-
-        // 선두 주자 진행률
-        float maxProgress = 0f;
-        foreach (var racer in rm.Racers)
-        {
-            if (racer.IsFinished) continue;
-            float p = racer.OverallProgress;
-            if (p > maxProgress) maxProgress = p;
-        }
-
-        float leaderLapProg = maxProgress * totalLaps; // e.g. 1.75 = 2번째 랩 75%
-
-        for (int lap = 1; lap <= totalLaps; lap++)
-        {
-            // 25% / 50% / 100% (완료)
-            float[] subs = { 0.25f, 0.50f, 1.00f };
-            foreach (float sub in subs)
-            {
-                string key = string.Format("L{0}_{1}", lap, (int)(sub * 100));
-                float threshold = (lap - 1) + sub; // e.g. lap=1 sub=0.25 → 0.25
-                if (!recordedCheckpoints.Contains(key) && leaderLapProg >= threshold)
-                {
-                    recordedCheckpoints.Add(key);
-                    TakeLapSnapshot(rm, lap, sub);
-                }
-            }
-        }
-    }
-
-    /// <summary>특정 랩의 구간(25%/50%/100%) 스냅샷 기록</summary>
-    private void TakeLapSnapshot(RaceManager rm, int lap, float subProgress)
-    {
+        if (racer?.CharData == null) return;
         var log = GetOrCreateLog(currentRound);
 
-        var snapshot = new LapSnapshot { lap = lap, subProgress = subProgress };
-
-        var ranked = rm.GetLiveRankings();
-        for (int i = 0; i < ranked.Count; i++)
+        // 해당 구간 스냅샷이 없으면 생성
+        LapSnapshot snapshot = null;
+        foreach (var s in log.lapSnapshots)
         {
-            var racer = ranked[i];
-            if (racer.CharData == null) continue;
-
-            float hpPct = racer.MaxHP > 0f ? (racer.EnduranceHP / racer.MaxHP) * 100f : 0f;
-            float cpPct = racer.MaxCPValue > 0f ? (racer.CalmPoints / racer.MaxCPValue) * 100f : 0f;
-
-            snapshot.racers.Add(new LapRacerInfo
+            if (s.lap == lap && Mathf.Approximately(s.subProgress, subProgress))
+            { snapshot = s; break; }
+        }
+        if (snapshot == null)
+        {
+            snapshot = new LapSnapshot { lap = lap, subProgress = subProgress };
+            // 진행도 오름차순 삽입
+            float myKey = (lap - 1) + subProgress;
+            int insertAt = log.lapSnapshots.Count;
+            for (int i = 0; i < log.lapSnapshots.Count; i++)
             {
-                rank = i + 1,
-                name = racer.CharData.DisplayName,
-                typeName = racer.CharData.GetTypeName(),
-                hpPercent = hpPct,
-                cpPercent = cpPct,
-                speed = racer.CurrentSpeed
-            });
+                float k = (log.lapSnapshots[i].lap - 1) + log.lapSnapshots[i].subProgress;
+                if (myKey < k) { insertAt = i; break; }
+            }
+            log.lapSnapshots.Insert(insertAt, snapshot);
         }
 
-        log.lapSnapshots.Add(snapshot);
-        Debug.Log(string.Format("[Debug] {0} 스냅샷 기록 ({1}명)", snapshot.GetLabel(), snapshot.racers.Count));
+        // 이미 이 캐릭터 데이터가 있으면 중복 방지
+        foreach (var r in snapshot.racers)
+            if (r.name == racer.CharData.DisplayName) return;
+
+        // 현재 레이스 순위 (동적)
+        int rank = 1;
+        var rm = RaceManager.Instance;
+        if (rm != null)
+        {
+            var rankings = rm.GetLiveRankings();
+            for (int i = 0; i < rankings.Count; i++)
+                if (rankings[i] == racer) { rank = i + 1; break; }
+        }
+
+        snapshot.racers.Add(new LapRacerInfo
+        {
+            rank     = rank,
+            name     = racer.CharData.DisplayName,
+            typeName = racer.CharData.GetTypeName(),
+            hpPercent = hpPct,
+            cpPercent = 0f,   // V4는 CP 없음
+            speed     = speed
+        });
     }
 
     // ══════════════════════════════════════

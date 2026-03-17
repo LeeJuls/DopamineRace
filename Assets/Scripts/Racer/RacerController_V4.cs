@@ -44,6 +44,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     private float v4LuckTimer = 0f;
     private float v4CritBoostRemaining = 0f;
 
+    // 구간별 HP 체크포인트 (각자 통과 시 RaceDebugOverlay에 보고)
+    private HashSet<string> v4PassedCheckpoints = new HashSet<string>();
+
     // ──────────────────────────────────────────────
     //  V4 페이즈 열거형 (로그/디버그용)
     // ──────────────────────────────────────────────
@@ -86,6 +89,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         v4LastProgress = 0f;
         v4LuckTimer   = 0f;
         v4CritBoostRemaining = 0f;
+        v4PassedCheckpoints.Clear();
 
         Debug.Log($"[RacerController V4] InitV4 완료 — {charDataV4.charId} " +
                   $"Type={charDataV4.charType} Stamina={v4MaxStamina:F1}");
@@ -110,6 +114,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         // 스태미나 소모
         ConsumeStaminaV4(dt, gs4);
+
+        // 구간별 HP 체크포인트 보고 (각자 통과 시점 기준)
+        ReportV4Checkpoints();
 
         // V4 슬립스트림 감지
         UpdateV4Slipstream(gs4);
@@ -379,6 +386,41 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     // ──────────────────────────────────────────────
     //  유틸
     // ──────────────────────────────────────────────
+
+    // ──────────────────────────────────────────────
+    //  구간별 HP 체크포인트 보고
+    //  각 캐릭터가 자신의 진행도 25%/50%/100%를 통과하는 순간
+    //  RaceDebugOverlay에 직접 보고 → 선두 기준이 아닌 "실제 그 거리를 달렸을 때" HP
+    // ──────────────────────────────────────────────
+
+    private void ReportV4Checkpoints()
+    {
+        if (charDataV4 == null) return;
+        var overlay = RaceManager.Instance?.GetComponent<RaceDebugOverlay>();
+        if (overlay == null) return;
+
+        int   totalLaps = GetTotalLaps();
+        float progress  = GetOverallProgress(); // 0~1 전체 진행도
+
+        for (int lap = 1; lap <= totalLaps; lap++)
+        {
+            foreach (float sub in new float[] { 0.25f, 0.50f, 1.00f })
+            {
+                string key = $"L{lap}_{(int)(sub * 100)}";
+                if (v4PassedCheckpoints.Contains(key)) continue;
+
+                // 이 캐릭터가 해당 구간에 도달했는지 확인
+                // threshold = (lap-1 + sub) / totalLaps (전체 0~1 기준)
+                float threshold = ((lap - 1) + sub) / totalLaps;
+                if (progress >= threshold)
+                {
+                    v4PassedCheckpoints.Add(key);
+                    float hpPct  = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina * 100f : 0f;
+                    overlay.RecordRacerCheckpoint(this, lap, sub, hpPct, currentSpeed);
+                }
+            }
+        }
+    }
 
     /// <summary>전체 레이스 진행률 0~1</summary>
     private float GetOverallProgress()
