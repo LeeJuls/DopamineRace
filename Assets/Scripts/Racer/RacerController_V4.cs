@@ -282,7 +282,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             {
                 inStream = true;
                 closestGap = gap;
-                leaderSpeed = r.v4CurrentSpeed > 0f ? r.v4CurrentSpeed : r.currentSpeed;
+                // currentSpeed = 순수 Lerp 상태값 (크리티컬/슬링샷 배율 미포함)
+                // v4CurrentSpeed는 배율 포함이라 시너지 문제 발생
+                leaderSpeed = r.currentSpeed;
             }
         }
 
