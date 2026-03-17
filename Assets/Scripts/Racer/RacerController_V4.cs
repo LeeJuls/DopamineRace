@@ -219,7 +219,13 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             case CharacterType.Reckoner: start = gs.v4_reckonerBurstStart; end = gs.v4_reckonerBurstEnd; break;
             default: return false;
         }
-        return progress >= start && progress < end;
+
+        // 지능 modifier: (지능 - 10) / 10 × modMax
+        // 지능20 → +10%, 지능10 → ±0%, 지능0 → -10%
+        float intModifier = (charDataV4.v4Intelligence - 10f) / 10f * gs.v4_intelligenceModMax;
+        float effectiveEnd = start + (end - start) * (1f + intModifier);
+
+        return progress >= start && progress < effectiveEnd;
     }
 
     // ──────────────────────────────────────────────
@@ -324,7 +330,10 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             float chance = charDataV4.v4Luck * gs.v4_luckCritChance;
             if (UnityEngine.Random.value < chance)
             {
-                v4CritBoostRemaining = gs.v4_luckCritDuration;
+                // 지능 modifier: (지능 - 10) / 10 × modMax
+                // 지능20 → +10%, 지능10 → ±0%, 지능0 → -10%
+                float intModifier = (charDataV4.v4Intelligence - 10f) / 10f * gs.v4_intelligenceModMax;
+                v4CritBoostRemaining = gs.v4_luckCritDuration * (1f + intModifier);
                 isCritActive = true;
 
                 // VFX

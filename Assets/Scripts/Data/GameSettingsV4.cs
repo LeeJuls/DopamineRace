@@ -120,6 +120,10 @@ public class GameSettingsV4 : ScriptableObject
     [Tooltip("지능 스탯 최대값 (오버페이스 확률 계산 기준)")]
     public float v4_intelligenceStatMax = 20f;
 
+    [Tooltip("지능 스탯 10 기준 ±0, 최대(20)/최소(0) 시 부스트·크리 지속시간 ±이 값만큼 비율 변동\n" +
+             "예: 0.10 → 지능20 = +10%, 지능0 = -10%")]
+    public float v4_intelligenceModMax = 0.10f;
+
     [Header("  [판단 틱 T_tick = T_base - (Int/IntMax × T_bonus)]")]
     [Tooltip("AI 기본 판단 주기 (초) — 낮은 지능 캐릭터")]
     public float v4_thinkTickBase = 1.0f;
