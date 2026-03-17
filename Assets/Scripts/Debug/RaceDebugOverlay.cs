@@ -825,6 +825,9 @@ public class RaceDebugOverlay : MonoBehaviour
                 GUILayout.Label("  (아직 리포트 없음)", normalStyle);
         }
 
+        // ── V4 구간별 속도 세팅 ──
+        DrawV4SettingsSection();
+
         // ── 캐릭터 V4 스탯 테이블 ──
         DrawCharacterStatsSection();
     }
@@ -864,6 +867,55 @@ public class RaceDebugOverlay : MonoBehaviour
                 v4.v4Power, v4.v4Intelligence, v4.v4Luck,
                 v4.StatTotal), normalStyle);
         }
+    }
+
+    private bool showV4SettingsSection = true;
+
+    private void DrawV4SettingsSection()
+    {
+        var gs = GameSettings.Instance;
+        var v4 = gs?.v4Settings;
+        if (v4 == null) return;
+
+        GUILayout.Label("─────────────────────────────────────", normalStyle);
+        GUILayout.BeginHorizontal();
+        string header = showV4SettingsSection ? "▼ ⚙️ V4 구간별 속도 세팅" : "▶ ⚙️ V4 구간별 속도 세팅";
+        if (GUILayout.Button(header, normalStyle, GUILayout.ExpandWidth(true)))
+            showV4SettingsSection = !showV4SettingsSection;
+        GUILayout.EndHorizontal();
+
+        if (!showV4SettingsSection) return;
+
+        // 부스트 ON/OFF 상태
+        string burstState = v4.v4_disableBurst
+            ? "<color=#FF4444>● BURST OFF (순수 Normal)</color>"
+            : "<color=#66FF66>● BURST ON</color>";
+        GUILayout.Label("  " + burstState, normalStyle);
+
+        // 속도 배율
+        GUILayout.Label(
+            string.Format("  Normal <color=#88CCFF>×{0:F2}</color>  Burst <color=#FF8800>×{1:F2}</color>  Spurt <color=#FF4444>×{2:F2}</color>  (SpurtStart:{3:P0})",
+                v4.v4_normalSpeedRatio, v4.v4_burstSpeedRatio, v4.v4_spurtVmaxBonus, v4.v4_finalSpurtStart),
+            normalStyle);
+
+        // HP 소모 배율
+        GUILayout.Label(
+            string.Format("  Drain/Lap <color=#88FF88>{0:F1}</color>  BurstMul <color=#FFAA44>×{1:F1}</color>  SpurtMul <color=#FF6666>×{2:F1}</color>",
+                v4.v4_drainPerLap, v4.v4_burstDrainMul, v4.v4_spurtDrainMul),
+            normalStyle);
+
+        // 타입별 부스트 구간
+        GUILayout.Label("<color=yellow>  타입별 부스트 구간 (전체진행도 기준)</color>", normalStyle);
+        GUILayout.Label(
+            string.Format("  Runner  <color=#88CCFF>{0:P0}~{1:P0}</color>  |  Leader <color=#AAFFAA>{2:P0}~{3:P0}</color>",
+                v4.v4_runnerBurstStart, v4.v4_runnerBurstEnd,
+                v4.v4_leaderBurstStart, v4.v4_leaderBurstEnd),
+            normalStyle);
+        GUILayout.Label(
+            string.Format("  Chaser  <color=#FFAAFF>{0:P0}~{1:P0}</color>  |  Reckoner <color=#FFCC66>{2:P0}~{3:P0}</color>",
+                v4.v4_chaserBurstStart, v4.v4_chaserBurstEnd,
+                v4.v4_reckonerBurstStart, v4.v4_reckonerBurstEnd),
+            normalStyle);
     }
 
     // ── 탭 1: HP 랩별 스냅샷 ──
