@@ -348,8 +348,10 @@ public partial class RacerController : MonoBehaviour
         float finalSpeed = CalculateSpeed(gs);
         if (gs.useV4RaceSystem)
         {
-            // V4: CalcSpeedV4 내부에서 Lerp 완료됨 — 이중 Lerp 방지
-            currentSpeed = finalSpeed;
+            // V4: CalcSpeedV4 내부에서 currentSpeed(Lerp 상태) 직접 관리
+            // finalSpeed에는 크리티컬/충돌 등 일시적 배율이 포함됨
+            // currentSpeed를 덮어쓰면 배율이 다음 프레임 Lerp에 누적 → 순간이동 버그
+            // 이동에만 finalSpeed 사용, currentSpeed는 CalcSpeedV4가 관리
         }
         else
         {
@@ -364,6 +366,10 @@ public partial class RacerController : MonoBehaviour
         UpdateDeviation();
 
         // ── 3) 이동 ──
+        // V4: finalSpeed = 크리티컬/충돌 배율 포함된 최종 출력 속도
+        // Legacy: currentSpeed = Lerp 완료된 이동 속도
+        float moveSpeed = gs.useV4RaceSystem ? finalSpeed : currentSpeed;
+
         Vector3 target = headingToFinish ? GetOffsetPosition(0) : GetOffsetPosition(currentWP);
         Vector3 dir = target - transform.position;
         float dist = dir.magnitude;
@@ -392,7 +398,7 @@ public partial class RacerController : MonoBehaviour
         }
         else
         {
-            float step = currentSpeed * Time.deltaTime;
+            float step = moveSpeed * Time.deltaTime;
             float actualStep = Mathf.Min(step, dist);
             transform.position += dir.normalized * actualStep;
             _cumulativeDistance += actualStep;   // ★ 실제 이동 거리 누적

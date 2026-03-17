@@ -174,19 +174,25 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             target = vmax * gs.v4_normalSpeedRatio;
 
         // ── Accel 스탯 기반 Lerp ──────────────────
+        // currentSpeed는 Lerp 상태값 — 매 프레임 유지되므로 여기서만 갱신
         currentSpeed  = Mathf.Lerp(currentSpeed, target, Time.deltaTime * accelRate);
+
+        // ── 일시적 배율은 별도 변수에 적용 (currentSpeed 오염 방지) ──
+        // currentSpeed에 직접 곱하면 다음 프레임 Lerp 입력에 누적되어
+        // 지수적 속도 증가 → 순간이동 버그 발생
+        float outputSpeed = currentSpeed;
 
         // ── V4 Luck 크리티컬 배율 ──
         if (v4CritBoostRemaining > 0f)
-            currentSpeed *= gs.v4_luckCritBoost;
+            outputSpeed *= gs.v4_luckCritBoost;
 
         // ── 충돌 페널티 / 슬링샷 배율 (타이머 업데이트 포함) ──
         // V4 early return으로 인해 CalculateSpeed()의 GetCollisionMultiplier()가
         // 호출되지 않으므로 여기서 직접 적용
-        currentSpeed *= GetCollisionMultiplier();
+        outputSpeed *= GetCollisionMultiplier();
 
-        v4CurrentSpeed = currentSpeed;
-        return currentSpeed;
+        v4CurrentSpeed = outputSpeed;
+        return outputSpeed;
     }
 
     // ──────────────────────────────────────────────
