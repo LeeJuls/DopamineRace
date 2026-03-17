@@ -46,6 +46,10 @@ public class GameSettingsV4 : ScriptableObject
     [Range(0.5f, 1.0f)]
     public float v4_slipstreamDrainMul = 0.70f;
 
+    [Tooltip("슬립스트림 시 가속도(Lerp rate) 배율\n1.0=원래 가속, 0.7=70%로 부드럽게 따라감")]
+    [Range(0.3f, 1.0f)]
+    public float v4_slipstreamAccelMul = 0.70f;
+
     [Tooltip("스태미나 0 도달 시 최고속도 강제 감소 배율\n예: 0.50 = 최고속의 50%로 제한")]
     [Range(0.3f, 0.7f)]
     public float v4_exhaustSpeedFloor = 0.80f;

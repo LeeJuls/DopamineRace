@@ -173,6 +173,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         else
             target = vmax * gs.v4_normalSpeedRatio;
 
+        // ── 슬립스트림 시 가속도 감소 (스무스하게 따라감) ──
+        if (v4InSlipstream) accelRate *= gs.v4_slipstreamAccelMul;
+
         // ── Accel 스탯 기반 Lerp ──────────────────
         // currentSpeed는 Lerp 상태값 — 매 프레임 유지되므로 여기서만 갱신
         currentSpeed  = Mathf.Lerp(currentSpeed, target, Time.deltaTime * accelRate);
