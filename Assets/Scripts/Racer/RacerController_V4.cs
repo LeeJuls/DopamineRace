@@ -134,31 +134,50 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         float target;
         float accelRate = charDataV4.v4Accel * gs.v4_accelStatFactor;
 
-        // ── 구간 판별 ──────────────────────────────
-        bool burstActive = !gs.v4_disableBurst; // 테스트 옵션: OFF 시 순수 노말 달리기
-        if (burstActive && progress >= gs.v4_finalSpurtStart)
+        // ── 구간 판별 (boolean으로 먼저 확정 → 두 번째 패스에서 재활용) ──
+        bool burstActive = !gs.v4_disableBurst;
+        bool inSpurtZone = burstActive && progress >= gs.v4_finalSpurtStart;
+        bool inBurstZone = !inSpurtZone && burstActive && IsInBurstZone(gs, progress);
+
+        // ── 헬퍼: 현재 HP 상태 문자열 ──────────────
+        string HpStr() {
+            float r = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina : 0f;
+            return $"HP={v4CurrentStamina:F0}/{v4MaxStamina:F0}({r:P0})";
+        }
+
+        if (inSpurtZone)
         {
             // 최종 스퍼트 (80~100%): 전원 남은 HP 연소
-            target   = vmax * gs.v4_spurtVmaxBonus;
+            target    = vmax * gs.v4_spurtVmaxBonus;
             accelRate *= gs.v4_spurtAccelBonus;
 
             if (!v4IsSpurting)
             {
                 v4IsSpurting = true;
                 v4Phase      = V4Phase.Spurt;
-                Debug.Log($"[V4 Spurt] {charDataV4.charId} 최종 스퍼트! progress={progress:P0}");
+                Debug.Log($"[V4 FinalSpurt 시작] {charDataV4.charId} progress={progress:P0} {HpStr()}");
             }
         }
-        else if (burstActive && IsInBurstZone(gs, progress))
+        else if (inBurstZone)
         {
             // 타입별 부스트 구간: Vmax 전력질주
-            target  = vmax * gs.v4_burstSpeedRatio;
-            v4Phase = V4Phase.Burst;
+            target = vmax * gs.v4_burstSpeedRatio;
+
+            if (v4Phase != V4Phase.Burst) // 부스트 진입
+            {
+                Debug.Log($"[V4 Burst 시작] {charDataV4.charId} progress={progress:P0} {HpStr()}");
+                v4Phase = V4Phase.Burst;
+            }
         }
         else
         {
             // 기본 달리기: 체력 비축 (또는 v4_disableBurst=true 시 항상 여기)
-            target  = vmax * gs.v4_normalSpeedRatio;
+            target = vmax * gs.v4_normalSpeedRatio;
+
+            if (v4Phase == V4Phase.Burst) // 부스트 이탈
+            {
+                Debug.Log($"[V4 Burst 종료] {charDataV4.charId} progress={progress:P0} {HpStr()}");
+            }
             if (!v4IsSpurting) v4Phase = V4Phase.Normal;
         }
 
@@ -166,13 +185,10 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         // HP 100% → vmax×1.0, HP 0% → vmax×exhaustSpeedFloor (ex: ×0.8)
         float staminaRatio = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina : 0f;
         vmax *= Mathf.Lerp(gs.v4_exhaustSpeedFloor, 1.0f, staminaRatio);
-        // target도 감소한 vmax 기준으로 재계산
-        if (burstActive && progress >= gs.v4_finalSpurtStart)
-            target = vmax * gs.v4_spurtVmaxBonus;
-        else if (burstActive && IsInBurstZone(gs, progress))
-            target = vmax * gs.v4_burstSpeedRatio;
-        else
-            target = vmax * gs.v4_normalSpeedRatio;
+        // target도 감소한 vmax 기준으로 재계산 (bool 재활용 — IsInBurstZone 중복호출 없음)
+        if      (inSpurtZone) target = vmax * gs.v4_spurtVmaxBonus;
+        else if (inBurstZone) target = vmax * gs.v4_burstSpeedRatio;
+        else                  target = vmax * gs.v4_normalSpeedRatio;
 
         // ── 슬립스트림: 앞 캐릭터 속도에 맞춰 따라감 ──
         // target을 앞 캐릭터 속도로 상한 제한 → 자연스러운 추격 연출

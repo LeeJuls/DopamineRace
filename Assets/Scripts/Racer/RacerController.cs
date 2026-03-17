@@ -379,6 +379,15 @@ public partial class RacerController : MonoBehaviour
             if (headingToFinish)
             {
                 transform.position = target;
+
+                // V4: 최종 스퍼트 종료 로그 (골인 시점 HP 기록)
+                if (GameSettings.Instance?.useV4RaceSystem == true && v4IsSpurting && charDataV4 != null)
+                {
+                    float _r = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina : 0f;
+                    Debug.Log($"[V4 FinalSpurt 종료] {charDataV4.charId} 골인 " +
+                              $"HP={v4CurrentStamina:F0}/{v4MaxStamina:F0}({_r:P0})");
+                }
+
                 isFinished = true; isRacing = false; currentSpeed = 0f;
                 if (animator != null) animator.SetTrigger("Idle");
                 OnFinished?.Invoke(this);
