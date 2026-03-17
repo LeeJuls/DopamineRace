@@ -140,10 +140,12 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         bool inBurstZone = !inSpurtZone && burstActive && IsInBurstZone(gs, progress);
 
         // ── 헬퍼: 현재 HP 상태 문자열 ──────────────
+        string charLabel = charData?.DisplayName ?? charDataV4.charId;
         string HpStr() {
             float r = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina : 0f;
-            return $"HP={v4CurrentStamina:F0}/{v4MaxStamina:F0}({r:P0})";
+            return $"HP:{r:P0}({v4CurrentStamina:F0}/{v4MaxStamina:F0})";
         }
+        var overlay = RaceManager.Instance?.GetComponent<RaceDebugOverlay>();
 
         if (inSpurtZone)
         {
@@ -155,7 +157,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             {
                 v4IsSpurting = true;
                 v4Phase      = V4Phase.Spurt;
-                Debug.Log($"[V4 FinalSpurt 시작] {charDataV4.charId} progress={progress:P0} {HpStr()}");
+                string msg = $"{charLabel} 파이널스퍼트! {HpStr()} (progress:{progress:P0})";
+                Debug.Log($"[V4 FinalSpurt 시작] {msg}");
+                overlay?.LogEvent(RaceDebugOverlay.EventType.Spurt, msg);
             }
         }
         else if (inBurstZone)
@@ -165,7 +169,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
             if (v4Phase != V4Phase.Burst) // 부스트 진입
             {
-                Debug.Log($"[V4 Burst 시작] {charDataV4.charId} progress={progress:P0} {HpStr()}");
+                string msg = $"{charLabel} 부스트 시작 {HpStr()} (progress:{progress:P0})";
+                Debug.Log($"[V4 Burst 시작] {msg}");
+                overlay?.LogEvent(RaceDebugOverlay.EventType.Burst, msg);
                 v4Phase = V4Phase.Burst;
             }
         }
@@ -176,7 +182,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
             if (v4Phase == V4Phase.Burst) // 부스트 이탈
             {
-                Debug.Log($"[V4 Burst 종료] {charDataV4.charId} progress={progress:P0} {HpStr()}");
+                string msg = $"{charLabel} 부스트 종료 {HpStr()} (progress:{progress:P0})";
+                Debug.Log($"[V4 Burst 종료] {msg}");
+                overlay?.LogEvent(RaceDebugOverlay.EventType.Burst, msg);
             }
             if (!v4IsSpurting) v4Phase = V4Phase.Normal;
         }

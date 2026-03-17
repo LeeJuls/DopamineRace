@@ -384,8 +384,11 @@ public partial class RacerController : MonoBehaviour
                 if (GameSettings.Instance?.useV4RaceSystem == true && v4IsSpurting && charDataV4 != null)
                 {
                     float _r = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina : 0f;
-                    Debug.Log($"[V4 FinalSpurt 종료] {charDataV4.charId} 골인 " +
-                              $"HP={v4CurrentStamina:F0}/{v4MaxStamina:F0}({_r:P0})");
+                    string _name = charData?.DisplayName ?? charDataV4.charId;
+                    string _msg  = $"{_name} 파이널스퍼트 종료 골인 HP:{_r:P0}({v4CurrentStamina:F0}/{v4MaxStamina:F0})";
+                    Debug.Log($"[V4 FinalSpurt 종료] {_msg}");
+                    var _ov = RaceManager.Instance?.GetComponent<RaceDebugOverlay>();
+                    _ov?.LogEvent(RaceDebugOverlay.EventType.Spurt, _msg);
                 }
 
                 isFinished = true; isRacing = false; currentSpeed = 0f;
