@@ -128,7 +128,8 @@ public static class BettingCalculator
         float multiplier = OddsCalculator.CalcPayout(bet, rankings, racers);
         if (multiplier <= 0f) return 0;
 
-        return Mathf.Max(1, Mathf.FloorToInt(multiplier));
+        int basePt = GetPayout(bet.type);
+        return Mathf.Max(1, Mathf.FloorToInt(basePt * multiplier));
     }
 
     /// <summary>기존 고정 배당 방식 (fallback)</summary>
