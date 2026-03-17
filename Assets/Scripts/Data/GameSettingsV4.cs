@@ -38,6 +38,10 @@ public class GameSettingsV4 : ScriptableObject
              "기준: 22.4 × 5바퀴 = 112HP → 지구력20(HP140) 기준 20% 잔여")]
     public float v4_drainPerLap = 22.4f;
 
+    [Tooltip("슬립스트림 감지 거리 (TotalProgress 기준)\n앞 캐릭터와의 진행도 차이가 이 값 이하면 슬립스트림 발동\n예: 0.08 = 진행도 8% 이내")]
+    [Range(0.01f, 0.30f)]
+    public float v4_slipstreamRange = 0.08f;
+
     [Tooltip("슬립스트림(앞 캐릭터 뒤) 효과: 드레인 감소 배율\n예: 0.7 = 30% 절약")]
     [Range(0.5f, 1.0f)]
     public float v4_slipstreamDrainMul = 0.70f;

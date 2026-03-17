@@ -110,6 +110,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         // 스태미나 소모
         ConsumeStaminaV4(dt, gs4);
 
+        // V4 슬립스트림 감지
+        UpdateV4Slipstream(gs4);
+
         // V4 Luck 크리티컬 판정
         UpdateV4LuckCrit(gs4);
     }
@@ -237,6 +240,34 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         v4CurrentStamina = Mathf.Max(0f, v4CurrentStamina - drain);
         enduranceHP      = v4CurrentStamina; // 디버그 시스템 호환
+    }
+
+    // ──────────────────────────────────────────────
+    //  V4 슬립스트림 감지
+    //  앞 캐릭터의 TotalProgress 차이가 v4_slipstreamRange 이하면 발동
+    //  → ConsumeStaminaV4에서 drain × slipstreamDrainMul(0.70) 적용
+    // ──────────────────────────────────────────────
+
+    private void UpdateV4Slipstream(GameSettingsV4 gs)
+    {
+        if (RaceManager.Instance == null) { v4InSlipstream = false; return; }
+
+        float myProgress = TotalProgress;
+        bool inStream = false;
+
+        foreach (var r in RaceManager.Instance.Racers)
+        {
+            if (r == this || r.IsFinished) continue;
+            float gap = r.TotalProgress - myProgress;
+            // 앞에 있는 캐릭터만 (gap > 0), 범위 내면 슬립스트림
+            if (gap > 0f && gap <= gs.v4_slipstreamRange)
+            {
+                inStream = true;
+                break;
+            }
+        }
+
+        v4InSlipstream = inStream;
     }
 
     // ──────────────────────────────────────────────
