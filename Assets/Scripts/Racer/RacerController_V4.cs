@@ -36,6 +36,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     private float v4PanicTimer = 0f;
 
     private bool v4InSlipstream = false;
+    private float v4SlipstreamLeaderSpeed = 0f; // 슬립스트림 대상(앞 캐릭터)의 현재 속도
     private float v4ThinkTimer = 0f;
     private float v4LastProgress = 0f;  // 진행도 기반 드레인용
 
@@ -173,8 +174,13 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         else
             target = vmax * gs.v4_normalSpeedRatio;
 
-        // ── 슬립스트림 시 가속도 감소 (스무스하게 따라감) ──
-        if (v4InSlipstream) accelRate *= gs.v4_slipstreamAccelMul;
+        // ── 슬립스트림: 앞 캐릭터 속도에 맞춰 따라감 ──
+        // target을 앞 캐릭터 속도로 상한 제한 → 자연스러운 추격 연출
+        if (v4InSlipstream && v4SlipstreamLeaderSpeed > 0f)
+        {
+            target = Mathf.Min(target, v4SlipstreamLeaderSpeed);
+            accelRate *= gs.v4_slipstreamAccelMul;
+        }
 
         // ── Accel 스탯 기반 Lerp ──────────────────
         // currentSpeed는 Lerp 상태값 — 매 프레임 유지되므로 여기서만 갱신
@@ -263,20 +269,25 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         float myProgress = TotalProgress;
         bool inStream = false;
+        float closestGap = float.MaxValue;
+        float leaderSpeed = 0f;
 
         foreach (var r in RaceManager.Instance.Racers)
         {
             if (r == this || r.IsFinished) continue;
             float gap = r.TotalProgress - myProgress;
             // 앞에 있는 캐릭터만 (gap > 0), 범위 내면 슬립스트림
-            if (gap > 0f && gap <= gs.v4_slipstreamRange)
+            // 가장 가까운 앞 캐릭터의 속도를 기록
+            if (gap > 0f && gap <= gs.v4_slipstreamRange && gap < closestGap)
             {
                 inStream = true;
-                break;
+                closestGap = gap;
+                leaderSpeed = r.v4CurrentSpeed > 0f ? r.v4CurrentSpeed : r.currentSpeed;
             }
         }
 
         v4InSlipstream = inStream;
+        v4SlipstreamLeaderSpeed = leaderSpeed;
     }
 
     // ──────────────────────────────────────────────
