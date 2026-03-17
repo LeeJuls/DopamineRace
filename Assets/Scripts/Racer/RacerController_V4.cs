@@ -39,6 +39,10 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     private float v4ThinkTimer = 0f;
     private float v4LastProgress = 0f;  // 진행도 기반 드레인용
 
+    // Luck 크리티컬
+    private float v4LuckTimer = 0f;
+    private float v4CritBoostRemaining = 0f;
+
     // ──────────────────────────────────────────────
     //  V4 페이즈 열거형 (로그/디버그용)
     // ──────────────────────────────────────────────
@@ -79,6 +83,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         v4InSlipstream = false;
         v4ThinkTimer  = 0f;
         v4LastProgress = 0f;
+        v4LuckTimer   = 0f;
+        v4CritBoostRemaining = 0f;
 
         Debug.Log($"[RacerController V4] InitV4 완료 — {charDataV4.charId} " +
                   $"Type={charDataV4.charType} Stamina={v4MaxStamina:F1}");
@@ -103,6 +109,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         // 스태미나 소모
         ConsumeStaminaV4(dt, gs4);
+
+        // V4 Luck 크리티컬 판정
+        UpdateV4LuckCrit(gs4);
     }
 
     // ──────────────────────────────────────────────
@@ -163,6 +172,16 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         // ── Accel 스탯 기반 Lerp ──────────────────
         currentSpeed  = Mathf.Lerp(currentSpeed, target, Time.deltaTime * accelRate);
+
+        // ── V4 Luck 크리티컬 배율 ──
+        if (v4CritBoostRemaining > 0f)
+            currentSpeed *= gs.v4_luckCritBoost;
+
+        // ── 충돌 페널티 / 슬링샷 배율 (타이머 업데이트 포함) ──
+        // V4 early return으로 인해 CalculateSpeed()의 GetCollisionMultiplier()가
+        // 호출되지 않으므로 여기서 직접 적용
+        currentSpeed *= GetCollisionMultiplier();
+
         v4CurrentSpeed = currentSpeed;
         return currentSpeed;
     }
@@ -218,6 +237,51 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         v4CurrentStamina = Mathf.Max(0f, v4CurrentStamina - drain);
         enduranceHP      = v4CurrentStamina; // 디버그 시스템 호환
+    }
+
+    // ──────────────────────────────────────────────
+    //  V4 Luck 크리티컬 판정
+    //  UpdateV4()에서 매 프레임 호출
+    // ──────────────────────────────────────────────
+
+    private void UpdateV4LuckCrit(GameSettingsV4 gs)
+    {
+        if (charDataV4 == null) return;
+
+        float gameDt = Time.deltaTime * GameSettings.Instance.globalSpeedMultiplier;
+
+        // 크리티컬 진행 중
+        if (v4CritBoostRemaining > 0f)
+        {
+            v4CritBoostRemaining -= gameDt;
+            if (v4CritBoostRemaining <= 0f)
+            {
+                v4CritBoostRemaining = 0f;
+                isCritActive = false;
+            }
+            return;
+        }
+
+        // 새 판정
+        v4LuckTimer -= gameDt;
+        if (v4LuckTimer <= 0f)
+        {
+            v4LuckTimer = gs.v4_luckCheckInterval;
+
+            float chance = charDataV4.v4Luck * gs.v4_luckCritChance;
+            if (UnityEngine.Random.value < chance)
+            {
+                v4CritBoostRemaining = gs.v4_luckCritDuration;
+                isCritActive = true;
+
+                // VFX
+                var critVfx = GetComponent<CollisionVFX>();
+                if (critVfx == null) critVfx = gameObject.AddComponent<CollisionVFX>();
+                critVfx.Show(CollisionVFXType.Crit, 0.8f);
+
+                Debug.Log($"★ [V4] 크리티컬! {charDataV4.charId} (luck:{charDataV4.v4Luck})");
+            }
+        }
     }
 
     // ──────────────────────────────────────────────
