@@ -31,6 +31,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     private float v4CurrentSpeed;
     private float v4LastVmax       = 0f;   // HP 감소 적용 전 Vmax (디버그용)
     private float v4LastHpSpeedMul = 1f;   // 이번 프레임 HP 속도 배율 (디버그용)
+    private float v4LastTarget     = 0f;   // 이번 프레임 최종 target 속도 (디버그용)
 
     private V4Phase v4Phase = V4Phase.Normal;
     private bool v4IsSpurting = false;
@@ -248,6 +249,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         if      (inSpurtZone) target = vmax * gs.v4_spurtVmaxBonus;
         else if (inBurstZone) target = vmax * gs.v4_burstSpeedRatio;
         else                  target = vmax * gs.v4_normalSpeedRatio;
+        v4LastTarget = target;   // 최종 target 저장 (디버그 오버레이용)
 
         // ── 슬립스트림: 지능 판정 성공 시만 가속 혜택 ──
         // HP 드레인 감소는 ConsumeStaminaV4에서 별도 처리 (항상 적용)
@@ -584,7 +586,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
                                   : v4Phase == V4Phase.Burst  ? "부스트"
                                   : "노말";
                     overlay.RecordRacerCheckpoint(this, lap, sub, hpPct, currentSpeed,
-                                                  v4LastVmax, v4LastHpSpeedMul, phase);
+                                                  v4LastVmax, v4LastHpSpeedMul, phase, v4LastTarget);
                 }
             }
         }

@@ -135,6 +135,7 @@ public class RaceDebugOverlay : MonoBehaviour
         public float vmax;        // HP 감소 적용 전 Vmax
         public float hpSpeedMul;  // HP 속도 배율 (1.0 = 감소 없음)
         public string phase;      // "노말" / "부스트" / "스퍼트"
+        public float target;      // phase 배율 적용 후 target 속도
     }
 
     private RoundLog GetOrCreateLog(int round)
@@ -325,9 +326,10 @@ public class RaceDebugOverlay : MonoBehaviour
                     sb.AppendFormat("  {0}위 {1} ({2})  HP:{3:F0}%  SPD:{4:F2}  [{5:F3}s]\n",
                         info.rank, info.name, info.typeName, info.hpPercent, info.speed, info.time);
                     if (info.vmax > 0f)
-                        sb.AppendFormat("     └ Vmax:{0:F2}  hp:x{1:F2}{2}  [{3}]\n",
+                        sb.AppendFormat("     └ Vmax:{0:F2}  hp:x{1:F2}{2}{3}  [{4}]\n",
                             info.vmax, info.hpSpeedMul,
                             info.hpSpeedMul < 0.999f ? string.Format("(-{0:P0})", 1f - info.hpSpeedMul) : "",
+                            info.target > 0f ? string.Format("  →T:{0:F2}", info.target) : "",
                             info.phase);
                 }
             }
@@ -521,7 +523,7 @@ public class RaceDebugOverlay : MonoBehaviour
     /// → 선두 기준 스냅샷이 아닌 "해당 캐릭터가 실제로 그 거리를 달렸을 때"의 HP를 기록.
     /// </summary>
     public void RecordRacerCheckpoint(RacerController racer, int lap, float subProgress, float hpPct, float speed,
-                                      float vmax = 0f, float hpSpeedMul = 1f, string phase = "노말")
+                                      float vmax = 0f, float hpSpeedMul = 1f, string phase = "노말", float target = 0f)
     {
         if (racer?.CharData == null) return;
         var log = GetOrCreateLog(currentRound);
@@ -562,7 +564,8 @@ public class RaceDebugOverlay : MonoBehaviour
             speed     = speed,
             vmax      = vmax,
             hpSpeedMul = hpSpeedMul,
-            phase     = phase
+            phase     = phase,
+            target    = target
         });
 
         // time 오름차순 정렬 후 rank 재할당 (struct이므로 copy-modify-replace)
@@ -1045,9 +1048,12 @@ public class RaceDebugOverlay : MonoBehaviour
                     string phaseColor = info.phase == "스퍼트" ? "#FF88FF"
                                       : info.phase == "부스트" ? "#88FFFF"
                                       : "#888888";
+                    string targetStr = info.target > 0f
+                        ? string.Format("  →T:<color=#AAFFAA>{0:F2}</color>", info.target)
+                        : "";
                     GUILayout.Label(string.Format(
-                        "  <color=#555555>└</color> Vmax:<color=#FFFFFF>{0:F2}</color>  hp:<color={1}>{2}</color>  <color={3}>[{4}]</color>",
-                        info.vmax, hpMulColor, hpMulStr, phaseColor, info.phase), normalStyle);
+                        "  <color=#555555>└</color> Vmax:<color=#FFFFFF>{0:F2}</color>  hp:<color={1}>{2}</color>{3}  <color={4}>[{5}]</color>",
+                        info.vmax, hpMulColor, hpMulStr, targetStr, phaseColor, info.phase), normalStyle);
                 }
             }
             GUILayout.Space(2);
