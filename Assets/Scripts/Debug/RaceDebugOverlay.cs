@@ -370,6 +370,17 @@ public class RaceDebugOverlay : MonoBehaviour
         sb.AppendFormat("긴급부스트: {0}  Spd×{1:F2}  Drain×{2:F1}\n",
             v4.v4_emergencyBurstEnabled ? "ON" : "OFF",
             v4.v4_emergencyBurstSpeedRatio, v4.v4_emergencyBurstDrainMul);
+        if (v4.v4_hpSpeedThresholds != null && v4.v4_hpSpeedThresholds.Count > 0)
+        {
+            var hpSb = new StringBuilder("HP감속:");
+            foreach (var t in v4.v4_hpSpeedThresholds)
+                hpSb.AppendFormat("  HP≤{0:P0}→-{1:P0}(×{2:F2})", t.hpRatio, t.speedReduction, 1f - t.speedReduction);
+            sb.AppendLine(hpSb.ToString());
+        }
+        else
+        {
+            sb.AppendLine("HP감속: (없음)");
+        }
         sb.AppendFormat("Runner:{0:P0}~{1:P0}  Leader:{2:P0}~{3:P0}  Chaser:{4:P0}~{5:P0}  Reckoner:{6:P0}~{7:P0}\n",
             v4.v4_runnerBurstStart, v4.v4_runnerBurstEnd,
             v4.v4_leaderBurstStart, v4.v4_leaderBurstEnd,
@@ -1003,6 +1014,23 @@ public class RaceDebugOverlay : MonoBehaviour
                 v4.v4_emergencyBurstEnabled ? "<color=#88FF88>ON</color>" : "<color=#888888>OFF</color>",
                 v4.v4_emergencyBurstSpeedRatio, v4.v4_emergencyBurstDrainMul),
             normalStyle);
+
+        // HP 임계값 기반 속도 감소 (밴드 시스템)
+        if (v4.v4_hpSpeedThresholds != null && v4.v4_hpSpeedThresholds.Count > 0)
+        {
+            GUILayout.Label("<color=yellow>  HP 감속 임계값 (밴드 시스템)</color>", normalStyle);
+            foreach (var t in v4.v4_hpSpeedThresholds)
+            {
+                GUILayout.Label(
+                    string.Format("    HP≤<color=#FFAAAA>{0:P0}</color>  →  -<color=#FF6666>{1:P0}</color>  (배율 <color=#FFCC44>×{2:F2}</color>)",
+                        t.hpRatio, t.speedReduction, 1f - t.speedReduction),
+                    normalStyle);
+            }
+        }
+        else
+        {
+            GUILayout.Label("  <color=#888888>HP 감속 임계값: (없음)</color>", normalStyle);
+        }
 
         // 타입별 부스트 구간
         GUILayout.Label("<color=yellow>  타입별 부스트 구간 (전체진행도 기준)</color>", normalStyle);
