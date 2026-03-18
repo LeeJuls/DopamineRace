@@ -9,7 +9,8 @@ public enum CollisionVFXType
     Hit,        // 충돌
     Dodge,      // 회피
     Slingshot,  // 슬링샷 (추격)
-    Crit        // Lucky 크리티컬
+    Crit,       // Lucky 크리티컬
+    Slipstream  // 슬립스트림 가속 발동
 }
 
 // ══════════════════════════════════════════
@@ -48,11 +49,12 @@ public class CollisionVFX : MonoBehaviour
     {
         switch (type)
         {
-            case CollisionVFXType.Crit:      return 3;
-            case CollisionVFXType.Hit:       return 2;
-            case CollisionVFXType.Dodge:     return 1;
-            case CollisionVFXType.Slingshot: return 0;
-            default: return -1;
+            case CollisionVFXType.Crit:       return 3;
+            case CollisionVFXType.Hit:        return 2;
+            case CollisionVFXType.Dodge:      return 1;
+            case CollisionVFXType.Slingshot:  return 0;
+            case CollisionVFXType.Slipstream: return -1;
+            default: return -2;
         }
     }
 
@@ -135,6 +137,13 @@ public class CollisionVFX : MonoBehaviour
                 iconColor = new Color(1f, 1f, 0.3f, 1f);
                 icon = s_star5;
                 text = "BOOST!";
+                break;
+
+            case CollisionVFXType.Slipstream:
+                bgColor = new Color(0.2f, 0.6f, 1f, 0.85f);
+                iconColor = new Color(0.8f, 1f, 1f, 1f);
+                icon = s_arrow;
+                text = "DRAFT!";
                 break;
 
             default:

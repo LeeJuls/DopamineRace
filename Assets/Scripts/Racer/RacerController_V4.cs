@@ -38,6 +38,12 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
     private bool v4InSlipstream = false;
     private float v4SlipstreamLeaderSpeed = 0f; // 슬립스트림 대상(앞 캐릭터)의 현재 속도
+    private bool v4SlipstreamAccelActive = false; // 지능 판정 통과 여부
+    private float v4SlipstreamRollTimer = 0f;     // 판정 쿨다운 타이머 (0이면 판정 가능)
+
+    // 프로퍼티 (RaceDebugOverlay 표시용)
+    public bool V4InSlipstream => v4InSlipstream;
+    public bool V4SlipstreamAccelActive => v4SlipstreamAccelActive;
     private float v4ThinkTimer = 0f;
     private float v4LastProgress = 0f;  // 진행도 기반 드레인용
 
@@ -94,6 +100,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         v4IsSpurting  = false;
         v4IsPanicking = false;
         v4InSlipstream = false;
+        v4SlipstreamAccelActive = false;
+        v4SlipstreamRollTimer = 0f;
         v4ThinkTimer  = 0f;
         v4LastProgress = 0f;
         v4LuckTimer   = 0f;
@@ -222,9 +230,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         else if (inBurstZone) target = vmax * gs.v4_burstSpeedRatio;
         else                  target = vmax * gs.v4_normalSpeedRatio;
 
-        // ── 슬립스트림: 앞 캐릭터 속도에 맞춰 따라감 ──
-        // target을 앞 캐릭터 속도로 상한 제한 → 자연스러운 추격 연출
-        if (v4InSlipstream && v4SlipstreamLeaderSpeed > 0f)
+        // ── 슬립스트림: 지능 판정 성공 시만 가속 혜택 ──
+        // HP 드레인 감소는 ConsumeStaminaV4에서 별도 처리 (항상 적용)
+        if (v4InSlipstream && v4SlipstreamAccelActive && v4SlipstreamLeaderSpeed > 0f)
         {
             target = Mathf.Min(target, v4SlipstreamLeaderSpeed);
             accelRate *= gs.v4_slipstreamAccelMul;
@@ -304,7 +312,11 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             else if (IsInBurstZone(gs, currentProgress))       drain *= gs.v4_burstDrainMul;
         }
 
-        if (v4InSlipstream) drain *= gs.v4_slipstreamDrainMul;
+        if (v4InSlipstream)
+        {
+            drain *= gs.v4_slipstreamDrainMul;                       // 항상: 드래프트 HP 절약
+            if (v4SlipstreamAccelActive) drain *= gs.v4_slipstreamAccelDrainMul; // 가속 시: 추가 소모
+        }
         if (v4IsPanicking)  drain *= gs.v4_panicDrainMul;
 
         v4CurrentStamina = Mathf.Max(0f, v4CurrentStamina - drain);
@@ -321,6 +333,10 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     {
         if (RaceManager.Instance == null) { v4InSlipstream = false; return; }
 
+        // 쿨다운 타이머 감소
+        if (v4SlipstreamRollTimer > 0f)
+            v4SlipstreamRollTimer -= Time.deltaTime;
+
         float myProgress = TotalProgress;
         bool inStream = false;
         float closestGap = float.MaxValue;
@@ -330,20 +346,65 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         {
             if (r == this || r.IsFinished) continue;
             float gap = r.TotalProgress - myProgress;
-            // 앞에 있는 캐릭터만 (gap > 0), 범위 내면 슬립스트림
-            // 가장 가까운 앞 캐릭터의 속도를 기록
             if (gap > 0f && gap <= gs.v4_slipstreamRange && gap < closestGap)
             {
                 inStream = true;
                 closestGap = gap;
-                // currentSpeed = 순수 Lerp 상태값 (크리티컬/슬링샷 배율 미포함)
-                // v4CurrentSpeed는 배율 포함이라 시너지 문제 발생
                 leaderSpeed = r.currentSpeed;
             }
         }
 
+        // 타입별 해금 진행도 체크 (해금 전이면 슬립스트림 무효)
+        if (inStream && myProgress < GetV4SlipstreamUnlock(gs))
+            inStream = false;
+
+        // 슬립스트림 범위 진입 순간 & 쿨다운 만료 시 지능 확률 판정
+        if (inStream && !v4InSlipstream && v4SlipstreamRollTimer <= 0f)
+        {
+            float prob = charDataV4 != null
+                ? charDataV4.v4Intelligence / (charDataV4.v4Intelligence + gs.v4_slipstreamSmartK)
+                : 0f;
+            v4SlipstreamAccelActive = (UnityEngine.Random.value < prob);
+            v4SlipstreamRollTimer = gs.v4_slipstreamRollCooldown; // 성공·실패 모두 쿨다운 시작
+
+            // 이벤트 로그
+            var overlay = RaceManager.Instance?.GetComponent<RaceDebugOverlay>();
+            if (overlay != null && charDataV4 != null)
+            {
+                string result = v4SlipstreamAccelActive ? "성공 (가속ON)" : "실패 (HP절약만)";
+                overlay.LogEvent(RaceDebugOverlay.EventType.Slipstream,
+                    string.Format("{0} 슬립스트림 판정 {1} | Int:{2:F0} 확률:{3:P0}",
+                        charDataV4.charId.Split('.')[2], result,
+                        charDataV4.v4Intelligence, prob));
+            }
+
+            // VFX — 가속 성공 시만 표시
+            if (v4SlipstreamAccelActive)
+            {
+                var vfx = GetComponent<CollisionVFX>() ?? gameObject.AddComponent<CollisionVFX>();
+                vfx.Show(CollisionVFXType.Slipstream, 1.0f);
+            }
+        }
+        else if (!inStream)
+        {
+            v4SlipstreamAccelActive = false; // 범위 이탈 시 가속 해제 (쿨다운은 유지)
+        }
+
         v4InSlipstream = inStream;
         v4SlipstreamLeaderSpeed = leaderSpeed;
+    }
+
+    private float GetV4SlipstreamUnlock(GameSettingsV4 gs)
+    {
+        if (charDataV4 == null) return 0f;
+        switch (charDataV4.charType)
+        {
+            case CharacterType.Runner:   return gs.v4_ssUnlockRunner;
+            case CharacterType.Leader:   return gs.v4_ssUnlockLeader;
+            case CharacterType.Chaser:   return gs.v4_ssUnlockChaser;
+            case CharacterType.Reckoner: return gs.v4_ssUnlockReckoner;
+            default: return 0f;
+        }
     }
 
     // ──────────────────────────────────────────────

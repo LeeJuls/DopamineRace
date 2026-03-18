@@ -50,6 +50,30 @@ public class GameSettingsV4 : ScriptableObject
     [Range(0.3f, 1.0f)]
     public float v4_slipstreamAccelMul = 0.70f;
 
+    [Tooltip("슬립스트림 가속 발동 확률 공식의 K 상수\n" +
+             "prob = Int / (Int + K)\n" +
+             "K=20: 지능10→33%, 지능20→50%\n" +
+             "K=10: 지능10→50%, 지능20→67%")]
+    public float v4_slipstreamSmartK = 20f;
+
+    [Tooltip("슬립스트림 가속 판정 쿨다운 (초)\n성공·실패 모두 판정 후 이 시간 동안 재판정 없음")]
+    public float v4_slipstreamRollCooldown = 3f;
+
+    [Tooltip("슬립스트림 가속 발동 성공 시 HP 드레인 추가 배율\n" +
+             "기본 드레인 감소(0.70) 위에 추가 적용\n" +
+             "drain×0.70×1.80 = drain×1.26 (기본 대비 26% 증가)")]
+    public float v4_slipstreamAccelDrainMul = 1.80f;
+
+    [Header("슬립스트림 해금 진행도 (0=시작부터 허용, 1=불가)")]
+    [Tooltip("도주(Runner) 슬립스트림 최소 전체 진행도")]
+    public float v4_ssUnlockRunner   = 0.00f;
+    [Tooltip("선행(Leader) 슬립스트림 최소 전체 진행도")]
+    public float v4_ssUnlockLeader   = 0.00f;
+    [Tooltip("선입(Chaser) 슬립스트림 최소 전체 진행도")]
+    public float v4_ssUnlockChaser   = 0.30f;
+    [Tooltip("추입(Reckoner) 슬립스트림 최소 전체 진행도")]
+    public float v4_ssUnlockReckoner = 0.50f;
+
     [Tooltip("스태미나 0 도달 시 최고속도 강제 감소 배율\n예: 0.50 = 최고속의 50%로 제한")]
     [Range(0.3f, 0.7f)]
     public float v4_exhaustSpeedFloor = 0.80f;

@@ -64,7 +64,7 @@ public class RaceDebugOverlay : MonoBehaviour
     // ── HP 탭 UI ──
     // (탭 시스템으로 전환 — 별도 스크롤 불필요)
 
-    public enum EventType { Critical, CollisionHit, CollisionDodge, Slingshot, Attack, Finish, Track, Burst, Spurt }
+    public enum EventType { Critical, CollisionHit, CollisionDodge, Slingshot, Attack, Finish, Track, Burst, Spurt, Slipstream }
 
     public struct RaceEvent
     {
@@ -85,6 +85,7 @@ public class RaceDebugOverlay : MonoBehaviour
                 case EventType.Track:          return "🗺️";
                 case EventType.Burst:          return "🔥";
                 case EventType.Spurt:          return "💨";
+                case EventType.Slipstream:     return "🌊";
                 default: return "•";
             }
         }
@@ -588,6 +589,7 @@ public class RaceDebugOverlay : MonoBehaviour
             else if (racer.IsCritActive) { status = "⚡크리티컬!"; col = "#FF8800"; }
             else if (racer.CollisionPenalty > 0) { status = "💥-" + (int)(racer.CollisionPenalty * 100) + "%"; col = "#FF6666"; }
             else if (racer.SlingshotBoost > 0) { status = "🚀+" + (int)(racer.SlingshotBoost * 100) + "%"; col = "#66FF66"; }
+            else if (racer.V4InSlipstream) { status = racer.V4SlipstreamAccelActive ? "🌊✓가속" : "🌊✗절약"; col = "#88CCFF"; }
 
             sb.AppendFormat("<color={0}>{1,2}위  {2,-4}  {3,-3}  {4,5:F2}  {5,5:F1}%  {6}</color>\n",
                 col, i + 1, cd.DisplayName, cd.GetTypeName(),
@@ -625,6 +627,9 @@ public class RaceDebugOverlay : MonoBehaviour
             if (racer.IsCritActive) sl += "<color=#FF8800>⚡크리티컬</color>  ";
             if (racer.CollisionPenalty > 0) sl += "<color=#FF6666>💥감속</color>  ";
             if (racer.SlingshotBoost > 0) sl += "<color=#66FF66>🚀슬링샷</color>  ";
+            if (racer.V4InSlipstream) sl += racer.V4SlipstreamAccelActive
+                ? "<color=#88CCFF>🌊슬립스트림✓</color>  "
+                : "<color=#6699AA>🌊슬립스트림✗</color>  ";
             sb.AppendFormat("  최종: <color=#FFFFFF>{0:F2}</color>  |  랩: {1}/{2}  {3}\n\n",
                 racer.CurrentSpeed, racer.CurrentLap, rm.CurrentLaps, sl);
         }
