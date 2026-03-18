@@ -361,10 +361,11 @@ public class RaceDebugOverlay : MonoBehaviour
             v4.v4_reckonerBurstStart, v4.v4_reckonerBurstEnd);
 
         // 캐릭터 스탯
+        bool applyCond = v4.v4_applyCondition;
         var rm = RaceManager.Instance;
         if (rm != null && rm.Racers != null && rm.Racers.Count > 0)
         {
-            sb.AppendLine("\n▶ 캐릭터 스탯 (V4)");
+            sb.AppendLine(applyCond ? "\n▶ 캐릭터 스탯 (V4) [컨디션 적용중]" : "\n▶ 캐릭터 스탯 (V4)");
             sb.AppendLine("이름    SPD  ACC  STA  POW  INT  LCK  합계");
             var rankings = rm.GetLiveRankings();
             foreach (var racer in rankings)
@@ -372,9 +373,14 @@ public class RaceDebugOverlay : MonoBehaviour
                 if (racer.CharData == null) continue;
                 var v4c = CharacterDatabaseV4.FindById(racer.CharData.charId);
                 if (v4c == null) continue;
-                sb.AppendFormat("{0,-4}  {1,3:F0}  {2,3:F0}  {3,3:F0}  {4,3:F0}  {5,3:F0}  {6,3:F0}  {7,3:F0}\n",
+                float condMul = applyCond
+                    ? Mathf.Max(OddsCalculator.GetConditionMultiplier(racer.CharData.charId), 0.3f)
+                    : 1f;
+                string spdDelta = applyCond ? FormatCondDeltaPlain(v4c.v4Speed,   condMul) : "";
+                string staDelta = applyCond ? FormatCondDeltaPlain(v4c.v4Stamina, condMul) : "";
+                sb.AppendFormat("{0,-4}  {1,3:F0}{2}  {3,3:F0}  {4,3:F0}{5}  {6,3:F0}  {7,3:F0}  {8,3:F0}  {9,3:F0}\n",
                     racer.CharData.DisplayName,
-                    v4c.v4Speed, v4c.v4Accel, v4c.v4Stamina,
+                    v4c.v4Speed, spdDelta, v4c.v4Accel, v4c.v4Stamina, staDelta,
                     v4c.v4Power, v4c.v4Intelligence, v4c.v4Luck,
                     v4c.StatTotal);
             }
@@ -868,6 +874,25 @@ public class RaceDebugOverlay : MonoBehaviour
 
     private bool showStatsSection = true;
 
+    /// <summary>GUI용: 스탯 + 컨디션 델타 (리치텍스트 색상 포함)</summary>
+    private string FormatStatWithCond(float stat, float condMul, bool applyCondition)
+    {
+        if (!applyCondition) return stat.ToString("F0");
+        int delta = Mathf.RoundToInt(stat * (condMul - 1f));
+        if (delta == 0) return stat.ToString("F0");
+        string sign = delta > 0 ? "+" : "";
+        string col  = delta > 0 ? "#66FF66" : "#FF6666";
+        return string.Format("{0}<color={1}>({2}{3})</color>", (int)stat, col, sign, delta);
+    }
+
+    /// <summary>복사 텍스트용: 스탯 + 컨디션 델타 (plain text)</summary>
+    private string FormatCondDeltaPlain(float stat, float condMul)
+    {
+        int delta = Mathf.RoundToInt(stat * (condMul - 1f));
+        if (delta == 0) return "";
+        return string.Format("({0}{1})", delta > 0 ? "+" : "", delta);
+    }
+
     private void DrawCharacterStatsSection()
     {
         GUILayout.Label("─────────────────────────────────────", normalStyle);
@@ -883,8 +908,10 @@ public class RaceDebugOverlay : MonoBehaviour
         var rm = RaceManager.Instance;
         if (rm == null || rm.Racers == null || rm.Racers.Count == 0) return;
 
+        bool applyCond = GameSettings.Instance?.v4Settings?.v4_applyCondition ?? false;
+        string condLabel = applyCond ? " <color=#FFCC44>(컨디션 적용중)</color>" : "";
         GUILayout.Label(
-            "<color=yellow>이름    SPD  ACC  STA  POW  INT  LCK  합계</color>",
+            "<color=yellow>이름    SPD  ACC  STA  POW  INT  LCK  합계</color>" + condLabel,
             normalStyle);
 
         var rankings = rm.GetLiveRankings();
@@ -894,10 +921,17 @@ public class RaceDebugOverlay : MonoBehaviour
             var v4 = CharacterDatabaseV4.FindById(racer.CharData.charId);
             if (v4 == null) continue;
 
+            float condMul = applyCond
+                ? Mathf.Max(OddsCalculator.GetConditionMultiplier(racer.CharData.charId), 0.3f)
+                : 1f;
+
+            string spdStr = FormatStatWithCond(v4.v4Speed,   condMul, applyCond);
+            string staStr = FormatStatWithCond(v4.v4Stamina, condMul, applyCond);
+
             GUILayout.Label(string.Format(
-                "{0,-4}  {1,3:F0}  {2,3:F0}  {3,3:F0}  {4,3:F0}  {5,3:F0}  {6,3:F0}  <color=#888888>{7,3:F0}</color>",
+                "{0,-4}  {1}  {2,3:F0}  {3}  {4,3:F0}  {5,3:F0}  {6,3:F0}  <color=#888888>{7,3:F0}</color>",
                 racer.CharData.DisplayName,
-                v4.v4Speed, v4.v4Accel, v4.v4Stamina,
+                spdStr, v4.v4Accel, staStr,
                 v4.v4Power, v4.v4Intelligence, v4.v4Luck,
                 v4.StatTotal), normalStyle);
         }
