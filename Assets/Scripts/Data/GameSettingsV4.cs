@@ -1,4 +1,17 @@
+using System.Collections.Generic;
 using UnityEngine;
+
+[System.Serializable]
+public class HpSpeedThreshold
+{
+    [Tooltip("HP가 이 비율 이하일 때 적용 (0~1, 예: 0.5 = HP 50% 이하)")]
+    [Range(0f, 1f)]
+    public float hpRatio = 0.50f;
+
+    [Tooltip("base 속도 감소율 (0~1, 예: 0.10 = 10% 감소 → 배율 0.90)")]
+    [Range(0f, 0.9f)]
+    public float speedReduction = 0.10f;
+}
 
 /// <summary>
 /// Race V4 설정 — 5대 스탯(Speed/Accel/Stamina/Power/Intelligence) + Luck 기반 완전 새로운 달리기 시스템
@@ -74,12 +87,12 @@ public class GameSettingsV4 : ScriptableObject
     [Tooltip("추입(Reckoner) 슬립스트림 최소 전체 진행도")]
     public float v4_ssUnlockReckoner = 0.50f;
 
-    [Tooltip("스태미나 0 도달 시 최고속도 강제 감소 배율\n예: 0.50 = 최고속의 50%로 제한")]
-    [Range(0.3f, 0.7f)]
-    public float v4_exhaustSpeedFloor = 0.80f;
-
-    [Tooltip("스태미나 고갈 후 추가 감속 (초당 속도 감소량)")]
-    public float v4_exhaustDecel = 2.0f;
+    [Header("═══ HP 기반 속도 감소 임계값 ═══")]
+    [Tooltip("HP가 지정 비율 이하일 때 base 속도 감소.\n" +
+             "해당 임계값 중 hpRatio가 가장 낮은 항목 적용 (밴드 시스템).\n" +
+             "예) hpRatio:0.9, reduction:0.3 → HP 90%이하 → base -30%\n" +
+             "+ 버튼으로 추가, − 버튼으로 삭제")]
+    public List<HpSpeedThreshold> v4_hpSpeedThresholds = new List<HpSpeedThreshold>();
 
     // ═══════════════════════════════════════════════
     //  최고속도 (Speed)
@@ -279,6 +292,26 @@ public class GameSettingsV4 : ScriptableObject
     // ═══════════════════════════════════════════════
     //  유틸리티 메서드
     // ═══════════════════════════════════════════════
+
+    /// <summary>
+    /// 현재 HP 비율에 따른 속도 배율 반환 (1.0 = 감소 없음)
+    /// 매칭되는 임계값 중 hpRatio가 가장 낮은 항목 적용 (밴드 시스템)
+    /// </summary>
+    public float GetHpSpeedMultiplier(float hpRatio)
+    {
+        if (v4_hpSpeedThresholds == null || v4_hpSpeedThresholds.Count == 0) return 1f;
+        float bestReduction = 0f;
+        float bestThreshold = float.MaxValue;
+        foreach (var entry in v4_hpSpeedThresholds)
+        {
+            if (hpRatio <= entry.hpRatio && entry.hpRatio < bestThreshold)
+            {
+                bestThreshold = entry.hpRatio;
+                bestReduction = entry.speedReduction;
+            }
+        }
+        return 1f - bestReduction;
+    }
 
     /// <summary>캐릭터의 최대 스태미나 (HP) 계산</summary>
     public float GetV4MaxStamina(float staminaStat)

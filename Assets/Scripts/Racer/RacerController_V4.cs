@@ -175,9 +175,17 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         float accelRate = charDataV4.v4Accel * gs.v4_accelStatFactor;
 
         // ── 구간 판별 (boolean으로 먼저 확정 → 두 번째 패스에서 재활용) ──
-        bool burstActive = !gs.v4_disableBurst;
-        bool inSpurtZone = burstActive && progress >= gs.v4_finalSpurtStart;
-        bool inBurstZone = !inSpurtZone && burstActive && (IsInBurstZone(gs, progress) || v4EmergencyBurst);
+        bool burstActive  = !gs.v4_disableBurst;
+        bool hpAvailable  = v4CurrentStamina > 0f;  // HP 0이면 부스트/스퍼트 불가
+        bool inSpurtZone  = burstActive && hpAvailable && progress >= gs.v4_finalSpurtStart;
+        bool inBurstZone  = !inSpurtZone && burstActive && hpAvailable && (IsInBurstZone(gs, progress) || v4EmergencyBurst);
+
+        // ── HP 임계값 기반 속도 배율 (부스트/스퍼트 로그에 사용) ──
+        float staminaRatio  = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina : 0f;
+        float hpSpeedMul    = gs.GetHpSpeedMultiplier(staminaRatio);
+        string hpPenaltyTag = hpSpeedMul < 1f
+            ? $"[감속 -{(1f - hpSpeedMul):P0}]"
+            : "[100%]";
 
         // ── 헬퍼: 현재 HP 상태 문자열 ──────────────
         string charLabel = charData?.DisplayName ?? charDataV4.charId;
@@ -197,7 +205,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             {
                 v4IsSpurting = true;
                 v4Phase      = V4Phase.Spurt;
-                string msg = $"{charLabel} 파이널스퍼트! {HpStr()} (progress:{progress:P0})";
+                string msg = $"{charLabel} 파이널스퍼트! {HpStr()} {hpPenaltyTag} (progress:{progress:P0})";
                 Debug.Log($"[V4 FinalSpurt 시작] {msg}");
                 overlay?.LogEvent(RaceDebugOverlay.EventType.Spurt, msg);
             }
@@ -209,7 +217,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
             if (v4Phase != V4Phase.Burst) // 부스트 진입
             {
-                string msg = $"{charLabel} 부스트 시작 {HpStr()} (progress:{progress:P0})";
+                string msg = $"{charLabel} 부스트 시작 {HpStr()} {hpPenaltyTag} (progress:{progress:P0})";
                 Debug.Log($"[V4 Burst 시작] {msg}");
                 overlay?.LogEvent(RaceDebugOverlay.EventType.Burst, msg);
                 v4Phase = V4Phase.Burst;
@@ -229,10 +237,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             if (!v4IsSpurting) v4Phase = V4Phase.Normal;
         }
 
-        // ── HP 비율에 따라 vmax 점진적 감소 ──
-        // HP 100% → vmax×1.0, HP 0% → vmax×exhaustSpeedFloor (ex: ×0.8)
-        float staminaRatio = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina : 0f;
-        vmax *= Mathf.Lerp(gs.v4_exhaustSpeedFloor, 1.0f, staminaRatio);
+        // ── HP 임계값 기반 vmax 감소 ──
+        // hpSpeedMul: 임계값 설정에 따른 배율 (1.0 = 감소 없음, 설정 없으면 항상 1.0)
+        vmax *= hpSpeedMul;
         // target도 감소한 vmax 기준으로 재계산 (bool 재활용 — IsInBurstZone 중복호출 없음)
         if      (inSpurtZone) target = vmax * gs.v4_spurtVmaxBonus;
         else if (inBurstZone) target = vmax * gs.v4_burstSpeedRatio;
