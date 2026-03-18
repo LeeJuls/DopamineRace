@@ -36,6 +36,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     private bool v4IsPanicking = false;
     private float v4PanicTimer = 0f;
 
+    private bool v4EmergencyBurst = false; // 긴급 부스트 (목표 순위 이탈 시)
+    private int v4CurrentRank = 0;         // 현재 순위 (ThinkTick에서 업데이트)
+
     private bool v4InSlipstream = false;
     private float v4SlipstreamLeaderSpeed = 0f; // 슬립스트림 대상(앞 캐릭터)의 현재 속도
     private bool v4SlipstreamAccelActive = false; // 지능 판정 통과 여부
@@ -102,6 +105,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         v4InSlipstream = false;
         v4SlipstreamAccelActive = false;
         v4SlipstreamRollTimer = 0f;
+        v4EmergencyBurst = false;
+        v4CurrentRank = 0;
         v4ThinkTimer  = 0f;
         v4LastProgress = 0f;
         v4LuckTimer   = 0f;
@@ -134,6 +139,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         // 구간별 HP 체크포인트 보고 (각자 통과 시점 기준)
         ReportV4Checkpoints();
+
+        // 긴급 부스트 체크 (부스트 구간 전, 목표 순위 이탈 시)
+        UpdateV4EmergencyBurst(gs4);
 
         // V4 슬립스트림 감지
         UpdateV4Slipstream(gs4);
@@ -169,7 +177,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         // ── 구간 판별 (boolean으로 먼저 확정 → 두 번째 패스에서 재활용) ──
         bool burstActive = !gs.v4_disableBurst;
         bool inSpurtZone = burstActive && progress >= gs.v4_finalSpurtStart;
-        bool inBurstZone = !inSpurtZone && burstActive && IsInBurstZone(gs, progress);
+        bool inBurstZone = !inSpurtZone && burstActive && (IsInBurstZone(gs, progress) || v4EmergencyBurst);
 
         // ── 헬퍼: 현재 HP 상태 문자열 ──────────────
         string charLabel = charData?.DisplayName ?? charDataV4.charId;
@@ -308,8 +316,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         // 구간별 추가 소모 (v4_disableBurst=true 시 배율 1.0 고정 — 순수 노말 테스트)
         if (!gs.v4_disableBurst)
         {
-            if      (currentProgress >= gs.v4_finalSpurtStart) drain *= gs.v4_spurtDrainMul;
-            else if (IsInBurstZone(gs, currentProgress))       drain *= gs.v4_burstDrainMul;
+            if      (currentProgress >= gs.v4_finalSpurtStart)                       drain *= gs.v4_spurtDrainMul;
+            else if (IsInBurstZone(gs, currentProgress) || v4EmergencyBurst) drain *= gs.v4_burstDrainMul;
         }
 
         if (v4InSlipstream)
@@ -459,7 +467,74 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     //  V4 지능 판단 틱 (M3b에서 구현)
     // ──────────────────────────────────────────────
 
-    private void ProcessV4ThinkTick(GameSettingsV4 gs) { }
+    private void ProcessV4ThinkTick(GameSettingsV4 gs)
+    {
+        // 현재 순위 업데이트 (ThinkTick 주기로 — 매 프레임 리스트 생성 방지)
+        if (RaceManager.Instance != null)
+        {
+            var rankings = RaceManager.Instance.GetLiveRankings();
+            int idx = rankings.IndexOf(this);
+            v4CurrentRank = idx >= 0 ? idx + 1 : rankings.Count;
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    //  긴급 부스트 — 부스트 구간 시작 전, 목표 순위 이탈 시 자동 발동
+    // ──────────────────────────────────────────────
+
+    private void UpdateV4EmergencyBurst(GameSettingsV4 gs)
+    {
+        if (!gs.v4_emergencyBurstEnabled || charDataV4 == null || gs.v4_disableBurst) return;
+
+        float progress  = GetOverallProgress();
+        float burstStart = GetV4BurstStart(gs);
+
+        if (progress >= burstStart)
+        {
+            // 부스트 구간 진입 → 긴급 부스트 해제 (정규 부스트로 이어짐)
+            if (v4EmergencyBurst)
+            {
+                v4EmergencyBurst = false;
+                var ov = RaceManager.Instance?.GetComponent<RaceDebugOverlay>();
+                ov?.LogEvent(RaceDebugOverlay.EventType.Burst,
+                    string.Format("{0} 긴급부스트 종료→정규부스트 연결 (rank:{1})",
+                        charDataV4.charId.Split('.')[2], v4CurrentRank));
+            }
+            return;
+        }
+
+        // 부스트 구간 전: 목표 순위 체크
+        if (v4CurrentRank <= 0) return;
+        var (_, targetMax) = gs.GetV4TargetRankRange(charDataV4.charType);
+
+        bool shouldEmergency = v4CurrentRank > targetMax;
+
+        if (shouldEmergency && !v4EmergencyBurst)
+        {
+            v4EmergencyBurst = true;
+            var ov = RaceManager.Instance?.GetComponent<RaceDebugOverlay>();
+            ov?.LogEvent(RaceDebugOverlay.EventType.Burst,
+                string.Format("{0} 긴급부스트! rank:{1} > 목표:{2} (progress:{3:P0})",
+                    charDataV4.charId.Split('.')[2], v4CurrentRank, targetMax, progress));
+        }
+        else if (!shouldEmergency && v4EmergencyBurst)
+        {
+            v4EmergencyBurst = false; // 목표 순위 복귀 시 해제
+        }
+    }
+
+    private float GetV4BurstStart(GameSettingsV4 gs)
+    {
+        if (charDataV4 == null) return 0f;
+        switch (charDataV4.charType)
+        {
+            case CharacterType.Runner:   return gs.v4_runnerBurstStart;
+            case CharacterType.Leader:   return gs.v4_leaderBurstStart;
+            case CharacterType.Chaser:   return gs.v4_chaserBurstStart;
+            case CharacterType.Reckoner: return gs.v4_reckonerBurstStart;
+            default: return 0f;
+        }
+    }
 
     // ──────────────────────────────────────────────
     //  유틸
