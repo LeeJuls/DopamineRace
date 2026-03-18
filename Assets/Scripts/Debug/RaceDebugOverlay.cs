@@ -327,10 +327,57 @@ public class RaceDebugOverlay : MonoBehaviour
         {
             sb.AppendLine("\n▶ 라운드 리포트");
             sb.AppendLine("────────────────────────");
-            // 리치텍스트 태그 제거
             string plain = log.reportText;
             plain = System.Text.RegularExpressions.Regex.Replace(plain, "<[^>]+>", "");
             sb.AppendLine(plain);
+        }
+
+        // V4 설정 + 캐릭터 스탯
+        sb.AppendLine(BuildV4SettingsText());
+
+        return sb.ToString();
+    }
+
+    private string BuildV4SettingsText()
+    {
+        var gs = GameSettings.Instance;
+        var v4 = gs?.v4Settings;
+        if (v4 == null) return "";
+
+        var sb = new StringBuilder();
+        sb.AppendLine("\n▶ V4 설정");
+        sb.AppendLine("────────────────────────");
+        sb.AppendFormat("BURST: {0}  Condition: {1}\n",
+            v4.v4_disableBurst ? "OFF" : "ON",
+            v4.v4_applyCondition ? "ON" : "OFF");
+        sb.AppendFormat("Normal×{0:F2}  Burst×{1:F2}  Spurt×{2:F2}  SpurtStart:{3:P0}\n",
+            v4.v4_normalSpeedRatio, v4.v4_burstSpeedRatio, v4.v4_spurtVmaxBonus, v4.v4_finalSpurtStart);
+        sb.AppendFormat("Drain/Lap:{0:F1}  BurstDrain×{1:F1}  SpurtDrain×{2:F1}\n",
+            v4.v4_drainPerLap, v4.v4_burstDrainMul, v4.v4_spurtDrainMul);
+        sb.AppendFormat("Runner:{0:P0}~{1:P0}  Leader:{2:P0}~{3:P0}  Chaser:{4:P0}~{5:P0}  Reckoner:{6:P0}~{7:P0}\n",
+            v4.v4_runnerBurstStart, v4.v4_runnerBurstEnd,
+            v4.v4_leaderBurstStart, v4.v4_leaderBurstEnd,
+            v4.v4_chaserBurstStart, v4.v4_chaserBurstEnd,
+            v4.v4_reckonerBurstStart, v4.v4_reckonerBurstEnd);
+
+        // 캐릭터 스탯
+        var rm = RaceManager.Instance;
+        if (rm != null && rm.Racers != null && rm.Racers.Count > 0)
+        {
+            sb.AppendLine("\n▶ 캐릭터 스탯 (V4)");
+            sb.AppendLine("이름    SPD  ACC  STA  POW  INT  LCK  합계");
+            var rankings = rm.GetLiveRankings();
+            foreach (var racer in rankings)
+            {
+                if (racer.CharData == null) continue;
+                var v4c = CharacterDatabaseV4.FindById(racer.CharData.charId);
+                if (v4c == null) continue;
+                sb.AppendFormat("{0,-4}  {1,3:F0}  {2,3:F0}  {3,3:F0}  {4,3:F0}  {5,3:F0}  {6,3:F0}  {7,3:F0}\n",
+                    racer.CharData.DisplayName,
+                    v4c.v4Speed, v4c.v4Accel, v4c.v4Stamina,
+                    v4c.v4Power, v4c.v4Intelligence, v4c.v4Luck,
+                    v4c.StatTotal);
+            }
         }
 
         return sb.ToString();

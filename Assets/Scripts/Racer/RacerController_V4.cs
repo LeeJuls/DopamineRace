@@ -75,6 +75,14 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         }
 
         v4MaxStamina    = gs.v4_staminaBase + charDataV4.v4Stamina * gs.v4_staminaPerStat;
+
+        // 컨디션 적용: MaxStamina에 conditionMul 배율
+        if (gs.v4_applyCondition)
+        {
+            float condMul = OddsCalculator.GetConditionMultiplier(charData.charId);
+            v4MaxStamina *= Mathf.Max(condMul, 0.3f);
+        }
+
         v4CurrentStamina = v4MaxStamina;
         v4CurrentSpeed  = GameSettings.Instance.globalSpeedMultiplier;
 
@@ -137,6 +145,14 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         float baseSpeed = GameSettings.Instance.globalSpeedMultiplier;
         float vmax      = baseSpeed * (1f + charDataV4.v4Speed * gs.v4_speedStatFactor);
+
+        // 컨디션 적용: Vmax에 conditionMul 배율
+        if (gs.v4_applyCondition)
+        {
+            float condMul = OddsCalculator.GetConditionMultiplier(charDataV4.charId);
+            vmax *= Mathf.Max(condMul, 0.3f);
+        }
+
         float progress  = GetOverallProgress(); // 0~1 전체 진행도
 
         float target;
