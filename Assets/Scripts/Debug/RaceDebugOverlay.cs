@@ -129,6 +129,7 @@ public class RaceDebugOverlay : MonoBehaviour
         public float hpPercent;   // 0~100
         public float cpPercent;   // 0~100
         public float speed;       // 현재 속도
+        public float time;        // 통과 시각 (Time.time)
     }
 
     private RoundLog GetOrCreateLog(int round)
@@ -316,8 +317,8 @@ public class RaceDebugOverlay : MonoBehaviour
                 sb.AppendFormat("── {0} ──\n", snapshot.GetLabel());
                 foreach (var info in snapshot.racers)
                 {
-                    sb.AppendFormat("  {0}위 {1} ({2})  HP:{3:F0}%  SPD:{4:F2}\n",
-                        info.rank, info.name, info.typeName, info.hpPercent, info.speed);
+                    sb.AppendFormat("  {0}위 {1} ({2})  HP:{3:F0}%  SPD:{4:F2}  [{5:F1}s]\n",
+                        info.rank, info.name, info.typeName, info.hpPercent, info.speed, info.time);
                 }
             }
         }
@@ -556,6 +557,7 @@ public class RaceDebugOverlay : MonoBehaviour
             typeName = racer.CharData.GetTypeName(),
             hpPercent = hpPct,
             cpPercent = 0f,   // V4는 CP 없음
+            time      = Time.time,
             speed     = speed
         });
     }
@@ -1012,9 +1014,9 @@ public class RaceDebugOverlay : MonoBehaviour
                     bar += b < filled ? "█" : "░";
 
                 GUILayout.Label(string.Format(
-                    "  {0}위 {1,-4} ({2})  <color={3}>{4} {5,3:F0}%</color>  SPD:{6:F2}",
+                    "  {0}위 {1,-4} ({2})  <color={3}>{4} {5,3:F0}%</color>  SPD:{6:F2}  <color=#888888>[{7:F1}s]</color>",
                     info.rank, info.name, info.typeName,
-                    hpColor, bar, info.hpPercent, info.speed), normalStyle);
+                    hpColor, bar, info.hpPercent, info.speed, info.time), normalStyle);
             }
             GUILayout.Space(2);
         }
