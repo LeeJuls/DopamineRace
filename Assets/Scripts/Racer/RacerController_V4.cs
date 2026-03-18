@@ -29,6 +29,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     private float v4CurrentStamina;
     private float v4MaxStamina;
     private float v4CurrentSpeed;
+    private float v4LastVmax       = 0f;   // HP 감소 적용 전 Vmax (디버그용)
+    private float v4LastHpSpeedMul = 1f;   // 이번 프레임 HP 속도 배율 (디버그용)
 
     private V4Phase v4Phase = V4Phase.Normal;
     private bool v4IsSpurting = false;
@@ -183,6 +185,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         // ── HP 임계값 기반 속도 배율 (부스트/스퍼트 로그에 사용) ──
         float staminaRatio  = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina : 0f;
         float hpSpeedMul    = gs.GetHpSpeedMultiplier(staminaRatio);
+        v4LastVmax       = vmax;         // HP 감소 전 Vmax 저장 (디버그 오버레이용)
+        v4LastHpSpeedMul = hpSpeedMul;   // HP 배율 저장 (디버그 오버레이용)
         string hpPenaltyTag = hpSpeedMul < 1f
             ? $"[감속 -{(1f - hpSpeedMul):P0}]"
             : "[100%]";
@@ -575,8 +579,12 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
                 if (progress >= threshold)
                 {
                     v4PassedCheckpoints.Add(key);
-                    float hpPct  = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina * 100f : 0f;
-                    overlay.RecordRacerCheckpoint(this, lap, sub, hpPct, currentSpeed);
+                    float hpPct   = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina * 100f : 0f;
+                    string phase  = v4Phase == V4Phase.Spurt ? "스퍼트"
+                                  : v4Phase == V4Phase.Burst  ? "부스트"
+                                  : "노말";
+                    overlay.RecordRacerCheckpoint(this, lap, sub, hpPct, currentSpeed,
+                                                  v4LastVmax, v4LastHpSpeedMul, phase);
                 }
             }
         }

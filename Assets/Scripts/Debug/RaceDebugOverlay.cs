@@ -131,6 +131,10 @@ public class RaceDebugOverlay : MonoBehaviour
         public float cpPercent;   // 0~100
         public float speed;       // 현재 속도
         public float time;        // 통과 시각 (Time.time)
+        // 속도 분해 정보
+        public float vmax;        // HP 감소 적용 전 Vmax
+        public float hpSpeedMul;  // HP 속도 배율 (1.0 = 감소 없음)
+        public string phase;      // "노말" / "부스트" / "스퍼트"
     }
 
     private RoundLog GetOrCreateLog(int round)
@@ -318,8 +322,13 @@ public class RaceDebugOverlay : MonoBehaviour
                 sb.AppendFormat("── {0} ──\n", snapshot.GetLabel());
                 foreach (var info in snapshot.racers)
                 {
-                    sb.AppendFormat("  {0}위 {1} ({2})  HP:{3:F0}%  SPD:{4:F2}  [{5:F1}s]\n",
+                    sb.AppendFormat("  {0}위 {1} ({2})  HP:{3:F0}%  SPD:{4:F2}  [{5:F3}s]\n",
                         info.rank, info.name, info.typeName, info.hpPercent, info.speed, info.time);
+                    if (info.vmax > 0f)
+                        sb.AppendFormat("     └ Vmax:{0:F2}  hp:x{1:F2}{2}  [{3}]\n",
+                            info.vmax, info.hpSpeedMul,
+                            info.hpSpeedMul < 0.999f ? string.Format("(-{0:P0})", 1f - info.hpSpeedMul) : "",
+                            info.phase);
                 }
             }
         }
@@ -511,7 +520,8 @@ public class RaceDebugOverlay : MonoBehaviour
     /// RacerController_V4.UpdateV4()에서 직접 호출됨.
     /// → 선두 기준 스냅샷이 아닌 "해당 캐릭터가 실제로 그 거리를 달렸을 때"의 HP를 기록.
     /// </summary>
-    public void RecordRacerCheckpoint(RacerController racer, int lap, float subProgress, float hpPct, float speed)
+    public void RecordRacerCheckpoint(RacerController racer, int lap, float subProgress, float hpPct, float speed,
+                                      float vmax = 0f, float hpSpeedMul = 1f, string phase = "노말")
     {
         if (racer?.CharData == null) return;
         var log = GetOrCreateLog(currentRound);
@@ -541,26 +551,24 @@ public class RaceDebugOverlay : MonoBehaviour
         foreach (var r in snapshot.racers)
             if (r.name == racer.CharData.DisplayName) return;
 
-        // 현재 레이스 순위 (동적)
-        int rank = 1;
-        var rm = RaceManager.Instance;
-        if (rm != null)
-        {
-            var rankings = rm.GetLiveRankings();
-            for (int i = 0; i < rankings.Count; i++)
-                if (rankings[i] == racer) { rank = i + 1; break; }
-        }
-
         snapshot.racers.Add(new LapRacerInfo
         {
-            rank     = rank,
-            name     = racer.CharData.DisplayName,
-            typeName = racer.CharData.GetTypeName(),
+            rank      = 0,   // 나중에 time 기준으로 재계산
+            name      = racer.CharData.DisplayName,
+            typeName  = racer.CharData.GetTypeName(),
             hpPercent = hpPct,
             cpPercent = 0f,   // V4는 CP 없음
             time      = Time.time,
-            speed     = speed
+            speed     = speed,
+            vmax      = vmax,
+            hpSpeedMul = hpSpeedMul,
+            phase     = phase
         });
+
+        // time 오름차순 정렬 후 rank 재할당
+        snapshot.racers.Sort((a, b) => a.time.CompareTo(b.time));
+        for (int i = 0; i < snapshot.racers.Count; i++)
+            snapshot.racers[i].rank = i + 1;
     }
 
     // ══════════════════════════════════════
@@ -763,7 +771,7 @@ public class RaceDebugOverlay : MonoBehaviour
         if (rm == null) return;
         InitStyles();
 
-        float panelWidth = showDetail ? 520 : 440;
+        float panelWidth = showDetail ? 600 : 460;
         float panelHeight = Screen.height - 20;
         Rect panelRect = new Rect(Screen.width - panelWidth - 10, 10, panelWidth, panelHeight);
 
@@ -1019,9 +1027,24 @@ public class RaceDebugOverlay : MonoBehaviour
                     bar += b < filled ? "█" : "░";
 
                 GUILayout.Label(string.Format(
-                    "  {0}위 {1,-4} ({2})  <color={3}>{4} {5,3:F0}%</color>  SPD:{6:F2}  <color=#888888>[{7:F1}s]</color>",
+                    "  {0}위 {1,-4} ({2})  <color={3}>{4} {5,3:F0}%</color>  SPD:{6:F2}  <color=#888888>[{7:F3}s]</color>",
                     info.rank, info.name, info.typeName,
                     hpColor, bar, info.hpPercent, info.speed, info.time), normalStyle);
+
+                // 속도 분해 정보 (두 번째 줄)
+                if (info.vmax > 0f)
+                {
+                    string hpMulColor = info.hpSpeedMul < 0.999f ? "#FFAA44" : "#888888";
+                    string hpMulStr   = info.hpSpeedMul < 0.999f
+                        ? string.Format("×{0:F2}<color=#FF8844>(-{1:P0})</color>", info.hpSpeedMul, 1f - info.hpSpeedMul)
+                        : "×1.00";
+                    string phaseColor = info.phase == "스퍼트" ? "#FF88FF"
+                                      : info.phase == "부스트" ? "#88FFFF"
+                                      : "#888888";
+                    GUILayout.Label(string.Format(
+                        "  <color=#555555>└</color> Vmax:<color=#FFFFFF>{0:F2}</color>  hp:<color={1}>{2}</color>  <color={3}>[{4}]</color>",
+                        info.vmax, hpMulColor, hpMulStr, phaseColor, info.phase), normalStyle);
+                }
             }
             GUILayout.Space(2);
         }
