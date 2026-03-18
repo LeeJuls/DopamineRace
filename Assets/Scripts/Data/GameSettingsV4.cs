@@ -289,6 +289,14 @@ public class GameSettingsV4 : ScriptableObject
              "부스트 구간 진입 시 자연스럽게 이어짐")]
     public bool v4_emergencyBurstEnabled = true;
 
+    [Tooltip("긴급 부스트 속도 배율 (Vmax 대비)\n정규 부스트(v4_burstSpeedRatio)보다 낮게 설정 권장 (포지셔닝용)")]
+    [Range(0.9f, 2.0f)]
+    public float v4_emergencyBurstSpeedRatio = 1.20f;
+
+    [Tooltip("긴급 부스트 HP 소모 배율\n정규 부스트(v4_burstDrainMul)보다 낮게 설정 권장")]
+    [Range(1.0f, 4.0f)]
+    public float v4_emergencyBurstDrainMul = 1.50f;
+
     // ═══════════════════════════════════════════════
     //  유틸리티 메서드
     // ═══════════════════════════════════════════════

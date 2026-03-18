@@ -367,6 +367,9 @@ public class RaceDebugOverlay : MonoBehaviour
             v4.v4_normalSpeedRatio, v4.v4_burstSpeedRatio, v4.v4_spurtVmaxBonus, v4.v4_finalSpurtStart);
         sb.AppendFormat("Drain/Lap:{0:F1}  BurstDrain×{1:F1}  SpurtDrain×{2:F1}\n",
             v4.v4_drainPerLap, v4.v4_burstDrainMul, v4.v4_spurtDrainMul);
+        sb.AppendFormat("긴급부스트: {0}  Spd×{1:F2}  Drain×{2:F1}\n",
+            v4.v4_emergencyBurstEnabled ? "ON" : "OFF",
+            v4.v4_emergencyBurstSpeedRatio, v4.v4_emergencyBurstDrainMul);
         sb.AppendFormat("Runner:{0:P0}~{1:P0}  Leader:{2:P0}~{3:P0}  Chaser:{4:P0}~{5:P0}  Reckoner:{6:P0}~{7:P0}\n",
             v4.v4_runnerBurstStart, v4.v4_runnerBurstEnd,
             v4.v4_leaderBurstStart, v4.v4_leaderBurstEnd,
@@ -992,6 +995,13 @@ public class RaceDebugOverlay : MonoBehaviour
         GUILayout.Label(
             string.Format("  Drain/Lap <color=#88FF88>{0:F1}</color>  BurstMul <color=#FFAA44>×{1:F1}</color>  SpurtMul <color=#FF6666>×{2:F1}</color>",
                 v4.v4_drainPerLap, v4.v4_burstDrainMul, v4.v4_spurtDrainMul),
+            normalStyle);
+
+        // 긴급부스트 설정
+        GUILayout.Label(
+            string.Format("  긴급부스트 {0}  Spd <color=#AADDFF>×{1:F2}</color>  Drain <color=#FFCC88>×{2:F1}</color>",
+                v4.v4_emergencyBurstEnabled ? "<color=#88FF88>ON</color>" : "<color=#888888>OFF</color>",
+                v4.v4_emergencyBurstSpeedRatio, v4.v4_emergencyBurstDrainMul),
             normalStyle);
 
         // 타입별 부스트 구간

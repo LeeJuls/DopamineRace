@@ -181,7 +181,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         bool burstActive  = !gs.v4_disableBurst;
         bool hpAvailable  = v4CurrentStamina > 0f;  // HP 0이면 부스트/스퍼트 불가
         bool inSpurtZone  = burstActive && hpAvailable && progress >= gs.v4_finalSpurtStart;
-        bool inBurstZone  = !inSpurtZone && burstActive && hpAvailable && (IsInBurstZone(gs, progress) || v4EmergencyBurst);
+        bool inRegularBurst   = !inSpurtZone && burstActive && hpAvailable && IsInBurstZone(gs, progress);
+        bool inEmergencyBurst = !inSpurtZone && !inRegularBurst && burstActive && hpAvailable && v4EmergencyBurst;
+        bool inBurstZone      = inRegularBurst || inEmergencyBurst;
 
         // ── HP 임계값 기반 속도 배율 (부스트/스퍼트 로그에 사용) ──
         float staminaRatio  = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina : 0f;
@@ -215,7 +217,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
                 overlay?.LogEvent(RaceDebugOverlay.EventType.Spurt, msg);
             }
         }
-        else if (inBurstZone)
+        else if (inRegularBurst)
         {
             // 타입별 부스트 구간: Vmax 전력질주
             target = vmax * gs.v4_burstSpeedRatio;
@@ -224,6 +226,19 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             {
                 string msg = $"{charLabel} 부스트 시작 {HpStr()} {hpPenaltyTag} (progress:{progress:P0})";
                 Debug.Log($"[V4 Burst 시작] {msg}");
+                overlay?.LogEvent(RaceDebugOverlay.EventType.Burst, msg);
+                v4Phase = V4Phase.Burst;
+            }
+        }
+        else if (inEmergencyBurst)
+        {
+            // 긴급 부스트: 포지션 유지용 (낮은 속도/드레인)
+            target = vmax * gs.v4_emergencyBurstSpeedRatio;
+
+            if (v4Phase != V4Phase.Burst) // 부스트 진입
+            {
+                string msg = $"{charLabel} 긴급부스트 {HpStr()} {hpPenaltyTag} (progress:{progress:P0})";
+                Debug.Log($"[V4 EmergencyBurst] {msg}");
                 overlay?.LogEvent(RaceDebugOverlay.EventType.Burst, msg);
                 v4Phase = V4Phase.Burst;
             }
@@ -246,9 +261,10 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         // hpSpeedMul: 임계값 설정에 따른 배율 (1.0 = 감소 없음, 설정 없으면 항상 1.0)
         vmax *= hpSpeedMul;
         // target도 감소한 vmax 기준으로 재계산 (bool 재활용 — IsInBurstZone 중복호출 없음)
-        if      (inSpurtZone) target = vmax * gs.v4_spurtVmaxBonus;
-        else if (inBurstZone) target = vmax * gs.v4_burstSpeedRatio;
-        else                  target = vmax * gs.v4_normalSpeedRatio;
+        if      (inSpurtZone)     target = vmax * gs.v4_spurtVmaxBonus;
+        else if (inRegularBurst)  target = vmax * gs.v4_burstSpeedRatio;
+        else if (inEmergencyBurst)target = vmax * gs.v4_emergencyBurstSpeedRatio;
+        else                      target = vmax * gs.v4_normalSpeedRatio;
         v4LastTarget = target;   // 최종 target 저장 (디버그 오버레이용)
 
         // ── 슬립스트림: 지능 판정 성공 시만 가속 혜택 ──
@@ -330,7 +346,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         if (!gs.v4_disableBurst)
         {
             if      (currentProgress >= gs.v4_finalSpurtStart)                       drain *= gs.v4_spurtDrainMul;
-            else if (IsInBurstZone(gs, currentProgress) || v4EmergencyBurst) drain *= gs.v4_burstDrainMul;
+            else if (IsInBurstZone(gs, currentProgress)) drain *= gs.v4_burstDrainMul;
+            else if (v4EmergencyBurst)                   drain *= gs.v4_emergencyBurstDrainMul;
         }
 
         if (v4InSlipstream)
