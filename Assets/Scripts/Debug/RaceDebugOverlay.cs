@@ -565,10 +565,14 @@ public class RaceDebugOverlay : MonoBehaviour
             phase     = phase
         });
 
-        // time 오름차순 정렬 후 rank 재할당
+        // time 오름차순 정렬 후 rank 재할당 (struct이므로 copy-modify-replace)
         snapshot.racers.Sort((a, b) => a.time.CompareTo(b.time));
         for (int i = 0; i < snapshot.racers.Count; i++)
-            snapshot.racers[i].rank = i + 1;
+        {
+            var r = snapshot.racers[i];
+            r.rank = i + 1;
+            snapshot.racers[i] = r;
+        }
     }
 
     // ══════════════════════════════════════
