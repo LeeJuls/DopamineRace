@@ -419,10 +419,22 @@ public class RaceDebugOverlay : MonoBehaviour
             v4.v4_normalSpeedRatio, v4.v4_burstSpeedRatio, v4.v4_spurtVmaxBonus, v4.v4_finalSpurtStart);
         sb.AppendFormat("Drain/Prog:{0:F1}  BurstDrain×{1:F1}  SpurtDrain×{2:F1}\n",
             v4.v4_drainPerLap, v4.v4_burstDrainMul, v4.v4_spurtDrainMul);
-        sb.AppendFormat("긴급부스트: {0}  Spd×{1:F2}  Drain×{2:F1}  도주지속:{3}\n",
+        sb.AppendFormat("긴급부스트: {0}  Spd×{1:F2}  Drain×{2:F1}  도주지속:{3}  쿨다운:{4:F1}s\n",
             v4.v4_emergencyBurstEnabled ? "ON" : "OFF",
             v4.v4_emergencyBurstSpeedRatio, v4.v4_emergencyBurstDrainMul,
-            v4.v4_runnerPersistentBurst ? "ON" : "OFF");
+            v4.v4_runnerPersistentBurst ? "ON" : "OFF",
+            v4.v4_emergencyBurstCooldown);
+        // 타입별 긴급부스트 drain 오버라이드가 있는 경우만 출력
+        bool hasTypeOverride = v4.v4_runnerEmergencyDrainMul > 0f || v4.v4_leaderEmergencyDrainMul > 0f
+                            || v4.v4_chaserEmergencyDrainMul > 0f || v4.v4_reckonerEmergencyDrainMul > 0f;
+        if (hasTypeOverride)
+        {
+            sb.AppendFormat("  긴급Drain 타입별: 도주×{0:F1}  선행×{1:F1}  선입×{2:F1}  추입×{3:F1}\n",
+                v4.v4_runnerEmergencyDrainMul   > 0f ? v4.v4_runnerEmergencyDrainMul   : v4.v4_emergencyBurstDrainMul,
+                v4.v4_leaderEmergencyDrainMul   > 0f ? v4.v4_leaderEmergencyDrainMul   : v4.v4_emergencyBurstDrainMul,
+                v4.v4_chaserEmergencyDrainMul   > 0f ? v4.v4_chaserEmergencyDrainMul   : v4.v4_emergencyBurstDrainMul,
+                v4.v4_reckonerEmergencyDrainMul > 0f ? v4.v4_reckonerEmergencyDrainMul : v4.v4_emergencyBurstDrainMul);
+        }
         if (v4.v4_hpSpeedThresholds != null && v4.v4_hpSpeedThresholds.Count > 0)
         {
             var hpSb = new StringBuilder("HP감속:");

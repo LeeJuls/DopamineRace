@@ -38,8 +38,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
     private bool v4IsPanicking = false;
 
-    private bool v4EmergencyBurst = false; // 긴급 부스트 (목표 순위 이탈 시)
-    private int v4CurrentRank = 0;         // 현재 순위 (ThinkTick에서 업데이트)
+    private bool v4EmergencyBurst = false;              // 긴급 부스트 (목표 순위 이탈 시)
+    private float v4EmergencyBurstCooldownTimer = 0f;  // 재발동 쿨다운 타이머
+    private int v4CurrentRank = 0;                      // 현재 순위 (ThinkTick에서 업데이트)
 
     private bool v4InSlipstream = false;
     private float v4SlipstreamLeaderSpeed = 0f; // 슬립스트림 대상(앞 캐릭터)의 현재 속도
@@ -110,6 +111,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         v4SlipstreamAccelActive = false;
         v4SlipstreamRollTimer = 0f;
         v4EmergencyBurst = false;
+        v4EmergencyBurstCooldownTimer = 0f;
         v4CurrentRank = 0;
         v4ThinkTimer  = 0f;
         v4LastProgress = 0f;
@@ -348,7 +350,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         {
             if      (currentProgress >= gs.v4_finalSpurtStart)                       drain *= gs.v4_spurtDrainMul;
             else if (IsInBurstZone(gs, currentProgress)) drain *= gs.v4_burstDrainMul;
-            else if (v4EmergencyBurst)                   drain *= gs.v4_emergencyBurstDrainMul;
+            else if (v4EmergencyBurst)                   drain *= gs.GetV4EmergencyBurstDrainMul(charDataV4.charType);
         }
 
         if (v4InSlipstream)
@@ -518,7 +520,11 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     {
         if (!gs.v4_emergencyBurstEnabled || charDataV4 == null || gs.v4_disableBurst) return;
 
-        float progress  = GetOverallProgress();
+        // 쿨다운 타이머 감소 (매 프레임)
+        if (v4EmergencyBurstCooldownTimer > 0f)
+            v4EmergencyBurstCooldownTimer -= Time.deltaTime;
+
+        float progress   = GetOverallProgress();
         float burstStart = GetV4BurstStart(gs);
 
         if (progress >= burstStart)
@@ -527,6 +533,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             if (v4EmergencyBurst)
             {
                 v4EmergencyBurst = false;
+                v4EmergencyBurstCooldownTimer = 0f; // 연결 종료 시 쿨다운 없음
                 var ov = RaceManager.Instance?.GetComponent<RaceDebugOverlay>();
                 ov?.LogEvent(RaceDebugOverlay.EventType.Burst,
                     string.Format("{0} 긴급부스트 종료→정규부스트 연결 (rank:{1})",
@@ -547,15 +554,23 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         if (shouldEmergency && !v4EmergencyBurst)
         {
+            // 쿨다운 중이면 재발동 차단 (도주 지속 특성 제외)
+            if (v4EmergencyBurstCooldownTimer > 0f && !isPersistentRunner) return;
+
             v4EmergencyBurst = true;
             var ov = RaceManager.Instance?.GetComponent<RaceDebugOverlay>();
+            string cooldownInfo = v4EmergencyBurstCooldownTimer > 0f ? "" :
+                                  gs.v4_emergencyBurstCooldown > 0f ? " [쿨다운 대기 후]" : "";
             ov?.LogEvent(RaceDebugOverlay.EventType.Burst,
-                string.Format("{0} 긴급부스트! rank:{1} > 목표:{2} (progress:{3:P0})",
-                    charDataV4.charId.Split('.')[2], v4CurrentRank, targetMax, progress));
+                string.Format("{0} 긴급부스트! rank:{1} > 목표:{2} (progress:{3:P0}){4}",
+                    charDataV4.charId.Split('.')[2], v4CurrentRank, targetMax, progress, cooldownInfo));
         }
         else if (!shouldEmergency && v4EmergencyBurst && !isPersistentRunner)
         {
-            v4EmergencyBurst = false; // 목표 순위 복귀 시 해제 (비-도주 또는 지속 OFF)
+            // 목표 순위 복귀 시 해제 + 쿨다운 시작
+            v4EmergencyBurst = false;
+            if (gs.v4_emergencyBurstCooldown > 0f)
+                v4EmergencyBurstCooldownTimer = gs.v4_emergencyBurstCooldown;
         }
         // isPersistentRunner && !shouldEmergency: 목표 달성했어도 부스트 구간까지 유지
     }
