@@ -301,7 +301,7 @@ public partial class RacerController : MonoBehaviour
 
         // 크리티컬/공격
         critBoostRemaining = 0f; isCritActive = false;
-        attackCooldown = 0f; attackAnimChecked = false;
+        attackCooldown = 0f;
 
         // 스킬
         skillCollisionCount = 0; skillActive = false; skillRemainingTime = 0f;
@@ -1236,15 +1236,20 @@ public partial class RacerController : MonoBehaviour
     }
 
     /// <summary>
-    /// luck 기반 충돌 회피 판정 (CollisionSystem에서 호출)
+    /// int(지능) 기반 충돌 회피 판정 (CollisionSystem에서 호출)
+    /// "영리하게 피했다" — luck이 아닌 intelligence로 발동
     /// </summary>
     public bool TryDodge()
     {
         if (charData == null) return false;
         var gs = GameSettings.Instance;
+        var gs4 = gs?.v4Settings;
+        if (gs4 == null) return false;
+        var charV4 = CharacterDatabaseV4.FindById(charData.charId);
+        if (charV4 == null) return false;
         TrackData track = gs.currentTrack;
-        float trackLuckMul = track != null ? track.luckMultiplier : 1f;
-        float chance = charData.charBaseLuck * gs.luckDodgeChance * trackLuckMul;
+        float trackMul = track != null ? track.luckMultiplier : 1f;
+        float chance = charV4.v4Intelligence * gs4.v4_intDodgeChance * trackMul;
         return UnityEngine.Random.value < chance;
     }
 
@@ -1267,7 +1272,6 @@ public partial class RacerController : MonoBehaviour
         SwapModel(toAttack: true);
 
         // Animator 파라미터 캐싱 (모델 교체 후 재확인)
-        attackAnimChecked = false;
         hasSlash = false;
         hasShoot = false;
         if (animator != null)
@@ -1280,7 +1284,6 @@ public partial class RacerController : MonoBehaviour
                     if (param.name == "AttackShoot") hasShoot = true;
                 }
             }
-            attackAnimChecked = true;
         }
 
         // ★ Trigger 큐 클리어 (이전 잔여 Trigger 제거)
@@ -1320,7 +1323,6 @@ public partial class RacerController : MonoBehaviour
         return triggered;
     }
 
-    private bool attackAnimChecked = false;
     private bool hasSlash = false;
     private bool hasShoot = false;
     private float attackCooldown = 0f;
@@ -1416,7 +1418,6 @@ public partial class RacerController : MonoBehaviour
 
         // ★ 캐싱된 Animator 사용 (루트 vs 공격모델)
         animator = toAttack ? attackAnimator : normalAnimator;
-        attackAnimChecked = false; // Animator 파라미터 캐시 리셋
 
         if (animator != null)
             animator.SetTrigger("Run");

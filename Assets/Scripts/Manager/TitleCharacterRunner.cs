@@ -36,7 +36,6 @@ public class TitleCharacterRunner : MonoBehaviour
     private List<RunnerInfo> runners = new List<RunnerInfo>();
     private List<RunnerInfo> pool = new List<RunnerInfo>();   // 프리로드된 비활성 인스턴스
     private int spawnedCount = 0;
-    private bool spawning = false;
 
     private class RunnerInfo
     {
@@ -85,8 +84,6 @@ public class TitleCharacterRunner : MonoBehaviour
     // ══════════════════════════════════════
     private IEnumerator SpawnSequence()
     {
-        spawning = true;
-
         // CharacterDatabase 대기
         float waitTime = 0f;
         while (CharacterDatabase.Instance == null && waitTime < 3f)
@@ -138,7 +135,6 @@ public class TitleCharacterRunner : MonoBehaviour
             }
         }
 
-        spawning = false;
         Debug.Log($"[TitleRunner] 스폰 완료: {spawnedCount}캐릭터 (프리로드)");
     }
 

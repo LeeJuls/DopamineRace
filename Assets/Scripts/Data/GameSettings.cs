@@ -775,7 +775,7 @@ public partial class GameSettings : ScriptableObject
     [Range(0.5f, 3.0f)]
     public float luckCritDuration = 1.5f;
 
-    [Tooltip("luck 1당 충돌 회피 확률 (luck 15면 15×0.02=30% 회피)")]
+    [Tooltip("[V4에서는 미사용 — v4_intDodgeChance 사용]\nluck 1당 충돌 회피 확률 (레거시)")]
     [Range(0.005f, 0.05f)]
     public float luckDodgeChance = 0.02f;
 
