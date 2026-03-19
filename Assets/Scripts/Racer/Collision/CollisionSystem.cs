@@ -193,15 +193,19 @@ public class CollisionSystem : MonoBehaviour
             { winner = a; loser = b; }
         }
 
-        // ── luck 회피 판정 (패자 측) ──
+        // ── int(지능) 회피 판정 (패자 측) ──
         if (loser.TryDodge())
         {
             if (debugOverlay != null)
             {
+                float trackPenaltyMulDodge = track != null ? track.collisionPenaltyMultiplier : 1f;
+                float dodgedPenalty = gs.collisionBasePenalty * trackPenaltyMulDodge;
+                var loserV4 = CharacterDatabaseV4.FindById(loser.CharData.charId);
+                float intStat = loserV4 != null ? loserV4.v4Intelligence : 0f;
                 debugOverlay.LogEvent(RaceDebugOverlay.EventType.CollisionDodge,
-                    string.Format("{0} → {1} 회피! (luck:{2})",
+                    string.Format("{0} → {1} 회피! (int:{2}) 회피한 감속:-{3:F0}%",
                         winner.CharData.DisplayName, loser.CharData.DisplayName,
-                        loser.CharData.charBaseLuck));
+                        intStat, dodgedPenalty * 100));
             }
             if (gs.enableCollisionVFX)
                 ShowVFX(loser, CollisionVFXType.Dodge, 0.8f);
@@ -243,9 +247,11 @@ public class CollisionSystem : MonoBehaviour
         {
             string behindName = behind.CharData.DisplayName;
             debugOverlay.LogEvent(RaceDebugOverlay.EventType.CollisionHit,
-                string.Format("{0}(pow:{1}) > {2}(pow:{3}) 충돌! 슬링샷→{4}(brv:{5})",
+                string.Format("{0}(pow:{1}) > {2}(pow:{3}) 충돌! 감속:{4}→-{5:F0}%/{6:F1}s {7}→-{8:F0}%/{9:F1}s 슬링샷→{10}(brv:{11})",
                     winner.CharData.DisplayName, winner.CharData.charBasePower,
                     loser.CharData.DisplayName, loser.CharData.charBasePower,
+                    winner.CharData.DisplayName, winnerPenalty * 100, gs.winnerPenaltyDuration,
+                    loser.CharData.DisplayName, loserPenalty * 100, loserDuration,
                     behindName, behind.CharData.charBaseBrave));
         }
 
@@ -297,9 +303,10 @@ public class CollisionSystem : MonoBehaviour
                 if (debugOverlay != null)
                 {
                     debugOverlay.LogEvent(RaceDebugOverlay.EventType.Slingshot,
-                        string.Format("{0} 슬링샷! +{1:F0}% | 원인: {2}",
+                        string.Format("{0} 슬링샷! +{1:F0}% {2:F1}s | 원인: {3}",
                             res.racer.CharData.DisplayName,
                             res.boost * 100,
+                            res.duration,
                             res.reason));
                 }
 

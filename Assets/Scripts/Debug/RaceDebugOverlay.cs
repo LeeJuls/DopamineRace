@@ -243,19 +243,31 @@ public class RaceDebugOverlay : MonoBehaviour
 
         log.reportText = sb.ToString();
 
-        // ── 완주 이벤트 누락 보완 ──
-        // 마지막 완주자는 raceActive=false 직후라 LateUpdate가 건너뛰어 미기록됨
+        // ── 완주 이벤트 finalRankings 기준으로 재구성 ──
+        // LateUpdate 타이밍 문제(raceActive=false 직후 스킵)로 순서가 틀릴 수 있어
+        // 기존 이벤트를 보존하되 finalRankings 순서대로 재정렬 + 미기록 항목 추가
         if (rm != null)
         {
+            var originalFinishEvents = new List<RaceEvent>(log.finishEvents);
+            log.finishEvents.Clear();
+
             foreach (var entry in rankings)
             {
-                bool alreadyLogged = false;
-                foreach (var fe in log.finishEvents)
+                // 기존 로그에서 해당 레이서 이벤트 찾기 (타임스탬프 보존)
+                bool found = false;
+                foreach (var fe in originalFinishEvents)
                 {
-                    if (fe.description.Contains(entry.racerName)) { alreadyLogged = true; break; }
+                    if (fe.description.Contains(entry.racerName))
+                    {
+                        log.finishEvents.Add(fe); // 타임스탬프 그대로 유지
+                        found = true;
+                        break;
+                    }
                 }
-                if (!alreadyLogged)
+
+                if (!found)
                 {
+                    // 미기록 완주자 새로 생성
                     float hpPct = hpByIndex.ContainsKey(entry.racerIndex) ? hpByIndex[entry.racerIndex] : 0f;
                     var racer = rm.Racers.Find(r => r.RacerIndex == entry.racerIndex);
                     string typeName = racer?.CharData?.GetTypeName() ?? "?";
@@ -367,9 +379,10 @@ public class RaceDebugOverlay : MonoBehaviour
             v4.v4_normalSpeedRatio, v4.v4_burstSpeedRatio, v4.v4_spurtVmaxBonus, v4.v4_finalSpurtStart);
         sb.AppendFormat("Drain/Prog:{0:F1}  BurstDrain×{1:F1}  SpurtDrain×{2:F1}\n",
             v4.v4_drainPerLap, v4.v4_burstDrainMul, v4.v4_spurtDrainMul);
-        sb.AppendFormat("긴급부스트: {0}  Spd×{1:F2}  Drain×{2:F1}\n",
+        sb.AppendFormat("긴급부스트: {0}  Spd×{1:F2}  Drain×{2:F1}  도주지속:{3}\n",
             v4.v4_emergencyBurstEnabled ? "ON" : "OFF",
-            v4.v4_emergencyBurstSpeedRatio, v4.v4_emergencyBurstDrainMul);
+            v4.v4_emergencyBurstSpeedRatio, v4.v4_emergencyBurstDrainMul,
+            v4.v4_runnerPersistentBurst ? "ON" : "OFF");
         if (v4.v4_hpSpeedThresholds != null && v4.v4_hpSpeedThresholds.Count > 0)
         {
             var hpSb = new StringBuilder("HP감속:");
@@ -386,6 +399,10 @@ public class RaceDebugOverlay : MonoBehaviour
             v4.v4_leaderBurstStart, v4.v4_leaderBurstEnd,
             v4.v4_chaserBurstStart, v4.v4_chaserBurstEnd,
             v4.v4_reckonerBurstStart, v4.v4_reckonerBurstEnd);
+        sb.AppendFormat("Luck크리티컬: 확률{0:F3}/luck  ×{1:F2}속도  {2:F1}s지속  판정주기{3:F1}s\n",
+            v4.v4_luckCritChance, v4.v4_luckCritBoost, v4.v4_luckCritDuration, v4.v4_luckCheckInterval);
+        sb.AppendFormat("Int회피: 확률{0:F3}/int\n",
+            v4.v4_intDodgeChance);
 
         // 캐릭터 스탯
         bool applyCond = v4.v4_applyCondition;
@@ -393,7 +410,7 @@ public class RaceDebugOverlay : MonoBehaviour
         if (rm != null && rm.Racers != null && rm.Racers.Count > 0)
         {
             sb.AppendLine(applyCond ? "\n▶ 캐릭터 스탯 (V4) [컨디션 적용중]" : "\n▶ 캐릭터 스탯 (V4)");
-            sb.AppendLine("이름    SPD  ACC  STA  POW  INT  LCK  합계");
+            sb.AppendLine(applyCond ? "이름    SPD  ACC  STA  POW  INT  LCK  합계  COND" : "이름    SPD  ACC  STA  POW  INT  LCK  합계");
             var rankings = rm.GetLiveRankings();
             foreach (var racer in rankings)
             {
@@ -405,11 +422,22 @@ public class RaceDebugOverlay : MonoBehaviour
                     : 1f;
                 string spdDelta = applyCond ? FormatCondDeltaPlain(v4c.v4Speed,   condMul) : "";
                 string staDelta = applyCond ? FormatCondDeltaPlain(v4c.v4Stamina, condMul) : "";
-                sb.AppendFormat("{0,-4}  {1,3:F0}{2}  {3,3:F0}  {4,3:F0}{5}  {6,3:F0}  {7,3:F0}  {8,3:F0}  {9,3:F0}\n",
-                    racer.CharData.DisplayName,
-                    v4c.v4Speed, spdDelta, v4c.v4Accel, v4c.v4Stamina, staDelta,
-                    v4c.v4Power, v4c.v4Intelligence, v4c.v4Luck,
-                    v4c.StatTotal);
+                if (applyCond)
+                {
+                    sb.AppendFormat("{0,-4}  {1,3:F0}{2}  {3,3:F0}  {4,3:F0}{5}  {6,3:F0}  {7,3:F0}  {8,3:F0}  {9,3:F0}  ×{10:F2}\n",
+                        racer.CharData.DisplayName,
+                        v4c.v4Speed, spdDelta, v4c.v4Accel, v4c.v4Stamina, staDelta,
+                        v4c.v4Power, v4c.v4Intelligence, v4c.v4Luck,
+                        v4c.StatTotal, condMul);
+                }
+                else
+                {
+                    sb.AppendFormat("{0,-4}  {1,3:F0}{2}  {3,3:F0}  {4,3:F0}{5}  {6,3:F0}  {7,3:F0}  {8,3:F0}  {9,3:F0}\n",
+                        racer.CharData.DisplayName,
+                        v4c.v4Speed, spdDelta, v4c.v4Accel, v4c.v4Stamina, staDelta,
+                        v4c.v4Power, v4c.v4Intelligence, v4c.v4Luck,
+                        v4c.StatTotal);
+                }
             }
         }
 
@@ -497,9 +525,13 @@ public class RaceDebugOverlay : MonoBehaviour
 
             if (isCrit && !wasCrit)
             {
+                var gs4 = GameSettings.Instance?.v4Settings;
+                float critBoost = gs4 != null ? gs4.v4_luckCritBoost : 1.3f;
+                float critDur = racer.V4CritInitialDuration;
                 LogEvent(EventType.Critical,
-                    string.Format("{0} (luck:{1}) 크리티컬!",
-                        racer.CharData.DisplayName, racer.CharData.charBaseLuck));
+                    string.Format("{0} (luck:{1}) 크리티컬! ×{2:F2} {3:F1}s",
+                        racer.CharData.DisplayName, racer.CharData.charBaseLuck,
+                        critBoost, critDur));
             }
 
             if (racer.IsFinished && racer.FinishOrder > 0)

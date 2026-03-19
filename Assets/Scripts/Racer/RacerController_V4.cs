@@ -37,7 +37,6 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     private bool v4IsSpurting = false;
 
     private bool v4IsPanicking = false;
-    private float v4PanicTimer = 0f;
 
     private bool v4EmergencyBurst = false; // 긴급 부스트 (목표 순위 이탈 시)
     private int v4CurrentRank = 0;         // 현재 순위 (ThinkTick에서 업데이트)
@@ -56,6 +55,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     // Luck 크리티컬
     private float v4LuckTimer = 0f;
     private float v4CritBoostRemaining = 0f;
+    private float v4CritInitialDuration = 0f;   // 크리티컬 발동 시 계산된 지속시간 (로그용)
+    public float V4CritInitialDuration => v4CritInitialDuration;
 
     // 구간별 HP 체크포인트 (각자 통과 시 RaceDebugOverlay에 보고)
     private HashSet<string> v4PassedCheckpoints = new HashSet<string>();
@@ -480,7 +481,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
                 // 지능 modifier: (지능 - 10) / 10 × modMax
                 // 지능20 → +10%, 지능10 → ±0%, 지능0 → -10%
                 float intModifier = (charDataV4.v4Intelligence - 10f) / 10f * gs.v4_intelligenceModMax;
-                v4CritBoostRemaining = gs.v4_luckCritDuration * (1f + intModifier);
+                v4CritInitialDuration = gs.v4_luckCritDuration * (1f + intModifier);
+                v4CritBoostRemaining = v4CritInitialDuration;
                 isCritActive = true;
 
                 // VFX
@@ -539,6 +541,10 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         bool shouldEmergency = v4CurrentRank > targetMax;
 
+        // 도주 지속 긴급부스트: 한 번 발동하면 목표 달성 전까지 끊지 않음
+        bool isPersistentRunner = gs.v4_runnerPersistentBurst &&
+                                  charDataV4.charType == CharacterType.Runner;
+
         if (shouldEmergency && !v4EmergencyBurst)
         {
             v4EmergencyBurst = true;
@@ -547,10 +553,11 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
                 string.Format("{0} 긴급부스트! rank:{1} > 목표:{2} (progress:{3:P0})",
                     charDataV4.charId.Split('.')[2], v4CurrentRank, targetMax, progress));
         }
-        else if (!shouldEmergency && v4EmergencyBurst)
+        else if (!shouldEmergency && v4EmergencyBurst && !isPersistentRunner)
         {
-            v4EmergencyBurst = false; // 목표 순위 복귀 시 해제
+            v4EmergencyBurst = false; // 목표 순위 복귀 시 해제 (비-도주 또는 지속 OFF)
         }
+        // isPersistentRunner && !shouldEmergency: 목표 달성했어도 부스트 구간까지 유지
     }
 
     private float GetV4BurstStart(GameSettingsV4 gs)

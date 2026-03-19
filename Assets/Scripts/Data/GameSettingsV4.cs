@@ -102,7 +102,7 @@ public class GameSettingsV4 : ScriptableObject
     public float v4_speedStatFactor = 0.02f;
 
     [Tooltip("스퍼트 진입 시 Vmax 상승 배율\n예: 1.20 = 스퍼트 중 20% 더 빠름")]
-    [Range(1.0f, 1.5f)]
+    [Range(1.0f, 3.0f)]
     public float v4_spurtVmaxBonus = 1.50f;
 
     // ═══════════════════════════════════════════════
@@ -185,8 +185,9 @@ public class GameSettingsV4 : ScriptableObject
     [Tooltip("크리티컬 지속 시간 (초)")]
     public float v4_luckCritDuration = 1.5f;
 
-    [Tooltip("Luck 스탯 → 충돌 회피 확률 변환 (luck × 이 값 = 회피 확률)")]
-    public float v4_luckDodgeChance = 0.02f;
+    [Tooltip("Intelligence 스탯 → 충돌 회피 확률 변환\n예: int 20 × 0.02 = 40% 회피")]
+    [Range(0.005f, 0.05f)]
+    public float v4_intDodgeChance = 0.02f;
 
     // ═══════════════════════════════════════════════
     //  구간제 속도 시스템 (M2 개편)
@@ -206,11 +207,11 @@ public class GameSettingsV4 : ScriptableObject
     public float v4_finalSpurtStart = 0.86f;
 
     [Tooltip("부스트 구간 HP 추가 소모 배율\n예: 1.8 = Burst 구간에서 Normal의 1.8배 HP 소모")]
-    [Range(1.0f, 5.0f)]
+    [Range(1.0f, 10.0f)]
     public float v4_burstDrainMul = 1.8f;
 
     [Tooltip("최종 스퍼트 구간 HP 추가 소모 배율\n예: 2.5 = Spurt 구간에서 2.5배 소모 (HP 연소)")]
-    [Range(1.0f, 4.0f)]
+    [Range(1.0f, 10.0f)]
     public float v4_spurtDrainMul = 2.5f;
 
     [Header("  [타입별 부스트 구간 — 전체 진행도 0~1]")]
@@ -294,8 +295,13 @@ public class GameSettingsV4 : ScriptableObject
     public float v4_emergencyBurstSpeedRatio = 1.20f;
 
     [Tooltip("긴급 부스트 HP 소모 배율\n정규 부스트(v4_burstDrainMul)보다 낮게 설정 권장")]
-    [Range(1.0f, 4.0f)]
+    [Range(1.0f, 10.0f)]
     public float v4_emergencyBurstDrainMul = 1.50f;
+
+    [Tooltip("도주(Runner) 지속 긴급부스트 특성\n" +
+             "ON: 목표 순위에 도달할 때까지 긴급부스트를 끊지 않고 계속 유지\n" +
+             "OFF: 기존 방식 (순위 달성 시 즉시 해제 → 이탈 시 재발동)")]
+    public bool v4_runnerPersistentBurst = true;
 
     // ═══════════════════════════════════════════════
     //  유틸리티 메서드
