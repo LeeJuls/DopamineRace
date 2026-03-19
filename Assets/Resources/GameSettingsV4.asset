@@ -16,10 +16,28 @@ MonoBehaviour:
   spurtTriggerLapRemain: 0.4
   v4_staminaBase: 80
   v4_staminaPerStat: 3
-  v4_drainPerLap: 22.4
+  v4_drainPerLap: 45
+  v4_slipstreamRange: 0.08
   v4_slipstreamDrainMul: 0.7
-  v4_exhaustSpeedFloor: 0.7
-  v4_exhaustDecel: 2
+  v4_slipstreamAccelMul: 0.3
+  v4_slipstreamSmartK: 20
+  v4_slipstreamRollCooldown: 3
+  v4_slipstreamAccelDrainMul: 1.8
+  v4_ssUnlockRunner: 0
+  v4_ssUnlockLeader: 0.15
+  v4_ssUnlockChaser: 0.3
+  v4_ssUnlockReckoner: 0.5
+  v4_hpSpeedThresholds:
+  - hpRatio: 0.5
+    speedReduction: 0.1
+  - hpRatio: 0.4
+    speedReduction: 0.15
+  - hpRatio: 0.25
+    speedReduction: 0.2
+  - hpRatio: 0.1
+    speedReduction: 0.3
+  - hpRatio: 0.01
+    speedReduction: 0.35
   v4_speedStatFactor: 0.02
   v4_spurtVmaxBonus: 1.5
   v4_accelStatFactor: 0.05
@@ -33,6 +51,7 @@ MonoBehaviour:
   v4_panicDrainMul: 1.8
   v4_panicDuration: 2
   v4_intelligenceStatMax: 20
+  v4_intelligenceModMax: 0.1
   v4_thinkTickBase: 1
   v4_thinkTickBonus: 0.8
   v4_luckCheckInterval: 3
@@ -40,24 +59,28 @@ MonoBehaviour:
   v4_luckCritBoost: 1.3
   v4_luckCritDuration: 1.5
   v4_luckDodgeChance: 0.02
-  v4_normalSpeedRatio: 1
-  v4_burstSpeedRatio: 2
-  v4_finalSpurtStart: 0.86
-  v4_burstDrainMul: 1.8
-  v4_spurtDrainMul: 2.5
-  v4_runnerBurstStart: 0.06
-  v4_runnerBurstEnd: 0.86
-  v4_leaderBurstStart: 0.26
-  v4_leaderBurstEnd: 0.45
-  v4_chaserBurstStart: 0.46
-  v4_chaserBurstEnd: 0.65
-  v4_reckonerBurstStart: 0.66
-  v4_reckonerBurstEnd: 0.85
-  v4_disableBurst: 1
+  v4_normalSpeedRatio: 0.85
+  v4_burstSpeedRatio: 1.4
+  v4_finalSpurtStart: 0.8
+  v4_burstDrainMul: 3.5
+  v4_spurtDrainMul: 4
+  v4_runnerBurstStart: 0.1
+  v4_runnerBurstEnd: 0.4
+  v4_leaderBurstStart: 0.25
+  v4_leaderBurstEnd: 0.5
+  v4_chaserBurstStart: 0.45
+  v4_chaserBurstEnd: 0.7
+  v4_reckonerBurstStart: 0.55
+  v4_reckonerBurstEnd: 0.8
+  v4_disableBurst: 0
+  v4_applyCondition: 0
   v4_runnerTargetRank: 1
   v4_leaderTargetMin: 2
   v4_leaderTargetMax: 4
   v4_chaserTargetMin: 4
   v4_chaserTargetMax: 6
-  v4_reckonerTargetMin: 7
+  v4_reckonerTargetMin: 6
   v4_reckonerTargetMax: 9
+  v4_emergencyBurstEnabled: 1
+  v4_emergencyBurstSpeedRatio: 1.4
+  v4_emergencyBurstDrainMul: 2
