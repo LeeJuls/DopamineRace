@@ -303,6 +303,29 @@ public class GameSettingsV4 : ScriptableObject
              "OFF: 기존 방식 (순위 달성 시 즉시 해제 → 이탈 시 재발동)")]
     public bool v4_runnerPersistentBurst = true;
 
+    [Tooltip("긴급부스트 종료 후 재발동 쿨다운 (초)\n" +
+             "0 = 쿨다운 없음 (기존 동작 — 종료 즉시 재발동 가능)\n" +
+             "3~5초 권장: '잠깐 치고 → 쉬고 → 또 치고' 패턴으로 HP 낭비 방지\n" +
+             "도주 지속 긴급부스트(v4_runnerPersistentBurst=ON) 시에는 적용 안 됨")]
+    [Range(0f, 10f)]
+    public float v4_emergencyBurstCooldown = 0f;
+
+    [Header("  [타입별 긴급부스트 드레인 배율 오버라이드]")]
+    [Tooltip("0이면 전역 v4_emergencyBurstDrainMul 사용\n" +
+             "추입 권장: 1.5~2.0 (전역보다 낮게 → 포지셔닝 비용 절약)\n" +
+             "도주 권장: 0 또는 전역과 동일 (목표 유지 필수)")]
+    [Range(0f, 10f)]
+    public float v4_runnerEmergencyDrainMul   = 0f;
+
+    [Range(0f, 10f)]
+    public float v4_leaderEmergencyDrainMul   = 0f;
+
+    [Range(0f, 10f)]
+    public float v4_chaserEmergencyDrainMul   = 0f;
+
+    [Range(0f, 10f)]
+    public float v4_reckonerEmergencyDrainMul = 0f;
+
     // ═══════════════════════════════════════════════
     //  유틸리티 메서드
     // ═══════════════════════════════════════════════
@@ -381,5 +404,22 @@ public class GameSettingsV4 : ScriptableObject
             case CharacterType.Reckoner: return (v4_reckonerTargetMin, v4_reckonerTargetMax);
             default: return (4, 6);
         }
+    }
+
+    /// <summary>
+    /// 타입별 긴급부스트 드레인 배율 반환
+    /// 타입별 오버라이드값이 0보다 크면 그 값 사용, 0이면 전역 v4_emergencyBurstDrainMul 사용
+    /// </summary>
+    public float GetV4EmergencyBurstDrainMul(CharacterType type)
+    {
+        float typeVal = 0f;
+        switch (type)
+        {
+            case CharacterType.Runner:   typeVal = v4_runnerEmergencyDrainMul;   break;
+            case CharacterType.Leader:   typeVal = v4_leaderEmergencyDrainMul;   break;
+            case CharacterType.Chaser:   typeVal = v4_chaserEmergencyDrainMul;   break;
+            case CharacterType.Reckoner: typeVal = v4_reckonerEmergencyDrainMul; break;
+        }
+        return typeVal > 0f ? typeVal : v4_emergencyBurstDrainMul;
     }
 }
