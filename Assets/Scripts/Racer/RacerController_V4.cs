@@ -338,9 +338,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         if (progressDelta <= 0f) return;
 
-        // 바퀴당 절대 드레인 × 총 바퀴 수 (절대 거리 소모)
-        int totalLaps = GetTotalLaps();
-        float drain = gs.v4_drainPerLap * totalLaps * progressDelta;
+        // 진행도 기준 고정 드레인 (레이스 길이 무관)
+        // totalLaps 제거 → 2바퀴/5바퀴 동일한 HP 관리 경험 보장
+        float drain = gs.v4_drainPerLap * progressDelta;
 
         // 구간별 추가 소모 (v4_disableBurst=true 시 배율 1.0 고정 — 순수 노말 테스트)
         if (!gs.v4_disableBurst)

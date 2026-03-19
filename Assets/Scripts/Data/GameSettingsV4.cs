@@ -45,11 +45,11 @@ public class GameSettingsV4 : ScriptableObject
     [Tooltip("스태미나 스탯 1당 추가 HP")]
     public float v4_staminaPerStat = 3f;
 
-    [Tooltip("바퀴당 절대 HP 소모량\n" +
-             "1바퀴 기본 달리기 완주 시 소모되는 고정 HP량\n" +
-             "총 드레인 = drainPerLap × totalLaps\n" +
-             "기준: 22.4 × 5바퀴 = 112HP → 지구력20(HP140) 기준 20% 잔여")]
-    public float v4_drainPerLap = 22.4f;
+    [Tooltip("진행도 기준 HP 소모량 (레이스 길이 무관)\n" +
+             "레이스 전체 진행도(0~1) 소모 시 빠져나가는 고정 HP량\n" +
+             "2바퀴 기준: 44.8 ≈ 45 → 레이스 길이와 동일한 경험 보장\n" +
+             "기준: 45 × burstMul×3.5 × spurtMul×4.0 → 지구력20(HP140) 기준 ~29% 잔여")]
+    public float v4_drainPerLap = 45f;
 
     [Tooltip("슬립스트림 감지 거리 (TotalProgress 기준)\n앞 캐릭터와의 진행도 차이가 이 값 이하면 슬립스트림 발동\n예: 0.08 = 진행도 8% 이내")]
     [Range(0.01f, 0.30f)]

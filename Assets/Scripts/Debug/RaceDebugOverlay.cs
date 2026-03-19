@@ -365,7 +365,7 @@ public class RaceDebugOverlay : MonoBehaviour
             v4.v4_applyCondition ? "ON" : "OFF");
         sb.AppendFormat("Normal×{0:F2}  Burst×{1:F2}  Spurt×{2:F2}  SpurtStart:{3:P0}\n",
             v4.v4_normalSpeedRatio, v4.v4_burstSpeedRatio, v4.v4_spurtVmaxBonus, v4.v4_finalSpurtStart);
-        sb.AppendFormat("Drain/Lap:{0:F1}  BurstDrain×{1:F1}  SpurtDrain×{2:F1}\n",
+        sb.AppendFormat("Drain/Prog:{0:F1}  BurstDrain×{1:F1}  SpurtDrain×{2:F1}\n",
             v4.v4_drainPerLap, v4.v4_burstDrainMul, v4.v4_spurtDrainMul);
         sb.AppendFormat("긴급부스트: {0}  Spd×{1:F2}  Drain×{2:F1}\n",
             v4.v4_emergencyBurstEnabled ? "ON" : "OFF",
@@ -1004,7 +1004,7 @@ public class RaceDebugOverlay : MonoBehaviour
 
         // HP 소모 배율
         GUILayout.Label(
-            string.Format("  Drain/Lap <color=#88FF88>{0:F1}</color>  BurstMul <color=#FFAA44>×{1:F1}</color>  SpurtMul <color=#FF6666>×{2:F1}</color>",
+            string.Format("  Drain/Prog <color=#88FF88>{0:F1}</color>  BurstMul <color=#FFAA44>×{1:F1}</color>  SpurtMul <color=#FF6666>×{2:F1}</color>",
                 v4.v4_drainPerLap, v4.v4_burstDrainMul, v4.v4_spurtDrainMul),
             normalStyle);
 
