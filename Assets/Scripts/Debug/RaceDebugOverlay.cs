@@ -278,6 +278,46 @@ public class RaceDebugOverlay : MonoBehaviour
             }
         }
 
+        // ── 최종 랩 100% 스냅샷 순위도 finalRankings 기준으로 재정렬 ──
+        // RecordRacerCheckpoint는 Time.time 기준 정렬 → 프레임 실행 순서에 따라 FinishOrder와 어긋날 수 있음
+        LapSnapshot finalSnapshot = null;
+        int maxLapNum = 0;
+        foreach (var snap in log.lapSnapshots)
+        {
+            if (snap.subProgress >= 1f && snap.lap > maxLapNum)
+            {
+                maxLapNum = snap.lap;
+                finalSnapshot = snap;
+            }
+        }
+        if (finalSnapshot != null && finalSnapshot.racers.Count > 0)
+        {
+            var reordered = new List<LapRacerInfo>();
+            foreach (var entry in rankings)
+            {
+                for (int i = 0; i < finalSnapshot.racers.Count; i++)
+                {
+                    if (finalSnapshot.racers[i].name == entry.racerName)
+                    {
+                        var r = finalSnapshot.racers[i];
+                        r.rank = entry.rank;  // 순위도 finalRankings 기준으로 수정
+                        reordered.Add(r);
+                        break;
+                    }
+                }
+            }
+            // rankings에 없는 레이서(미완주 등)도 보존
+            foreach (var r in finalSnapshot.racers)
+            {
+                bool alreadyAdded = false;
+                foreach (var re in reordered)
+                    if (re.name == r.name) { alreadyAdded = true; break; }
+                if (!alreadyAdded) reordered.Add(r);
+            }
+            finalSnapshot.racers.Clear();
+            finalSnapshot.racers.AddRange(reordered);
+        }
+
         // Console 출력 (plain text)
         string plain = System.Text.RegularExpressions.Regex.Replace(sb.ToString(), "<[^>]+>", "");
         Debug.Log(plain);
