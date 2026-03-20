@@ -412,6 +412,7 @@ public class RaceDebugOverlay : MonoBehaviour
         var sb = new StringBuilder();
         sb.AppendLine("\n▶ V4 설정");
         sb.AppendLine("────────────────────────");
+        sb.AppendFormat("GlobalSpeed×{0:F2}\n", gs.globalSpeedMultiplier);
         sb.AppendFormat("BURST: {0}  Condition: {1}\n",
             v4.v4_disableBurst ? "OFF" : "ON",
             v4.v4_applyCondition ? "ON" : "OFF");
@@ -451,6 +452,17 @@ public class RaceDebugOverlay : MonoBehaviour
             v4.v4_leaderBurstStart, v4.v4_leaderBurstEnd,
             v4.v4_chaserBurstStart, v4.v4_chaserBurstEnd,
             v4.v4_reckonerBurstStart, v4.v4_reckonerBurstEnd);
+        // 타입별 긴급부스트 상세 (구간 라인 바로 아래)
+        sb.AppendFormat("  긴급Spd×{0:F2}  쿨다운:{1:F1}s  도주지속:{2}\n",
+            v4.v4_emergencyBurstSpeedRatio,
+            v4.v4_emergencyBurstCooldown,
+            v4.v4_runnerPersistentBurst ? "ON" : "OFF");
+        sb.AppendFormat("  긴급Drain: 전역×{0:F1}  도주×{1:F1}  선행×{2:F1}  선입×{3:F1}  추입×{4:F1}\n",
+            v4.v4_emergencyBurstDrainMul,
+            v4.GetV4EmergencyBurstDrainMul(CharacterType.Runner),
+            v4.GetV4EmergencyBurstDrainMul(CharacterType.Leader),
+            v4.GetV4EmergencyBurstDrainMul(CharacterType.Chaser),
+            v4.GetV4EmergencyBurstDrainMul(CharacterType.Reckoner));
         sb.AppendFormat("Luck크리티컬: 확률{0:F3}/luck  ×{1:F2}속도  {2:F1}s지속  판정주기{3:F1}s\n",
             v4.v4_luckCritChance, v4.v4_luckCritBoost, v4.v4_luckCritDuration, v4.v4_luckCheckInterval);
         sb.AppendFormat("Int회피: 확률{0:F3}/int\n",

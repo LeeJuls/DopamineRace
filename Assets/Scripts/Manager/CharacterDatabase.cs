@@ -73,7 +73,9 @@ public class CharacterDatabase : MonoBehaviour
     }
 
     /// <summary>
-    /// 전체 풀에서 count명 랜덤 선발
+    /// 타입 균형 선발: 도주2 / 선행2 / 선입2 / 추입2 + 나머지1 (랜덤)
+    /// 같은 타입 내에서는 charAppearanceRate 가중치 기반 확률 선택
+    /// count가 9가 아닌 경우 폴백으로 단순 가중치 랜덤 사용
     /// </summary>
     public List<CharacterData> SelectRandom(int count)
     {
@@ -85,29 +87,65 @@ public class CharacterDatabase : MonoBehaviour
             return selectedCharacters;
         }
 
-        // 셔플 복사본
-        List<CharacterData> pool = new List<CharacterData>(allCharacters);
-        int n = pool.Count;
-        for (int i = n - 1; i > 0; i--)
+        if (count == 9)
         {
-            int j = Random.Range(0, i + 1);
-            var tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+            // ── 타입 균형 선발 (도주2 / 선행2 / 선입2 / 추입2 + 와일드1) ──
+            var picked = new List<CharacterData>();
+
+            PickWeighted(GetByType(CharacterType.Runner),   2, picked);
+            PickWeighted(GetByType(CharacterType.Leader),   2, picked);
+            PickWeighted(GetByType(CharacterType.Chaser),   2, picked);
+            PickWeighted(GetByType(CharacterType.Reckoner), 2, picked);
+
+            // 와일드카드 1명: 아직 선발되지 않은 전체 캐릭터 중 가중치 랜덤
+            var remaining = new List<CharacterData>(allCharacters);
+            foreach (var c in picked) remaining.Remove(c);
+            PickWeighted(remaining, 1, picked);
+
+            selectedCharacters.AddRange(picked);
+        }
+        else
+        {
+            // 폴백: 전체 풀 가중치 랜덤 (count가 9가 아닌 경우)
+            var pool = new List<CharacterData>(allCharacters);
+            PickWeighted(pool, Mathf.Min(count, pool.Count), selectedCharacters);
         }
 
-        // 선발
-        int pick = Mathf.Min(count, pool.Count);
-        for (int i = 0; i < pick; i++)
-        {
-            selectedCharacters.Add(pool[i]);
-        }
-
-        Debug.Log("[CharacterDB] " + pool.Count + "명 중 " + pick + "명 선발: "
+        Debug.Log("[CharacterDB] " + allCharacters.Count + "명 중 " + selectedCharacters.Count + "명 선발: "
             + string.Join(", ", selectedCharacters.ConvertAll(c => c.DisplayName)));
 
         SelectionVersion++;
         GameConstants.InvalidateCache();
 
         return selectedCharacters;
+    }
+
+    /// <summary>
+    /// pool에서 n명을 charAppearanceRate 가중치 기반으로 비복원 추출하여 result에 추가
+    /// </summary>
+    private void PickWeighted(List<CharacterData> pool, int n, List<CharacterData> result)
+    {
+        // 풀 복사 (비복원 추출을 위해)
+        var available = new List<CharacterData>(pool);
+
+        int pickCount = Mathf.Min(n, available.Count);
+        for (int i = 0; i < pickCount; i++)
+        {
+            float totalWeight = 0f;
+            foreach (var c in available) totalWeight += c.charAppearanceRate;
+
+            float rnd = Random.Range(0f, totalWeight);
+            float sum = 0f;
+            CharacterData selected = available[available.Count - 1]; // 부동소수점 오차 방어용 폴백
+            foreach (var c in available)
+            {
+                sum += c.charAppearanceRate;
+                if (rnd < sum) { selected = c; break; }
+            }
+
+            result.Add(selected);
+            available.Remove(selected);
+        }
     }
 
     /// <summary>

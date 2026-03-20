@@ -190,35 +190,6 @@ public partial class GameSettings : ScriptableObject
     [Tooltip("배팅 마커 높이")]
     public float betMarkerHeight = 0.3f;
 
-    [Header("═══ 아이콘 파일 설정 (얼굴 크롭 PNG) ═══")]
-    [Tooltip("아이콘 파일 확대 배율")]
-    [Range(0.5f, 3f)]
-    public float iconFileZoom = 1.3f;
-
-    [Tooltip("아이콘 파일 수직 오프셋")]
-    [Range(-0.5f, 0.5f)]
-    public float iconFileOffsetY = 0.05f;
-
-    [Tooltip("아이콘 파일 수평 오프셋")]
-    [Range(-0.5f, 0.5f)]
-    public float iconFileOffsetX = 0f;
-
-    [Header("═══ 프리팹 스프라이트 설정 (전신샷 fallback) ═══")]
-    [Tooltip("프리팹 스프라이트 확대 배율")]
-    [Range(0.5f, 7f)]
-    public float iconPrefabZoom = 3f;
-
-    [Tooltip("프리팹 스프라이트 수직 오프셋")]
-    [Range(-1f, 1f)]
-    public float iconPrefabOffsetY = 0.05f;
-
-    [Tooltip("프리팹 스프라이트 수평 오프셋")]
-    [Range(-1f, 1f)]
-    public float iconPrefabOffsetX = 0f;
-
-    [Header("═══ 배팅 버튼 설정 ═══")]
-    public float bettingButtonHeight = 90f;
-
     [Header("═══ BGM 설정 ═══")]
     [Tooltip("BGM 시작 딜레이 (초)")]
     [Range(0f, 10f)]
@@ -337,12 +308,6 @@ public partial class GameSettings : ScriptableObject
     [Tooltip("스프린트 시 HP 소모율 배율 (Runner 제외). 3.0 = 3배 빠른 소모.\n" +
              "단거리일수록 hpLapReference/totalLaps 배율 가산 → 단거리 추입 불리, 장거리 유리")]
     [Range(1f, 8f)] public float sprintHPDrainMultiplier = 3.0f;
-
-    // ── 레거시 포지션 보정 (deprecated, 시리얼 유지) ──
-    [HideInInspector] public float paceLeadReduction = 0.15f;
-    [HideInInspector] public float paceLeadFadeStart = 0.7f;
-    [HideInInspector] public int paceLeadMaxRank = 3;
-    [HideInInspector] public float conservationAmpCoeff = 0.6f;
 
     [Tooltip("슬립스트림 블렌드 페이드 시간 (초)")]
     [Range(0.5f, 5f)] public float slipstreamFadeTime = 2.0f;
