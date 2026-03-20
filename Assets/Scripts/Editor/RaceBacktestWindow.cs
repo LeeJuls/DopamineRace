@@ -31,6 +31,7 @@ public class RaceBacktestWindow : EditorWindow
     private bool cancelRequested = false;
     private List<SimRacer> _activeRacers; // SimConsumeHP_FormationHold 에서 상행 그룹 탐색용
     private int sweepSimsPerLap = 50;
+    private Dictionary<string, CharacterDataV4> v4DataMap;
 
     // ★ 구간별 포지션 추적 체크포인트
     private static readonly float[] segCheckpoints = { 0.10f, 0.20f, 0.35f, 0.50f, 0.65f, 0.80f, 0.90f };
@@ -48,10 +49,30 @@ public class RaceBacktestWindow : EditorWindow
 
     private void OnGUI()
     {
-        EditorGUILayout.LabelField("🏇 레이스 백테스팅 v3", EditorStyles.boldLabel);
+        bool isV4 = gameSettings != null && gameSettings.useV4RaceSystem;
+        string backtestTitle = isV4 ? "🏇 레이스 백테스팅 V4" : "🏇 레이스 백테스팅 v3";
+        EditorGUILayout.LabelField(backtestTitle, EditorStyles.boldLabel);
         EditorGUILayout.Space();
 
         gameSettings = (GameSettings)EditorGUILayout.ObjectField("GameSettings", gameSettings, typeof(GameSettings), false);
+
+        // ═══ V4 현재 세팅 요약 ═══
+        if (isV4)
+        {
+            var gs4 = gameSettings.v4Settings;
+            EditorGUILayout.HelpBox(
+                string.Format("V4 활성 | GlobalSpeed×{0:F1} | Normal×{1:F2} Burst×{2:F2} Spurt×{3:F2}\n" +
+                    "Drain/Prog:{4:F0} | BurstDrain×{5:F1} SpurtDrain×{6:F1}\n" +
+                    "긴급부스트:{7} Spd×{8:F2} 쿨다운:{9:F1}s 도주지속:{10}",
+                    gameSettings.globalSpeedMultiplier,
+                    gs4.v4_normalSpeedRatio, gs4.v4_burstSpeedRatio, gs4.v4_spurtVmaxBonus,
+                    gs4.v4_drainPerLap, gs4.v4_burstDrainMul, gs4.v4_spurtDrainMul,
+                    gs4.v4_emergencyBurstEnabled ? "ON" : "OFF",
+                    gs4.v4_emergencyBurstSpeedRatio,
+                    gs4.v4_emergencyBurstCooldown,
+                    gs4.v4_runnerPersistentBurst ? "ON" : "OFF"),
+                MessageType.Info);
+        }
 
         EditorGUILayout.Space();
         runAllTracks = EditorGUILayout.Toggle("🌍 전체 트랙 비교 모드", runAllTracks);
@@ -76,7 +97,9 @@ public class RaceBacktestWindow : EditorWindow
         EditorGUILayout.Space();
 
         GUI.enabled = !isRunning && gameSettings != null;
-        if (GUILayout.Button(isRunning ? "시뮬레이션 중..." : "▶ 시뮬레이션 실행", GUILayout.Height(30)))
+        string runLabel = isRunning ? "시뮬레이션 중..."
+            : string.Format("▶ {0} 시뮬레이션 ({1}회 × {2}바퀴)", isV4 ? "V4" : "V3", simCount, simLaps);
+        if (GUILayout.Button(runLabel, GUILayout.Height(30)))
         {
             if (runAllTracks)
                 RunAllTracksSimulation();
@@ -172,6 +195,19 @@ public class RaceBacktestWindow : EditorWindow
         // ★ Race V3 시스템
         public float v3SprintAccelProgress; // V3 전력질주 가속 진행률 0~1
         public bool v3IsSprintActive;       // V3 전력질주 활성 여부
+
+        // ★ Race V4 시스템
+        public CharacterDataV4 dataV4;
+        public float v4Stamina;
+        public float v4MaxStamina;
+        public float v4CurrentSpeed;
+        public float v4LastProgress;
+        public bool v4EmergencyBurst;
+        public float v4EmergencyBurstCooldownTimer;
+        public float v4CritBoostRemaining;
+        public float v4LuckTimer;
+        public bool v4InSlipstream;
+        public float v4SlipstreamDrainMul;
 
         // ★ 구간별 포지션 추적
         public bool[] segRecorded;        // 각 체크포인트 통과 여부
@@ -410,6 +446,22 @@ public class RaceBacktestWindow : EditorWindow
             if (cd != null) allChars.Add(cd);
         }
         if (allChars.Count == 0) { resultText = "❌ 캐릭터 데이터 비어있음!"; return null; }
+
+        // ★ V4 데이터 로드
+        v4DataMap = new Dictionary<string, CharacterDataV4>();
+        TextAsset v4csv = Resources.Load<TextAsset>("Data/CharacterDB_V4");
+        if (v4csv != null)
+        {
+            string[] v4lines = v4csv.text.Split('\n');
+            for (int i = 1; i < v4lines.Length; i++)
+            {
+                string vl = v4lines[i].Trim();
+                if (string.IsNullOrEmpty(vl)) continue;
+                var v4d = CharacterDataV4.ParseCSVLine(vl);
+                if (v4d != null) v4DataMap[v4d.charId] = v4d;
+            }
+        }
+
         return allChars;
     }
 
@@ -469,6 +521,23 @@ public class RaceBacktestWindow : EditorWindow
                     cd.charBaseEndurance = equalStatValue;
                     cd.charBaseLuck = equalStatValue;
                 }
+                // V4 스탯도 오버라이드
+                if (gs.useV4RaceSystem && v4DataMap != null)
+                {
+                    foreach (var cd in selected)
+                    {
+                        CharacterDataV4 dv4;
+                        if (v4DataMap.TryGetValue(cd.charId, out dv4))
+                        {
+                            dv4.v4Speed = equalStatValue;
+                            dv4.v4Accel = equalStatValue;
+                            dv4.v4Stamina = equalStatValue;
+                            dv4.v4Power = equalStatValue;
+                            dv4.v4Intelligence = equalStatValue;
+                            dv4.v4Luck = equalStatValue;
+                        }
+                    }
+                }
             }
 
             List<SimRacer> racers = new List<SimRacer>();
@@ -486,8 +555,33 @@ public class RaceBacktestWindow : EditorWindow
                     finished = false, finishOrder = 0
                 };
 
+                // ★ V4 초기화
+                if (gs.useV4RaceSystem && v4DataMap != null)
+                {
+                    CharacterDataV4 dv4 = null;
+                    v4DataMap.TryGetValue(cd.charId, out dv4);
+                    racer.dataV4 = dv4;
+                    if (dv4 != null)
+                    {
+                        var gs4 = gs.v4Settings;
+                        racer.v4MaxStamina = gs4.v4_staminaBase + dv4.v4Stamina * gs4.v4_staminaPerStat;
+                        racer.v4Stamina = racer.v4MaxStamina;
+                        racer.v4CurrentSpeed = gs.globalSpeedMultiplier * 0.5f;
+                        racer.v4LastProgress = 0f;
+                        racer.v4EmergencyBurst = false;
+                        racer.v4EmergencyBurstCooldownTimer = 0f;
+                        racer.v4CritBoostRemaining = 0f;
+                        racer.v4LuckTimer = 0f;
+                        racer.v4InSlipstream = false;
+                        racer.v4SlipstreamDrainMul = 1f;
+                        racer.currentRank = 0;
+                        // V4 uses its own HP fields — mirror to enduranceHP for shared stats
+                        racer.maxHP = racer.v4MaxStamina;
+                        racer.enduranceHP = racer.v4MaxStamina;
+                    }
+                }
                 // HP / V3 스태미나 초기화
-                if (gs.useV3RaceSystem)
+                else if (gs.useV3RaceSystem)
                 {
                     // V3: 스태미나 = staminaBase + endurance × staminaPerEndurance
                     racer.maxHP = gs.v3Settings.v3_staminaBase + cd.charBaseEndurance * gs.v3Settings.v3_staminaPerEndurance;
@@ -542,8 +636,8 @@ public class RaceBacktestWindow : EditorWindow
             {
                 simTime += simTimeStep;
 
-                // ═══ Phase 4: 순위 + 슬립스트림 + CP 소모 갱신 ═══
-                if (gs.useHPSystem)
+                // ═══ 순위 + 슬립스트림 갱신 ═══
+                if (gs.useV4RaceSystem || gs.useHPSystem)
                 {
                     for (int ri = 0; ri < racers.Count; ri++)
                     {
@@ -562,22 +656,40 @@ public class RaceBacktestWindow : EditorWindow
                         }
                         racers[ri].currentRank = rank;
 
-                        // 슬립스트림 블렌드 (전체 타입, 거리 기반)
-                        float ssTarget = (closestGap < gs.universalSlipstreamRange)
-                            ? 1f - (closestGap / gs.universalSlipstreamRange) : 0f;
-                        float fadeTime = Mathf.Max(gs.slipstreamFadeTime, 0.01f);
-                        float gameDtSS = simTimeStep * gs.globalSpeedMultiplier;
-                        racers[ri].slipstreamBlend = Mathf.MoveTowards(
-                            racers[ri].slipstreamBlend, ssTarget, gameDtSS / fadeTime);
-
-                        // CP 소모
-                        if (racers[ri].calmPoints > 0f)
+                        if (gs.useV4RaceSystem)
                         {
-                            float drain = gs.cpBasicDrain;
-                            if (racers[ri].slipstreamBlend > 0f)
-                                drain += gs.cpSlipstreamDrain * racers[ri].slipstreamBlend;
-                            racers[ri].calmPoints = Mathf.Max(0f,
-                                racers[ri].calmPoints - drain * gameDtSS);
+                            // ═══ V4 슬립스트림: 범위 내 앞 캐릭터 감지 ═══
+                            var gs4 = gs.v4Settings;
+                            float myProg = Mathf.Clamp01(myPos / finishDistance);
+                            bool inStream = false;
+                            if (gs4 != null)
+                            {
+                                float ssUnlock = SimGetV4SlipstreamUnlock(racers[ri], gs4);
+                                if (myProg >= ssUnlock && closestGap < gs4.v4_slipstreamRange && closestGap > 0f)
+                                    inStream = true;
+                            }
+                            racers[ri].v4InSlipstream = inStream;
+                            racers[ri].v4SlipstreamDrainMul = inStream ? gs4.v4_slipstreamDrainMul : 1f;
+                        }
+                        else
+                        {
+                            // ═══ V1-V3 슬립스트림 블렌드 ═══
+                            float ssTarget = (closestGap < gs.universalSlipstreamRange)
+                                ? 1f - (closestGap / gs.universalSlipstreamRange) : 0f;
+                            float fadeTime = Mathf.Max(gs.slipstreamFadeTime, 0.01f);
+                            float gameDtSS = simTimeStep * gs.globalSpeedMultiplier;
+                            racers[ri].slipstreamBlend = Mathf.MoveTowards(
+                                racers[ri].slipstreamBlend, ssTarget, gameDtSS / fadeTime);
+
+                            // CP 소모
+                            if (racers[ri].calmPoints > 0f)
+                            {
+                                float drain = gs.cpBasicDrain;
+                                if (racers[ri].slipstreamBlend > 0f)
+                                    drain += gs.cpSlipstreamDrain * racers[ri].slipstreamBlend;
+                                racers[ri].calmPoints = Mathf.Max(0f,
+                                    racers[ri].calmPoints - drain * gameDtSS);
+                            }
                         }
                     }
                 }
@@ -587,40 +699,49 @@ public class RaceBacktestWindow : EditorWindow
                     if (r.finished) continue;
 
                     float progress = Mathf.Clamp01(r.position / finishDistance);
-                    float baseTarget = CalcSpeed(r, progress, simTime);
 
-                    // 충돌 감속
-                    float gameDtTimer = simTimeStep * gs.globalSpeedMultiplier;
-                    float penaltyMul = 1f;
-                    if (r.collisionTimer > 0f)
+                    if (gs.useV4RaceSystem && r.dataV4 != null)
                     {
-                        r.collisionTimer -= gameDtTimer;
-                        penaltyMul = 1f - r.collisionPenalty;
-                        float distLost = r.currentSpeed * r.collisionPenalty * simTimeStep;
-                        r.totalDistLost += distLost;
-                        r.contrib_power -= distLost;  // 충돌 패배 시 잃은 거리
-                        if (r.collisionTimer <= 0f) r.collisionPenalty = 0f;
+                        // ═══ V4 속도 계산 + 이동 ═══
+                        SimTickV4(r, racers, gs, simTime, finishDistance);
                     }
-
-                    // 슬링샷 가속
-                    float slingshotMul = 1f;
-                    if (r.slingshotTimer > 0f)
+                    else
                     {
-                        r.slingshotTimer -= gameDtTimer;
-                        slingshotMul = 1f + r.slingshotBoost;
-                        float distGained = r.currentSpeed * r.slingshotBoost * simTimeStep;
-                        r.totalDistGained += distGained;
-                        r.contrib_brave += distGained;  // 슬링샷 이득
-                        if (r.slingshotTimer <= 0f) r.slingshotBoost = 0f;
-                    }
+                        // ═══ V1-V3 속도 계산 + 이동 ═══
+                        float baseTarget = CalcSpeed(r, progress, simTime);
 
-                    float targetSpeed = baseTarget * penaltyMul * slingshotMul;
-                    // [SPEC-RC-002] 스프린트 진입 시 Burst Lerp
-                    float effectiveLerp = r.isSprintMode
-                        ? gs.raceSpeedLerp * gs.sprintBurstLerpMult
-                        : gs.raceSpeedLerp;
-                    r.currentSpeed = Mathf.Lerp(r.currentSpeed, targetSpeed, simTimeStep * effectiveLerp);
-                    r.position += r.currentSpeed * simTimeStep;
+                        // 충돌 감속
+                        float gameDtTimer = simTimeStep * gs.globalSpeedMultiplier;
+                        float penaltyMul = 1f;
+                        if (r.collisionTimer > 0f)
+                        {
+                            r.collisionTimer -= gameDtTimer;
+                            penaltyMul = 1f - r.collisionPenalty;
+                            float distLost = r.currentSpeed * r.collisionPenalty * simTimeStep;
+                            r.totalDistLost += distLost;
+                            r.contrib_power -= distLost;
+                            if (r.collisionTimer <= 0f) r.collisionPenalty = 0f;
+                        }
+
+                        // 슬링샷 가속
+                        float slingshotMul = 1f;
+                        if (r.slingshotTimer > 0f)
+                        {
+                            r.slingshotTimer -= gameDtTimer;
+                            slingshotMul = 1f + r.slingshotBoost;
+                            float distGained = r.currentSpeed * r.slingshotBoost * simTimeStep;
+                            r.totalDistGained += distGained;
+                            r.contrib_brave += distGained;
+                            if (r.slingshotTimer <= 0f) r.slingshotBoost = 0f;
+                        }
+
+                        float targetSpeed = baseTarget * penaltyMul * slingshotMul;
+                        float effectiveLerp = r.isSprintMode
+                            ? gs.raceSpeedLerp * gs.sprintBurstLerpMult
+                            : gs.raceSpeedLerp;
+                        r.currentSpeed = Mathf.Lerp(r.currentSpeed, targetSpeed, simTimeStep * effectiveLerp);
+                        r.position += r.currentSpeed * simTimeStep;
+                    }
 
                     // ★ 랩 구간별 순위 기록 (25%/50%/100%)
                     {
@@ -1556,6 +1677,246 @@ public class RaceBacktestWindow : EditorWindow
     }
 
     // ══════════════════════════════════════
+    //  Race V4 시뮬레이션 (RacerController_V4 미러)
+    // ══════════════════════════════════════
+
+    /// <summary>
+    /// V4 레이서 1명의 1틱 업데이트: 긴급부스트 + 럭크릿 + 속도계산 + 스태미나 드레인 + 이동
+    /// </summary>
+    private void SimTickV4(SimRacer r, List<SimRacer> racers, GameSettings gs, float simTime, float finishDistance)
+    {
+        var gs4 = gs.v4Settings;
+        var dv4 = r.dataV4;
+        if (gs4 == null || dv4 == null) return;
+
+        float progress = Mathf.Clamp01(r.position / finishDistance);
+        float dt = simTimeStep;
+        float gameDt = dt * gs.globalSpeedMultiplier;
+
+        // ── 1. 긴급 부스트 판정 ──
+        SimUpdateV4EmergencyBurst(r, gs4, progress, dt);
+
+        // ── 2. Luck 크리티컬 ──
+        SimUpdateV4LuckCrit(r, gs4, gameDt);
+
+        // ── 3. 속도 계산 (CalcSpeedV4 미러) ──
+        float baseSpeed = gs.globalSpeedMultiplier;
+        float vmax = baseSpeed * (1f + dv4.v4Speed * gs4.v4_speedStatFactor);
+
+        // HP 임계값 기반 속도 배율
+        float staminaRatio = r.v4MaxStamina > 0 ? r.v4Stamina / r.v4MaxStamina : 0f;
+        float hpSpeedMul = gs4.GetHpSpeedMultiplier(staminaRatio);
+        vmax *= hpSpeedMul;
+
+        float accelRate = dv4.v4Accel * gs4.v4_accelStatFactor;
+
+        // 구간 판별
+        bool burstActive = !gs4.v4_disableBurst;
+        bool hpAvailable = r.v4Stamina > 0f;
+        bool inSpurtZone = burstActive && hpAvailable && progress >= gs4.v4_finalSpurtStart;
+        bool inRegularBurst = !inSpurtZone && burstActive && hpAvailable && SimIsInBurstZoneV4(dv4, gs4, progress);
+        bool inEmergencyBurst = !inSpurtZone && !inRegularBurst && burstActive && hpAvailable && r.v4EmergencyBurst;
+
+        float target;
+        if (inSpurtZone)
+        {
+            target = vmax * gs4.v4_spurtVmaxBonus;
+            accelRate *= gs4.v4_spurtAccelBonus;
+        }
+        else if (inRegularBurst)
+        {
+            target = vmax * gs4.v4_burstSpeedRatio;
+        }
+        else if (inEmergencyBurst)
+        {
+            target = vmax * gs4.v4_emergencyBurstSpeedRatio;
+        }
+        else
+        {
+            target = vmax * gs4.v4_normalSpeedRatio;
+        }
+
+        // Lerp 기반 가속
+        r.v4CurrentSpeed = Mathf.Lerp(r.v4CurrentSpeed, target, dt * accelRate);
+        float outputSpeed = r.v4CurrentSpeed;
+
+        // 크리티컬 배율
+        if (r.v4CritBoostRemaining > 0f)
+            outputSpeed *= gs4.v4_luckCritBoost;
+
+        // 충돌 감속 (기존 시스템과 공유)
+        if (r.collisionTimer > 0f)
+        {
+            r.collisionTimer -= gameDt;
+            float penaltyMul = 1f - r.collisionPenalty;
+            float distLost = outputSpeed * r.collisionPenalty * dt;
+            r.totalDistLost += distLost;
+            r.contrib_power -= distLost;
+            outputSpeed *= penaltyMul;
+            if (r.collisionTimer <= 0f) r.collisionPenalty = 0f;
+        }
+
+        // 슬링샷 가속 (기존 충돌 시스템의 보너스, V4에서도 유지)
+        if (r.slingshotTimer > 0f)
+        {
+            r.slingshotTimer -= gameDt;
+            float slingshotMul = 1f + r.slingshotBoost;
+            float distGained = outputSpeed * r.slingshotBoost * dt;
+            r.totalDistGained += distGained;
+            r.contrib_brave += distGained;
+            outputSpeed *= slingshotMul;
+            if (r.slingshotTimer <= 0f) r.slingshotBoost = 0f;
+        }
+
+        r.currentSpeed = outputSpeed;
+        r.position += outputSpeed * dt;
+
+        // ── 4. V4 스태미나 드레인 (진행도 기반) ──
+        float currentProgress = Mathf.Clamp01(r.position / finishDistance);
+        float progressDelta = Mathf.Max(0f, currentProgress - r.v4LastProgress);
+        r.v4LastProgress = currentProgress;
+
+        if (progressDelta > 0f && r.v4Stamina > 0f)
+        {
+            float drain = gs4.v4_drainPerLap * progressDelta;
+
+            // 구간별 추가 소모
+            if (!gs4.v4_disableBurst)
+            {
+                if (inSpurtZone) drain *= gs4.v4_spurtDrainMul;
+                else if (inRegularBurst) drain *= gs4.v4_burstDrainMul;
+                else if (inEmergencyBurst) drain *= gs4.GetV4EmergencyBurstDrainMul(dv4.charType);
+            }
+
+            // 슬립스트림 드레인 감소
+            if (r.v4InSlipstream)
+                drain *= r.v4SlipstreamDrainMul;
+
+            r.v4Stamina = Mathf.Max(0f, r.v4Stamina - drain);
+            r.enduranceHP = r.v4Stamina; // 디버그 통계 호환
+        }
+
+        // 스탯 기여 추적 (V4: 타입 보너스 = phase 속도 차이)
+        float typeContrib = (outputSpeed / baseSpeed - 1f) * dt;
+        r.contrib_type += typeContrib;
+    }
+
+    /// <summary>V4 긴급 부스트 판정 (UpdateV4EmergencyBurst 미러)</summary>
+    private void SimUpdateV4EmergencyBurst(SimRacer r, GameSettingsV4 gs4, float progress, float dt)
+    {
+        if (!gs4.v4_emergencyBurstEnabled || r.dataV4 == null || gs4.v4_disableBurst) return;
+
+        // 쿨다운 타이머
+        if (r.v4EmergencyBurstCooldownTimer > 0f)
+            r.v4EmergencyBurstCooldownTimer -= dt;
+
+        // 정규 부스트 구간 또는 스퍼트 구간 안이면 긴급 부스트 비활성
+        bool inRegularBurst = SimIsInBurstZoneV4(r.dataV4, gs4, progress);
+        bool inSpurt        = progress >= gs4.v4_finalSpurtStart;
+
+        if (inRegularBurst || inSpurt)
+        {
+            // 정규 부스트/스퍼트 구간 → 긴급 해제
+            r.v4EmergencyBurst = false;
+            r.v4EmergencyBurstCooldownTimer = 0f;
+            return;
+        }
+
+        if (r.currentRank <= 0) return;
+        var (_, targetMax) = gs4.GetV4TargetRankRange(r.dataV4.charType);
+        bool shouldEmergency = r.currentRank > targetMax;
+
+        bool isPersistentRunner = gs4.v4_runnerPersistentBurst &&
+                                  r.dataV4.charType == CharacterType.Runner;
+
+        if (shouldEmergency && !r.v4EmergencyBurst)
+        {
+            if (r.v4EmergencyBurstCooldownTimer > 0f && !isPersistentRunner) return;
+            r.v4EmergencyBurst = true;
+        }
+        else if (!shouldEmergency && r.v4EmergencyBurst && !isPersistentRunner)
+        {
+            r.v4EmergencyBurst = false;
+            if (gs4.v4_emergencyBurstCooldown > 0f)
+                r.v4EmergencyBurstCooldownTimer = gs4.v4_emergencyBurstCooldown;
+        }
+    }
+
+    /// <summary>V4 Luck 크리티컬 판정 (UpdateV4LuckCrit 미러)</summary>
+    private void SimUpdateV4LuckCrit(SimRacer r, GameSettingsV4 gs4, float gameDt)
+    {
+        if (r.dataV4 == null) return;
+
+        if (r.v4CritBoostRemaining > 0f)
+        {
+            r.v4CritBoostRemaining -= gameDt;
+            if (r.v4CritBoostRemaining <= 0f) r.v4CritBoostRemaining = 0f;
+            return;
+        }
+
+        r.v4LuckTimer -= gameDt;
+        if (r.v4LuckTimer <= 0f)
+        {
+            r.v4LuckTimer = gs4.v4_luckCheckInterval;
+            float chance = r.dataV4.v4Luck * gs4.v4_luckCritChance;
+            if (Random.value < chance)
+            {
+                // 지능 modifier
+                float intModifier = (r.dataV4.v4Intelligence - 10f) / 10f * gs4.v4_intelligenceModMax;
+                r.v4CritBoostRemaining = gs4.v4_luckCritDuration * (1f + intModifier);
+                r.critCount++;
+            }
+        }
+    }
+
+    /// <summary>V4 부스트 구간 판별 (IsInBurstZone 미러)</summary>
+    private bool SimIsInBurstZoneV4(CharacterDataV4 dv4, GameSettingsV4 gs4, float progress)
+    {
+        float start, end;
+        switch (dv4.charType)
+        {
+            case CharacterType.Runner:   start = gs4.v4_runnerBurstStart;   end = gs4.v4_runnerBurstEnd;   break;
+            case CharacterType.Leader:   start = gs4.v4_leaderBurstStart;   end = gs4.v4_leaderBurstEnd;   break;
+            case CharacterType.Chaser:   start = gs4.v4_chaserBurstStart;   end = gs4.v4_chaserBurstEnd;   break;
+            case CharacterType.Reckoner: start = gs4.v4_reckonerBurstStart; end = gs4.v4_reckonerBurstEnd; break;
+            default: return false;
+        }
+
+        // 지능 modifier (지능20 → +10%, 지능10 → ±0%, 지능0 → -10%)
+        float intModifier = (dv4.v4Intelligence - 10f) / 10f * gs4.v4_intelligenceModMax;
+        float effectiveEnd = start + (end - start) * (1f + intModifier);
+
+        return progress >= start && progress < effectiveEnd;
+    }
+
+    /// <summary>V4 부스트 구간 시작점</summary>
+    private float SimGetV4BurstStart(CharacterDataV4 dv4, GameSettingsV4 gs4)
+    {
+        switch (dv4.charType)
+        {
+            case CharacterType.Runner:   return gs4.v4_runnerBurstStart;
+            case CharacterType.Leader:   return gs4.v4_leaderBurstStart;
+            case CharacterType.Chaser:   return gs4.v4_chaserBurstStart;
+            case CharacterType.Reckoner: return gs4.v4_reckonerBurstStart;
+            default: return 0f;
+        }
+    }
+
+    /// <summary>V4 슬립스트림 해금 진행도</summary>
+    private float SimGetV4SlipstreamUnlock(SimRacer r, GameSettingsV4 gs4)
+    {
+        if (r.dataV4 == null) return 0f;
+        switch (r.dataV4.charType)
+        {
+            case CharacterType.Runner:   return gs4.v4_ssUnlockRunner;
+            case CharacterType.Leader:   return gs4.v4_ssUnlockLeader;
+            case CharacterType.Chaser:   return gs4.v4_ssUnlockChaser;
+            case CharacterType.Reckoner: return gs4.v4_ssUnlockReckoner;
+            default: return 0f;
+        }
+    }
+
+    // ══════════════════════════════════════
     //  결과 빌드 (에디터 표시 + 마크다운 로그)
     // ══════════════════════════════════════
 
@@ -1578,8 +1939,9 @@ public class RaceBacktestWindow : EditorWindow
 
         // ── 헤더 ──
         string settlingInfo = simCollision ? string.Format("ON(settling:{0:F1}s)", GameSettings.Instance.collisionSettlingTime) : "OFF";
-        string header = string.Format("백테스팅 v3  |  {0}회 × {1}바퀴 × {2}명  |  충돌:{3}  |  트랙:{4}",
-            simCount, simLaps, simRacers, settlingInfo,
+        string versionTag = (gameSettings != null && gameSettings.useV4RaceSystem) ? "V4" : "v3";
+        string header = string.Format("백테스팅 {0}  |  {1}회 × {2}바퀴 × {3}명  |  충돌:{4}  |  트랙:{5}",
+            versionTag, simCount, simLaps, simRacers, settlingInfo,
             multiTrack ? "전체 " + results.Count + "종" : results[0].trackName);
 
         display.AppendLine("═══════════════════════════════════════════════════════════════════");

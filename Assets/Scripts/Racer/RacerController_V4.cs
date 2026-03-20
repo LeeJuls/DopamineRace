@@ -525,24 +525,28 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             v4EmergencyBurstCooldownTimer -= Time.deltaTime;
 
         float progress   = GetOverallProgress();
-        float burstStart = GetV4BurstStart(gs);
 
-        if (progress >= burstStart)
+        // 정규 부스트 구간 또는 스퍼트 구간 안이면 긴급 부스트 비활성
+        bool inRegularBurst = IsInBurstZone(gs, progress);
+        bool inSpurt        = progress >= gs.v4_finalSpurtStart;
+
+        if (inRegularBurst || inSpurt)
         {
-            // 부스트 구간 진입 → 긴급 부스트 해제 (정규 부스트로 이어짐)
+            // 정규 부스트/스퍼트 구간 → 긴급 부스트 해제 (정규로 이어짐)
             if (v4EmergencyBurst)
             {
                 v4EmergencyBurst = false;
                 v4EmergencyBurstCooldownTimer = 0f; // 연결 종료 시 쿨다운 없음
                 var ov = RaceManager.Instance?.GetComponent<RaceDebugOverlay>();
+                string zoneName = inSpurt ? "스퍼트" : "정규부스트";
                 ov?.LogEvent(RaceDebugOverlay.EventType.Burst,
-                    string.Format("{0} 긴급부스트 종료→정규부스트 연결 (rank:{1})",
-                        charDataV4.charId.Split('.')[2], v4CurrentRank));
+                    string.Format("{0} 긴급부스트 종료→{1} 연결 (rank:{2})",
+                        charDataV4.charId.Split('.')[2], zoneName, v4CurrentRank));
             }
             return;
         }
 
-        // 부스트 구간 전: 목표 순위 체크
+        // 부스트/스퍼트 구간 밖: 목표 순위 체크
         if (v4CurrentRank <= 0) return;
         var (_, targetMax) = gs.GetV4TargetRankRange(charDataV4.charType);
 

@@ -27,10 +27,11 @@ public enum WeaponHand
 /// 캐릭터 1명의 전체 데이터 (CSV 1행)
 ///
 /// CSV 컬럼 순서:
-///   0:char_id, 1:char_name, 2:speed, 3:power, 4:brave, 5:calm, 6:endurance, 7:luck,
-///   8:type, 9:char_ability, 10:char_ability_time_sec,
-///   11:char_resource_prefabs, 12:char_attack_resource_prefabs,
-///   13:char_icon, 14:char_weapon, 15:char_skill_desc, 16:char_illustration
+///   0:char_id, 1:char_name, 2:char_name_kr(미사용), 3:speed, 4:power, 5:brave, 6:calm, 7:endurance, 8:luck,
+///   9:type, 10:char_ability, 11:char_ability_time_sec,
+///   12:char_resource_prefabs, 13:char_attack_resource_prefabs,
+///   14:char_icon, 15:char_weapon, 16:char_skill_desc, 17:char_illustration,
+///   18:char_appearance_rate
 /// </summary>
 [System.Serializable]
 public class CharacterData
@@ -59,6 +60,13 @@ public class CharacterData
     public WeaponHand charWeapon;                  // 무기 위치 (L/R/N)
     public string charSkillDesc;                   // 스킬 설명 StringUID
     public string charIllustration;                // 일러스트 Resources 경로
+
+    /// <summary>
+    /// 레이스 등장 확률 가중치 (같은 타입 풀 내에서 상대적 비율)
+    /// 기본값 10 — 모든 캐릭터 동일 확률
+    /// 예: A=10, B=20 이면 B가 2배 확률로 등장
+    /// </summary>
+    public float charAppearanceRate = 10f;
 
     public SkillData skillData;                    // 파싱된 스킬 데이터
 
@@ -189,6 +197,12 @@ public class CharacterData
 
         // char_illustration (17번)
         d.charIllustration = cols.Length > 17 ? cols[17].Trim() : "";
+
+        // char_appearance_rate (18번) — 기본값 10 (미기재 시 동일 확률)
+        d.charAppearanceRate = 10f;
+        if (cols.Length > 18)
+            float.TryParse(cols[18].Trim(), out d.charAppearanceRate);
+        if (d.charAppearanceRate <= 0f) d.charAppearanceRate = 10f; // 0 이하 방어
 
         // ★ 스킬 데이터 파싱
         d.skillData = SkillData.Parse(d.charAbility, d.charAbilityTimeSec);
