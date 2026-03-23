@@ -7,7 +7,7 @@ using System.Linq;
 using System.IO;
 
 /// <summary>
-/// 레이스 백테스팅 에디터 윈도우 (v3.1 — HP 시스템 미러)
+/// 레이스 백테스팅 에디터 윈도우 (HP 시스템 미러)
 /// 충돌/슬링샷/회피 시뮬레이션 + HP 부스트 + 스탯 기여 분석 + 전체 트랙 비교 + 로그 저장
 /// </summary>
 public class RaceBacktestWindow : EditorWindow
@@ -49,8 +49,7 @@ public class RaceBacktestWindow : EditorWindow
     private void OnGUI()
     {
         bool isV4 = gameSettings != null && gameSettings.useV4RaceSystem;
-        string backtestTitle = isV4 ? "🏇 레이스 백테스팅 V4" : "🏇 레이스 백테스팅 v3";
-        EditorGUILayout.LabelField(backtestTitle, EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("🏇 레이스 백테스팅", EditorStyles.boldLabel);
         EditorGUILayout.Space();
 
         gameSettings = (GameSettings)EditorGUILayout.ObjectField("GameSettings", gameSettings, typeof(GameSettings), false);
@@ -97,7 +96,7 @@ public class RaceBacktestWindow : EditorWindow
 
         GUI.enabled = !isRunning && gameSettings != null;
         string runLabel = isRunning ? "시뮬레이션 중..."
-            : string.Format("▶ {0} 시뮬레이션 ({1}회 × {2}바퀴)", isV4 ? "V4" : "V3", simCount, simLaps);
+            : string.Format("▶ 시뮬레이션 ({0}회 × {1}바퀴)", simCount, simLaps);
         if (GUILayout.Button(runLabel, GUILayout.Height(30)))
         {
             if (runAllTracks)
@@ -175,10 +174,6 @@ public class RaceBacktestWindow : EditorWindow
 
         // ★ SPEC-RC-002: 스프린트 상태
         public bool isSprintMode;         // 전력질주 상태
-
-        // ★ Race V3 시스템
-        public float v3SprintAccelProgress; // V3 전력질주 가속 진행률 0~1
-        public bool v3IsSprintActive;       // V3 전력질주 활성 여부
 
         // ★ Race V4 시스템
         public CharacterDataV4 dataV4;
@@ -565,21 +560,6 @@ public class RaceBacktestWindow : EditorWindow
                         racer.maxHP = racer.v4MaxStamina;
                         racer.enduranceHP = racer.v4MaxStamina;
                     }
-                }
-                // HP / V3 스태미나 초기화
-                else if (gs.useV3RaceSystem)
-                {
-                    // V3: 스태미나 = staminaBase + endurance × staminaPerEndurance
-                    racer.maxHP = gs.v3Settings.v3_staminaBase + cd.charBaseEndurance * gs.v3Settings.v3_staminaPerEndurance;
-                    racer.enduranceHP = racer.maxHP;
-                    racer.totalConsumedHP = 0f;
-                    racer.hpBoostValue = 0f;
-                    racer.currentRank = 0;
-                    racer.slipstreamBlend = 0f;
-                    racer.maxCP = cd.charBaseCalm * gs.cpMultiplier;
-                    racer.calmPoints = racer.maxCP;
-                    racer.v3SprintAccelProgress = 0f;
-                    racer.v3IsSprintActive = false;
                 }
                 else if (gs.useHPSystem)
                 {
@@ -1025,34 +1005,7 @@ public class RaceBacktestWindow : EditorWindow
         float typeBonus = 0f;
         float fatigue = 0f;
 
-        if (gs.useV3RaceSystem)
-        {
-            // ═══ Race V3: 스탯 기반 재설계 ═══
-            // V3 base: 모든 캐릭터 동일 (speed 스탯은 maxSpeedMul에 반영)
-            baseSpeed = globalMul * trackSpeedMul;
-
-            SimUpdateV3Sprint(r, gs, progress);
-
-            float v3MaxSpeedMul = gs.v3Settings.GetV3MaxSpeedMul(cd.charBaseSpeed);
-            float v3HpRatio     = r.maxHP > 0f ? Mathf.Clamp01(r.enduranceHP / r.maxHP) : 0f;
-            float v3HpSpeedMul  = gs.v3Settings.GetV3SpeedFromHP(v3HpRatio);
-            float v3SpeedRatio  = Mathf.Lerp(1.0f, v3MaxSpeedMul, r.v3SprintAccelProgress) * v3HpSpeedMul;
-
-            // 포메이션 속도 캡 (드레인도 자동 감소)
-            v3SpeedRatio *= SimCalcV3FormationSpeedCap(r, gs, progress);
-
-            float v3CpRatio = r.maxCP > 0f ? r.calmPoints / r.maxCP : 0f;
-            float v3CpEff   = gs.GetCPEfficiency(v3CpRatio);
-            float v3SsBonus = gs.GetSlipstreamBonus(cd.charType, r.slipstreamBlend, v3CpEff);
-            v3SpeedRatio *= (1f + v3SsBonus);
-
-            float v3ZoneDrainMul = SimCalcV3ZoneDrainMul(r, gs, progress);
-            SimConsumeHP_V3(r, gs, v3SpeedRatio, v3ZoneDrainMul);
-
-            typeBonus = v3SpeedRatio - 1f;
-            r.contrib_type += baseSpeed * typeBonus * simTimeStep;
-        }
-        else if (gs.useHPSystem)
+        if (gs.useHPSystem)
         {
             // ═══ 속도 압축 ═══
             if (gs.hpSpeedCompress > 0f)
@@ -1091,7 +1044,7 @@ public class RaceBacktestWindow : EditorWindow
         }
 
         float powerBonus = 0f, braveBonus = 0f;
-        if (track != null && !gs.useV3RaceSystem)
+        if (track != null)
         {
             powerBonus = (cd.charBasePower / 20f) * track.powerSpeedBonus;
             braveBonus = (cd.charBaseBrave / 20f) * track.braveSpeedBonus;
@@ -1136,7 +1089,7 @@ public class RaceBacktestWindow : EditorWindow
 
         float speed = baseSpeed * (1f + typeBonus + powerBonus + braveBonus);
         speed += r.noiseValue;
-        if (!gs.useHPSystem && !gs.useV3RaceSystem) speed -= fatigue; // HP/V3 시스템: fatigue 내장
+        if (!gs.useHPSystem) speed -= fatigue; // HP 시스템: fatigue 내장
 
         // ═══ 초반 대형: 타입별 포지션 정렬 ═══
         float formationMod = gs.GetFormationModifier(
@@ -1145,84 +1098,6 @@ public class RaceBacktestWindow : EditorWindow
 
         speed *= slowMul * critMul;
         return Mathf.Max(speed, 0.1f);
-    }
-
-    // ══════════════════════════════════════
-    //  Race V3 미러 (RacerController_V3 동일 로직)
-    // ══════════════════════════════════════
-
-    /// <summary>V3 스프린트 판정 (RacerController_V3.UpdateV3Sprint 미러)</summary>
-    private void SimUpdateV3Sprint(SimRacer r, GameSettings gs, float progress)
-    {
-        float strategyStart = gs.formationHoldLapEnd / simLaps;
-        if (progress < strategyStart) return;
-
-        float strategyProg = Mathf.InverseLerp(strategyStart, 1f, progress);
-        if (!r.v3IsSprintActive && strategyProg >= gs.v3Settings.GetV3SprintStart(r.data.charType))
-            r.v3IsSprintActive = true;
-
-        if (!r.v3IsSprintActive) return;
-
-        float accelRate = 1.0f + r.data.charBaseBrave * gs.v3Settings.v3_braveAccelPerPoint;
-        float gameDt    = simTimeStep * gs.globalSpeedMultiplier;
-        float step      = gameDt * accelRate / gs.v3Settings.v3_sprintAccelTimeBase;
-        r.v3SprintAccelProgress = Mathf.MoveTowards(r.v3SprintAccelProgress, 1f, step);
-        r.isSprintMode = r.v3SprintAccelProgress > 0.1f;
-    }
-
-    /// <summary>V3 HP 소모 (RacerController_V3.ConsumeHP_V3 미러)</summary>
-    private void SimConsumeHP_V3(SimRacer r, GameSettings gs, float speedRatio, float zoneDrainMul)
-    {
-        if (r.enduranceHP <= 0f) return;
-
-        float gameDt      = simTimeStep * gs.globalSpeedMultiplier;
-        float drain       = gs.v3Settings.v3_drainBaseRate
-                            * Mathf.Pow(speedRatio, gs.v3Settings.v3_drainExponent)
-                            * zoneDrainMul;
-        float consumption = Mathf.Min(drain * gameDt, r.enduranceHP);
-        r.enduranceHP    -= consumption;
-        r.totalConsumedHP += consumption;
-
-        // 선두 HP 택스
-        if (r.currentRank <= gs.leadPaceTaxRank && r.enduranceHP > 0f)
-        {
-            float tax = Mathf.Min(gs.leadPaceTaxRate * gameDt, r.enduranceHP);
-            r.enduranceHP -= tax;
-        }
-    }
-
-    /// <summary>V3 포메이션 속도 캡 (RacerController_V3.CalcV3FormationSpeedCap 미러)</summary>
-    private float SimCalcV3FormationSpeedCap(SimRacer r, GameSettings gs, float progress)
-    {
-        float posEnd = gs.positioningLapEnd / simLaps;
-        if (progress >= posEnd) return 1.0f;
-        if (simRacers <= 1) return 1.0f;
-
-        float zoneTarget  = gs.v3Settings.GetV3ZoneTarget(r.data.charType);
-        float myRankRatio = simRacers > 1
-            ? (float)(r.currentRank - 1) / (simRacers - 1) : 0f;
-        float diff = myRankRatio - zoneTarget;
-
-        if (diff < -gs.v3Settings.v3_zoneRange)
-            return gs.v3Settings.v3_formationSpeedCap;
-        return 1.0f;
-    }
-
-    /// <summary>V3 포지션 피드백 드레인 배율 (RacerController_V3.CalcV3ZoneDrainMul 미러)</summary>
-    private float SimCalcV3ZoneDrainMul(SimRacer r, GameSettings gs, float progress)
-    {
-        float strategyStart = gs.formationHoldLapEnd / simLaps;
-        if (progress >= strategyStart) return 1.0f;
-        if (simRacers <= 1) return 1.0f;
-
-        float zoneTarget  = gs.v3Settings.GetV3ZoneTarget(r.data.charType);
-        float myRankRatio = simRacers > 1
-            ? (float)(r.currentRank - 1) / (simRacers - 1) : 0f;
-        float diff = myRankRatio - zoneTarget;
-
-        if (diff >  gs.v3Settings.v3_zoneRange) return gs.v3Settings.v3_zoneDrainMul;
-        if (diff < -gs.v3Settings.v3_zoneRange) return gs.v3Settings.v3_zoneSaveMul;
-        return 1.0f;
     }
 
     // ══════════════════════════════════════
@@ -1851,7 +1726,7 @@ public class RaceBacktestWindow : EditorWindow
 
         // ── 헤더 ──
         string settlingInfo = simCollision ? string.Format("ON(settling:{0:F1}s)", GameSettings.Instance.collisionSettlingTime) : "OFF";
-        string versionTag = (gameSettings != null && gameSettings.useV4RaceSystem) ? "V4" : "v3";
+        string versionTag = (gameSettings != null && gameSettings.useV4RaceSystem) ? "V4" : "HP";
         string header = string.Format("백테스팅 {0}  |  {1}회 × {2}바퀴 × {3}명  |  충돌:{4}  |  트랙:{5}",
             versionTag, simCount, simLaps, simRacers, settlingInfo,
             multiTrack ? "전체 " + results.Count + "종" : results[0].trackName);

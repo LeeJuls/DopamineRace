@@ -58,10 +58,6 @@ public partial class RacerController : MonoBehaviour
     private int currentRank;                   // 현재 순위 1~12 (Phase 4)
     private bool isSprintMode = false;         // 전력질주 상태 (SPEC-RC-002: Burst Lerp용)
 
-    // ── Race V3 시스템 ──
-    private float v3SprintAccelProgress = 0f;  // V3 전력질주 가속 진행률 0~1
-    private bool v3IsSprintActive = false;     // V3 전력질주 활성 여부
-
     // ── CP 시스템 (Calm Points) ──
     private float calmPoints;                  // 현재 CP
     private float maxCP;                       // 최대 CP (calm × cpMultiplier)
@@ -78,9 +74,6 @@ public partial class RacerController : MonoBehaviour
     public int SkillCollisionCount => skillCollisionCount;
     public float CollisionPenalty => collisionPenalty;
     public float SlingshotBoost => slingshotBoost;
-    public bool V3IsSprintActive => v3IsSprintActive;
-    public float V3SprintAccelProgress => v3SprintAccelProgress;
-
     // ── HP 시스템 외부 접근 ──
     public float EnduranceHP => enduranceHP;
     public float MaxHP => maxHP;
@@ -227,29 +220,13 @@ public partial class RacerController : MonoBehaviour
         deviationTarget = 0f;
         deviationTimer = 0f;
 
-        // V3 스프린트 상태 리셋
-        v3SprintAccelProgress = 0f;
-        v3IsSprintActive = false;
-
-        // HP / V3 / V4 스태미나 초기화
+        // HP / V4 스태미나 초기화
         if (charData != null)
         {
             var gsInst = GameSettings.Instance;
             if (gsInst.useV4RaceSystem)
             {
                 InitV4();
-            }
-            else if (gsInst.useV3RaceSystem)
-            {
-                // V3: 스태미나 = staminaBase + endurance × staminaPerEndurance
-                maxHP = gsInst.v3Settings.v3_staminaBase + charData.charBaseEndurance * gsInst.v3Settings.v3_staminaPerEndurance;
-                enduranceHP = maxHP;
-                totalConsumedHP = 0f;
-                hpBoostValue = 0f;
-                slipstreamBlend = 0f;
-                currentRank = racerIndex + 1;
-                maxCP = charData.charBaseCalm * gsInst.cpMultiplier;
-                calmPoints = maxCP;
             }
             else if (gsInst.useHPSystem)
             {
@@ -431,11 +408,6 @@ public partial class RacerController : MonoBehaviour
         {
             // ═══ Race V4: 5대 스탯 기반 ═══
             return CalcSpeedV4(gs.v4Settings);
-        }
-        else if (gs.useV3RaceSystem)
-        {
-            // ═══ Race V3: 스탯 기반 재설계 ═══
-            speed = CalcSpeedV3(gs, track, condMul);
         }
         else if (gs.useHPSystem)
         {

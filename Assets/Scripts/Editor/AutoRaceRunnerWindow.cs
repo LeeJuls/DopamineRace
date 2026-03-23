@@ -516,7 +516,7 @@ public class AutoRaceRunnerWindow : EditorWindow
         if (gs != null)
         {
             sb.AppendFormat("- 레이스 시스템: {0}\n",
-                gs.useV4RaceSystem ? "V4" : gs.useV3RaceSystem ? "V3" : "V1/V2");
+                gs.useV4RaceSystem ? "V4" : "Legacy");
             sb.AppendFormat("- GlobalSpeed: {0:F2}\n", gs.globalSpeedMultiplier);
 
             int[] laps = gs.roundLaps;
