@@ -344,41 +344,6 @@ public partial class GameSettings : ScriptableObject
     [Tooltip("Leader 조건부 스퍼트 최소 HP 잔량 비율 (이하면 스퍼트 포기)")]
     [Range(0f, 0.5f)] public float leaderSpurtMinHP = 0.3f;
 
-    [Header("═══ HP: 초반 타입 보너스 ═══")]
-    [Tooltip("도주(Runner) 초반 속도 보너스")]
-    [Range(0f, 0.3f)] public float hp_earlyBonus_Runner = 0.12f;
-    [Tooltip("선행(Leader) 초반 속도 보너스")]
-    [Range(0f, 0.3f)] public float hp_earlyBonus_Leader = 0.04f;
-    [Tooltip("선입(Chaser) 초반 속도 보너스")]
-    [Range(0f, 0.3f)] public float hp_earlyBonus_Chaser = 0.02f;
-    [Tooltip("추행(Reckoner) 초반 속도 보너스")]
-    [Range(0f, 0.3f)] public float hp_earlyBonus_Reckoner = 0f;
-    [Tooltip("초반 보너스가 0으로 사라지는 진행률")]
-    [Range(0.1f, 0.5f)] public float hp_earlyBonusFadeEnd = 0.25f;
-
-    /// <summary>
-    /// HP 시스템용 초반 타입 보너스.
-    /// progress 0 → 최대값, hp_earlyBonusFadeEnd → 0 (선형 페이드아웃)
-    /// </summary>
-    public float GetHPEarlyBonus(CharacterType type, float progress)
-    {
-        if (progress >= hp_earlyBonusFadeEnd) return 0f;
-
-        float bonus = type switch
-        {
-            CharacterType.Runner   => hp_earlyBonus_Runner,
-            CharacterType.Leader   => hp_earlyBonus_Leader,
-            CharacterType.Chaser   => hp_earlyBonus_Chaser,
-            _                      => hp_earlyBonus_Reckoner
-        };
-        // 음수 보너스 허용: 하행 타입(선입/추입)은 초반에 의도적으로 감속
-        // bonus == 0이면 효과 없음 (불필요한 계산 스킵)
-        if (bonus == 0f) return 0f;
-
-        float fade = 1f - (progress / hp_earlyBonusFadeEnd);
-        return bonus * fade;
-    }
-
     [Header("═══ 초반 대형 (Formation Phase) ═══")]
     [Tooltip("대형 유지 구간 종료 진행률 (0.2 = 처음 20%)")]
     [Range(0.05f, 0.5f)] public float formationPhaseEnd = 0.20f;
@@ -452,12 +417,6 @@ public partial class GameSettings : ScriptableObject
             _                      => -1f  // Reckoner: 항상 보존
         };
     }
-
-    [Header("═══ 선두 페이스 택스 (Lead Pace Tax) ═══")]
-    [Tooltip("HP 추가 소모 적용 순위 (2 = 1~2위가 바람막이 세금)")]
-    [Range(1, 6)] public int leadPaceTaxRank = 2;
-    [Tooltip("선두 HP 추가 소모율 (/초). totalConsumedHP에 미포함 → 순수 탈진 가속")]
-    [Range(0f, 3f)] public float leadPaceTaxRate = 0.8f;
 
     [Header("═══ CP 시스템 (Calm Points) ═══")]
     [Tooltip("CP 최대치 = charBaseCalm × 이 값")]

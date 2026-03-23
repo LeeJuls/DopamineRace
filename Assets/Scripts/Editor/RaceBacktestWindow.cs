@@ -1017,11 +1017,10 @@ public class RaceBacktestWindow : EditorWindow
             // ═══ Type 1: 기존 HP 부스트 경로 ═══
             SimConsumeHP(r, gs, progress);
             float hpBoost = SimCalcHPBoost(r, gs);
-            float earlyBonus = gs.GetHPEarlyBonus(cd.charType, progress);
             float cpRatioCalc = r.maxCP > 0f ? r.calmPoints / r.maxCP : 0f;
             float cpEff = gs.GetCPEfficiency(cpRatioCalc);
             float ssBonus = gs.GetSlipstreamBonus(cd.charType, r.slipstreamBlend, cpEff);
-            typeBonus = hpBoost + earlyBonus + ssBonus;
+            typeBonus = hpBoost + ssBonus;
             r.contrib_type += baseSpeed * typeBonus * simTimeStep;
         }
 
@@ -1318,7 +1317,7 @@ public class RaceBacktestWindow : EditorWindow
         return lastLapRemaining <= threshold;
     }
 
-    // ─── 공통 tail: boostAmp / speedRatio / leadPaceTax (SPEC-RC-002 미러링) ──
+    // ─── 공통 tail: boostAmp / speedRatio (SPEC-RC-002 미러링) ──
     private void SimApplyHPConsumption(SimRacer r, GameSettings gs, float rate)
     {
         float trackSpeedMul = selectedTrack != null ? selectedTrack.speedMultiplier : 1f;
@@ -1357,13 +1356,6 @@ public class RaceBacktestWindow : EditorWindow
 
         r.enduranceHP -= consumption;
         r.totalConsumedHP += consumption;
-
-        // 선두 페이스 택스: 바람막이 추가 소모
-        if (r.currentRank <= gs.leadPaceTaxRank && r.enduranceHP > 0f)
-        {
-            float paceTax = gs.leadPaceTaxRate * Mathf.Sqrt(speedRatio) * gameDtHP;
-            r.enduranceHP = Mathf.Max(0f, r.enduranceHP - paceTax);
-        }
     }
 
     // ─── 헬퍼: 상행 그룹(Runner/Leader) 중 최소 TotalProgress ────────
@@ -2042,8 +2034,6 @@ public class RaceBacktestWindow : EditorWindow
             md.AppendFormat("| boostThreshold | {0} |\n", g.boostThreshold);
             md.AppendFormat("| hpLapReference | {0} |\n", g.hpLapReference);
             md.AppendFormat("| longRaceLateBoostAmp | {0} |\n", g.longRaceLateBoostAmp);
-            md.AppendFormat("| hp_earlyBonus_Runner | {0} |\n", g.hp_earlyBonus_Runner);
-            md.AppendFormat("| hp_earlyBonusFadeEnd | {0} |\n", g.hp_earlyBonusFadeEnd);
             md.AppendLine();
             md.AppendLine("| 타입 | spurtStart | activeRate | peakBoost | accelExp | decelExp | exhaustionFloor |");
             md.AppendLine("|------|------------|-----------|-----------|----------|----------|-----------------|");

@@ -424,10 +424,9 @@ public partial class RacerController : MonoBehaviour
                 // ═══ Type 1: 기존 HP 부스트 경로 ═══
                 ConsumeHP(gs, track, Time.deltaTime);
                 float hpBoost = CalcHPBoost(gs);
-                float earlyBonus = gs.GetHPEarlyBonus(charData.charType, OverallProgress);
                 float cpEff = gs.GetCPEfficiency(CPRatio);
                 float ssBonus = gs.GetSlipstreamBonus(charData.charType, slipstreamBlend, cpEff);
-                speed *= (1f + (hpBoost + earlyBonus + ssBonus + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
+                speed *= (1f + (hpBoost + ssBonus + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
                 speed += GetNoiseValue(gs, track) * condMul;
             }
         }
@@ -760,7 +759,7 @@ public partial class RacerController : MonoBehaviour
         return lastLapRemaining <= threshold;
     }
 
-    // ─── 공통 tail: boostAmp / speedRatio / condMul / leadPaceTax ─────
+    // ─── 공통 tail: boostAmp / speedRatio / condMul ─────
     private void ApplyHPConsumption(GameSettings gs, TrackData track, float deltaTime, float rate)
     {
         float baseTrackSpeed = GetBaseTrackSpeed(gs, track);
@@ -803,13 +802,6 @@ public partial class RacerController : MonoBehaviour
 
         enduranceHP -= consumption;
         totalConsumedHP += consumption;
-
-        // 선두 페이스 택스: 바람막이 추가 소모 (totalConsumedHP 미포함 → 순수 탈진 가속)
-        if (currentRank <= gs.leadPaceTaxRank && enduranceHP > 0f)
-        {
-            float paceTax = gs.leadPaceTaxRate * Mathf.Sqrt(speedRatio) * gameDt;
-            enduranceHP = Mathf.Max(0f, enduranceHP - paceTax);
-        }
     }
 
     // ─── 헬퍼: 상행 타입 여부 (Runner/Leader) ────────────────────────
