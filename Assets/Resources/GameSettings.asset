@@ -92,101 +92,19 @@ MonoBehaviour:
   finishPanelPrefab: {fileID: 8787253541604398564, guid: 996934117f1431047812b05bf40ec784, type: 3}
   leaderboardPanelPrefab: {fileID: 588526348272800763, guid: fe2555fdfd8ecef4e9a46d3c4e389ac1, type: 3}
   trackProgressBarPrefab: {fileID: 0}
-  pathDeviation: 0.4
+  enableRoundResume: 0
+  pathDeviation: 0.3
   characterScale: 1.2
   laneOffset: 0.19
   labelSize: 0.07
   labelHeight: 0.8
   betMarkerSize: 0.07
   betMarkerHeight: -0.01
-  iconFileZoom: 1.3
-  iconFileOffsetY: 0.05
-  iconFileOffsetX: 0
-  iconPrefabZoom: 3.8
-  iconPrefabOffsetY: 0.55
-  iconPrefabOffsetX: -0.75
-  bettingButtonHeight: 120
   bgmDelay: 1
   bgmVolume: 0.4
-  globalSpeedMultiplier: 4
+  sfxVolume: 0.12
+  globalSpeedMultiplier: 3
   noiseFactor: 0.1
-  fatigueFactor: 0.15
-  raceSpeedLerp: 3
-  useHPSystem: 1
-  hpBase: 50
-  hpPerEndurance: 3
-  basicConsumptionRate: 0.5
-  boostThreshold: 0.4
-  hpSpeedCompress: 0.85
-  hpLapReference: 3
-  boostHPDrainCoeff: 1.5
-  powerAccelCoeff: 0.5
-  runner_spurtStart: 0
-  runner_activeRate: 3.5
-  runner_peakBoost: 0.2
-  runner_accelExp: 1
-  runner_decelExp: 0.7
-  runner_exhaustionFloor: -0.2
-  leader_spurtStart: 0.1
-  leader_activeRate: 3
-  leader_peakBoost: 0.2
-  leader_accelExp: 1.2
-  leader_decelExp: 1
-  leader_exhaustionFloor: -0.08
-  chaser_spurtStart: 0.15
-  chaser_activeRate: 5.5
-  chaser_peakBoost: 0.24
-  chaser_accelExp: 1.3
-  chaser_decelExp: 0.8
-  chaser_exhaustionFloor: -0.03
-  reckoner_spurtStart: 0.2
-  reckoner_activeRate: 7
-  reckoner_peakBoost: 0.24
-  reckoner_accelExp: 1.8
-  reckoner_decelExp: 0.4
-  reckoner_exhaustionFloor: -0.08
-  longRaceLateBoostAmp: 0.3
-  leaderSprintLastLapThreshold: 0.2
-  chaserSprintLastLapThreshold: 0.3
-  reckonerSprintLastLapThreshold: 0.4
-  sprintBurstLerpMult: 2.5
-  sprintHPDrainMultiplier: 2
-  paceLeadReduction: 0.15
-  paceLeadFadeStart: 0.7
-  paceLeadMaxRank: 3
-  conservationAmpCoeff: 0.6
-  slipstreamFadeTime: 2
-  runner_targetZone: 0.25
-  runner_inZoneRate: 0.6
-  runner_outZoneRate: 2
-  leader_targetZone: 0.45
-  leader_inZoneRate: 1.2
-  leader_outZoneRate: 1.8
-  chaser_targetZone: 0.7
-  chaser_inZoneRate: 0.8
-  chaser_outZoneRate: 1.5
-  reckoner_baseRate: 0.7
-  leaderSpurtMinHP: 0.3
-  hp_earlyBonus_Runner: 0.25
-  hp_earlyBonus_Leader: 0.04
-  hp_earlyBonus_Chaser: -0.02
-  hp_earlyBonus_Reckoner: -0.06
-  hp_earlyBonusFadeEnd: 0.25
-  formationPhaseEnd: 0.2
-  formationCorrectionStrength: 0.15
-  formationTarget_Runner: 0.15
-  formationTarget_Leader: 0.35
-  formationTarget_Chaser: 0.65
-  formationTarget_Reckoner: 0.85
-  positioningLapEnd: 0.25
-  formationHoldLapEnd: 1
-  runner_posTarget: 0.25
-  leader_posTarget: 0.5
-  chaser_posTarget: 0.75
-  formationGapMax: 0.3
-  formationGapMin: 0.05
-  leadPaceTaxRank: 3
-  leadPaceTaxRate: 0.3
   cpMultiplier: 10
   cpBasicDrain: 0.5
   cpSlipstreamDrain: 2.5
@@ -198,18 +116,6 @@ MonoBehaviour:
   cpLowNoiseMul: 2
   hpUnstableThreshold: 0.4
   hpLowNoiseMul: 2.5
-  earlyBonus_Runner: 0.15
-  earlyBonus_Leader: 0.08
-  earlyBonus_Chaser: 0
-  earlyBonus_Reckoner: -0.05
-  midBonus_Runner: -0.05
-  midBonus_Leader: 0.05
-  midBonus_Chaser: 0.1
-  midBonus_Reckoner: 0.03
-  lateBonus_Runner: -0.1
-  lateBonus_Leader: 0
-  lateBonus_Chaser: 0.05
-  lateBonus_Reckoner: 0.18
   enableCollision: 1
   enableCollisionVFX: 1
   collisionChance: 0.8
@@ -238,9 +144,7 @@ MonoBehaviour:
   luckCritChance: 0.005
   luckCritBoost: 1.3
   luckCritDuration: 1.5
-  luckDodgeChance: 0.02
   currentTrack: {fileID: 0}
-  randomTrackPerRound: 0
   enableTrackTransition: 1
   trackTransitionFadeDuration: 0.3
   waypointArrivalDist: 0.25
@@ -249,33 +153,5 @@ MonoBehaviour:
   mainFont: {fileID: 12800000, guid: 80d111d8d567ca749a67ce59eaa9cb47, type: 3}
   koreanFont: {fileID: 12800000, guid: 967a67b8c17c46b4295390c687d1c8a1, type: 3}
   uiFontScale: 1
-  useV2RaceSystem: 1
-  v2_sprintMaxBoost: 0.3
-  v2_sprintThreshold: 0.25
-  v2_exhaustFloor: 0.7
-  v2_baseDrain: 0.2
-  v2_sprintDrainRate: 5
-  v2_sprintAccelTime: 2.5
-  v2_sprintStart_Runner: 0
-  v2_sprintStart_Leader: 0.25
-  v2_sprintStart_Chaser: 0.5
-  v2_sprintStart_Reckoner: 0.75
-  v2_phaseCoeff_Runner_early: 1
-  v2_phaseCoeff_Runner_mid: 0.985
-  v2_phaseCoeff_Runner_late: 0.97
-  v2_phaseCoeff_Leader_early: 0.985
-  v2_phaseCoeff_Leader_mid: 0.993
-  v2_phaseCoeff_Leader_late: 0.98
-  v2_phaseCoeff_Chaser_early: 0.965
-  v2_phaseCoeff_Chaser_mid: 1
-  v2_phaseCoeff_Chaser_late: 0.99
-  v2_phaseCoeff_Reckoner_early: 0.95
-  v2_phaseCoeff_Reckoner_mid: 1
-  v2_phaseCoeff_Reckoner_late: 1.015
-  v2_drainBaseRate: 1
-  v2_drainExponent: 2
-  v2_phaseEarlyEnd: 0.33
-  v2_phaseMidEnd: 0.66
   enableRaceDebug: 0
-  v3Settings: {fileID: 11400000, guid: 4425b7a30c2922a478d33b8e240bb9e0, type: 2}
   v4Settings: {fileID: 11400000, guid: 834170f72f494a6fa50c0bc9d7edfbe8, type: 2}
