@@ -39,68 +39,6 @@ public class GameSettingsEditor : Editor
         }
         EditorGUILayout.EndHorizontal();
 
-        // ── 타입 보너스 (전반) ──
-        EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField("타입 보너스 (전반)", EditorStyles.boldLabel);
-        if (GUILayout.Button("기본값 복원", GUILayout.Width(100)))
-        {
-            Undo.RecordObject(gs, "Reset Early Bonus");
-            gs.earlyBonus_Runner = 0.15f;
-            gs.earlyBonus_Leader = 0.08f;
-            gs.earlyBonus_Chaser = 0f;
-            gs.earlyBonus_Reckoner = -0.05f;
-            EditorUtility.SetDirty(gs);
-            Debug.Log("✅ 타입 보너스 (전반) → 기본값 복원");
-        }
-        EditorGUILayout.EndHorizontal();
-
-        // ── 타입 보너스 (중반) ──
-        EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField("타입 보너스 (중반)", EditorStyles.boldLabel);
-        if (GUILayout.Button("기본값 복원", GUILayout.Width(100)))
-        {
-            Undo.RecordObject(gs, "Reset Mid Bonus");
-            gs.midBonus_Runner = -0.05f;
-            gs.midBonus_Leader = 0.05f;
-            gs.midBonus_Chaser = 0.10f;
-            gs.midBonus_Reckoner = 0.03f;
-            EditorUtility.SetDirty(gs);
-            Debug.Log("✅ 타입 보너스 (중반) → 기본값 복원");
-        }
-        EditorGUILayout.EndHorizontal();
-
-        // ── 타입 보너스 (후반) ──
-        EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField("타입 보너스 (후반)", EditorStyles.boldLabel);
-        if (GUILayout.Button("기본값 복원", GUILayout.Width(100)))
-        {
-            Undo.RecordObject(gs, "Reset Late Bonus");
-            gs.lateBonus_Runner = -0.10f;
-            gs.lateBonus_Leader = 0f;
-            gs.lateBonus_Chaser = 0.05f;
-            gs.lateBonus_Reckoner = 0.18f;
-            EditorUtility.SetDirty(gs);
-            Debug.Log("✅ 타입 보너스 (후반) → 기본값 복원");
-        }
-        EditorGUILayout.EndHorizontal();
-
-        // ── 타입 보너스 전체 ──
-        EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField("  ↳ 타입 보너스 (전체)", EditorStyles.miniLabel);
-        if (GUILayout.Button("전체 복원", GUILayout.Width(100)))
-        {
-            Undo.RecordObject(gs, "Reset All Type Bonus");
-            gs.earlyBonus_Runner = 0.15f;  gs.earlyBonus_Leader = 0.08f;
-            gs.earlyBonus_Chaser = 0f;     gs.earlyBonus_Reckoner = -0.05f;
-            gs.midBonus_Runner = -0.05f;   gs.midBonus_Leader = 0.05f;
-            gs.midBonus_Chaser = 0.10f;    gs.midBonus_Reckoner = 0.03f;
-            gs.lateBonus_Runner = -0.10f;  gs.lateBonus_Leader = 0f;
-            gs.lateBonus_Chaser = 0.05f;   gs.lateBonus_Reckoner = 0.18f;
-            EditorUtility.SetDirty(gs);
-            Debug.Log("✅ 타입 보너스 (전체 12개) → 기본값 복원");
-        }
-        EditorGUILayout.EndHorizontal();
-
         // ── 충돌 시스템 ──
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("충돌 시스템", EditorStyles.boldLabel);
@@ -262,7 +200,7 @@ public class GameSettingsEditor : Editor
         if (GUILayout.Button("⚠️ 레이스 공식 전체 기본값 복원", GUILayout.Height(30)))
         {
             if (EditorUtility.DisplayDialog("전체 복원",
-                "레이스 기본 공식, 타입 보너스, 충돌, 슬링샷, Luck\n모든 값을 기본값으로 되돌립니다.\n\n계속하시겠습니까?",
+                "레이스 기본 공식, 충돌, 슬링샷, Luck\n모든 값을 기본값으로 되돌립니다.\n\n계속하시겠습니까?",
                 "복원", "취소"))
             {
                 Undo.RecordObject(gs, "Reset All Race Settings");
@@ -272,14 +210,6 @@ public class GameSettingsEditor : Editor
                 gs.noiseFactor = 0.1f;
                 gs.fatigueFactor = 0.15f;
                 gs.raceSpeedLerp = 3f;
-
-                // 타입 보너스
-                gs.earlyBonus_Runner = 0.15f;  gs.earlyBonus_Leader = 0.08f;
-                gs.earlyBonus_Chaser = 0f;     gs.earlyBonus_Reckoner = -0.05f;
-                gs.midBonus_Runner = -0.05f;   gs.midBonus_Leader = 0.05f;
-                gs.midBonus_Chaser = 0.10f;    gs.midBonus_Reckoner = 0.03f;
-                gs.lateBonus_Runner = -0.10f;  gs.lateBonus_Leader = 0f;
-                gs.lateBonus_Chaser = 0.05f;   gs.lateBonus_Reckoner = 0.18f;
 
                 // 충돌
                 gs.enableCollision = true;

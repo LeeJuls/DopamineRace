@@ -1024,24 +1024,6 @@ public class RaceBacktestWindow : EditorWindow
             typeBonus = hpBoost + earlyBonus + ssBonus;
             r.contrib_type += baseSpeed * typeBonus * simTimeStep;
         }
-        else
-        {
-            // ═══ 레거시 시스템 ═══
-            float trackFatMul = track != null ? track.fatigueMultiplier : 1f;
-            float endurance = Mathf.Max(cd.charBaseEndurance, 1f);
-            fatigue = progress * (1f / endurance) * gs.fatigueFactor * trackFatMul;
-            r.contrib_endurance -= fatigue * simTimeStep;
-
-            int phase = progress < 0.35f ? 0 : progress < 0.70f ? 1 : 2;
-            typeBonus = gs.GetTypeBonus(cd.charType, phase);
-            if (track != null)
-            {
-                float phaseMul = phase == 0 ? track.earlyBonusMultiplier :
-                                 phase == 1 ? track.midBonusMultiplier : track.lateBonusMultiplier;
-                typeBonus *= phaseMul;
-            }
-            r.contrib_type += baseSpeed * typeBonus * simTimeStep;
-        }
 
         float powerBonus = 0f, braveBonus = 0f;
         if (track != null)
@@ -2094,17 +2076,7 @@ public class RaceBacktestWindow : EditorWindow
                 md.AppendFormat("### ⚖️ 균등 스탯 모드: 모든 스탯 = {0}\n", equalStatValue);
             }
         }
-        else
-        {
-            md.AppendLine("### 타입 보너스 (레거시)");
-            md.AppendLine();
-            md.AppendLine("| 타입 | 전반 | 중반 | 후반 |");
-            md.AppendLine("|------|------|------|------|");
-            md.AppendFormat("| Runner | {0} | {1} | {2} |\n", SF(g.earlyBonus_Runner), SF(g.midBonus_Runner), SF(g.lateBonus_Runner));
-            md.AppendFormat("| Leader | {0} | {1} | {2} |\n", SF(g.earlyBonus_Leader), SF(g.midBonus_Leader), SF(g.lateBonus_Leader));
-            md.AppendFormat("| Chaser | {0} | {1} | {2} |\n", SF(g.earlyBonus_Chaser), SF(g.midBonus_Chaser), SF(g.lateBonus_Chaser));
-            md.AppendFormat("| Reckoner | {0} | {1} | {2} |\n", SF(g.earlyBonus_Reckoner), SF(g.midBonus_Reckoner), SF(g.lateBonus_Reckoner));
-        }
+        // (레거시 타입 보너스 제거됨 — HP 시스템으로 통합)
         md.AppendLine();
 
         display.AppendLine("═══════════════════════════════════════════════════════════════════");

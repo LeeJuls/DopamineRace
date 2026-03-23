@@ -614,25 +614,6 @@ public partial class GameSettings : ScriptableObject
         return (float)laps / hpLapReference;
     }
 
-    [Header("═══ 타입 보너스 (레거시 — HP 시스템 OFF 시 사용) ═══")]
-    [Header("전반 0~35%")]
-    [Range(-0.3f, 0.3f)] public float earlyBonus_Runner = 0.15f;
-    [Range(-0.3f, 0.3f)] public float earlyBonus_Leader = 0.08f;
-    [Range(-0.3f, 0.3f)] public float earlyBonus_Chaser = 0.0f;
-    [Range(-0.3f, 0.3f)] public float earlyBonus_Reckoner = -0.05f;
-
-    [Header("═══ 타입 보너스 (중반 35~70%) ═══")]
-    [Range(-0.3f, 0.3f)] public float midBonus_Runner = -0.05f;
-    [Range(-0.3f, 0.3f)] public float midBonus_Leader = 0.05f;
-    [Range(-0.3f, 0.3f)] public float midBonus_Chaser = 0.10f;
-    [Range(-0.3f, 0.3f)] public float midBonus_Reckoner = 0.03f;
-
-    [Header("═══ 타입 보너스 (후반 70~100%) ═══")]
-    [Range(-0.3f, 0.3f)] public float lateBonus_Runner = -0.10f;
-    [Range(-0.3f, 0.3f)] public float lateBonus_Leader = 0.0f;
-    [Range(-0.3f, 0.3f)] public float lateBonus_Chaser = 0.05f;
-    [Range(-0.3f, 0.3f)] public float lateBonus_Reckoner = 0.18f;
-
     [Header("═══ 충돌 시스템 ═══")]
     [Tooltip("충돌 시스템 ON/OFF")]
     public bool enableCollision = true;
@@ -786,45 +767,6 @@ public partial class GameSettings : ScriptableObject
     [Header("═══ 디버그 ═══")]
     [Tooltip("레이스 디버그 오버레이 (F1:토글 F2:상세 F3:캐릭터선택)")]
     public bool enableRaceDebug = false;
-
-    /// <summary>
-    /// 타입별 구간 보너스 가져오기
-    /// phase: 0=전반, 1=중반, 2=후반
-    /// </summary>
-    public float GetTypeBonus(CharacterType type, int phase)
-    {
-        switch (phase)
-        {
-            case 0: // 전반
-                switch (type)
-                {
-                    case CharacterType.Runner: return earlyBonus_Runner;
-                    case CharacterType.Leader: return earlyBonus_Leader;
-                    case CharacterType.Chaser: return earlyBonus_Chaser;
-                    case CharacterType.Reckoner: return earlyBonus_Reckoner;
-                }
-                break;
-            case 1: // 중반
-                switch (type)
-                {
-                    case CharacterType.Runner: return midBonus_Runner;
-                    case CharacterType.Leader: return midBonus_Leader;
-                    case CharacterType.Chaser: return midBonus_Chaser;
-                    case CharacterType.Reckoner: return midBonus_Reckoner;
-                }
-                break;
-            case 2: // 후반
-                switch (type)
-                {
-                    case CharacterType.Runner: return lateBonus_Runner;
-                    case CharacterType.Leader: return lateBonus_Leader;
-                    case CharacterType.Chaser: return lateBonus_Chaser;
-                    case CharacterType.Reckoner: return lateBonus_Reckoner;
-                }
-                break;
-        }
-        return 0f;
-    }
 
     /// <summary>
     /// 트랙 승수 적용된 값 가져오기 (트랙 없으면 1.0)

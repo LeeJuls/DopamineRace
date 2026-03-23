@@ -734,12 +734,8 @@ public class RaceDebugOverlay : MonoBehaviour
             float progress = racer.OverallProgress;
             int phase = progress < 0.35f ? 0 : progress < 0.70f ? 1 : 2;
             string phaseName = phase == 0 ? "전반" : phase == 1 ? "중반" : "후반";
-            float typeBonus = gs.GetTypeBonus(cd.charType, phase);
             float trackSpd = track != null ? track.speedMultiplier : 1f;
             float baseSpd = cd.SpeedMultiplier * gs.globalSpeedMultiplier * trackSpd;
-            float endurance = Mathf.Max(cd.charBaseEndurance, 1f);
-            float trackFat = track != null ? track.fatigueMultiplier : 1f;
-            float fatigue = progress * (1f / endurance) * gs.fatigueFactor * trackFat;
 
             string nameCol = racer.IsCritActive ? "#FF8800" : racer.IsFinished ? "#AAAAAA" : "#FFDD44";
             sb.AppendFormat("<color={0}>── {1}위: {2} ({3}) ──</color>\n",
@@ -747,8 +743,8 @@ public class RaceDebugOverlay : MonoBehaviour
             sb.AppendFormat("  SPD:<color=#88CCFF>{0:F2}</color>  POW:{1}  BRV:{2}  CLM:{3}  END:{4}  LCK:{5}\n",
                 cd.charBaseSpeed, cd.charBasePower, cd.charBaseBrave,
                 cd.charBaseCalm, cd.charBaseEndurance, cd.charBaseLuck);
-            sb.AppendFormat("  기본:{0:F2}  구간:{1}(<color=#88FF88>{2:+0.0%;-0.0%}</color>)  피로:<color=#FF8888>-{3:F3}</color>  진행:{4:F1}%\n",
-                baseSpd, phaseName, typeBonus, fatigue, progress * 100);
+            sb.AppendFormat("  기본:{0:F2}  구간:{1}  진행:{2:F1}%\n",
+                baseSpd, phaseName, progress * 100);
 
             string sl = "";
             if (racer.IsCritActive) sl += "<color=#FF8800>⚡크리티컬</color>  ";

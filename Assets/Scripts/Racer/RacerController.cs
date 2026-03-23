@@ -431,13 +431,6 @@ public partial class RacerController : MonoBehaviour
                 speed += GetNoiseValue(gs, track) * condMul;
             }
         }
-        else
-        {
-            // ═══ 레거시 시스템 ═══
-            speed *= (1f + (GetTypeBonus(gs, track) + GetPowerBonus(track) + GetBraveBonus(track)) * condMul);
-            speed += GetNoiseValue(gs, track) * condMul;
-            speed -= GetFatigue(gs, track) / condMul;
-        }
 
         // ═══ 초반 대형: 타입별 포지션 정렬 ═══
         {
@@ -469,23 +462,6 @@ public partial class RacerController : MonoBehaviour
         return charData.SpeedMultiplier * gs.globalSpeedMultiplier * trackSpeedMul;
     }
 
-    // ── 타입 보너스 (구간별 + 트랙 배율) ──
-    private float GetTypeBonus(GameSettings gs, TrackData track)
-    {
-        float progress = OverallProgress;
-        int phase = progress < 0.35f ? 0 : progress < 0.70f ? 1 : 2;
-        float typeBonus = gs.GetTypeBonus(charData.charType, phase);
-
-        if (track != null)
-        {
-            float phaseMul = phase == 0 ? track.earlyBonusMultiplier :
-                             phase == 1 ? track.midBonusMultiplier :
-                                          track.lateBonusMultiplier;
-            typeBonus *= phaseMul;
-        }
-        return typeBonus;
-    }
-
     // ── 트랙 특수: power → 속도 보너스 ──
     private float GetPowerBonus(TrackData track)
     {
@@ -509,14 +485,6 @@ public partial class RacerController : MonoBehaviour
     }
 
     // ── endurance 기반 후반 피로 ──
-    private float GetFatigue(GameSettings gs, TrackData track)
-    {
-        float trackFatigueMul = track != null ? track.fatigueMultiplier : 1f;
-        float progress = OverallProgress;
-        float endurance = Mathf.Max(charData.charBaseEndurance, 1f);
-        return progress * (1f / endurance) * gs.fatigueFactor * trackFatigueMul;
-    }
-
     // ══════════════════════════════════════
     //  ★ HP 시스템 코어 (SPEC-006)
     // ══════════════════════════════════════
