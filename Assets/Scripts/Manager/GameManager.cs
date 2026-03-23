@@ -50,10 +50,25 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private const string PREF_LAST_ROUND = "DR_LastRound";
+
     // ═══ 게임 초기화 (새 게임 시작) ═══
     public void StartNewGame()
     {
-        CurrentRound = 1;
+        // ★ 라운드 복귀: 저장된 라운드가 있으면 거기서부터 시작
+        int startRound = 1;
+        var gs = GameSettings.Instance;
+        if (gs != null && gs.enableRoundResume && PlayerPrefs.HasKey(PREF_LAST_ROUND))
+        {
+            int saved = PlayerPrefs.GetInt(PREF_LAST_ROUND, 1);
+            if (saved >= 1 && saved <= TotalRounds)
+            {
+                startRound = saved;
+                Debug.Log($"[GameManager] 라운드 복귀: Round {saved}부터 시작");
+            }
+        }
+
+        CurrentRound = startRound;
         CurrentBet = new BetInfo(BetType.Exacta);   // 기본 = 쌍승
         ScoreManager.Instance?.ResetAll();
 
@@ -152,11 +167,25 @@ public class GameManager : MonoBehaviour
                 CurrentBet.selections.Clear();
             BetFirst = -1;
             BetSecond = -1;
+
+            // ★ 라운드 복귀용 저장
+            var gs2 = GameSettings.Instance;
+            if (gs2 != null && gs2.enableRoundResume)
+            {
+                PlayerPrefs.SetInt(PREF_LAST_ROUND, CurrentRound);
+                PlayerPrefs.Save();
+            }
         }
         if (s == GameState.Countdown) countdownTimer = 3f;
         if (s == GameState.Racing) OnRaceStart?.Invoke();
         if (s == GameState.Result) CalcScore();
-        if (s == GameState.Finish) ScoreManager.Instance?.SaveToLeaderboard();
+        if (s == GameState.Finish)
+        {
+            ScoreManager.Instance?.SaveToLeaderboard();
+            // ★ 게임 완료 → 다음에 1라운드부터 시작
+            PlayerPrefs.DeleteKey(PREF_LAST_ROUND);
+            PlayerPrefs.Save();
+        }
         OnStateChanged?.Invoke(s);
     }
 

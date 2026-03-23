@@ -34,6 +34,8 @@ public class CharacterInfoPopup : MonoBehaviour
 
     // XCharts — 레이더차트 (능력치)
     private RadarChart radarChart;
+    private List<double> radarTargetValues; // 스탯 애니메이션 목표값
+    private const int RADAR_STAT_SERIE_INDEX = 4; // zone 0~3 + stat 4
 
     // ═══ 상태 ═══
     private bool isInitialized;
@@ -270,23 +272,49 @@ public class CharacterInfoPopup : MonoBehaviour
         UpdateRadarChart(pendingData, pendingTrackInfo);
         UpdateRecentRecords(pendingRecord);
 
-        // ── 슬라이드인 애니메이션 ──
+        // ── 슬라이드인 + 레이더차트 스탯 선 애니메이션 (동시 진행) ──
         RectTransform rt = GetComponent<RectTransform>();
-        if (rt != null)
-        {
-            Vector2 startPos = targetPosition + new Vector2(0, -200);
-            rt.anchoredPosition = startPos;
+        Vector2 startPos = targetPosition + new Vector2(0, -200);
+        if (rt != null) rt.anchoredPosition = startPos;
 
-            float elapsed = 0f;
-            float duration = 0.25f;
-            while (elapsed < duration)
+        float elapsed = 0f;
+        float slideDuration = 0.25f;
+        float chartDuration = 0.35f; // 스탯 선은 약간 더 길게
+        float totalDuration = Mathf.Max(slideDuration, chartDuration);
+
+        while (elapsed < totalDuration)
+        {
+            elapsed += Time.deltaTime;
+
+            // 슬라이드인
+            if (rt != null && elapsed <= slideDuration)
             {
-                elapsed += Time.deltaTime;
-                float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
-                rt.anchoredPosition = Vector2.Lerp(startPos, targetPosition, t);
-                yield return null;
+                float st = Mathf.SmoothStep(0f, 1f, elapsed / slideDuration);
+                rt.anchoredPosition = Vector2.Lerp(startPos, targetPosition, st);
             }
-            rt.anchoredPosition = targetPosition;
+
+            // 레이더차트 스탯 선: 0 → 실제값 보간
+            if (radarChart != null && radarTargetValues != null)
+            {
+                float ct = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / chartDuration));
+                for (int i = 0; i < radarTargetValues.Count; i++)
+                {
+                    double current = radarTargetValues[i] * ct;
+                    radarChart.UpdateData(RADAR_STAT_SERIE_INDEX, 0, i, current);
+                }
+                radarChart.RefreshChart();
+            }
+
+            yield return null;
+        }
+
+        // 최종값 확정
+        if (rt != null) rt.anchoredPosition = targetPosition;
+        if (radarChart != null && radarTargetValues != null)
+        {
+            for (int i = 0; i < radarTargetValues.Count; i++)
+                radarChart.UpdateData(RADAR_STAT_SERIE_INDEX, 0, i, radarTargetValues[i]);
+            radarChart.RefreshChart();
         }
 
         showCoroutine = null;
@@ -439,6 +467,7 @@ public class CharacterInfoPopup : MonoBehaviour
                 zoneSerie.lineStyle.show = false;
                 zoneSerie.symbol.show = false;
                 zoneSerie.label.show = false;
+                zoneSerie.animation.enable = false; // 배경 즉시 표시
             }
             var zoneData = new List<double>();
             for (int s = 0; s < 6; s++)
@@ -453,7 +482,8 @@ public class CharacterInfoPopup : MonoBehaviour
         {
             statSerie.EnsureComponent<AreaStyle>();
             statSerie.EnsureComponent<LabelStyle>();
-            statSerie.areaStyle.show = false; // 채움 없이 선만 표시
+            statSerie.areaStyle.show = true;
+            statSerie.areaStyle.color = new Color(0f, 0f, 0f, 0.8f); // 80% 반투명 검은색 채움
             statSerie.lineStyle.show = true;
             statSerie.lineStyle.color = Color.white;
             statSerie.lineStyle.width = 2f;
@@ -462,6 +492,7 @@ public class CharacterInfoPopup : MonoBehaviour
             statSerie.symbol.size = 4;
             statSerie.symbol.color = Color.white;
             statSerie.label.show = false;
+            statSerie.animation.enable = false; // 코루틴으로 직접 애니메이션
         }
 
         List<double> statValues;
@@ -490,7 +521,11 @@ public class CharacterInfoPopup : MonoBehaviour
                 data.charBaseEndurance, data.charBaseLuck
             };
         }
-        radarChart.AddData(statIdx, statValues);
+        // 스탯 목표값 저장 → 실제 데이터는 0으로 시작 (애니메이션용)
+        radarTargetValues = new List<double>(statValues);
+        var zeroValues = new List<double>();
+        for (int i = 0; i < statValues.Count; i++) zeroValues.Add(0);
+        radarChart.AddData(statIdx, zeroValues);
         Debug.Log($"[CharInfoPopup] UpdateRadarChart: stats=[{string.Join(",", statValues)}], series={radarChart.series.Count}");
 
         radarChart.RefreshChart();

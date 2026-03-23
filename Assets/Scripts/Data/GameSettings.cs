@@ -156,6 +156,10 @@ public partial class GameSettings : ScriptableObject
     [Tooltip("트랙 프로그레스 바 프리팹 (추후 디자인 적용 시 사용)")]
     public GameObject trackProgressBarPrefab;
 
+    [Header("═══ 세이브 ═══")]
+    [Tooltip("true면 마지막 플레이 라운드를 기억하여 복귀\nfalse면 항상 1라운드부터 시작")]
+    public bool enableRoundResume = true;
+
     /// <summary>
     /// 바퀴 수 → 거리 구분 Loc 키 반환
     /// </summary>

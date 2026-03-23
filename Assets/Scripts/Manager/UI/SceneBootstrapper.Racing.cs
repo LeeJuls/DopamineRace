@@ -338,8 +338,8 @@ public partial class SceneBootstrapper
             if (circle.racerIndex >= racers.Count) continue;
 
             var racer = racers[circle.racerIndex];
-            // Y: 실제 이동 거리 누적 → 바 높이로 직접 매핑
-            float y = racer.SmoothProgress * barHeight;
+            // Y: OverallProgress(웨이포인트 기반) → 트랙 위 캐릭터 위치와 일치
+            float y = racer.OverallProgress * barHeight;
             // X: 캐릭터의 레인+경로이탈을 그대로 가져와서 좌우 펼치기
             float x = (racer.LateralOffset / maxLateral) * xRange;
             circle.rect.anchoredPosition = new Vector2(x, y);
