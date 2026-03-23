@@ -146,8 +146,7 @@ public class CheatGuideWindow : EditorWindow
         DrawKeyRow("좀비 프로세스 제거", "수동",          "Docs/setup/mcp_kill_zombie.bat 실행 (새 세션 시작 전)");
 
         DrawNote("▸ SAVE_VERSION = 2 — 구버전 세이브 파일은 자동 삭제됨\n" +
-                 "▸ hpSpeedCompress = 0.85 — 기본속도 격차 ~0.83% 압축 (GameConstants 조정)\n" +
-                 "▸ 도주(Runner)는 0.5랩 선두 확보 후 스프린트, 추입(Reckoner)은 최후반 역전 패턴");
+                 "▸ V4 레이스 시스템 활성 (5대 스탯: Speed/Accel/Stamina/Power/Intelligence + Luck)");
 
         GUILayout.Space(14);
         DrawHRule();

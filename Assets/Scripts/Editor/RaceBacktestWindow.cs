@@ -29,7 +29,7 @@ public class RaceBacktestWindow : EditorWindow
     private string lastLogPath = "";
     private bool isRunning = false;
     private bool cancelRequested = false;
-    private List<SimRacer> _activeRacers; // SimConsumeHP_FormationHold 에서 상행 그룹 탐색용
+    private List<SimRacer> _activeRacers; // V4 시뮬레이션에서 사용
     private Dictionary<string, CharacterDataV4> v4DataMap;
 
     // ★ 구간별 포지션 추적 체크포인트
@@ -561,19 +561,6 @@ public class RaceBacktestWindow : EditorWindow
                         racer.enduranceHP = racer.v4MaxStamina;
                     }
                 }
-                else if (gs.useHPSystem)
-                {
-                    racer.maxHP = gs.CalcMaxHP(cd.charBaseEndurance, simLaps);
-                    racer.enduranceHP = racer.maxHP;
-                    racer.totalConsumedHP = 0f;
-                    racer.hpBoostValue = 0f;
-                    racer.currentRank = 0;
-                    racer.slipstreamBlend = 0f;
-
-                    // CP 시스템 초기화
-                    racer.maxCP = cd.charBaseCalm * gs.cpMultiplier;
-                    racer.calmPoints = racer.maxCP;
-                }
 
                 // 구간 추적 초기화
                 racer.segRecorded = new bool[segCheckpoints.Length];
@@ -601,7 +588,7 @@ public class RaceBacktestWindow : EditorWindow
                 simTime += simTimeStep;
 
                 // ═══ 순위 + 슬립스트림 갱신 ═══
-                if (gs.useV4RaceSystem || gs.useHPSystem)
+                if (gs.useV4RaceSystem)
                 {
                     for (int ri = 0; ri < racers.Count; ri++)
                     {
@@ -637,23 +624,7 @@ public class RaceBacktestWindow : EditorWindow
                         }
                         else
                         {
-                            // ═══ V1-V3 슬립스트림 블렌드 ═══
-                            float ssTarget = (closestGap < gs.universalSlipstreamRange)
-                                ? 1f - (closestGap / gs.universalSlipstreamRange) : 0f;
-                            float fadeTime = Mathf.Max(gs.slipstreamFadeTime, 0.01f);
-                            float gameDtSS = simTimeStep * gs.globalSpeedMultiplier;
-                            racers[ri].slipstreamBlend = Mathf.MoveTowards(
-                                racers[ri].slipstreamBlend, ssTarget, gameDtSS / fadeTime);
-
-                            // CP 소모
-                            if (racers[ri].calmPoints > 0f)
-                            {
-                                float drain = gs.cpBasicDrain;
-                                if (racers[ri].slipstreamBlend > 0f)
-                                    drain += gs.cpSlipstreamDrain * racers[ri].slipstreamBlend;
-                                racers[ri].calmPoints = Mathf.Max(0f,
-                                    racers[ri].calmPoints - drain * gameDtSS);
-                            }
+                            // V1-V3 슬립스트림/CP 코드 제거됨 (V4 전용)
                         }
                     }
                 }
@@ -700,9 +671,7 @@ public class RaceBacktestWindow : EditorWindow
                         }
 
                         float targetSpeed = baseTarget * penaltyMul * slingshotMul;
-                        float effectiveLerp = r.isSprintMode
-                            ? gs.raceSpeedLerp * gs.sprintBurstLerpMult
-                            : gs.raceSpeedLerp;
+                        float effectiveLerp = 3f; // Legacy fallback lerp
                         r.currentSpeed = Mathf.Lerp(r.currentSpeed, targetSpeed, simTimeStep * effectiveLerp);
                         r.position += r.currentSpeed * simTimeStep;
                     }
@@ -1001,29 +970,6 @@ public class RaceBacktestWindow : EditorWindow
         // ★ calm 기여
         r.contrib_calm += r.noiseValue * simTimeStep;
 
-        // ── HP vs 레거시 분기 ──
-        float typeBonus = 0f;
-        float fatigue = 0f;
-
-        if (gs.useHPSystem)
-        {
-            // ═══ 속도 압축 ═══
-            if (gs.hpSpeedCompress > 0f)
-            {
-                float midSpeed = 0.905f * globalMul * trackSpeedMul;
-                baseSpeed = Mathf.Lerp(baseSpeed, midSpeed, gs.hpSpeedCompress);
-            }
-
-            // ═══ Type 1: 기존 HP 부스트 경로 ═══
-            SimConsumeHP(r, gs, progress);
-            float hpBoost = SimCalcHPBoost(r, gs);
-            float cpRatioCalc = r.maxCP > 0f ? r.calmPoints / r.maxCP : 0f;
-            float cpEff = gs.GetCPEfficiency(cpRatioCalc);
-            float ssBonus = gs.GetSlipstreamBonus(cd.charType, r.slipstreamBlend, cpEff);
-            typeBonus = hpBoost + ssBonus;
-            r.contrib_type += baseSpeed * typeBonus * simTimeStep;
-        }
-
         float powerBonus = 0f, braveBonus = 0f;
         if (track != null)
         {
@@ -1068,361 +1014,13 @@ public class RaceBacktestWindow : EditorWindow
             }
         }
 
-        float speed = baseSpeed * (1f + typeBonus + powerBonus + braveBonus);
+        float speed = baseSpeed * (1f + powerBonus + braveBonus);
         speed += r.noiseValue;
-        if (!gs.useHPSystem) speed -= fatigue; // HP 시스템: fatigue 내장
-
-        // ═══ 초반 대형: 타입별 포지션 정렬 ═══
-        float formationMod = gs.GetFormationModifier(
-            cd.charType, progress, r.currentRank, simRacers);
-        speed *= (1f + formationMod);
 
         speed *= slowMul * critMul;
         return Mathf.Max(speed, 0.1f);
     }
 
-    // ══════════════════════════════════════
-    //  HP 시스템 미러 (SPEC-006)
-    // ══════════════════════════════════════
-
-    /// <summary>HP 소모 (RacerController.ConsumeHP 미러) — 4페이즈 전략</summary>
-    private void SimConsumeHP(SimRacer r, GameSettings gs, float progress)
-    {
-        if (r.enduranceHP <= 0f) return;
-
-        // 1랩 이하: Legacy 존 기반 로직
-        if (simLaps < 2)
-        {
-            SimConsumeHP_Legacy(r, gs, progress);
-            return;
-        }
-
-        // progress(OverallProgress 0-1) × simLaps = TotalProgress 환산
-        float totalProgressSim = progress * simLaps;
-        if (totalProgressSim < gs.positioningLapEnd)
-            SimConsumeHP_Positioning(r, gs);
-        else if (totalProgressSim < gs.formationHoldLapEnd)
-            SimConsumeHP_FormationHold(r, gs);
-        else
-            SimConsumeHP_Strategy(r, gs, progress);
-    }
-
-    // ─── 기존 존 기반 로직 (1랩 이하 폴백) ──────────────────────────
-    private void SimConsumeHP_Legacy(SimRacer r, GameSettings gs, float progress)
-    {
-        gs.GetHPParams(r.data.charType,
-            out float spurtStart, out float activeRate, out _,
-            out _, out _, out _);
-        gs.GetZoneParams(r.data.charType,
-            out float targetZonePct, out float inZoneRate, out float outZoneRate);
-
-        bool inSpurt = spurtStart > 0f && progress >= (1f - spurtStart);
-        if (inSpurt && r.data.charType == CharacterType.Leader
-            && r.maxHP > 0f && r.enduranceHP / r.maxHP < gs.leaderSpurtMinHP)
-            inSpurt = false;
-
-        float normalRate;
-        if (targetZonePct <= 0f)
-        {
-            normalRate = inZoneRate;
-        }
-        else
-        {
-            int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(simRacers * targetZonePct));
-            normalRate = (r.currentRank <= targetMaxRank) ? inZoneRate : outZoneRate;
-        }
-
-        float rate;
-        if (inSpurt)
-        {
-            float spurtThreshold = 1f - spurtStart;
-            float spurtProgress = Mathf.Clamp01((progress - spurtThreshold) / spurtStart);
-            rate = Mathf.Lerp(normalRate, activeRate, spurtProgress);
-        }
-        else
-        {
-            rate = normalRate;
-        }
-
-        SimApplyHPConsumption(r, gs, rate);
-    }
-
-    // ─── 페이즈 1: 포지셔닝 ─────────────────────────────────────────
-    // ★ 타입 기반 포지셔닝 (RacerController 미러링)
-    private void SimConsumeHP_Positioning(SimRacer r, GameSettings gs)
-    {
-        gs.GetHPParams(r.data.charType,
-            out _, out float activeRate, out _, out _, out _, out _);
-        gs.GetZoneParams(r.data.charType,
-            out _, out float inZoneRate, out _);
-
-        float rate;
-        switch (r.data.charType)
-        {
-            case CharacterType.Runner:
-                rate = activeRate;
-                break;
-            case CharacterType.Leader:
-                rate = Mathf.Lerp(inZoneRate, activeRate, 0.6f);
-                break;
-            case CharacterType.Chaser:
-                rate = inZoneRate;
-                break;
-            default: // Reckoner
-                rate = Mathf.Max(gs.basicConsumptionRate, inZoneRate * 0.4f);
-                break;
-        }
-
-        SimApplyHPConsumption(r, gs, rate);
-    }
-
-    // ─── 페이즈 2: 대형 유지 ────────────────────────────────────────
-    private void SimConsumeHP_FormationHold(SimRacer r, GameSettings gs)
-    {
-        gs.GetHPParams(r.data.charType,
-            out _, out float activeRate, out _, out _, out _, out _);
-        gs.GetZoneParams(r.data.charType,
-            out _, out float inZoneRate, out float outZoneRate);
-
-        int topHalf = Mathf.Max(1, simRacers / 2);
-        float rate;
-
-        bool isUpperType = r.data.charType == CharacterType.Runner
-                        || r.data.charType == CharacterType.Leader;
-        if (isUpperType)
-        {
-            float posTarget = gs.GetPositioningTarget(r.data.charType);
-            int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(simRacers * posTarget));
-            rate = (r.currentRank <= targetMaxRank) ? inZoneRate : activeRate;
-        }
-        else
-        {
-            if (r.currentRank <= topHalf)
-            {
-                // 상행 영역 침범 금지 → 강제 보존 (reckoner_baseRate)
-                gs.GetZoneParams(CharacterType.Reckoner, out _, out float baseConserveRate, out _);
-                rate = baseConserveRate;
-            }
-            else
-            {
-                const float trackLen = 17f;
-                float myTotalProg = r.position / trackLen;
-                float gap = SimGetLastUpperTrackProgress() - myTotalProg;
-
-                if (gap > gs.formationGapMax)
-                    rate = activeRate; // 상행 따라잡기
-                else if (gap < gs.formationGapMin)
-                    rate = inZoneRate; // 추월 방지 → 보존
-                else if (r.data.charType == CharacterType.Chaser)
-                {
-                    float chaserTarget = gs.GetPositioningTarget(CharacterType.Chaser);
-                    int targetMaxRank = Mathf.Max(1, Mathf.CeilToInt(simRacers * chaserTarget));
-                    rate = (r.currentRank <= targetMaxRank) ? inZoneRate : outZoneRate;
-                }
-                else
-                    rate = inZoneRate; // Reckoner: 항상 보존
-            }
-        }
-
-        SimApplyHPConsumption(r, gs, rate);
-    }
-
-    // ─── 페이즈 3: 전략 (SPEC-RC-002 미러링) ────────────────────────
-    private void SimConsumeHP_Strategy(SimRacer r, GameSettings gs, float progress)
-    {
-        gs.GetHPParams(r.data.charType,
-            out _, out float activeRate, out _,
-            out _, out _, out _);
-        gs.GetZoneParams(r.data.charType,
-            out _, out float inZoneRate, out float outZoneRate);
-
-        float rate;
-        bool sprintThisFrame = false;
-
-        switch (r.data.charType)
-        {
-            case CharacterType.Runner:
-            {
-                // [SPEC-RC-002] 도주: 항상 전력질주
-                rate = activeRate;
-                sprintThisFrame = true;
-                break;
-            }
-
-            case CharacterType.Leader:
-            {
-                // [SPEC-RC-002] 선행: 마지막 바퀴 20% 남으면 전력질주
-                bool inSprint = SimIsLastLapSprintZone(progress, gs.leaderSprintLastLapThreshold);
-                int top30Rank = Mathf.Max(1, Mathf.CeilToInt(simRacers * 0.30f));
-
-                if (inSprint)
-                {
-                    rate = activeRate;
-                    sprintThisFrame = true;
-                }
-                else if (r.currentRank > top30Rank)
-                    rate = outZoneRate;
-                else
-                    rate = inZoneRate;
-                break;
-            }
-
-            case CharacterType.Chaser:
-            {
-                // [SPEC-RC-002] 선입: 마지막 바퀴 30% 남으면 전력질주
-                bool inSprint = SimIsLastLapSprintZone(progress, gs.chaserSprintLastLapThreshold);
-                int top70Rank = Mathf.Max(1, Mathf.CeilToInt(simRacers * 0.70f));
-
-                if (inSprint)
-                {
-                    rate = activeRate;
-                    sprintThisFrame = true;
-                }
-                else if (r.currentRank > top70Rank)
-                    rate = outZoneRate;
-                else
-                    rate = inZoneRate;
-                break;
-            }
-
-            default: // Reckoner
-            {
-                // [SPEC-RC-002] 추입: 마지막 바퀴 40% 남으면 전력질주
-                bool inSprint = SimIsLastLapSprintZone(progress, gs.reckonerSprintLastLapThreshold);
-
-                if (inSprint)
-                {
-                    rate = activeRate;
-                    sprintThisFrame = true;
-                }
-                else
-                    rate = inZoneRate;
-                break;
-            }
-        }
-
-        r.isSprintMode = sprintThisFrame;
-        SimApplyHPConsumption(r, gs, rate);
-    }
-
-    // ─── 헬퍼: 마지막 바퀴 기준 스프린트 판정 (SPEC-RC-002 미러링) ──
-    private bool SimIsLastLapSprintZone(float overallProgress, float threshold)
-    {
-        if (simLaps < 2) return false;
-        float lastLapStart = (float)(simLaps - 1) / simLaps;
-        if (overallProgress < lastLapStart) return false;
-        float lastLapLen = 1f / simLaps;
-        float lastLapProg = (overallProgress - lastLapStart) / lastLapLen;
-        float lastLapRemaining = 1f - lastLapProg;
-        return lastLapRemaining <= threshold;
-    }
-
-    // ─── 공통 tail: boostAmp / speedRatio (SPEC-RC-002 미러링) ──
-    private void SimApplyHPConsumption(SimRacer r, GameSettings gs, float rate)
-    {
-        float trackSpeedMul = selectedTrack != null ? selectedTrack.speedMultiplier : 1f;
-        float baseTrackSpeed = r.data.SpeedMultiplier * gs.globalSpeedMultiplier * trackSpeedMul;
-        float speedRatio = baseTrackSpeed > 0.01f ? r.currentSpeed / baseTrackSpeed : 1f;
-        speedRatio = Mathf.Clamp(speedRatio, 0.1f, 2f);
-
-        float effectiveRate = Mathf.Max(gs.basicConsumptionRate, rate);
-
-        // 부스트 피드백: 부스트 높을수록 HP 소모 증가
-        float boostAmp = 1f + gs.boostHPDrainCoeff * Mathf.Max(0f, r.hpBoostValue);
-        effectiveRate *= boostAmp;
-
-        // ★ 컨디션 역보정: 저컨디션 → HP 소모 증가 (RacerController 미러링)
-        float condMul = OddsCalculator.GetConditionMultiplier(r.data.charId);
-        condMul = Mathf.Max(condMul, 0.3f);
-        effectiveRate /= condMul;
-
-        // [SPEC-RC-002 v2] 스프린트 HP 급소모 시스템 (RacerController 미러링)
-        // ① speedRatio 바이패스
-        float speedMul = r.isSprintMode
-            ? Mathf.Max(1f, Mathf.Sqrt(speedRatio))
-            : Mathf.Sqrt(speedRatio);
-
-        // ② 스프린트 급소모 배율 (Runner 제외)
-        // lapFactor = hpLapReference / totalLaps → 단거리일수록 높음
-        if (r.isSprintMode && r.data.charType != CharacterType.Runner)
-        {
-            float lapFactor = (float)gs.hpLapReference / Mathf.Max(1, simLaps);
-            effectiveRate *= gs.sprintHPDrainMultiplier * lapFactor;
-        }
-
-        float gameDtHP = simTimeStep * gs.globalSpeedMultiplier;
-        float consumption = effectiveRate * speedMul * gameDtHP;
-        consumption = Mathf.Min(consumption, r.enduranceHP);
-
-        r.enduranceHP -= consumption;
-        r.totalConsumedHP += consumption;
-    }
-
-    // ─── 헬퍼: 상행 그룹(Runner/Leader) 중 최소 TotalProgress ────────
-    private float SimGetLastUpperTrackProgress()
-    {
-        const float trackLen = 17f;
-        float minProg = float.MaxValue;
-        if (_activeRacers == null) return -0.1f;
-
-        foreach (var r in _activeRacers)
-        {
-            if (r.finished) continue;
-            var type = r.data?.charType ?? CharacterType.Runner;
-            if (type == CharacterType.Runner || type == CharacterType.Leader)
-            {
-                float prog = r.position / trackLen;
-                if (prog < minProg) minProg = prog;
-            }
-        }
-        return minProg == float.MaxValue ? -0.1f : minProg;
-    }
-
-    /// <summary>HP 부스트 계산 (RacerController.CalcHPBoost 미러)</summary>
-    private float SimCalcHPBoost(SimRacer r, GameSettings gs)
-    {
-        gs.GetHPParams(r.data.charType,
-            out _, out _, out float peakBoost,
-            out float accelExp, out float decelExp, out float exhaustionFloor);
-
-        // 장거리 보정: Chaser/Reckoner peakBoost 증폭
-        if (simLaps > gs.hpLapReference)
-        {
-            if (r.data.charType == CharacterType.Chaser || r.data.charType == CharacterType.Reckoner)
-            {
-                float lapExcess = (float)(simLaps - gs.hpLapReference) / gs.hpLapReference;
-                peakBoost *= (1f + lapExcess * gs.longRaceLateBoostAmp);
-            }
-        }
-
-        float consumedRatio = r.maxHP > 0f ? r.totalConsumedHP / r.maxHP : 0f;
-        float threshold = gs.boostThreshold;
-
-        // ═══ Power 기반 가속 강화: power 높을수록 부스트 곡선이 가파름 ═══
-        float powerFactor = 1f + (r.data.charBasePower / 20f) * gs.powerAccelCoeff;
-        float effectiveAccelExp = accelExp / Mathf.Max(powerFactor, 0.1f);
-
-        float boost;
-        if (consumedRatio <= threshold)
-        {
-            float t = threshold > 0f ? consumedRatio / threshold : 0f;
-            boost = peakBoost * Mathf.Pow(t, effectiveAccelExp);
-        }
-        else if (r.enduranceHP > 0f)
-        {
-            float remain = 1f - threshold;
-            float t = remain > 0f ? (consumedRatio - threshold) / remain : 1f;
-            t = Mathf.Clamp01(t);
-            boost = peakBoost * Mathf.Pow(1f - t, decelExp);
-        }
-        else
-        {
-            boost = exhaustionFloor;
-        }
-
-        r.hpBoostValue = boost;
-        return boost;
-    }
 
     private float GetBaseSpeed(CharacterData cd)
     {
@@ -1748,15 +1346,12 @@ public class RaceBacktestWindow : EditorWindow
             md.AppendLine();
 
             // ── 스탯 기여 분석 ──
-            bool hpOn = gameSettings.useHPSystem;
-            string typeColName = hpOn ? "HP부스트" : "타입(TYPE)";
-            string endColName = hpOn ? "(내장)" : "피로(END)";
-            display.AppendFormat("\n──── [{0}] 스탯별 기여 (레이스당 평균 거리) {1} ────\n", tn, hpOn ? "[HP시스템]" : "[레거시]");
-            display.AppendLine("  이름   속도    " + (hpOn ? "HP부스트" : "타입  ") + "  피로     노이즈   럭      파워    용감    합계");
+            display.AppendFormat("\n──── [{0}] 스탯별 기여 (레이스당 평균 거리) [V4] ────\n", tn);
+            display.AppendLine("  이름   속도    타입    피로     노이즈   럭      파워    용감    합계");
 
-            md.AppendFormat("### 스탯별 기여 (레이스당 평균 거리) {0}\n", hpOn ? "— HP시스템" : "— 레거시");
+            md.AppendLine("### 스탯별 기여 (레이스당 평균 거리) — V4");
             md.AppendLine();
-            md.AppendFormat("| 이름 | 속도(SPD) | {0} | {1} | 노이즈(CALM) | 럭(LUCK) | 파워(POW) | 용감(BRV) | 합계 |\n", typeColName, endColName);
+            md.AppendLine("| 이름 | 속도(SPD) | 타입(TYPE) | 피로(END) | 노이즈(CALM) | 럭(LUCK) | 파워(POW) | 용감(BRV) | 합계 |");
             md.AppendLine("|------|-----------|------------|-----------|--------------|----------|-----------|-----------|------|");
 
             var sortedByTotal = sorted.OrderByDescending(s => s.AvgContrib_total).ToList();
@@ -2015,58 +1610,18 @@ public class RaceBacktestWindow : EditorWindow
         md.AppendLine("| 설정 | 값 | 설명 |");
         md.AppendLine("|------|----|------|");
         md.AppendFormat("| globalSpeedMultiplier | {0:F2} | 전역 속도 배율 |\n", g.globalSpeedMultiplier);
-        md.AppendFormat("| fatigueFactor | {0:F3} | 피로 계수 (높으면 후반 감속↑) |\n", g.fatigueFactor);
         md.AppendFormat("| noiseFactor | {0:F3} | 노이즈 계수 (높으면 변동↑) |\n", g.noiseFactor);
         md.AppendFormat("| luckCritChance | {0:F4} | luck 1당 크리 확률 |\n", g.luckCritChance);
         md.AppendFormat("| luckCritBoost | {0:F2} | 크리 속도 배율 |\n", g.luckCritBoost);
         md.AppendFormat("| luckCritDuration | {0:F1}s | 크리 지속 시간 |\n", g.luckCritDuration);
         md.AppendFormat("| luckCheckInterval | {0:F1}s | 크리 판정 주기 |\n", g.luckCheckInterval);
         md.AppendLine();
-        if (g.useHPSystem)
+
+        if (equalStats)
         {
-            md.AppendLine("### HP 시스템 (SPEC-006) ✅ ON");
             md.AppendLine();
-            md.AppendLine("| 설정 | 값 |");
-            md.AppendLine("|------|----|");
-            md.AppendFormat("| hpBase | {0} |\n", g.hpBase);
-            md.AppendFormat("| hpPerEndurance | {0} |\n", g.hpPerEndurance);
-            md.AppendFormat("| basicConsumptionRate | {0} |\n", g.basicConsumptionRate);
-            md.AppendFormat("| boostThreshold | {0} |\n", g.boostThreshold);
-            md.AppendFormat("| hpLapReference | {0} |\n", g.hpLapReference);
-            md.AppendFormat("| longRaceLateBoostAmp | {0} |\n", g.longRaceLateBoostAmp);
-            md.AppendLine();
-            md.AppendLine("| 타입 | spurtStart | activeRate | peakBoost | accelExp | decelExp | exhaustionFloor |");
-            md.AppendLine("|------|------------|-----------|-----------|----------|----------|-----------------|");
-            md.AppendFormat("| Runner | {0} | {1} | {2} | {3} | {4} | {5} |\n",
-                g.runner_spurtStart, g.runner_activeRate, g.runner_peakBoost,
-                g.runner_accelExp, g.runner_decelExp, g.runner_exhaustionFloor);
-            md.AppendFormat("| Leader | {0} | {1} | {2} | {3} | {4} | {5} |\n",
-                g.leader_spurtStart, g.leader_activeRate, g.leader_peakBoost,
-                g.leader_accelExp, g.leader_decelExp, g.leader_exhaustionFloor);
-            md.AppendFormat("| Chaser | {0} | {1} | {2} | {3} | {4} | {5} |\n",
-                g.chaser_spurtStart, g.chaser_activeRate, g.chaser_peakBoost,
-                g.chaser_accelExp, g.chaser_decelExp, g.chaser_exhaustionFloor);
-            md.AppendFormat("| Reckoner | {0} | {1} | {2} | {3} | {4} | {5} |\n",
-                g.reckoner_spurtStart, g.reckoner_activeRate, g.reckoner_peakBoost,
-                g.reckoner_accelExp, g.reckoner_decelExp, g.reckoner_exhaustionFloor);
-
-            md.AppendLine();
-            md.AppendLine("### 포지션 타겟팅 파라미터");
-            md.AppendLine();
-            md.AppendLine("| 타입 | targetZone | inZoneRate | outZoneRate |");
-            md.AppendLine("|------|------------|-----------|-------------|");
-            md.AppendFormat("| Runner | {0:P0} | {1} | {2} |\n", g.runner_targetZone, g.runner_inZoneRate, g.runner_outZoneRate);
-            md.AppendFormat("| Leader | {0:P0} | {1} | {2} |\n", g.leader_targetZone, g.leader_inZoneRate, g.leader_outZoneRate);
-            md.AppendFormat("| Chaser | {0:P0} | {1} | {2} |\n", g.chaser_targetZone, g.chaser_inZoneRate, g.chaser_outZoneRate);
-            md.AppendFormat("| Reckoner | 없음 | {0} (base) | - |\n", g.reckoner_baseRate);
-
-            if (equalStats)
-            {
-                md.AppendLine();
-                md.AppendFormat("### ⚖️ 균등 스탯 모드: 모든 스탯 = {0}\n", equalStatValue);
-            }
+            md.AppendFormat("### 균등 스탯 모드: 모든 스탯 = {0}\n", equalStatValue);
         }
-        // (레거시 타입 보너스 제거됨 — HP 시스템으로 통합)
         md.AppendLine();
 
         display.AppendLine("═══════════════════════════════════════════════════════════════════");

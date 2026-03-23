@@ -32,8 +32,6 @@ public class GameSettingsEditor : Editor
             Undo.RecordObject(gs, "Reset Race Formula");
             gs.globalSpeedMultiplier = 2.5f;
             gs.noiseFactor = 0.1f;
-            gs.fatigueFactor = 0.15f;
-            gs.raceSpeedLerp = 3f;
             EditorUtility.SetDirty(gs);
             Debug.Log("✅ 레이스 기본 공식 → 기본값 복원");
         }
@@ -208,8 +206,6 @@ public class GameSettingsEditor : Editor
                 // 레이스 기본
                 gs.globalSpeedMultiplier = 2.5f;
                 gs.noiseFactor = 0.1f;
-                gs.fatigueFactor = 0.15f;
-                gs.raceSpeedLerp = 3f;
 
                 // 충돌
                 gs.enableCollision = true;
