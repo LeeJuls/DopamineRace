@@ -35,6 +35,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
     private V4Phase v4Phase = V4Phase.Normal;
     private bool v4IsSpurting = false;
+    private float v4SpurtHpRatio = 0f;   // 스퍼트 진입 시 HP 비율 스냅샷 (0~1)
 
     private bool v4IsPanicking = false;
 
@@ -106,6 +107,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         v4Phase       = V4Phase.Normal;
         v4IsSpurting  = false;
+        v4SpurtHpRatio = 0f;
         v4IsPanicking = false;
         v4InSlipstream = false;
         v4SlipstreamAccelActive = false;
@@ -208,17 +210,22 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         if (inSpurtZone)
         {
             // 최종 스퍼트 (80~100%): 전원 남은 HP 연소
-            target    = vmax * gs.v4_spurtVmaxBonus;
-            accelRate *= gs.v4_spurtAccelBonus;
-
+            // HP 비례 보너스: 진입 시 HP 비율에 따라 추가 속도/가속
             if (!v4IsSpurting)
             {
                 v4IsSpurting = true;
                 v4Phase      = V4Phase.Spurt;
-                string msg = $"{charLabel} 파이널스퍼트! {HpStr()} {hpPenaltyTag} (progress:{progress:P0})";
+                v4SpurtHpRatio = v4MaxStamina > 0 ? Mathf.Clamp01(v4CurrentStamina / v4MaxStamina) : 0f;
+                float hpBonusPct = v4SpurtHpRatio * gs.v4_spurtHpSpeedBonus * 100f;
+                string msg = $"{charLabel} 파이널스퍼트! {HpStr()} [HP보너스:+{hpBonusPct:F0}%] {hpPenaltyTag} (progress:{progress:P0})";
                 Debug.Log($"[V4 FinalSpurt 시작] {msg}");
                 overlay?.LogEvent(RaceDebugOverlay.EventType.Spurt, msg);
             }
+
+            float spurtHpSpeedMul = 1f + v4SpurtHpRatio * gs.v4_spurtHpSpeedBonus;
+            float spurtHpAccelMul = 1f + v4SpurtHpRatio * gs.v4_spurtHpAccelBonus;
+            target    = vmax * gs.v4_spurtVmaxBonus * spurtHpSpeedMul;
+            accelRate *= gs.v4_spurtAccelBonus * spurtHpAccelMul;
         }
         else if (inRegularBurst)
         {
@@ -264,7 +271,11 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         // hpSpeedMul: 임계값 설정에 따른 배율 (1.0 = 감소 없음, 설정 없으면 항상 1.0)
         vmax *= hpSpeedMul;
         // target도 감소한 vmax 기준으로 재계산 (bool 재활용 — IsInBurstZone 중복호출 없음)
-        if      (inSpurtZone)     target = vmax * gs.v4_spurtVmaxBonus;
+        if (inSpurtZone)
+        {
+            float spurtHpSpeedMul = 1f + v4SpurtHpRatio * gs.v4_spurtHpSpeedBonus;
+            target = vmax * gs.v4_spurtVmaxBonus * spurtHpSpeedMul;
+        }
         else if (inRegularBurst)  target = vmax * gs.v4_burstSpeedRatio;
         else if (inEmergencyBurst)target = vmax * gs.v4_emergencyBurstSpeedRatio;
         else                      target = vmax * gs.v4_normalSpeedRatio;

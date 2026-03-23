@@ -208,6 +208,8 @@ public class RaceBacktestWindow : EditorWindow
         public float v4LuckTimer;
         public bool v4InSlipstream;
         public float v4SlipstreamDrainMul;
+        public bool v4IsSpurting;
+        public float v4SpurtHpRatio;   // 스퍼트 진입 시 HP 비율 스냅샷
 
         // ★ 구간별 포지션 추적
         public bool[] segRecorded;        // 각 체크포인트 통과 여부
@@ -1720,8 +1722,15 @@ public class RaceBacktestWindow : EditorWindow
         float target;
         if (inSpurtZone)
         {
-            target = vmax * gs4.v4_spurtVmaxBonus;
-            accelRate *= gs4.v4_spurtAccelBonus;
+            if (!r.v4IsSpurting)
+            {
+                r.v4IsSpurting = true;
+                r.v4SpurtHpRatio = r.v4MaxStamina > 0 ? Mathf.Clamp01(r.v4Stamina / r.v4MaxStamina) : 0f;
+            }
+            float spurtHpSpeedMul = 1f + r.v4SpurtHpRatio * gs4.v4_spurtHpSpeedBonus;
+            float spurtHpAccelMul = 1f + r.v4SpurtHpRatio * gs4.v4_spurtHpAccelBonus;
+            target = vmax * gs4.v4_spurtVmaxBonus * spurtHpSpeedMul;
+            accelRate *= gs4.v4_spurtAccelBonus * spurtHpAccelMul;
         }
         else if (inRegularBurst)
         {

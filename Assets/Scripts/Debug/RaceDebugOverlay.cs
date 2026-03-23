@@ -420,6 +420,8 @@ public class RaceDebugOverlay : MonoBehaviour
             v4.v4_normalSpeedRatio, v4.v4_burstSpeedRatio, v4.v4_spurtVmaxBonus, v4.v4_finalSpurtStart);
         sb.AppendFormat("Drain/Prog:{0:F1}  BurstDrain×{1:F1}  SpurtDrain×{2:F1}\n",
             v4.v4_drainPerLap, v4.v4_burstDrainMul, v4.v4_spurtDrainMul);
+        sb.AppendFormat("SpurtHP보너스: 속도+{0:P0}/HP  가속+{1:P0}/HP\n",
+            v4.v4_spurtHpSpeedBonus, v4.v4_spurtHpAccelBonus);
         sb.AppendFormat("긴급부스트: {0}  Spd×{1:F2}  Drain×{2:F1}  도주지속:{3}  쿨다운:{4:F1}s\n",
             v4.v4_emergencyBurstEnabled ? "ON" : "OFF",
             v4.v4_emergencyBurstSpeedRatio, v4.v4_emergencyBurstDrainMul,

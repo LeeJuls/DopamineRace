@@ -116,6 +116,19 @@ public class GameSettingsV4 : ScriptableObject
     [Range(1.0f, 3.0f)]
     public float v4_spurtAccelBonus = 2.0f;
 
+    [Header("── 스퍼트 HP 비례 보너스 ──")]
+    [Tooltip("스퍼트 진입 시 남은 HP 비율에 비례한 속도 추가 보너스\n" +
+             "공식: 스퍼트속도 = Vmax × spurtVmaxBonus × (1 + hpRatio × 이 값)\n" +
+             "예: 0.30이면 HP 100%→+30%, HP 50%→+15%, HP 0%→+0%\n" +
+             "체력을 아껴둔 추입이 후반에 폭발하는 역전 드라마 연출")]
+    [Range(0f, 1.0f)]
+    public float v4_spurtHpSpeedBonus = 0.30f;
+
+    [Tooltip("스퍼트 진입 시 남은 HP 비율에 비례한 가속 추가 보너스\n" +
+             "공식: 스퍼트가속 = Accel × spurtAccelBonus × (1 + hpRatio × 이 값)")]
+    [Range(0f, 1.0f)]
+    public float v4_spurtHpAccelBonus = 0.20f;
+
     // ═══════════════════════════════════════════════
     //  파워 (Power) — 충돌 & 코너링
     // ═══════════════════════════════════════════════
