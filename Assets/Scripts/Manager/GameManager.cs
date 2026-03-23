@@ -51,12 +51,14 @@ public class GameManager : MonoBehaviour
     }
 
     private const string PREF_LAST_ROUND = "DR_LastRound";
+    private const string PREF_LAST_TRACK = "DR_LastTrack";
 
     // ═══ 게임 초기화 (새 게임 시작) ═══
     public void StartNewGame()
     {
-        // ★ 라운드 복귀: 저장된 라운드가 있으면 거기서부터 시작
+        // ★ 라운드 복귀: 저장된 라운드/트랙이 있으면 거기서부터 시작
         int startRound = 1;
+        string resumeTrackId = "";
         var gs = GameSettings.Instance;
         if (gs != null && gs.enableRoundResume && PlayerPrefs.HasKey(PREF_LAST_ROUND))
         {
@@ -64,7 +66,8 @@ public class GameManager : MonoBehaviour
             if (saved >= 1 && saved <= TotalRounds)
             {
                 startRound = saved;
-                Debug.Log($"[GameManager] 라운드 복귀: Round {saved}부터 시작");
+                resumeTrackId = PlayerPrefs.GetString(PREF_LAST_TRACK, "");
+                Debug.Log($"[GameManager] 라운드 복귀: Round {saved}부터 시작 (트랙: {(string.IsNullOrEmpty(resumeTrackId) ? "기본" : resumeTrackId)})");
             }
         }
 
@@ -90,8 +93,15 @@ public class GameManager : MonoBehaviour
             RaceManager.Instance.RespawnRacers();
         }
 
-        // ★ Round 1 = 기본 트랙 적용
-        ApplyTrackForCurrentRound();
+        // ★ 트랙 적용: 복귀 시 저장된 트랙, 신규 시 라운드 기반 선택
+        if (!string.IsNullOrEmpty(resumeTrackId) && TrackDatabase.Instance != null)
+        {
+            TrackDatabase.Instance.ForceApplyTrack(resumeTrackId);
+        }
+        else
+        {
+            ApplyTrackForCurrentRound();
+        }
 
         ApplyRoundLaps();
         Debug.Log("═══ 새 게임 시작 | 총 " + TotalRounds + " 라운드 | "
@@ -168,11 +178,13 @@ public class GameManager : MonoBehaviour
             BetFirst = -1;
             BetSecond = -1;
 
-            // ★ 라운드 복귀용 저장
+            // ★ 라운드 복귀용 저장 (라운드 + 트랙)
             var gs2 = GameSettings.Instance;
             if (gs2 != null && gs2.enableRoundResume)
             {
                 PlayerPrefs.SetInt(PREF_LAST_ROUND, CurrentRound);
+                string trackId = TrackDatabase.Instance?.CurrentTrackInfo?.trackId ?? "";
+                PlayerPrefs.SetString(PREF_LAST_TRACK, trackId);
                 PlayerPrefs.Save();
             }
         }
@@ -184,6 +196,7 @@ public class GameManager : MonoBehaviour
             ScoreManager.Instance?.SaveToLeaderboard();
             // ★ 게임 완료 → 다음에 1라운드부터 시작
             PlayerPrefs.DeleteKey(PREF_LAST_ROUND);
+            PlayerPrefs.DeleteKey(PREF_LAST_TRACK);
             PlayerPrefs.Save();
         }
         OnStateChanged?.Invoke(s);
