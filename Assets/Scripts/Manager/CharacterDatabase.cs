@@ -3,14 +3,14 @@ using System.Collections.Generic;
 
 /// <summary>
 /// 캐릭터 CSV 로드 + 전체 풀 관리 + 레이스 선발
-/// Resources/Data/CharacterDB.csv 에서 로드
+/// Resources/Data/CharacterDB_V4.csv 에서 로드 (V3/V4 통합)
 /// </summary>
 public class CharacterDatabase : MonoBehaviour
 {
     public static CharacterDatabase Instance { get; private set; }
 
     [Header("CSV 파일 (Resources 내 확장자 제외)")]
-    public string csvPath = "Data/CharacterDB";
+    public string csvPath = "Data/CharacterDB_V4";
 
     private List<CharacterData> allCharacters = new List<CharacterData>();
     private List<CharacterData> selectedCharacters = new List<CharacterData>();

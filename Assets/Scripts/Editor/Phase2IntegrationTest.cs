@@ -105,8 +105,8 @@ public class Phase2IntegrationTest : EditorWindow
     {
         Log("\n[테스트 1] CSV 로드");
 
-        TextAsset csv = Resources.Load<TextAsset>("Data/CharacterDB");
-        Assert(csv != null, "CSV 파일 존재 (Resources/Data/CharacterDB)");
+        TextAsset csv = Resources.Load<TextAsset>("Data/CharacterDB_V4");
+        Assert(csv != null, "CSV 파일 존재 (Resources/Data/CharacterDB_V4)");
 
         if (csv != null)
         {

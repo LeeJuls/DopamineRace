@@ -435,7 +435,7 @@ public class RaceBacktestWindow : EditorWindow
 
     private List<CharacterData> LoadAllCharacters()
     {
-        TextAsset csv = Resources.Load<TextAsset>("Data/CharacterDB");
+        TextAsset csv = Resources.Load<TextAsset>("Data/CharacterDB_V4");
         if (csv == null) { resultText = "❌ CharacterDB.csv를 찾을 수 없습니다!"; return null; }
 
         List<CharacterData> allChars = new List<CharacterData>();
@@ -2374,7 +2374,7 @@ public class RaceBacktestWindow : EditorWindow
         if (charDataCache == null)
         {
             charDataCache = new Dictionary<string, CharacterData>();
-            TextAsset csv = Resources.Load<TextAsset>("Data/CharacterDB");
+            TextAsset csv = Resources.Load<TextAsset>("Data/CharacterDB_V4");
             if (csv != null)
             {
                 foreach (var line in csv.text.Split('\n'))
