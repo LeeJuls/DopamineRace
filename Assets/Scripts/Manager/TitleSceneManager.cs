@@ -70,6 +70,7 @@ public class TitleSceneManager : MonoBehaviour
         EnsureCharacterDatabase();
         EnsureSceneTransitionManager();
         EnsureBGMManager();
+        EnsureSFXManager();
 
         // 비주얼 구성
         CreateBackground();
@@ -420,6 +421,12 @@ public class TitleSceneManager : MonoBehaviour
         if (BGMManager.Instance != null) return;
         GameObject bgmObj = new GameObject("BGMManager");
         bgmObj.AddComponent<BGMManager>();
+    }
+
+    private void EnsureSFXManager()
+    {
+        if (SFXManager.Instance != null) return;
+        new GameObject("SFXManager").AddComponent<SFXManager>();
     }
 
     // ══════════════════════════════════════

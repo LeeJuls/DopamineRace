@@ -175,6 +175,8 @@ public partial class SceneBootstrapper : MonoBehaviour
             new GameObject("TrackTransition").AddComponent<TrackTransition>();
         if (BGMManager.Instance == null)
             new GameObject("BGMManager").AddComponent<BGMManager>();
+        if (SFXManager.Instance == null)
+            new GameObject("SFXManager").AddComponent<SFXManager>();
 
         Camera cam = Camera.main;
         if (cam != null)
