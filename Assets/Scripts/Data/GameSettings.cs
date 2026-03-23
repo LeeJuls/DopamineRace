@@ -203,6 +203,10 @@ public partial class GameSettings : ScriptableObject
     [Range(0f, 1f)]
     public float bgmVolume = 0.5f;
 
+    [Tooltip("SFX(클릭음 등) 볼륨")]
+    [Range(0f, 1f)]
+    public float sfxVolume = 0.3f;
+
     // ══════════════════════════════════════
     //  레이스 공식 (Inspector에서 실시간 조절)
     // ══════════════════════════════════════

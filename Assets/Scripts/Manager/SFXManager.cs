@@ -40,16 +40,22 @@ public class SFXManager : MonoBehaviour
     public void PlayClick()
     {
         if (clickClip != null && sfxSource != null)
-            sfxSource.PlayOneShot(clickClip);
+        {
+            float vol = GameSettings.Instance != null ? GameSettings.Instance.sfxVolume : 0.3f;
+            sfxSource.PlayOneShot(clickClip, vol);
+        }
     }
 
     /// <summary>
-    /// 임의 SFX 재생
+    /// 임의 SFX 재생 (GameSettings.sfxVolume 적용)
     /// </summary>
-    public void PlaySFX(AudioClip clip, float volume = 1f)
+    public void PlaySFX(AudioClip clip, float volumeScale = 1f)
     {
         if (clip != null && sfxSource != null)
-            sfxSource.PlayOneShot(clip, volume);
+        {
+            float vol = GameSettings.Instance != null ? GameSettings.Instance.sfxVolume : 0.3f;
+            sfxSource.PlayOneShot(clip, vol * volumeScale);
+        }
     }
 
     // ══════════════════════════════════════
