@@ -164,7 +164,6 @@ public class GameSettingsEditor : Editor
         if (GUILayout.Button("트랙 설정 리셋"))
         {
             Undo.RecordObject(gs, "Reset Track Settings");
-            gs.randomTrackPerRound = false;
             gs.enableTrackTransition = true;
             gs.trackTransitionFadeDuration = 0.3f;
             EditorUtility.SetDirty(gs);
@@ -310,7 +309,6 @@ public class GameSettingsEditor : Editor
                 gs.luckDodgeChance = 0.02f;
 
                 // 트랙
-                gs.randomTrackPerRound = false;
                 gs.enableTrackTransition = true;
                 gs.trackTransitionFadeDuration = 0.3f;
 

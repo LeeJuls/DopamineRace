@@ -30,7 +30,6 @@ public class RaceBacktestWindow : EditorWindow
     private bool isRunning = false;
     private bool cancelRequested = false;
     private List<SimRacer> _activeRacers; // SimConsumeHP_FormationHold 에서 상행 그룹 탐색용
-    private int sweepSimsPerLap = 50;
     private Dictionary<string, CharacterDataV4> v4DataMap;
 
     // ★ 구간별 포지션 추적 체크포인트
@@ -106,17 +105,6 @@ public class RaceBacktestWindow : EditorWindow
             else
                 RunSingleTrackSimulation();
         }
-        // ═══ V2 파라미터 스윕 ═══
-        if (gameSettings != null && gameSettings.useV2RaceSystem)
-        {
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("━━━ V2 파라미터 스윕 ━━━");
-            sweepSimsPerLap = EditorGUILayout.IntSlider("스윕 시뮬/바퀴", sweepSimsPerLap, 20, 200);
-            if (GUILayout.Button(isRunning ? "스윕 중..." : "▶ V2 파라미터 스윕 (최적값 탐색)", GUILayout.Height(30)))
-            {
-                RunParameterSweep();
-            }
-        }
         GUI.enabled = true;
 
         if (!string.IsNullOrEmpty(lastLogPath))
@@ -187,10 +175,6 @@ public class RaceBacktestWindow : EditorWindow
 
         // ★ SPEC-RC-002: 스프린트 상태
         public bool isSprintMode;         // 전력질주 상태
-
-        // ★ Race V2 시스템
-        public float v2SprintAccelProgress; // 전력질주 가속 진행률 0~1
-        public bool v2IsSprintActive;       // V2 전력질주 활성 여부
 
         // ★ Race V3 시스템
         public float v3SprintAccelProgress; // V3 전력질주 가속 진행률 0~1
@@ -599,9 +583,7 @@ public class RaceBacktestWindow : EditorWindow
                 }
                 else if (gs.useHPSystem)
                 {
-                    racer.maxHP = gs.useV2RaceSystem
-                        ? gs.CalcMaxHP(cd.charBaseEndurance)        // V2: 랩 스케일링 없음
-                        : gs.CalcMaxHP(cd.charBaseEndurance, simLaps);
+                    racer.maxHP = gs.CalcMaxHP(cd.charBaseEndurance, simLaps);
                     racer.enduranceHP = racer.maxHP;
                     racer.totalConsumedHP = 0f;
                     racer.hpBoostValue = 0f;
@@ -1072,52 +1054,22 @@ public class RaceBacktestWindow : EditorWindow
         }
         else if (gs.useHPSystem)
         {
-            // ═══ 속도 압축 (V1/V2 공유) ═══
+            // ═══ 속도 압축 ═══
             if (gs.hpSpeedCompress > 0f)
             {
                 float midSpeed = 0.905f * globalMul * trackSpeedMul;
                 baseSpeed = Mathf.Lerp(baseSpeed, midSpeed, gs.hpSpeedCompress);
             }
 
-            if (gs.useV2RaceSystem)
-            {
-                // ═══ Race V2: 우마무스메 방식 — 구간 속도 계수 + 속도 비례 HP 소모 ═══
-
-                // Step 1: 스프린트 상태 업데이트
-                SimUpdateV2Sprint(r, gs, progress);
-
-                // Step 2: 구간 계수 + HP 비례 속도
-                int v2Phase = gs.GetV2Phase(progress);
-                float phaseCoeff = gs.GetV2PhaseCoeff(cd.charType, v2Phase);
-                float hpRatio = r.maxHP > 0f ? Mathf.Clamp01(r.enduranceHP / r.maxHP) : 0f;
-                float targetSpeed = gs.GetV2SpeedFromHP(hpRatio);
-                float v2SpeedMul = Mathf.Lerp(1f, targetSpeed, r.v2SprintAccelProgress);
-
-                // Step 3: 보너스
-                float cpRatioCalc = r.maxCP > 0f ? r.calmPoints / r.maxCP : 0f;
-                float cpEff = gs.GetCPEfficiency(cpRatioCalc);
-                float ssBonus = gs.GetSlipstreamBonus(cd.charType, r.slipstreamBlend, cpEff);
-
-                // Step 4: speedRatio → HP 소모
-                float speedRatio = phaseCoeff * v2SpeedMul * (1f + ssBonus);
-                SimConsumeHP_V2(r, gs, speedRatio);
-
-                // Step 5: 기여도
-                typeBonus = (speedRatio - 1f);
-                r.contrib_type += baseSpeed * typeBonus * simTimeStep;
-            }
-            else
-            {
-                // ═══ Type 1: 기존 HP 부스트 경로 ═══
-                SimConsumeHP(r, gs, progress);
-                float hpBoost = SimCalcHPBoost(r, gs);
-                float earlyBonus = gs.GetHPEarlyBonus(cd.charType, progress);
-                float cpRatioCalc = r.maxCP > 0f ? r.calmPoints / r.maxCP : 0f;
-                float cpEff = gs.GetCPEfficiency(cpRatioCalc);
-                float ssBonus = gs.GetSlipstreamBonus(cd.charType, r.slipstreamBlend, cpEff);
-                typeBonus = hpBoost + earlyBonus + ssBonus;
-                r.contrib_type += baseSpeed * typeBonus * simTimeStep;
-            }
+            // ═══ Type 1: 기존 HP 부스트 경로 ═══
+            SimConsumeHP(r, gs, progress);
+            float hpBoost = SimCalcHPBoost(r, gs);
+            float earlyBonus = gs.GetHPEarlyBonus(cd.charType, progress);
+            float cpRatioCalc = r.maxCP > 0f ? r.calmPoints / r.maxCP : 0f;
+            float cpEff = gs.GetCPEfficiency(cpRatioCalc);
+            float ssBonus = gs.GetSlipstreamBonus(cd.charType, r.slipstreamBlend, cpEff);
+            typeBonus = hpBoost + earlyBonus + ssBonus;
+            r.contrib_type += baseSpeed * typeBonus * simTimeStep;
         }
         else
         {
@@ -1193,55 +1145,6 @@ public class RaceBacktestWindow : EditorWindow
 
         speed *= slowMul * critMul;
         return Mathf.Max(speed, 0.1f);
-    }
-
-    // ══════════════════════════════════════
-    //  Race V2 HP 소모 미러
-    // ══════════════════════════════════════
-
-    /// <summary>V2 스프린트 판정 (RacerController.UpdateV2Sprint 미러)</summary>
-    private void SimUpdateV2Sprint(SimRacer r, GameSettings gs, float progress)
-    {
-        float strategyStart = gs.formationHoldLapEnd / simLaps;
-
-        // 전력질주 시작 판정 (한번 시작하면 멈추지 않음)
-        if (progress >= strategyStart)
-        {
-            float strategyProg = Mathf.InverseLerp(strategyStart, 1f, progress);
-            float sprintStart = gs.GetV2SprintStart(r.data.charType);
-            if (!r.v2IsSprintActive && strategyProg >= sprintStart)
-                r.v2IsSprintActive = true;
-        }
-
-        // 그라데이션 가속 (비가역)
-        float gameDt = simTimeStep * gs.globalSpeedMultiplier;
-        if (r.v2IsSprintActive)
-            r.v2SprintAccelProgress = Mathf.MoveTowards(r.v2SprintAccelProgress, 1f, gameDt / gs.v2_sprintAccelTime);
-    }
-
-    /// <summary>V2 속도 비례 HP 소모 (RacerController.ConsumeHP_V2 미러)</summary>
-    private void SimConsumeHP_V2(SimRacer r, GameSettings gs, float speedRatio)
-    {
-        float gameDt = simTimeStep * gs.globalSpeedMultiplier;
-
-        if (r.enduranceHP > 0f)
-        {
-            float drain = gs.CalcV2SpeedDrain(speedRatio);
-            float consumption = drain * gameDt;
-            consumption = Mathf.Min(consumption, r.enduranceHP);
-            r.enduranceHP -= consumption;
-            r.totalConsumedHP += consumption;
-
-            // 선두 HP 택스
-            if (r.currentRank <= gs.leadPaceTaxRank && r.enduranceHP > 0f)
-            {
-                float tax = gs.leadPaceTaxRate * gameDt;
-                r.enduranceHP = Mathf.Max(0f, r.enduranceHP - tax);
-            }
-        }
-
-        // Burst Lerp 호환
-        r.isSprintMode = r.v2IsSprintActive && r.v2SprintAccelProgress > 0.1f;
     }
 
     // ══════════════════════════════════════
@@ -2402,272 +2305,6 @@ public class RaceBacktestWindow : EditorWindow
         return Mathf.Sqrt(sumSqDiff / values.Count);
     }
 
-    // ══════════════════════════════════════
-    //  V2 파라미터 스윕 — 최적 계수 자동 탐색
-    // ══════════════════════════════════════
-
-    private struct SweepResult
-    {
-        public float drainRate, exhaustFloor;
-        public float runnerLate, leaderLate, chaserLate, reckonerLate;
-        public float score;
-        public string detail;
-    }
-
-    private void RunParameterSweep()
-    {
-        isRunning = true;
-        lastLogPath = "";
-
-        // 원본 값 백업
-        var gs = gameSettings;
-        float origDrainRate       = gs.v2_drainBaseRate;
-        float origExhaustFloor    = gs.v2_exhaustFloor;
-        float origRunnerLate      = gs.v2_phaseCoeff_Runner_late;
-        float origLeaderLate      = gs.v2_phaseCoeff_Leader_late;
-        float origChaserLate      = gs.v2_phaseCoeff_Chaser_late;
-        float origReckonerLate    = gs.v2_phaseCoeff_Reckoner_late;
-        int   origSimLaps         = simLaps;
-        int   origSimRacers       = simRacers;
-        int   origSimCount        = simCount;
-        bool  origEqualStats      = equalStats;
-        int   origEqualStatValue  = equalStatValue;
-        bool  origShowPerRace     = showPerRace;
-        bool  origSaveLog         = saveLog;
-
-        try
-        {
-            RunParameterSweepInternal();
-        }
-        catch (System.Exception e)
-        {
-            resultText = "❌ 스윕 에러: " + e.Message + "\n" + e.StackTrace;
-            Debug.LogError("[파라미터 스윕] " + e);
-        }
-        finally
-        {
-            // 원본 복원 (반드시 실행)
-            gs.v2_drainBaseRate            = origDrainRate;
-            gs.v2_exhaustFloor             = origExhaustFloor;
-            gs.v2_phaseCoeff_Runner_late   = origRunnerLate;
-            gs.v2_phaseCoeff_Leader_late   = origLeaderLate;
-            gs.v2_phaseCoeff_Chaser_late   = origChaserLate;
-            gs.v2_phaseCoeff_Reckoner_late = origReckonerLate;
-            simLaps          = origSimLaps;
-            simRacers        = origSimRacers;
-            simCount         = origSimCount;
-            equalStats       = origEqualStats;
-            equalStatValue   = origEqualStatValue;
-            showPerRace      = origShowPerRace;
-            saveLog          = origSaveLog;
-
-            EditorUtility.ClearProgressBar();
-            isRunning = false;
-        }
-    }
-
-    private void RunParameterSweepInternal()
-    {
-        var gs = gameSettings;
-
-        // 스윕 조건 고정
-        equalStats = true;
-        equalStatValue = 20;
-        simRacers = 12;
-        showPerRace = false;
-        saveLog = false;
-
-        // ═══ 스윕 그리드 정의 (v2: 높은 드레인 + 탈진 패널티 강화) ═══
-        // 이전 스윕에서 drainRate가 너무 낮아 5바퀴에서 HP가 거의 안 줄었음
-        // → drainRate 대폭 상향, exhaustFloor 강화로 장거리 타입 역전 가능성 확보
-        float[] drainRates    = { 0.50f, 1.00f, 1.50f, 2.00f };
-        float[] exhaustFloors = { 0.60f, 0.70f };
-        float[] runnerLates   = { 0.940f, 0.955f, 0.970f };
-        float[] leaderLates   = { 0.970f, 0.980f, 0.990f };
-        float[] chaserLates   = { 0.990f, 1.000f, 1.010f };
-        float[] reckonerLates = { 1.000f, 1.015f, 1.030f };
-
-        // 목표: (바퀴수, 목표 타입)
-        int[] testLaps = { 2, 3, 4, 5 };
-        CharacterType[] targetTypes = {
-            CharacterType.Runner,
-            CharacterType.Leader,
-            CharacterType.Chaser,
-            CharacterType.Reckoner
-        };
-        string[] targetTypeNames = { "도주", "선행", "선입", "추입" };
-
-        int totalCombos = drainRates.Length * exhaustFloors.Length * runnerLates.Length
-                        * leaderLates.Length * chaserLates.Length * reckonerLates.Length;
-
-        List<CharacterData> allChars = LoadAllCharacters();
-        if (allChars == null || allChars.Count == 0) return;
-
-        // 조합 사전 생성 (단일 루프 → 안전한 취소)
-        var paramSets = new List<float[]>();
-        foreach (float dr  in drainRates)
-        foreach (float ef  in exhaustFloors)
-        foreach (float rl  in runnerLates)
-        foreach (float ll  in leaderLates)
-        foreach (float cl  in chaserLates)
-        foreach (float rcl in reckonerLates)
-            paramSets.Add(new float[] { dr, ef, rl, ll, cl, rcl });
-
-        List<SweepResult> results = new List<SweepResult>();
-        cancelRequested = false;
-
-        for (int combo = 0; combo < paramSets.Count; combo++)
-        {
-            float dr  = paramSets[combo][0];
-            float ef  = paramSets[combo][1];
-            float rl  = paramSets[combo][2];
-            float ll  = paramSets[combo][3];
-            float cl  = paramSets[combo][4];
-            float rcl = paramSets[combo][5];
-
-            if (combo % 5 == 0)
-            {
-                bool cancelled = EditorUtility.DisplayCancelableProgressBar(
-                    "V2 파라미터 스윕 v2",
-                    $"조합 {combo + 1}/{totalCombos} | drain={dr:F2} floor={ef:F2} RL={rl:F3} RCL={rcl:F3}",
-                    (float)(combo + 1) / totalCombos);
-                if (cancelled) { cancelRequested = true; break; }
-            }
-
-            // 파라미터 적용
-            gs.v2_drainBaseRate            = dr;
-            gs.v2_exhaustFloor             = ef;
-            gs.v2_phaseCoeff_Runner_late   = rl;
-            gs.v2_phaseCoeff_Leader_late   = ll;
-            gs.v2_phaseCoeff_Chaser_late   = cl;
-            gs.v2_phaseCoeff_Reckoner_late = rcl;
-
-            float score = 0f;
-            StringBuilder detail = new StringBuilder();
-
-            for (int li = 0; li < testLaps.Length; li++)
-            {
-                simLaps = testLaps[li];
-                simCount = sweepSimsPerLap;
-
-                // 시뮬레이션 실행
-                var result = RunSimulationCore(allChars, 0, 1, "sweep");
-
-                // 타입별 승수 집계
-                var typeWinCount = new Dictionary<CharacterType, int>();
-                foreach (CharacterType ct in System.Enum.GetValues(typeof(CharacterType)))
-                    typeWinCount[ct] = 0;
-
-                foreach (var kv in result.stats)
-                {
-                    var cd = allChars.Find(c => c.charId == kv.Key);
-                    if (cd != null)
-                        typeWinCount[cd.charType] += kv.Value.winCount;
-                }
-
-                float totalWins = sweepSimsPerLap;
-                CharacterType targetType = targetTypes[li];
-                float targetRate = typeWinCount[targetType] / totalWins;
-
-                // 최고 승률 타입 찾기
-                float maxOtherRate = 0f;
-                string maxOtherName = "";
-                foreach (var kv in typeWinCount)
-                {
-                    if (kv.Key != targetType)
-                    {
-                        float rate = kv.Value / totalWins;
-                        if (rate > maxOtherRate)
-                        {
-                            maxOtherRate = rate;
-                            maxOtherName = kv.Key.ToString();
-                        }
-                    }
-                }
-
-                // 스코어링
-                if (targetRate >= maxOtherRate && targetRate > 0f)
-                    score += 100f + (targetRate - maxOtherRate) * 300f;
-                else if (targetRate >= maxOtherRate * 0.8f)
-                    score += 30f - (maxOtherRate - targetRate) * 200f;
-                else
-                    score -= (maxOtherRate - targetRate) * 300f;
-
-                detail.AppendFormat("{0}L:{1}={2:F0}%",
-                    testLaps[li], targetTypeNames[li], targetRate * 100f);
-                if (targetRate < maxOtherRate)
-                    detail.AppendFormat("(X {0}={1:F0}%)", maxOtherName, maxOtherRate * 100f);
-                else
-                    detail.Append("(O)");
-                if (li < testLaps.Length - 1) detail.Append("  ");
-            }
-
-            results.Add(new SweepResult
-            {
-                drainRate = dr,
-                exhaustFloor = ef,
-                runnerLate = rl,
-                leaderLate = ll,
-                chaserLate = cl,
-                reckonerLate = rcl,
-                score = score,
-                detail = detail.ToString()
-            });
-
-            if (cancelRequested) break;
-        }
-
-        // 점수 내림차순 정렬
-        results.Sort((a, b) => b.score.CompareTo(a.score));
-
-        // 결과 출력
-        StringBuilder sb = new StringBuilder();
-        sb.AppendLine("══════════════════════════════════════════════");
-        sb.AppendLine("  V2 파라미터 스윕 결과");
-        sb.AppendLine("══════════════════════════════════════════════");
-        sb.AppendLine($"조건: equalStats={equalStatValue}, 시뮬={sweepSimsPerLap}회/바퀴, 총 {totalCombos} 조합 (v2 스윕: 높은드레인+탈진패널티)");
-        sb.AppendLine($"목표: 2L→도주  3L→선행  4L→선입  5L→추입");
-        sb.AppendLine();
-
-        int showCount = Mathf.Min(30, results.Count);
-        for (int i = 0; i < showCount; i++)
-        {
-            var r = results[i];
-            sb.AppendFormat("#{0,-2} score={1,7:F1} | drain={2:F2} floor={3:F2}  RunL={4:F3}  LeadL={5:F3}  ChasL={6:F3}  ReckL={7:F3}\n",
-                i + 1, r.score, r.drainRate, r.exhaustFloor, r.runnerLate, r.leaderLate, r.chaserLate, r.reckonerLate);
-            sb.AppendLine($"     {r.detail}");
-        }
-
-        // 최적 파라미터 요약
-        if (results.Count > 0)
-        {
-            var best = results[0];
-            sb.AppendLine();
-            sb.AppendLine("══════════════════════════════════════════════");
-            sb.AppendLine("  BEST 파라미터 (Inspector에 복사)");
-            sb.AppendLine("══════════════════════════════════════════════");
-            sb.AppendLine($"v2_drainBaseRate            = {best.drainRate:F2}");
-            sb.AppendLine($"v2_exhaustFloor             = {best.exhaustFloor:F2}");
-            sb.AppendLine($"v2_phaseCoeff_Runner_late   = {best.runnerLate:F3}");
-            sb.AppendLine($"v2_phaseCoeff_Leader_late   = {best.leaderLate:F3}");
-            sb.AppendLine($"v2_phaseCoeff_Chaser_late   = {best.chaserLate:F3}");
-            sb.AppendLine($"v2_phaseCoeff_Reckoner_late = {best.reckonerLate:F3}");
-            sb.AppendLine($"Score = {best.score:F1}");
-            sb.AppendLine(best.detail);
-        }
-
-        resultText = sb.ToString();
-
-        // 로그 파일 저장
-        string logDir = "Assets/BacktestLogs";
-        if (!System.IO.Directory.Exists(logDir))
-            System.IO.Directory.CreateDirectory(logDir);
-        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        string logPath = $"{logDir}/V2_Sweep_{timestamp}.txt";
-        System.IO.File.WriteAllText(logPath, sb.ToString());
-        lastLogPath = logPath;
-        Debug.Log($"[V2 파라미터 스윕] 완료. {results.Count}개 조합 테스트. 로그: {logPath}");
-    }
 }
 
 // ══════════════════════════════════════════
