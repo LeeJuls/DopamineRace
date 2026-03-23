@@ -1,7 +1,7 @@
 UID,ko,en,jp,cn,de,es,br
-str.char.000.name,사일런스,Silence,サイレンス,沉默,Silence,Silencio,Silêncio
+str.char.000.name,고요,Silence,サイレンス,寂静,Stille,Silencio,Silêncio
 str.char.000.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.001.name,적토,Red Hare,セキト,赤兔,Roter Hase,Liebre Roja,Lebre Vermelha
+str.char.001.name,홍염,Red Flame,レッドフレイム,红焰,Rote Flamme,Llama Roja,Chama Vermelha
 str.char.001.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
 str.char.002.name,터프윈,Tough Win,タフウィン,硬胜,Tough Win,Tough Win,Tough Win
 str.char.002.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
@@ -9,59 +9,59 @@ str.char.003.name,크리스탈,Crystal,クリスタル,水晶,Kristall,Cristal,C
 str.char.003.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
 str.char.004.name,아마존,Amazon,アマゾン,亚马逊,Amazone,Amazona,Amazona
 str.char.004.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.005.name,씨비스킷,Seabiscuit,シービスケット,海饼干,Seabiscuit,Seabiscuit,Seabiscuit
+str.char.005.name,비스킷,Biscuit,ビスケット,饼干,Biskuit,Galleta,Biscoito
 str.char.005.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.006.name,세크레트,Secret,セクレト,秘密,Geheimnis,Secreto,Segredo
+str.char.006.name,세크레트,Secret,シークレット,秘密,Geheimnis,Secreto,Segredo
 str.char.006.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.007.name,만오워,Man o' War,マンオウォー,战神,Man o' War,Man o' War,Man o' War
+str.char.007.name,전마,War Girl,ウォーガール,战女,Kriegerin,Guerrera,Guerreira
 str.char.007.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.008.name,스페셜위크,Special Week,スペシャルウィーク,特别周,Special Week,Semana Especial,Semana Especial
+str.char.008.name,골든데이,Golden Day,ゴールデンデイ,金色之日,Goldener Tag,Día Dorado,Dia Dourado
 str.char.008.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.009.name,심볼리,Symboli,シンボリ,象征,Symboli,Symboli,Symboli
+str.char.009.name,심볼릭,Symbolic,シンボリック,象征,Symbolisch,Simbólico,Simbólico
 str.char.009.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.010.name,나리타,Narita,ナリタ,成田,Narita,Narita,Narita
+str.char.010.name,나리,Lily,リリー,百合,Lilie,Lirio,Lírio
 str.char.010.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.011.name,토카이,Tokai,トウカイ,东海,Tokai,Tokai,Tokai
+str.char.011.name,동풍,East Wind,イーストウィンド,东风,Ostwind,Viento del Este,Vento Leste
 str.char.011.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.012.name,메지로,Mejiro,メジロ,目白,Mejiro,Mejiro,Mejiro
+str.char.012.name,백로,White Heron,ホワイトヘロン,白鹭,Weißer Reiher,Garza Blanca,Garça Branca
 str.char.012.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.013.name,제냐타,Zenyatta,ゼニヤッタ,禅雅塔,Zenyatta,Zenyatta,Zenyatta
+str.char.013.name,젠,Zen,ゼン,禅,Zen,Zen,Zen
 str.char.013.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
 str.char.014.name,인디밴드,Indie Band,インディバンド,独立乐队,Indie Band,Indie Band,Indie Band
 str.char.014.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
 str.char.015.name,파워블레이드,Power Blade,パワーブレード,力之刃,Power Blade,Power Blade,Power Blade
 str.char.015.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.016.name,딥임팩트,Deep Impact,ディープインパクト,深度冲击,Deep Impact,Impacto Profundo,Impacto Profundo
+str.char.016.name,임팩트,Impact,インパクト,冲击,Einschlag,Impacto,Impacto
 str.char.016.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.017.name,오르페,Orfevre,オルフェーヴル,金矿,Orfevre,Orfevre,Orfevre
+str.char.017.name,골드런,Gold Run,ゴールドラン,金色奔跑,Goldlauf,Carrera Dorada,Corrida Dourada
 str.char.017.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.018.name,오구리캡,Oguri Cap,オグリキャップ,小栗帽,Oguri Cap,Oguri Cap,Oguri Cap
+str.char.018.name,오캡,O-Cap,オーキャップ,帽子,O-Cap,O-Cap,O-Cap
 str.char.018.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.019.name,저스티,Justify,ジャスティファイ,正义,Justify,Justicia,Justicia
+str.char.019.name,정의,Justice,ジャスティス,正义,Gerechtigkeit,Justicia,Justiça
 str.char.019.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.020.name,라이스샤워,Rice Shower,ライスシャワー,米浴,Rice Shower,Rice Shower,Rice Shower
+str.char.020.name,꽃비,Petal Rain,ペタルレイン,花雨,Blütenregen,Lluvia de Pétalos,Chuva de Pétalas
 str.char.020.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.021.name,젠틸도나,Gentildonna,ジェンティルドンナ,温柔淑女,Gentildonna,Gentildonna,Gentildonna
+str.char.021.name,레이디,Lady,レイディ,淑女,Lady,Dama,Dama
 str.char.021.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.022.name,스칼렛,Scarlet,スカーレット,红玉,Scharlach,Escarlata,Escarlate
+str.char.022.name,주홍,Vermillion,ヴァーミリオン,朱红,Zinnober,Bermellón,Vermelhão
 str.char.022.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.023.name,러피안,Ruffian,ラフィアン,恶棍,Ruffian,Ruffian,Ruffian
+str.char.023.name,광풍,Wild Storm,ワイルドストーム,狂风,Wilder Sturm,Tormenta Salvaje,Tempestade Selvagem
 str.char.023.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.024.name,골드쉽,Gold Ship,ゴールドシップ,金船,Gold Ship,Barco Dorado,Navio Dourado
+str.char.024.name,황금호,Golden Ship,ゴールデンシップ,金船,Goldenes Schiff,Barco Dorado,Navio Dourado
 str.char.024.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.025.name,키타산,Kitasan,キタサン,北山,Kitasan,Kitasan,Kitasan
+str.char.025.name,북산,North Peak,ノースピーク,北山,Nordgipfel,Pico Norte,Pico Norte
 str.char.025.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.026.name,하루우라라,Haru Urara,ハルウララ,春丽,Haru Urara,Haru Urara,Haru Urara
+str.char.026.name,봄빛,Spring Light,スプリングライト,春光,Frühlingslicht,Luz de Primavera,Luz da Primavera
 str.char.026.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.027.name,엘콘도르,El Condor,エルコンドル,秃鹰,El Condor,El Cóndor,El Condor
+str.char.027.name,독수리,Eagle,イーグル,雄鹰,Adler,Águila,Águia
 str.char.027.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.028.name,그래스원더,Grass Wonder,グラスワンダー,草奇迹,Grass Wonder,Grass Wonder,Grass Wonder
+str.char.028.name,초원,Meadow,メドウ,草原,Wiese,Pradera,Prado
 str.char.028.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.029.name,보드카,Vodka,ウオッカ,伏特加,Wodka,Vodka,Vodka
+str.char.029.name,칵테일,Cocktail,カクテル,鸡尾酒,Cocktail,Cóctel,Coquetel
 str.char.029.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.030.name,시애틀,Seattle,シアトル,西雅图,Seattle,Seattle,Seattle
+str.char.030.name,서풍,West Wind,ウエストウィンド,西风,Westwind,Viento del Oeste,Vento Oeste
 str.char.030.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
-str.char.031.name,천리마,Cheonrima,チョンリマ,千里马,Cheonrima,Cheonrima,Cheonrima
+str.char.031.name,천리풍,Gale Runner,ゲイルランナー,千里风,Sturmläufer,Corredor del Viento,Corredor do Vento
 str.char.031.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint
 str.chartype.runner,도주,Runner,逃げ,逃跑,Sprinter,Escapista,Escapista
 str.chartype.leader,선행,Leader,先行,领先,Anführer,Líder,Líder
