@@ -871,7 +871,7 @@ public class RaceBacktestWindow : EditorWindow
 
         // luck 회피
         float trackLuckMul = track != null ? track.luckMultiplier : 1f;
-        float dodgeChance = loser.data.charBaseLuck * gs.luckDodgeChance * trackLuckMul;
+        float dodgeChance = loser.data.charBaseLuck * gs.v4Settings.v4_intDodgeChance * trackLuckMul;
         if (Random.value < dodgeChance)
         {
             loser.dodgeCount++;

@@ -85,7 +85,6 @@ public class GameSettingsEditor : Editor
             gs.luckCritChance = 0.005f;
             gs.luckCritBoost = 1.3f;
             gs.luckCritDuration = 1.5f;
-            gs.luckDodgeChance = 0.02f;
             EditorUtility.SetDirty(gs);
             Debug.Log("✅ 운 (Luck) → 기본값 복원");
         }
@@ -232,7 +231,6 @@ public class GameSettingsEditor : Editor
                 gs.luckCritChance = 0.005f;
                 gs.luckCritBoost = 1.3f;
                 gs.luckCritDuration = 1.5f;
-                gs.luckDodgeChance = 0.02f;
 
                 // 트랙
                 gs.enableTrackTransition = true;
