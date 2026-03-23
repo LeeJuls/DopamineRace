@@ -279,6 +279,13 @@ public class GameManager : MonoBehaviour
         ApplyRoundLaps();
         RaceManager.Instance?.ResetRace();
 
+        // ★ 캐릭터 재선발 (매 라운드 새 멤버)
+        if (CharacterDatabase.Instance != null)
+        {
+            CharacterDatabase.Instance.SelectRandom(GameSettings.Instance.racerCount);
+            RaceManager.Instance?.RespawnRacers();
+        }
+
         // ★ 트랙 변경 (전판 제외 + weight 랜덤)
         ApplyTrackForCurrentRound();
 
