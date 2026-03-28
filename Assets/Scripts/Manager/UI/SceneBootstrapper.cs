@@ -89,6 +89,7 @@ public partial class SceneBootstrapper : MonoBehaviour
         public int racerIndex;
     }
     private RacerCircleUI[] racerCircles;
+    private Vector2[] racerCircleSmoothed;   // Lerp 보간용 현재 위치
     private RectTransform trackBarRect;
     private List<GameObject> lapDividers = new List<GameObject>();
     private HashSet<int> myPickIndices = new HashSet<int>();

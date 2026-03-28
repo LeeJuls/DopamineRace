@@ -88,6 +88,7 @@ public partial class SceneBootstrapper
             Transform prefabBar = prefabInst.transform.Find("TrackBarArea");
             if (prefabBar != null) trackBarRect = prefabBar as RectTransform ?? prefabBar.GetComponent<RectTransform>();
             racerCircles = new RacerCircleUI[racerCount];
+            racerCircleSmoothed = new Vector2[racerCount];
             Sprite prefabKnob = CircleSprite;
             Transform circleParent = trackBarRect != null ? trackBarRect : prefabInst.transform;
             for (int i = racerCount - 1; i >= 0; i--)
@@ -145,6 +146,7 @@ public partial class SceneBootstrapper
 
         // ── 레이서 원형 마커 생성 (역순: 높은 번호 먼저 → 낮은 번호가 위에 그려짐) ──
         racerCircles = new RacerCircleUI[racerCount];
+        racerCircleSmoothed = new Vector2[racerCount];
         Sprite circleSprt = CircleSprite;
 
         for (int i = racerCount - 1; i >= 0; i--)
@@ -332,17 +334,34 @@ public partial class SceneBootstrapper
         float maxLateral = GameConstants.RACER_COUNT * 0.5f *
             (GameSettings.Instance != null ? GameSettings.Instance.laneOffset : 0.15f) + 0.5f;
 
+        float lerpSpeed = GameSettings.Instance != null ? GameSettings.Instance.trackBarLerpSpeed : 0f;
+        bool useLerp = lerpSpeed > 0f;
+
         for (int i = 0; i < racerCircles.Length && i < racers.Count; i++)
         {
             var circle = racerCircles[i];
             if (circle.racerIndex >= racers.Count) continue;
 
             var racer = racers[circle.racerIndex];
-            // Y: OverallProgress(웨이포인트 기반) → 트랙 위 캐릭터 위치와 일치
-            float y = racer.OverallProgress * barHeight;
+            // Y: SmoothProgress(이동 거리 누적) → 웨이포인트 점프 없이 부드럽게
+            float y = racer.SmoothProgress * barHeight;
             // X: 캐릭터의 레인+경로이탈을 그대로 가져와서 좌우 펼치기
             float x = (racer.LateralOffset / maxLateral) * xRange;
-            circle.rect.anchoredPosition = new Vector2(x, y);
+            Vector2 target = new Vector2(x, y);
+
+            if (useLerp)
+            {
+                // 첫 프레임(초기값 0,0)이면 즉시 이동, 이후 Lerp 보간
+                if (racerCircleSmoothed[i] == Vector2.zero && target != Vector2.zero)
+                    racerCircleSmoothed[i] = target;
+                else
+                    racerCircleSmoothed[i] = Vector2.Lerp(racerCircleSmoothed[i], target, Time.deltaTime * lerpSpeed);
+                circle.rect.anchoredPosition = racerCircleSmoothed[i];
+            }
+            else
+            {
+                circle.rect.anchoredPosition = target;
+            }
         }
 
         // 배팅 마커를 최상위 z-order로
