@@ -1,117 +1,54 @@
-# DopamineRace — Claude 프로젝트 설정
+# DopamineRace
 
-## 프로젝트 기본 정보
-- **게임**: 2D 픽셀아트 경마 배팅 게임 (도파민레이스)
-- **엔진**: Unity 6000.3.7f1
-- **GitHub**: https://github.com/LeeJuls/DopamineRace
-- **상세 기술 문서**: `Docs/MEMORY.md` (세션 시작 시 필독)
+## 프로젝트
+- 2D 픽셀아트 경마 배팅 게임 | Unity 6000.3.7f1
+- GitHub: https://github.com/LeeJuls/DopamineRace
+- 핵심 목표: **우마무스메처럼 쫄깃한 레이싱** — 역전 드라마, 타입별 전략
 
-## 핵심 목표 (절대 잊지 말 것)
-> **캐릭터 레이싱 배팅 게임** — 유저가 캐릭터 레이싱 보는 맛은 **우마무스메처럼 쫄깃한 맛**을 줘야 함.
+## Git 커밋 접두사
+`[C]`=Claude, `[L]`=오너, `[UI]`=디자이너, `[이니셜]`=기타 — 병기 가능: `[C][DOC]`
 
----
+## 에이전트
+`.claude/agents/` 참조 — leader(PM), balance(수치), client(Unity), qa(검증)
 
-## Git 규칙
+## 다국어
+- `Resources/Data/StringTable.csv` — 7개 언어 (ko·en·ja·zh_CN·de·es·br)
+- UI 문자열 하드코딩 금지 — `Loc.Get("키")` 사용
 
-### 커밋 작성자 식별 규칙 ← **반드시 준수**
-> 누가 커밋했는지 한눈에 알 수 있게 접두사로 구분한다.
+## 아키텍처
+- 씬: TitleScene(0) → SampleScene(1)
+- 레이스: V4 시스템 — HP(지구력) + CP(침착) | `GameSettings.asset` + `GameSettingsV4.asset`
+- 타입: Runner(도주) / Leader(선행) / Chaser(선입) / Reckoner(추입)
+- MCP: `Assets/Plugins/UnityCodeMcpServer` — Play/Recompile 중 사용 자제
+- 프리팹: 코드 자동생성 → `DopamineRace > Create Betting UI Prefabs`
 
-| 작성자 | 접두사 | 예시 |
-|--------|--------|------|
-| **Claude (AI)** | `[C]` | `[C] feat: 배팅 UI 개선` |
-| **오너 (LeeJuls)** | `[L]` | `[L] fix: 배당률 수정` |
-| **UI 디자이너** | `[UI]` | `[UI] design: 배팅 패널 레이아웃` |
-| **기타 작업자** | `[이니셜]` | `[K] art: 캐릭터 스프라이트` |
+## 캐릭터 ID (혼용 금지)
+| 필드 | 용도 | 예시 |
+|------|------|------|
+| `charId` | UID, 검색/저장 기준 | `char.leader.thunder.000` |
+| `charName` | Loc 키 (0-based) | `str.char.000.name` |
+| `DisplayName` | UI 표시 전용 | `Loc.Get(charName)` |
 
-- **Claude는 커밋 시 반드시 `[C]`로 시작**할 것 — 빠뜨리면 안 됨
-- 분류 병기 가능: `[C][DOC]`, `[C][UI]` 등
-- **push는 반드시 오너(LeeJuls)에게 확인 후 진행**
-
----
-
-## 에이전트 공용 규칙
-1. **단계별 개발**: 계획 → 구현 → 검증 사이클 반복
-2. **사용자 호출**: 혼자 해결 불가 시 반드시 오너(LeeJuls) 호출
-3. **기획 분석 및 제안**: 더 좋은 안 있으면 적극 제안
-4. **다국어 필수**: 모든 UI 문자열은 `StringTable.csv` 키 추가 필수 — 하드코딩 금지 (7개 언어)
-
-## 에이전트 구성
-| 에이전트 | 역할 |
-|---------|------|
-| `leader` | PM·기획·문서·업무 배분 |
-| `balance` | 밸런스 수치 설계·백테스트 |
-| `client` | Unity 클라이언트 개발 |
-| `qa` | QA 계획·검증·버그 예측 |
-
----
-
-## 디버깅 원칙
-> 근본 원인 없이 절대 수정 금지
-
-1. **원인 먼저** — 에러 재현 → 로그·스택 확인 → 최근 변경 이력 추적 → 가설 수립
-2. **한 번에 하나** — 여러 곳 동시 수정 금지, 한 가지 변경 후 결과 확인
-3. **3회 실패 규칙** — 같은 문제 3회 이상 수정 실패 시 즉시 중단 → 아키텍처 재검토 + 오너 호출
-
-## 완료 전 검증 원칙
-> "됐습니다" 발언 전 반드시 실증
-
-- Unity 코드 변경 후 **컴파일 에러 없음** 확인 필수
-- MCP로 Play 가능한 상황이면 **실행 확인 후** 완료 보고
-- "아마 될 것", "should work" 발언 금지
-- `RaceBacktestWindow` 수정 시 **`RacerController`도 반드시 동시 수정** (미러링)
-
----
-
-## 주요 아키텍처 요약
-- **씬**: TitleScene(0) → SampleScene(1)
-- **레이스 자원**: HP(지구력/스프린트) + CP(침착/슬립스트림)
-- **캐릭터 타입**: Runner(도주) / Leader(선행) / Chaser(선입) / Reckoner(추입)
-- **레이스 단계**: Positioning → FormationHold → Strategy (V3: `GameSettingsV3.asset` 기준)
-- **기본속도 격차 압축** → HP 부스트가 레이스 결과를 결정 (수치는 `GameSettings.asset` 참조)
-- **MCP**: `Assets/Plugins/UnityCodeMcpServer` (Unity ↔ Claude 직접 제어)
-- **프리팹**: 코드 자동생성 → `DopamineRace > Create Betting UI Prefabs` 필수
-- **다국어**: `Resources/Data/StringTable.csv` (7개 언어: ko·en·ja·zh_CN·de·es·br)
-
-### 캐릭터 ID 체계 (혼용 금지)
-- `charId` = `char.type.name.NNN` — 진짜 UID (예: `char.leader.thunder.000`)
-- `charName` = `str.char.NNN.name` — Loc 키 (0-based)
-- `DisplayName` = `Loc.Get(charName)` — UI 표시 전용
-- `CharacterDatabase.FindById(charId)` — 검색은 항상 charId 기준
-
-### 주요 클래스
-| 클래스 | 특징 |
+## 주요 클래스
+| 클래스 | 비고 |
 |--------|------|
-| `OddsCalculator` | static 클래스, MonoBehaviour 아님 |
-| `CharacterRecord` | **charId** 기준 저장 — DisplayName 혼용 금지 |
-| `RacerController` | HP+CP 이중 자원 시스템 |
-| `RaceBacktestWindow` | RacerController 로직 미러링 — 반드시 동시 수정 |
-| `SceneBootstrapper.Betting.cs` | 프리팹 기반 (CharacterItemUI + BettingPanel) |
+| `RacerController` | V4 HP+CP 이중 자원 |
+| `RaceBacktestWindow` | RacerController 미러링 — 반드시 동시 수정 |
+| `OddsCalculator` | static, MonoBehaviour 아님 |
+| `CharacterRecord` | charId 기준 저장 — DisplayName 금지 |
+| `SceneBootstrapper` | partial 6개 — 항상 함께 수정 |
 
-### CharacterDB.csv 컬럼
-`col 0=char_id(UID), col 1=char_name(Loc키), col 15=char_skill_desc, col 16=char_illustration`
+## CharacterDB_V4.csv
+`col 0=char_id, 1=char_name, 12=prefab경로, 13=attack_prefab, 16=skill_desc, 17=illustration`
 
----
-
-## 문서 관리 규칙
-> 날짜는 **파일명 맨 뒤**에 붙인다 — 제목으로 정렬/검색이 쉽게.
-
+## 문서 규칙
 - 명세서: `Docs/specs/SPEC-XXX_제목_명세서_YYYYMMDD.md`
 - 히스토리: `Docs/history/제목_히스토리_YYYYMMDD.md`
-- 기타 문서: `Docs/제목_YYYYMMDD.md`
+- 날짜는 파일명 맨 뒤
 
----
+## 디자인 파일 전달
+`Assets/Design/Incoming/UI/` + `전달노트.md` 확인 → 올바른 위치로 이동+적용
 
-## 디자인 파일 전달 시스템
-UI 디자이너가 파일을 전달하면:
-1. `Assets/Design/Incoming/UI/` 폴더 확인 (히스토리 관리 없이 최신 파일만 유지)
-2. 같은 폴더의 `전달노트.md` 읽기 (양식: `Docs/incoming/전달노트_양식.md`)
-3. Claude에게: "디자인 파일 적용해줘" → 파일을 올바른 위치로 이동+적용
-
-자세한 가이드: `Docs/20260301_UI디자인파일전달_워크플로우.md`
-
----
-
-## MCP 주의사항
-- Play/Recompile 중 MCP 사용 자제 (좀비 프로세스 누적 가능)
-- 새 세션 전: `Get-Process unity-code-mcp-stdio | Stop-Process -Force` 실행 권장
-- `SAVE_VERSION = 2` — 구버전 세이브 자동 삭제됨
+## MCP 주의
+- Play/Recompile 중 사용 자제 (좀비 프로세스)
+- 새 세션 전: `Get-Process unity-code-mcp-stdio | Stop-Process -Force`
