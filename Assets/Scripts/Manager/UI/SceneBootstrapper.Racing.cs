@@ -343,8 +343,8 @@ public partial class SceneBootstrapper
             if (circle.racerIndex >= racers.Count) continue;
 
             var racer = racers[circle.racerIndex];
-            // Y: SmoothProgress(이동 거리 누적) → 웨이포인트 점프 없이 부드럽게
-            float y = racer.SmoothProgress * barHeight;
+            // Y: OverallProgress(서브WP 보간) → 순위 싱크 + 부드러운 이동
+            float y = racer.OverallProgress * barHeight;
             // X: 캐릭터의 레인+경로이탈을 그대로 가져와서 좌우 펼치기
             float x = (racer.LateralOffset / maxLateral) * xRange;
             Vector2 target = new Vector2(x, y);

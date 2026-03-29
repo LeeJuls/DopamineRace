@@ -106,13 +106,47 @@ public partial class RacerController : MonoBehaviour
             if (isFinished) return 1f;
             if (waypoints == null || waypoints.Count == 0) return 0f;
             int totalLaps = GetTotalLaps();
-            float lapProgress = (float)currentWP / waypoints.Count;
-            return (currentLap + lapProgress) / totalLaps;
+            int wpCount = waypoints.Count;
+
+            // headingToFinish: 마지막 WP → 결승선(WP0) 구간 보간
+            if (headingToFinish)
+            {
+                int lastWP = wpCount - 1;
+                Vector3 segDir = waypoints[0].position - waypoints[lastWP].position;
+                float segLen = segDir.magnitude;
+                Vector3 toRacer = transform.position - waypoints[lastWP].position;
+                float projected = (segLen > 0.01f)
+                    ? Vector3.Dot(toRacer, segDir.normalized) / segLen : 1f;
+                float frac = Mathf.Clamp01(projected);
+                float finalLapProg = (wpCount - 1 + frac) / wpCount;
+                float rawFinish = Mathf.Clamp01((totalLaps - 1 + finalLapProg) / totalLaps);
+                _maxOverallProgress = Mathf.Max(_maxOverallProgress, rawFinish);
+                return _maxOverallProgress;
+            }
+
+            // 일반 구간: prevWP → currentWP 중심선 투영
+            int targetWP = currentWP;
+            int prevWP = currentWP - 1;
+            if (prevWP < 0) prevWP = (currentLap > 0) ? wpCount - 1 : 0;
+
+            float segLength = Vector3.Distance(
+                waypoints[prevWP].position, waypoints[targetWP].position);
+            Vector3 dir = waypoints[targetWP].position - waypoints[prevWP].position;
+            Vector3 toPos = transform.position - waypoints[prevWP].position;
+            float proj = (segLength > 0.01f)
+                ? Vector3.Dot(toPos, dir.normalized) / segLength : 0f;
+            float frac2 = Mathf.Clamp01(proj);
+
+            float lapProgress = (currentWP + frac2) / wpCount;
+            float raw = Mathf.Clamp01((currentLap + lapProgress) / totalLaps);
+            _maxOverallProgress = Mathf.Max(_maxOverallProgress, raw);
+            return _maxOverallProgress;
         }
     }
 
     // ── 트랙바 진행률: 이동 거리 누적 방식 ──
     private float _cumulativeDistance = 0f;  // 누적 이동 거리
+    private float _maxOverallProgress = 0f; // OverallProgress 단조 증가 보장
     private float _oneLapDistance = 0f;      // 1바퀴 트랙 총 거리
 
     /// <summary>
@@ -187,8 +221,9 @@ public partial class RacerController : MonoBehaviour
     public void StartRacing()
     {
         isRacing = true; isFinished = false; headingToFinish = false; FinishOrder = -1;
-        currentLap = 0; currentWP = 0;
+        currentLap = 0; currentWP = 1; // WP1부터 시작 — WP0(결승선)은 측면이라 방향 틀어짐 방지
         _cumulativeDistance = 0f;       // 누적 거리 리셋
+        _maxOverallProgress = 0f;       // 진행률 최대값 리셋
         CalculateOneLapDistance();       // 1바퀴 트랙 거리 계산
         lastPosition = transform.position;
 

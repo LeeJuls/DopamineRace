@@ -91,12 +91,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         v4MaxStamina    = gs.v4_staminaBase + charDataV4.v4Stamina * gs.v4_staminaPerStat;
 
-        // 컨디션 적용: MaxStamina에 conditionMul 배율
-        if (gs.v4_applyCondition)
-        {
-            float condMul = OddsCalculator.GetConditionMultiplier(charData.charId);
-            v4MaxStamina *= Mathf.Max(condMul, 0.3f);
-        }
+        // 컨디션은 SPD/STA 스탯에만 적용, HP풀(MaxStamina)에는 미적용
+        // → 저STA + 낮은 컨디션 캐릭터의 단거리 탈진 방지
 
         v4CurrentStamina = v4MaxStamina;
         v4CurrentSpeed  = GameSettings.Instance.globalSpeedMultiplier;

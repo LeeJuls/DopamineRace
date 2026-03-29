@@ -196,6 +196,10 @@ public class RaceManager : MonoBehaviour
 
         var db = CharacterDatabase.Instance;
 
+        // 타입별 스폰 위치 정렬 (Runner→앞줄, Reckoner→뒷줄)
+        if (db != null && db.SelectedCharacters != null)
+            SortByTypePosition(db.SelectedCharacters);
+
         for (int i = 0; i < racerCount; i++)
         {
             // 출발 위치
@@ -545,4 +549,31 @@ public class RaceManager : MonoBehaviour
         finalRankings = fakeRankings;
     }
 #endif
+
+    // ══════════════════════════════════════
+    //  타입별 스폰 위치 정렬
+    // ══════════════════════════════════════
+
+    private void SortByTypePosition(System.Collections.Generic.List<CharacterData> chars)
+    {
+        chars.Sort((a, b) =>
+        {
+            int pa = GetTypePriority(a.charType);
+            int pb = GetTypePriority(b.charType);
+            if (pa != pb) return pa.CompareTo(pb);
+            return Random.Range(0, 2) == 0 ? -1 : 1;
+        });
+    }
+
+    private int GetTypePriority(CharacterType type)
+    {
+        switch (type)
+        {
+            case CharacterType.Runner:   return 0; // 앞줄
+            case CharacterType.Leader:   return 1;
+            case CharacterType.Chaser:   return 2;
+            case CharacterType.Reckoner: return 3; // 뒷줄
+            default: return 2;
+        }
+    }
 }
