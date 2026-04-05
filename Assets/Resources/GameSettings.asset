@@ -92,6 +92,7 @@ MonoBehaviour:
   finishPanelPrefab: {fileID: 8787253541604398564, guid: 996934117f1431047812b05bf40ec784, type: 3}
   leaderboardPanelPrefab: {fileID: 588526348272800763, guid: fe2555fdfd8ecef4e9a46d3c4e389ac1, type: 3}
   trackProgressBarPrefab: {fileID: 0}
+  trackBarLerpSpeed: 12
   enableRoundResume: 0
   pathDeviation: 0.3
   characterScale: 1.2

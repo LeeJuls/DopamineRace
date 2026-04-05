@@ -89,6 +89,6 @@ MonoBehaviour:
   v4_runnerPersistentBurst: 1
   v4_emergencyBurstCooldown: 2
   v4_runnerEmergencyDrainMul: 3.7
-  v4_leaderEmergencyDrainMul: 3.5
+  v4_leaderEmergencyDrainMul: 3.2
   v4_chaserEmergencyDrainMul: 2.1
   v4_reckonerEmergencyDrainMul: 1.5
