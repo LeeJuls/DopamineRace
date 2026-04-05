@@ -14,6 +14,7 @@ public class AutoRaceRunnerWindow : EditorWindow
     // ═══ 설정 ═══
     private int iterations = 10;
     private float timeScale = 10f;
+    private bool saveClaudeLog = true;  // Claude용 컴팩트 요약 로그 저장
 
     // ═══ 상태 ═══
     private bool isRunning;
@@ -29,6 +30,7 @@ public class AutoRaceRunnerWindow : EditorWindow
     private Vector2 statsScroll;
     private StringBuilder displayLog = new StringBuilder();
     private string savedLogPath;
+    private string currentTestTimestamp;  // test_YYMMDDHHmmss — 양쪽 파일 공유
 
     // ═══ 집계 ═══
     private bool showStats;
@@ -72,8 +74,9 @@ public class AutoRaceRunnerWindow : EditorWindow
         // ── 설정 ──
         using (new EditorGUI.DisabledScope(isRunning))
         {
-            iterations = EditorGUILayout.IntSlider("반복 횟수", iterations, 1, 100);
+            iterations = EditorGUILayout.IntSlider("반복 횟수", iterations, 1, 200);
             timeScale = EditorGUILayout.Slider("배속", timeScale, 1f, 20f);
+            saveClaudeLog = EditorGUILayout.Toggle("Claude 요약 로그 저장", saveClaudeLog);
         }
 
         EditorGUILayout.Space(4);
@@ -120,10 +123,11 @@ public class AutoRaceRunnerWindow : EditorWindow
 
         EditorGUILayout.Space(4);
 
-        // ── 로그 표시 ──
-        EditorGUILayout.LabelField("레이스 로그", EditorStyles.boldLabel);
+        // ── 로그 표시 (토글에 따라 Claude 압축 ↔ 상세 스왑) ──
+        EditorGUILayout.LabelField(saveClaudeLog ? "Claude 요약 [실시간]" : "레이스 로그", EditorStyles.boldLabel);
         logScroll = EditorGUILayout.BeginScrollView(logScroll, GUILayout.Height(180));
-        EditorGUILayout.TextArea(displayLog.ToString(), GUILayout.ExpandHeight(true));
+        string shownLog = saveClaudeLog ? BuildClaudeContent() : displayLog.ToString();
+        EditorGUILayout.TextArea(shownLog, GUILayout.ExpandHeight(true));
         EditorGUILayout.EndScrollView();
 
         // ── 저장 경로 ──
@@ -165,12 +169,13 @@ public class AutoRaceRunnerWindow : EditorWindow
         displayLog.Clear();
         savedLogPath = null;
         showStats = false;
+        currentTestTimestamp = "test_" + DateTime.Now.ToString("yyMMddHHmmss");
 
         Time.timeScale = timeScale;
 
         Subscribe();
 
-        // 첫 게임 시작: 현재 상태가 Betting이면 바로 자동 배팅
+        // 첫 게임 시작
         var gm = GameManager.Instance;
         if (gm != null)
         {
@@ -180,6 +185,32 @@ public class AutoRaceRunnerWindow : EditorWindow
             if (gm.CurrentState == GameManager.GameState.Betting)
             {
                 ScheduleNextFrame(() => AutoBetAndStart());
+            }
+            else if (gm.CurrentState == GameManager.GameState.Finish)
+            {
+                // Finish 상태: StartNewGame 후 배팅 진행
+                ScheduleNextFrame(() =>
+                {
+                    var g = GameManager.Instance;
+                    if (g != null && isRunning)
+                    {
+                        g.StartNewGame();
+                        ScheduleNextFrame(() => AutoBetAndStart());
+                    }
+                });
+            }
+            else
+            {
+                // Result / Racing 등 다른 상태: StartNewGame으로 강제 초기화
+                ScheduleNextFrame(() =>
+                {
+                    var g = GameManager.Instance;
+                    if (g != null && isRunning)
+                    {
+                        g.StartNewGame();
+                        ScheduleNextFrame(() => AutoBetAndStart());
+                    }
+                });
             }
         }
     }
@@ -332,12 +363,16 @@ public class AutoRaceRunnerWindow : EditorWindow
             // 타입 정보
             if (rm.Racers != null && r.racerIndex >= 0 && r.racerIndex < rm.Racers.Count)
             {
-                var cd = rm.Racers[r.racerIndex].CharData;
+                var racer = rm.Racers[r.racerIndex];
+                var cd = racer.CharData;
                 if (cd != null)
                 {
                     racerLog.charId = cd.charId;
                     racerLog.type = cd.charType;
                 }
+                racerLog.spurtHpRatio = racer.V4SpurtHpRatio;
+                racerLog.emergencyBurstCount = racer.V4EmergencyBurstCount;
+                racerLog.spurtEntryRank = racer.V4SpurtEntryRank;
             }
 
             roundLog.rankings.Add(racerLog);
@@ -377,12 +412,13 @@ public class AutoRaceRunnerWindow : EditorWindow
         if (currentGame >= iterations)
         {
             // 전체 완료
-            isRunning = false;
-            Time.timeScale = 1f;
-            Unsubscribe();
             SaveLogFile();
             showStats = true;
             AppendLog(string.Format("▶ 전체 {0}게임 완료! 로그 저장됨", iterations));
+
+            isRunning = false;
+            Time.timeScale = 1f;
+            Unsubscribe();
         }
         else
         {
@@ -502,8 +538,9 @@ public class AutoRaceRunnerWindow : EditorWindow
         if (!Directory.Exists(dir))
             Directory.CreateDirectory(dir);
 
-        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        string filePath = Path.Combine(dir, "autorace_" + timestamp + ".md");
+        if (string.IsNullOrEmpty(currentTestTimestamp))
+            currentTestTimestamp = "test_" + DateTime.Now.ToString("yyMMddHHmmss");
+        string filePath = Path.Combine(dir, currentTestTimestamp + ".md");
 
         var sb = new StringBuilder();
         sb.AppendLine("# 자동 레이스 테스트 결과");
@@ -633,6 +670,165 @@ public class AutoRaceRunnerWindow : EditorWindow
         File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
         savedLogPath = filePath;
         Debug.Log("[AutoRace] 로그 저장: " + filePath);
+
+        if (saveClaudeLog)
+            SaveClaudeLogFile();
+    }
+
+    // ═══════════════════════════════════════
+    //  Claude 요약 로그 (토큰 최적화)
+    // ═══════════════════════════════════════
+
+    // ─ 공용: Claude 압축 포맷 문자열 생성 (파일 저장 + 실시간 표시 양쪽에서 사용) ─
+    private string BuildClaudeContent()
+    {
+        var sb = new StringBuilder();
+
+        // ── 기본 정보 ──
+        int totalRaces = 0;
+        foreach (var g in gameLogs) totalRaces += g.rounds.Count;
+        sb.AppendFormat("GAMES={0} RACES={1} DATE={2}\n", gameLogs.Count, totalRaces, DateTime.Now.ToString("yyMMdd_HHmm"));
+
+        // ── V4 파라미터 핵심값 ──
+        var gs = GameSettings.Instance;
+        if (gs != null && gs.useV4RaceSystem && gs.v4Settings != null)
+        {
+            var v4 = gs.v4Settings;
+            sb.AppendFormat("BURST R:[{0:F2},{1:F2}] L:[{2:F2},{3:F2}] C:[{4:F2},{5:F2}] K:[{6:F2},{7:F2}]\n",
+                v4.v4_runnerBurstStart, v4.v4_runnerBurstEnd,
+                v4.v4_leaderBurstStart, v4.v4_leaderBurstEnd,
+                v4.v4_chaserBurstStart, v4.v4_chaserBurstEnd,
+                v4.v4_reckonerBurstStart, v4.v4_reckonerBurstEnd);
+            sb.AppendFormat("EMERG R:{0:F1} L:{1:F1} C:{2:F1} K:{3:F1}\n",
+                v4.v4_runnerEmergencyDrainMul, v4.v4_leaderEmergencyDrainMul,
+                v4.v4_chaserEmergencyDrainMul, v4.v4_reckonerEmergencyDrainMul);
+            sb.AppendFormat("SPURT spd:{0:F2} acc:{1:F2} start:{2:F2}\n",
+                v4.v4_spurtHpSpeedBonus, v4.v4_spurtHpAccelBonus, v4.v4_finalSpurtStart);
+        }
+        sb.AppendLine();
+
+        // ── 데이터 집계 ──
+        CharacterType[] types = { CharacterType.Runner, CharacterType.Leader, CharacterType.Chaser, CharacterType.Reckoner };
+
+        // 거리별×타입별 상세 통계
+        var distStat = new Dictionary<int, Dictionary<CharacterType, DistTypeStat>>();
+        var distTotal = new Dictionary<int, int>();
+        // 전체 타입 통계
+        var typeStats = new Dictionary<CharacterType, TypeStat>();
+        // 캐릭터 통계
+        var charStats = new Dictionary<string, CharStat>();
+
+        foreach (var game in gameLogs)
+        {
+            foreach (var round in game.rounds)
+            {
+                int laps = round.laps;
+                if (!distStat.ContainsKey(laps))
+                {
+                    distStat[laps] = new Dictionary<CharacterType, DistTypeStat>();
+                    distTotal[laps] = 0;
+                }
+                distTotal[laps]++;
+
+                foreach (var r in round.rankings)
+                {
+                    // 전체 타입 통계
+                    if (!typeStats.ContainsKey(r.type)) typeStats[r.type] = new TypeStat { type = r.type };
+                    var ts = typeStats[r.type];
+                    ts.totalRank += r.rank; ts.count++;
+                    if (r.rank == 1) ts.wins++;
+                    if (r.rank <= 3) ts.top3++;
+                    if (r.spurtHpRatio > 0f) { ts.spurtHpTotal += r.spurtHpRatio; ts.spurtHpCount++; }
+                    ts.emergencyTotal += r.emergencyBurstCount;
+                    if (r.spurtEntryRank > 0) { ts.spurtRankTotal += r.spurtEntryRank; ts.spurtRankCount++; }
+
+                    // 거리별 타입 통계
+                    if (!distStat[laps].ContainsKey(r.type)) distStat[laps][r.type] = new DistTypeStat();
+                    var ds = distStat[laps][r.type];
+                    ds.count++; ds.totalRank += r.rank;
+                    if (r.rank == 1) ds.wins++;
+                    if (r.rank <= 3) ds.top3++;
+                    if (r.spurtHpRatio > 0f) { ds.spurtHpTotal += r.spurtHpRatio; ds.spurtHpCount++; }
+
+                    // 캐릭터 통계
+                    string key = string.IsNullOrEmpty(r.charId) ? r.racerName : r.charId;
+                    if (!charStats.ContainsKey(key)) charStats[key] = new CharStat { name = r.racerName, type = r.type };
+                    var cs = charStats[key];
+                    cs.totalRank += r.rank; cs.count++;
+                    if (r.rank == 1) cs.wins++;
+                    if (r.rank <= 3) cs.top3++;
+                }
+            }
+        }
+
+        // ── 거리별 상세 (1위율 / Top3율 / avgRank) ──
+        // 헤더: win%/t3%/avg  R=도주 L=선행 C=선입 K=추입
+        sb.AppendLine("# DIST  win%/t3%/avg/hp  R=도주 L=선행 C=선입 K=추입");
+        var sortedLaps = new List<int>(distStat.Keys); sortedLaps.Sort();
+        foreach (int lap in sortedLaps)
+        {
+            int tot = distTotal[lap];
+            sb.AppendFormat("{0}L", lap);
+            foreach (var type in types)
+            {
+                char tc = type == CharacterType.Runner ? 'R' : type == CharacterType.Leader ? 'L' : type == CharacterType.Chaser ? 'C' : 'K';
+                if (distStat[lap].TryGetValue(type, out var ds) && ds.count > 0)
+                {
+                    float winPct  = ds.wins  * 100f / tot;
+                    float avg     = (float)ds.totalRank / ds.count;
+                    string hp     = ds.spurtHpCount > 0 ? $"{ds.spurtHpTotal / ds.spurtHpCount * 100f:F0}%" : "—";
+                    sb.AppendFormat("  {0}:{1:F0}%({2})/{3:F0}%/{4:F1}/{5}", tc, winPct, ds.wins, ds.top3 * 100f / ds.count, avg, hp);
+                }
+                else
+                {
+                    sb.AppendFormat("  {0}:0%(0)/0%/—/—", tc);
+                }
+            }
+            sb.AppendFormat("  n={0}\n", tot);
+        }
+        sb.AppendLine();
+
+        // ── 전체 타입 집계 ──
+        sb.AppendLine("# TOTAL  wins(%) avgRank top3% spurtHP emergAvg spurtRank");
+        foreach (var type in types)
+        {
+            if (!typeStats.ContainsKey(type)) continue;
+            var ts = typeStats[type];
+            char tc = type == CharacterType.Runner ? 'R' : type == CharacterType.Leader ? 'L' : type == CharacterType.Chaser ? 'C' : 'K';
+            float avg    = ts.count > 0 ? (float)ts.totalRank / ts.count : 0;
+            float wr     = totalRaces > 0 ? ts.wins * 100f / totalRaces : 0;
+            float t3r    = ts.count  > 0 ? ts.top3 * 100f / ts.count : 0;
+            string spHp  = ts.spurtHpCount > 0 ? $"{ts.spurtHpTotal / ts.spurtHpCount * 100f:F0}%" : "—";
+            float emAvg  = ts.count > 0 ? (float)ts.emergencyTotal / ts.count : 0;
+            string spRk  = ts.spurtRankCount > 0 ? $"{(float)ts.spurtRankTotal / ts.spurtRankCount:F1}" : "—";
+            sb.AppendFormat("{0}  wins={1}({2:F1}%) avg={3:F1} top3={4:F0}% spurtHP={5} emerg={6:F1} spRank={7}\n",
+                tc, ts.wins, wr, avg, t3r, spHp, emAvg, spRk);
+        }
+        sb.AppendLine();
+
+        // ── 상위 캐릭터 Top8 (1위 기준) ──
+        var sortedChars = new List<CharStat>(charStats.Values);
+        sortedChars.Sort((a, b) => b.wins.CompareTo(a.wins));
+        sb.AppendLine("# TOP8  name(type) wins avgRank");
+        int cnt = 0;
+        foreach (var c in sortedChars)
+        {
+            if (cnt++ >= 8) break;
+            char tc = c.type == CharacterType.Runner ? 'R' : c.type == CharacterType.Leader ? 'L' : c.type == CharacterType.Chaser ? 'C' : 'K';
+            float avg = c.count > 0 ? (float)c.totalRank / c.count : 0;
+            sb.AppendFormat("{0}({1}) w={2} avg={3:F1}\n", c.name, tc, c.wins, avg);
+        }
+
+        return sb.ToString();
+    }
+
+    private void SaveClaudeLogFile()
+    {
+        string dir = Path.Combine(Application.dataPath, "..", "Docs", "logs");
+        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+        string filePath = Path.Combine(dir, currentTestTimestamp + "_claude.txt");
+        File.WriteAllText(filePath, BuildClaudeContent(), Encoding.UTF8);
+        Debug.Log("[AutoRace] Claude 요약 로그 저장: " + filePath);
     }
 
     // ═══════════════════════════════════════
@@ -695,6 +891,9 @@ public class AutoRaceRunnerWindow : EditorWindow
         public string racerName;
         public int racerIndex;
         public CharacterType type;
+        public float spurtHpRatio;       // 스퍼트 진입 시 HP 비율 (0=스퍼트 미진입)
+        public int emergencyBurstCount;  // Emergency Burst 발동 횟수
+        public int spurtEntryRank;       // 스퍼트 진입 시 순위 (0=미진입)
     }
 
     private class TypeStat
@@ -704,6 +903,21 @@ public class AutoRaceRunnerWindow : EditorWindow
         public int count;
         public int wins;
         public int top3;
+        public float spurtHpTotal;       // 스퍼트 진입 HP 합산
+        public int spurtHpCount;         // 스퍼트 진입 횟수
+        public int emergencyTotal;       // Emergency Burst 총 횟수
+        public int spurtRankTotal;       // 스퍼트 진입 순위 합산
+        public int spurtRankCount;       // 스퍼트 진입 횟수 (순위용)
+    }
+
+    private class DistTypeStat
+    {
+        public int wins;
+        public int top3;
+        public int totalRank;
+        public int count;
+        public float spurtHpTotal;
+        public int spurtHpCount;
     }
 
     private class CharStat

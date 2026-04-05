@@ -42,24 +42,25 @@ MonoBehaviour:
   v4_spurtVmaxBonus: 1.5
   v4_accelStatFactor: 0.05
   v4_spurtAccelBonus: 2
-  v4_spurtHpSpeedBonus: 0.1
-  v4_spurtHpAccelBonus: 0.08
+  v4_spurtHpSpeedBonus: 1.2
+  v4_spurtHpAccelBonus: 0.25
   v4_collisionBasePenalty: 0.35
   v4_cornerDriftBase: 0.15
   v4_cornerDriftResistFactor: 0.007
+  v4_powerSpeedFactor: 0.003
   v4_smartK: 10
   v4_smartMaxLimit: 0.92
   v4_panicBase: 0.3
   v4_panicDrainMul: 1.8
   v4_panicDuration: 2
   v4_intelligenceStatMax: 20
-  v4_intelligenceModMax: 0.1
+  v4_intelligenceModMax: 0.2
   v4_thinkTickBase: 1
   v4_thinkTickBonus: 0.8
   v4_luckCheckInterval: 3
-  v4_luckCritChance: 0.005
-  v4_luckCritBoost: 1.3
-  v4_luckCritDuration: 1.5
+  v4_luckCritChance: 0.012
+  v4_luckCritBoost: 1.4
+  v4_luckCritDuration: 2
   v4_intDodgeChance: 0.02
   v4_normalSpeedRatio: 0.85
   v4_burstSpeedRatio: 1.4
@@ -67,20 +68,20 @@ MonoBehaviour:
   v4_burstDrainMul: 4
   v4_spurtDrainMul: 7
   v4_runnerBurstStart: 0.1
-  v4_runnerBurstEnd: 0.4
+  v4_runnerBurstEnd: 0.24
   v4_leaderBurstStart: 0.25
-  v4_leaderBurstEnd: 0.5
+  v4_leaderBurstEnd: 0.40
   v4_chaserBurstStart: 0.43
-  v4_chaserBurstEnd: 0.7
-  v4_reckonerBurstStart: 0.55
+  v4_chaserBurstEnd: 0.66
+  v4_reckonerBurstStart: 0.50
   v4_reckonerBurstEnd: 0.8
   v4_disableBurst: 0
   v4_applyCondition: 1
   v4_runnerTargetRank: 1
   v4_leaderTargetMin: 2
-  v4_leaderTargetMax: 2
+  v4_leaderTargetMax: 4
   v4_chaserTargetMin: 3
-  v4_chaserTargetMax: 4
+  v4_chaserTargetMax: 5
   v4_reckonerTargetMin: 4
   v4_reckonerTargetMax: 5
   v4_emergencyBurstEnabled: 1
@@ -88,7 +89,7 @@ MonoBehaviour:
   v4_emergencyBurstDrainMul: 3.7
   v4_runnerPersistentBurst: 1
   v4_emergencyBurstCooldown: 2
-  v4_runnerEmergencyDrainMul: 3.7
-  v4_leaderEmergencyDrainMul: 3.2
-  v4_chaserEmergencyDrainMul: 2.1
-  v4_reckonerEmergencyDrainMul: 1.5
+  v4_runnerEmergencyDrainMul: 3.8
+  v4_leaderEmergencyDrainMul: 4.5
+  v4_chaserEmergencyDrainMul: 1.3
+  v4_reckonerEmergencyDrainMul: 0.55

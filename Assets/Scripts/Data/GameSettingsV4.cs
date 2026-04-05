@@ -142,6 +142,10 @@ public class GameSettingsV4 : ScriptableObject
     [Tooltip("파워 스탯 → 코너 원심력 저항 변환\ndriftResist = Power × v4_cornerDriftResistFactor")]
     public float v4_cornerDriftResistFactor = 0.007f;
 
+    [Tooltip("파워 스탯 → 상시 최고속도 보정 계수\nVmax × (1 + Power × v4_powerSpeedFactor)\n예: 0.004 → Power 20 = +8%, Power 5 = +2%")]
+    [Range(0f, 0.01f)]
+    public float v4_powerSpeedFactor = 0.004f;
+
     // ═══════════════════════════════════════════════
     //  지능 (Intelligence) — AI 판단력
     // ═══════════════════════════════════════════════

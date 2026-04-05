@@ -42,15 +42,20 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     private bool v4EmergencyBurst = false;              // 긴급 부스트 (목표 순위 이탈 시)
     private float v4EmergencyBurstCooldownTimer = 0f;  // 재발동 쿨다운 타이머
     private int v4CurrentRank = 0;                      // 현재 순위 (ThinkTick에서 업데이트)
+    private int v4EmergencyBurstCount = 0;              // Emergency Burst 발동 횟수 (레이스당)
+    private int v4SpurtEntryRank = 0;                   // 스퍼트 진입 시 순위 (0=미진입)
 
     private bool v4InSlipstream = false;
     private float v4SlipstreamLeaderSpeed = 0f; // 슬립스트림 대상(앞 캐릭터)의 현재 속도
     private bool v4SlipstreamAccelActive = false; // 지능 판정 통과 여부
     private float v4SlipstreamRollTimer = 0f;     // 판정 쿨다운 타이머 (0이면 판정 가능)
 
-    // 프로퍼티 (RaceDebugOverlay 표시용)
+    // 프로퍼티 (RaceDebugOverlay / AutoRaceRunner 표시용)
     public bool V4InSlipstream => v4InSlipstream;
     public bool V4SlipstreamAccelActive => v4SlipstreamAccelActive;
+    public float V4SpurtHpRatio => v4SpurtHpRatio;   // 스퍼트 진입 시 HP 비율 (0=미진입)
+    public int V4EmergencyBurstCount => v4EmergencyBurstCount;  // Emergency Burst 발동 횟수
+    public int V4SpurtEntryRank => v4SpurtEntryRank;            // 스퍼트 진입 순위 (0=미진입)
     private float v4ThinkTimer = 0f;
     private float v4LastProgress = 0f;  // 진행도 기반 드레인용
 
@@ -110,6 +115,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         v4SlipstreamRollTimer = 0f;
         v4EmergencyBurst = false;
         v4EmergencyBurstCooldownTimer = 0f;
+        v4EmergencyBurstCount = 0;
+        v4SpurtEntryRank = 0;
         v4CurrentRank = 0;
         v4ThinkTimer  = 0f;
         v4LastProgress = 0f;
@@ -164,7 +171,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         if (charDataV4 == null) return GameSettings.Instance.globalSpeedMultiplier;
 
         float baseSpeed = GameSettings.Instance.globalSpeedMultiplier;
-        float vmax      = baseSpeed * (1f + charDataV4.v4Speed * gs.v4_speedStatFactor);
+        float vmax      = baseSpeed * (1f + charDataV4.v4Speed * gs.v4_speedStatFactor)
+                                   * (1f + charDataV4.v4Power * gs.v4_powerSpeedFactor);
 
         // 컨디션 적용: Vmax에 conditionMul 배율
         if (gs.v4_applyCondition)
@@ -212,6 +220,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
                 v4IsSpurting = true;
                 v4Phase      = V4Phase.Spurt;
                 v4SpurtHpRatio = v4MaxStamina > 0 ? Mathf.Clamp01(v4CurrentStamina / v4MaxStamina) : 0f;
+                v4SpurtEntryRank = v4CurrentRank;
                 float hpBonusPct = v4SpurtHpRatio * gs.v4_spurtHpSpeedBonus * 100f;
                 string msg = $"{charLabel} 파이널스퍼트! {HpStr()} [HP보너스:+{hpBonusPct:F0}%] {hpPenaltyTag} (progress:{progress:P0})";
                 Debug.Log($"[V4 FinalSpurt 시작] {msg}");
@@ -357,7 +366,13 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         {
             if      (currentProgress >= gs.v4_finalSpurtStart)                       drain *= gs.v4_spurtDrainMul;
             else if (IsInBurstZone(gs, currentProgress)) drain *= gs.v4_burstDrainMul;
-            else if (v4EmergencyBurst)                   drain *= gs.GetV4EmergencyBurstDrainMul(charDataV4.charType);
+            else if (v4EmergencyBurst)
+            {
+                // 거리별 스케일링: 단거리(2L)에서 drain 낮음 → 도주 강함, 장거리(5L)에서 drain 높음 → 도주 약함
+                // lapScale = √(랩수/3): 2L=0.82, 3L=1.0, 4L=1.15, 5L=1.29
+                float lapScale = Mathf.Pow((float)GetTotalLaps() / 3f, 0.5f);
+                drain *= gs.GetV4EmergencyBurstDrainMul(charDataV4.charType) * lapScale;
+            }
         }
 
         if (v4InSlipstream)
@@ -569,6 +584,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             if (v4EmergencyBurstCooldownTimer > 0f && !isPersistentRunner) return;
 
             v4EmergencyBurst = true;
+            v4EmergencyBurstCount++;
             var ov = RaceManager.Instance?.GetComponent<RaceDebugOverlay>();
             string cooldownInfo = v4EmergencyBurstCooldownTimer > 0f ? "" :
                                   gs.v4_emergencyBurstCooldown > 0f ? " [쿨다운 대기 후]" : "";

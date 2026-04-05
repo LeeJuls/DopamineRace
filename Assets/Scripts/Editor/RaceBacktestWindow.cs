@@ -1053,7 +1053,8 @@ public class RaceBacktestWindow : EditorWindow
 
         // ── 3. 속도 계산 (CalcSpeedV4 미러) ──
         float baseSpeed = gs.globalSpeedMultiplier;
-        float vmax = baseSpeed * (1f + dv4.v4Speed * gs4.v4_speedStatFactor);
+        float vmax = baseSpeed * (1f + dv4.v4Speed * gs4.v4_speedStatFactor)
+                              * (1f + dv4.v4Power * gs4.v4_powerSpeedFactor);
 
         // HP 임계값 기반 속도 배율
         float staminaRatio = r.v4MaxStamina > 0 ? r.v4Stamina / r.v4MaxStamina : 0f;
@@ -1144,7 +1145,13 @@ public class RaceBacktestWindow : EditorWindow
             {
                 if (inSpurtZone) drain *= gs4.v4_spurtDrainMul;
                 else if (inRegularBurst) drain *= gs4.v4_burstDrainMul;
-                else if (inEmergencyBurst) drain *= gs4.GetV4EmergencyBurstDrainMul(dv4.charType);
+                else if (inEmergencyBurst)
+                {
+                    // 거리별 스케일링 미러 (RacerController_V4 동기화)
+                    // lapScale = √(랩수/3): 2L=0.82, 3L=1.0, 4L=1.15, 5L=1.29
+                    float lapScale = Mathf.Pow((float)simLaps / 3f, 0.5f);
+                    drain *= gs4.GetV4EmergencyBurstDrainMul(dv4.charType) * lapScale;
+                }
             }
 
             // 슬립스트림 드레인 감소
