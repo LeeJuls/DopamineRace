@@ -2,6 +2,9 @@
 # Unity .gitignore
 # DopamineRace Project
 
+# 로컬 환경마다 경로가 다른 설정 파일
+.mcp.json
+
 # 잘못 생성된 중첩 clone (GitHub Desktop 오설정으로 생성됨)
 /DopamineRace/
 
