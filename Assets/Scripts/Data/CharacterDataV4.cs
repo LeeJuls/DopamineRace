@@ -39,6 +39,10 @@ public class CharacterDataV4
     public string charIllustration;
     public SkillData skillData;
 
+    // ─── 패시브 스킬 (col 19) ───
+    public string charPassive;          // 원본 문자열 (예: "P_LastRank:HpHeal:0.10:30")
+    public PassiveSkillData passiveData; // 파싱 결과
+
     // ─── Computed Properties ───
 
     /// <summary>표시 이름 (로컬라이즈)</summary>
@@ -85,8 +89,12 @@ public class CharacterDataV4
 
         d.charSkillDesc    = cols.Length > 16 ? cols[16].Trim() : "";
         d.charIllustration = cols.Length > 17 ? cols[17].Trim() : "";
+        // col 18 = char_appearance_rate (기존 위치 유지, CharacterDatabase에서 파싱)
+        // col 19 = char_passive (신규, 없으면 None으로 폴백)
+        d.charPassive  = cols.Length > 19 ? cols[19].Trim() : "";
 
-        d.skillData = SkillData.Parse(d.charAbility, d.charAbilityTimeSec);
+        d.skillData   = SkillData.Parse(d.charAbility, d.charAbilityTimeSec);
+        d.passiveData = PassiveSkillData.Parse(d.charPassive);
         return d;
     }
 

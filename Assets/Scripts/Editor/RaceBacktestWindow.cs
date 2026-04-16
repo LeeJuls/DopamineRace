@@ -190,6 +190,17 @@ public class RaceBacktestWindow : EditorWindow
         public bool v4IsSpurting;
         public float v4SpurtHpRatio;   // 스퍼트 진입 시 HP 비율 스냅샷
 
+        // ★ 액티브 스킬 (Group B)
+        public bool skillActive;
+        public float skillRemainingTime;
+        public int skillCollisionCount;
+        public bool skillHpTriggered;       // E_Skill_HP 1회 발동 추적
+        public bool skillRankTriggered;     // E_Skill_Rank 1회 발동 추적
+
+        // ★ 패시브 스킬 (Group C)
+        public bool passiveConditionActive;
+        public float passiveCooldownTimer;
+
         // ★ 구간별 포지션 추적
         public bool[] segRecorded;        // 각 체크포인트 통과 여부
 
@@ -559,6 +570,14 @@ public class RaceBacktestWindow : EditorWindow
                         // V4 uses its own HP fields — mirror to enduranceHP for shared stats
                         racer.maxHP = racer.v4MaxStamina;
                         racer.enduranceHP = racer.v4MaxStamina;
+                        // 스킬 초기화
+                        racer.skillActive = false;
+                        racer.skillRemainingTime = 0f;
+                        racer.skillCollisionCount = 0;
+                        racer.skillHpTriggered = false;
+                        racer.skillRankTriggered = false;
+                        racer.passiveConditionActive = false;
+                        racer.passiveCooldownTimer = 0f;
                     }
                 }
 
@@ -855,6 +874,25 @@ public class RaceBacktestWindow : EditorWindow
 
     private void SimResolve(SimRacer a, SimRacer b, GameSettings gs, TrackData track, float simTime)
     {
+        // V4 스킬 충돌 카운트 증가 (양쪽 모두 — CollisionTrigger 발동 체크 포함)
+        if (gs.useV4RaceSystem)
+        {
+            SimOnSkillCollisionHit(a);
+            SimOnSkillCollisionHit(b);
+        }
+
+        SimRacer winner, loser;
+
+        // CollisionWin 스킬 활성 여부 체크
+        bool aArmed = gs.useV4RaceSystem && a.skillActive
+                   && a.dataV4?.skillData?.effectType == SkillEffectType.CollisionWin;
+        bool bArmed = gs.useV4RaceSystem && b.skillActive
+                   && b.dataV4?.skillData?.effectType == SkillEffectType.CollisionWin;
+
+        if (aArmed && !bArmed) { winner = a; loser = b; }
+        else if (bArmed && !aArmed) { winner = b; loser = a; }
+        else
+        {
         float powerA = a.data.charBasePower;
         float powerB = b.data.charBasePower;
         float effA = powerA;
@@ -865,9 +903,9 @@ public class RaceBacktestWindow : EditorWindow
         float totalEff = effA + effB;
         float bWinChance = totalEff > 0f ? effB / totalEff : 0.5f;
 
-        SimRacer winner, loser;
         if (Random.value < bWinChance) { winner = b; loser = a; }
         else { winner = a; loser = b; }
+        }
 
         // luck 회피
         float trackLuckMul = track != null ? track.luckMultiplier : 1f;
@@ -1051,6 +1089,9 @@ public class RaceBacktestWindow : EditorWindow
         // ── 2. Luck 크리티컬 ──
         SimUpdateV4LuckCrit(r, gs4, gameDt);
 
+        // ── 2b. 패시브 스킬 체크 (CheckPassiveSkill 미러) ──
+        SimCheckPassiveV4(r, gs4, racers, progress);
+
         // ── 3. 속도 계산 (CalcSpeedV4 미러) ──
         float baseSpeed = gs.globalSpeedMultiplier;
         float vmax = baseSpeed * (1f + dv4.v4Speed * gs4.v4_speedStatFactor)
@@ -1103,6 +1144,32 @@ public class RaceBacktestWindow : EditorWindow
         // 크리티컬 배율
         if (r.v4CritBoostRemaining > 0f)
             outputSpeed *= gs4.v4_luckCritBoost;
+
+        // 액티브 SpeedBoost 배율 (CalcSpeedV4 미러)
+        if (r.skillActive && r.dataV4?.skillData?.effectType == SkillEffectType.SpeedBoost)
+            outputSpeed *= Mathf.Min(r.dataV4.skillData.effectValue, SkillData.SPEED_BOOST_MAX);
+
+        // 패시브 SpeedBonus 배율
+        if (r.passiveConditionActive && r.dataV4?.passiveData?.effectType == PassiveEffectType.SpeedBonus)
+            outputSpeed *= Mathf.Min(r.dataV4.passiveData.effectValue, PassiveSkillData.SPEED_BONUS_MAX);
+
+        // 스킬 타이머 감소
+        if (r.skillActive)
+        {
+            r.skillRemainingTime -= gameDt;
+            if (r.skillRemainingTime <= 0f) { r.skillActive = false; r.skillRemainingTime = 0f; }
+        }
+
+        // V4 HP/Rank 스킬 트리거 체크 (1회성 — ProcessV4ThinkTick 미러)
+        if (!r.skillActive && r.dataV4?.skillData != null && r.dataV4.skillData.triggerType != SkillTriggerType.None)
+        {
+            var sd = r.dataV4.skillData;
+            float hpRatio = r.v4MaxStamina > 0f ? r.v4Stamina / r.v4MaxStamina : 0f;
+            if (!r.skillHpTriggered && sd.CheckHpTrigger(hpRatio))
+            { r.skillHpTriggered = true; SimActivateSkillV4(r, sd); }
+            else if (!r.skillRankTriggered && r.currentRank > 0 && sd.CheckRankTrigger(r.currentRank))
+            { r.skillRankTriggered = true; SimActivateSkillV4(r, sd); }
+        }
 
         // 충돌 감속 (기존 시스템과 공유)
         if (r.collisionTimer > 0f)
@@ -1157,6 +1224,13 @@ public class RaceBacktestWindow : EditorWindow
             // 슬립스트림 드레인 감소
             if (r.v4InSlipstream)
                 drain *= r.v4SlipstreamDrainMul;
+
+            // 액티브 DrainReduce 배율 (ConsumeStaminaV4 미러)
+            if (r.skillActive && r.dataV4?.skillData?.effectType == SkillEffectType.DrainReduce)
+                drain *= Mathf.Max(r.dataV4.skillData.effectValue, SkillData.DRAIN_REDUCE_MIN);
+            // 패시브 DrainReduce 배율
+            if (r.passiveConditionActive && r.dataV4?.passiveData?.effectType == PassiveEffectType.DrainReduce)
+                drain *= Mathf.Max(r.dataV4.passiveData.effectValue, PassiveSkillData.DRAIN_REDUCE_MIN);
 
             r.v4Stamina = Mathf.Max(0f, r.v4Stamina - drain);
             r.enduranceHP = r.v4Stamina; // 디버그 통계 호환
@@ -1233,6 +1307,71 @@ public class RaceBacktestWindow : EditorWindow
                 r.critCount++;
             }
         }
+    }
+
+    /// <summary>패시브 스킬 체크 (CheckPassiveSkill 미러)</summary>
+    private void SimCheckPassiveV4(SimRacer r, GameSettingsV4 gs4, List<SimRacer> racers, float progress)
+    {
+        var pd = r.dataV4?.passiveData;
+        if (pd == null || pd.triggerType == PassiveTriggerType.None) return;
+
+        // 쿨다운 감소
+        if (r.passiveCooldownTimer > 0f)
+            r.passiveCooldownTimer -= simTimeStep;
+
+        float hpRatio = r.v4MaxStamina > 0f ? r.v4Stamina / r.v4MaxStamina : 0f;
+        int totalRacers = racers.Count;
+
+        bool inBurstZone = SimIsInBurstZoneV4(r.dataV4, gs4, progress);
+        bool inSpurtZone = progress >= gs4.v4_finalSpurtStart;
+
+        bool condMet = pd.CheckCondition(totalRacers, r.currentRank, hpRatio, inBurstZone, inSpurtZone);
+        r.passiveConditionActive = condMet;
+
+        // 즉발 효과: 조건 충족 + 쿨다운 만료
+        if (condMet && r.passiveCooldownTimer <= 0f)
+        {
+            if (pd.effectType == PassiveEffectType.HpHeal)
+            {
+                float heal = r.v4MaxStamina * pd.effectValue;
+                r.v4Stamina = Mathf.Min(r.v4MaxStamina, r.v4Stamina + heal);
+                r.enduranceHP = r.v4Stamina;
+                r.passiveCooldownTimer = pd.cooldownSec;
+            }
+            else if (pd.effectType == PassiveEffectType.CpRegen)
+            {
+                r.calmPoints = Mathf.Min(r.maxCP, r.calmPoints + r.maxCP * pd.effectValue);
+                r.passiveCooldownTimer = pd.cooldownSec;
+            }
+        }
+    }
+
+    /// <summary>V4 스킬 발동 (ActivateSkill 미러 — HpHeal 즉발 / 나머지 타이머)</summary>
+    private void SimActivateSkillV4(SimRacer r, SkillData sd)
+    {
+        r.skillCollisionCount = 0;
+        if (sd.effectType == SkillEffectType.HpHeal)
+        {
+            float heal = r.v4MaxStamina * sd.effectValue;
+            r.v4Stamina = Mathf.Min(r.v4MaxStamina, r.v4Stamina + heal);
+            r.enduranceHP = r.v4Stamina;
+        }
+        else
+        {
+            r.skillActive = true;
+            r.skillRemainingTime = sd.durationSec;
+        }
+    }
+
+    /// <summary>충돌 시 스킬 카운트 증가 (OnSkillCollisionHit 미러)</summary>
+    private void SimOnSkillCollisionHit(SimRacer r)
+    {
+        if (r.skillActive) return;
+        var sd = r.dataV4?.skillData;
+        if (sd == null || sd.triggerType == SkillTriggerType.None) return;
+        r.skillCollisionCount++;
+        if (sd.CheckCollisionTrigger(r.skillCollisionCount))
+            SimActivateSkillV4(r, sd);
     }
 
     /// <summary>V4 부스트 구간 판별 (IsInBurstZone 미러)</summary>

@@ -141,8 +141,9 @@ public class CollisionSystem : MonoBehaviour
         // ── 승패 결정 ──
         RacerController winner, loser;
 
-        bool aArmed = a.SkillActive;
-        bool bArmed = b.SkillActive;
+        // CollisionWin 타입 스킬만 충돌 자동 승리 부여 (SpeedBoost/DrainReduce 등은 제외)
+        bool aArmed = a.IsCollisionSkillArmed;
+        bool bArmed = b.IsCollisionSkillArmed;
 
         if (aArmed && !bArmed)
         {

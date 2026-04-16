@@ -49,6 +49,10 @@ public partial class RacerController : MonoBehaviour
     private Animator normalAnimator;           // 맨몸 Animator
     private Animator attackAnimator;           // 무기 Animator
 
+    // ── ★ 패시브 스킬 런타임 상태 (Group C용) ──
+    private bool passiveConditionActive = false;
+    private float passiveCooldownTimer = 0f;
+
     // ── ★ HP 시스템 (SPEC-006) ──
     private float enduranceHP;                 // 현재 HP (maxHP에서 시작, 0까지 감소)
     private float maxHP;                       // 50 + charEndurance × 2.5
@@ -70,6 +74,18 @@ public partial class RacerController : MonoBehaviour
     public CharacterData CharData => charData;
     public bool IsCritActive => isCritActive;
     public bool SkillActive => skillActive;           // 스킬 발동 중 여부 (외부 참조용)
+    /// <summary>CollisionWin 타입 스킬 활성화 여부 (CollisionSystem에서 충돌 승리 판정용)</summary>
+    public bool IsCollisionSkillArmed
+    {
+        get
+        {
+            if (!skillActive) return false;
+            // V4: effectType == CollisionWin인 경우만 충돌 자동 승리 부여
+            if (charDataV4?.skillData != null && charDataV4.skillData.triggerType != SkillTriggerType.None)
+                return charDataV4.skillData.effectType == SkillEffectType.CollisionWin;
+            return true; // 구버전 폴백: skillActive면 CollisionWin 취급
+        }
+    }
     public int SkillCollisionCount => skillCollisionCount;
     public float CollisionPenalty => collisionPenalty;
     public float SlingshotBoost => slingshotBoost;
@@ -247,6 +263,8 @@ public partial class RacerController : MonoBehaviour
         skillCollisionCount = 0;
         skillActive = false;
         skillRemainingTime = 0f;
+        passiveConditionActive = false;
+        passiveCooldownTimer = 0f;
         DeactivateSkill();
 
         // 흔들림 초기화
@@ -292,6 +310,8 @@ public partial class RacerController : MonoBehaviour
 
         // 스킬
         skillCollisionCount = 0; skillActive = false; skillRemainingTime = 0f;
+        passiveConditionActive = false; passiveCooldownTimer = 0f;
+        v4SkillHpTriggered = false; v4SkillRankTriggered = false;
         DeactivateSkill();
 
         // HP 시스템
@@ -374,6 +394,12 @@ public partial class RacerController : MonoBehaviour
                 if (currentLap >= GetTotalLaps())
                 {
                     headingToFinish = true;
+                }
+                // V4 Lap 트리거 체크
+                if (GameSettings.Instance?.useV4RaceSystem == true && !skillActive && charDataV4?.skillData != null)
+                {
+                    if (charDataV4.skillData.CheckLapTrigger(currentLap))
+                        ActivateSkill();
                 }
             }
         }
@@ -661,30 +687,49 @@ public partial class RacerController : MonoBehaviour
     /// </summary>
     public void OnSkillCollisionHit()
     {
-        if (skillActive) return;                      // 이미 발동 중이면 무시
-        if (charData == null || charData.skillData == null) return;
+        if (skillActive) return;
+        // V4 우선 사용, 없으면 구버전 폴백
+        SkillData sd = (charDataV4?.skillData != null && charDataV4.skillData.triggerType != SkillTriggerType.None)
+            ? charDataV4.skillData
+            : charData?.skillData;
+        if (sd == null) return;
 
         skillCollisionCount++;
-
-        if (charData.skillData.CheckCollisionTrigger(skillCollisionCount))
-        {
+        if (sd.CheckCollisionTrigger(skillCollisionCount))
             ActivateSkill();
-        }
     }
 
     /// <summary>
-    /// 스킬 발동: 무기 꺼냄 → 공격 프리팹으로 교체 + 타이머 시작
+    /// 스킬 발동: effectType에 따라 즉발(HpHeal) 또는 타이머 기반 효과 처리
     /// </summary>
     private void ActivateSkill()
     {
-        skillActive = true;
-        skillRemainingTime = charData.skillData.durationSec;
+        // V4 우선 사용, 없으면 구버전 폴백
+        SkillData sd = (charDataV4?.skillData != null && charDataV4.skillData.triggerType != SkillTriggerType.None)
+            ? charDataV4.skillData
+            : charData?.skillData;
+        if (sd == null) return;
+
         skillCollisionCount = 0; // 카운트 리셋 (재발동 가능)
+        string displayName = charData?.DisplayName ?? charDataV4?.charId ?? "?";
 
-        // ★ 모델 교체 안 함 (공격 시에만 잠깐 무기 표시)
+        // HpHeal: 즉발 회복 — skillActive 불필요
+        if (sd.effectType == SkillEffectType.HpHeal)
+        {
+            float heal = v4MaxStamina > 0f ? v4MaxStamina * sd.effectValue
+                       : maxHP > 0f        ? maxHP * sd.effectValue : 0f;
+            v4CurrentStamina = Mathf.Min(v4MaxStamina, v4CurrentStamina + heal);
+            enduranceHP = v4CurrentStamina;
+            Debug.Log(string.Format("[스킬 발동] {0} → HP 즉발 회복 +{1:P0} ({2:F0}HP)",
+                displayName, sd.effectValue, heal));
+            return;
+        }
 
-        Debug.Log(string.Format("[스킬 발동] {0} → 각성! ({1}초)",
-            charData.DisplayName, charData.skillData.durationSec));
+        // 타이머 기반 효과 (CollisionWin / SpeedBoost / DrainReduce)
+        skillActive = true;
+        skillRemainingTime = sd.durationSec;
+        Debug.Log(string.Format("[스킬 발동] {0} → {1} ({2}초)",
+            displayName, sd.effectType, sd.durationSec));
     }
 
     /// <summary>

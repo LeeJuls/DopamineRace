@@ -65,6 +65,10 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     private float v4CritInitialDuration = 0f;   // 크리티컬 발동 시 계산된 지속시간 (로그용)
     public float V4CritInitialDuration => v4CritInitialDuration;
 
+    // 1회성 스킬 트리거 추적 (HP/Rank 트리거는 레이스당 1회만 발동)
+    private bool v4SkillHpTriggered   = false;
+    private bool v4SkillRankTriggered = false;
+
     // 구간별 HP 체크포인트 (각자 통과 시 RaceDebugOverlay에 보고)
     private HashSet<string> v4PassedCheckpoints = new HashSet<string>();
 
@@ -122,6 +126,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         v4LastProgress = 0f;
         v4LuckTimer   = 0f;
         v4CritBoostRemaining = 0f;
+        v4SkillHpTriggered   = false;
+        v4SkillRankTriggered = false;
         v4PassedCheckpoints.Clear();
 
         Debug.Log($"[RacerController V4] InitV4 완료 — {charDataV4.charId} " +
@@ -307,6 +313,14 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         if (v4CritBoostRemaining > 0f)
             outputSpeed *= gs.v4_luckCritBoost;
 
+        // ── 액티브 SpeedBoost 배율 (currentSpeed 오염 방지: outputSpeed에만 적용) ──
+        if (skillActive && charDataV4?.skillData?.effectType == SkillEffectType.SpeedBoost)
+            outputSpeed *= Mathf.Min(charDataV4.skillData.effectValue, SkillData.SPEED_BOOST_MAX);
+
+        // ── 패시브 SpeedBonus 배율 ──
+        if (passiveConditionActive && charDataV4?.passiveData?.effectType == PassiveEffectType.SpeedBonus)
+            outputSpeed *= Mathf.Min(charDataV4.passiveData.effectValue, PassiveSkillData.SPEED_BONUS_MAX);
+
         // ── 충돌 페널티 / 슬링샷 배율 (타이머 업데이트 포함) ──
         // V4 early return으로 인해 CalculateSpeed()의 GetCollisionMultiplier()가
         // 호출되지 않으므로 여기서 직접 적용
@@ -380,6 +394,12 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             drain *= gs.v4_slipstreamDrainMul;                       // 항상: 드래프트 HP 절약
             if (v4SlipstreamAccelActive) drain *= gs.v4_slipstreamAccelDrainMul; // 가속 시: 추가 소모
         }
+        // 액티브 DrainReduce 배율 (슬립스트림 이후, 패닉 이전)
+        if (skillActive && charDataV4?.skillData?.effectType == SkillEffectType.DrainReduce)
+            drain *= Mathf.Max(charDataV4.skillData.effectValue, SkillData.DRAIN_REDUCE_MIN);
+        // 패시브 DrainReduce 배율
+        if (passiveConditionActive && charDataV4?.passiveData?.effectType == PassiveEffectType.DrainReduce)
+            drain *= Mathf.Max(charDataV4.passiveData.effectValue, PassiveSkillData.DRAIN_REDUCE_MIN);
         if (v4IsPanicking)  drain *= gs.v4_panicDrainMul;
 
         v4CurrentStamina = Mathf.Max(0f, v4CurrentStamina - drain);
@@ -405,11 +425,16 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         float closestGap = float.MaxValue;
         float leaderSpeed = 0f;
 
+        // 패시브 SlipstreamRange 배율 적용
+        float slipRange = gs.v4_slipstreamRange;
+        if (passiveConditionActive && charDataV4?.passiveData?.effectType == PassiveEffectType.SlipstreamRange)
+            slipRange *= Mathf.Min(charDataV4.passiveData.effectValue, PassiveSkillData.SLIPSTREAM_RANGE_MAX);
+
         foreach (var r in RaceManager.Instance.Racers)
         {
             if (r == this || r.IsFinished) continue;
             float gap = r.TotalProgress - myProgress;
-            if (gap > 0f && gap <= gs.v4_slipstreamRange && gap < closestGap)
+            if (gap > 0f && gap <= slipRange && gap < closestGap)
             {
                 inStream = true;
                 closestGap = gap;
@@ -531,6 +556,76 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             var rankings = RaceManager.Instance.GetLiveRankings();
             int idx = rankings.IndexOf(this);
             v4CurrentRank = idx >= 0 ? idx + 1 : rankings.Count;
+        }
+
+        // V4 HP/Rank 스킬 트리거 체크 (1회성 — 조건 최초 충족 시 1회만 발동)
+        if (!skillActive && charDataV4?.skillData != null && charDataV4.skillData.triggerType != SkillTriggerType.None)
+        {
+            var sd = charDataV4.skillData;
+            float hpRatio = v4MaxStamina > 0f ? v4CurrentStamina / v4MaxStamina : 0f;
+            if (!v4SkillHpTriggered && sd.CheckHpTrigger(hpRatio))
+            {
+                v4SkillHpTriggered = true;
+                ActivateSkill();
+            }
+            else if (!v4SkillRankTriggered && v4CurrentRank > 0 && sd.CheckRankTrigger(v4CurrentRank))
+            {
+                v4SkillRankTriggered = true;
+                ActivateSkill();
+            }
+        }
+
+        // 패시브 스킬 체크 (ThinkTick 주기로 실행)
+        CheckPassiveSkill(gs);
+    }
+
+    // ──────────────────────────────────────────────
+    //  패시브 스킬 체크 (CheckPassiveSkill)
+    //  ThinkTick마다 호출 — 조건 체크 + 즉발 효과 발동
+    // ──────────────────────────────────────────────
+
+    private void CheckPassiveSkill(GameSettingsV4 gs)
+    {
+        var pd = charDataV4?.passiveData;
+        if (pd == null || pd.triggerType == PassiveTriggerType.None) return;
+
+        // 쿨다운 타이머 감소: 지능값 불변 → GetV4ThinkTick은 "이전 틱 이후 경과시간"과 수학적 동치
+        // (ProcessV4ThinkTick이 v4ThinkTimer<=0 조건에서만 호출되므로 이번 간격만큼 경과 보장)
+        if (passiveCooldownTimer > 0f)
+            passiveCooldownTimer -= gs.GetV4ThinkTick(charDataV4.v4Intelligence);
+
+        float hpRatio = v4MaxStamina > 0 ? v4CurrentStamina / v4MaxStamina : 0f;
+        float progress = GetOverallProgress();
+        int totalRacers = RaceManager.Instance?.Racers?.Count ?? 8;
+
+        bool condMet = pd.CheckCondition(totalRacers, v4CurrentRank, hpRatio,
+                                         IsInBurstZone(gs, progress),
+                                         progress >= gs.v4_finalSpurtStart);
+        passiveConditionActive = condMet;
+
+        // 즉발 효과: 조건 충족 + 쿨다운 만료 시 발동
+        if (condMet && passiveCooldownTimer <= 0f)
+        {
+            if (pd.effectType == PassiveEffectType.HpHeal)
+            {
+                float heal = v4MaxStamina * pd.effectValue;
+                v4CurrentStamina = Mathf.Min(v4MaxStamina, v4CurrentStamina + heal);
+                enduranceHP = v4CurrentStamina;
+                passiveCooldownTimer = pd.cooldownSec;
+                var ov = RaceManager.Instance?.GetComponent<RaceDebugOverlay>();
+                ov?.LogEvent(RaceDebugOverlay.EventType.Skill,
+                    string.Format("{0} 패시브 HP회복 +{1:P0} ({2:F0}HP)",
+                        charDataV4.charId.Split('.')[2], pd.effectValue, heal));
+            }
+            else if (pd.effectType == PassiveEffectType.CpRegen)
+            {
+                calmPoints = Mathf.Min(maxCP, calmPoints + maxCP * pd.effectValue);
+                passiveCooldownTimer = pd.cooldownSec;
+                var ov = RaceManager.Instance?.GetComponent<RaceDebugOverlay>();
+                ov?.LogEvent(RaceDebugOverlay.EventType.Skill,
+                    string.Format("{0} 패시브 CP회복 +{1:P0}",
+                        charDataV4.charId.Split('.')[2], pd.effectValue));
+            }
         }
     }
 
