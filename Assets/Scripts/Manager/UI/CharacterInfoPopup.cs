@@ -216,14 +216,47 @@ public class CharacterInfoPopup : MonoBehaviour
             winRateLabel.text = Loc.Get("str.ui.char.winrate", winPct.ToString("F0"));
         }
 
-        // 4) 스킬 설명
+        // 4) 스킬 설명 — SkillRegistry 경유 (액티브 + 패시브, 다국어)
         if (skillDescLabel != null)
         {
-            string skillKey = data.charSkillDesc;
-            if (!string.IsNullOrEmpty(skillKey))
-                skillDescLabel.text = Loc.Get(skillKey);
-            else
-                skillDescLabel.text = Loc.Get(data.charName.Replace(".name", ".ability"));
+            var sb = new System.Text.StringBuilder();
+
+            // ── 액티브 스킬 (CharacterData.charAbility = skillKey) ──
+            if (!string.IsNullOrEmpty(data.charAbility) && !data.charAbility.Contains(":"))
+            {
+                string aName = SkillRegistry.GetDisplayName(data.charAbility);
+                string aDesc = SkillRegistry.GetDescription(data.charAbility);
+                if (!string.IsNullOrEmpty(aName) && aName != data.charAbility)
+                {
+                    sb.Append("<b>⚔ ").Append(aName).Append("</b>");
+                    if (!string.IsNullOrEmpty(aDesc)) sb.Append("\n").Append(aDesc);
+                }
+            }
+
+            // ── 패시브 스킬 (V4에서 charPassive = skillKey 조회) ──
+            var v4 = CharacterDatabaseV4.FindById(data.charId);
+            if (v4 != null && !string.IsNullOrEmpty(v4.charPassive) && !v4.charPassive.Contains(":"))
+            {
+                string pName = SkillRegistry.GetDisplayName(v4.charPassive);
+                string pDesc = SkillRegistry.GetDescription(v4.charPassive);
+                if (!string.IsNullOrEmpty(pName) && pName != v4.charPassive)
+                {
+                    if (sb.Length > 0) sb.Append("\n\n");
+                    sb.Append("<b>✨ ").Append(pName).Append("</b>");
+                    if (!string.IsNullOrEmpty(pDesc)) sb.Append("\n").Append(pDesc);
+                }
+            }
+
+            // 폴백: 스킬 미연결 캐릭터는 기존 description 키
+            if (sb.Length == 0)
+            {
+                string fallbackKey = !string.IsNullOrEmpty(data.charSkillDesc)
+                    ? data.charSkillDesc
+                    : data.charName.Replace(".name", ".ability");
+                sb.Append(Loc.Get(fallbackKey));
+            }
+
+            skillDescLabel.text = sb.ToString();
         }
 
         // 5) 코루틴 전달용 저장

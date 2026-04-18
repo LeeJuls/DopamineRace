@@ -382,9 +382,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             else if (IsInBurstZone(gs, currentProgress)) drain *= gs.v4_burstDrainMul;
             else if (v4EmergencyBurst)
             {
-                // 거리별 스케일링: 단거리(2L)에서 drain 낮음 → 도주 강함, 장거리(5L)에서 drain 높음 → 도주 약함
-                // lapScale = √(랩수/3): 2L=0.82, 3L=1.0, 4L=1.15, 5L=1.29
-                float lapScale = Mathf.Pow((float)GetTotalLaps() / 3f, 0.5f);
+                // 거리별 스케일링(drain 지수 0.5): 2L=0.82, 3L=1.0, 4L=1.15, 5L=1.29
+                float lapScale = gs.LapScale(GetTotalLaps(), 0.5f);
                 drain *= gs.GetV4EmergencyBurstDrainMul(charDataV4.charType) * lapScale;
             }
         }

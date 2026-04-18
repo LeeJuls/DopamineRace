@@ -398,6 +398,15 @@ public class GameSettingsV4 : ScriptableObject
         => v4_thinkTickBase - (intelligenceStat / v4_intelligenceStatMax) * v4_thinkTickBonus;
 
     /// <summary>
+    /// 거리별 스케일 팩터 = (laps/3)^exponent.
+    /// exponent=0.5f → drain용 (기존, 2L=0.82 / 3L=1.0 / 5L=1.29)
+    /// exponent=0.35f → 쿨타임용 (신규, 2L=0.87 / 3L=1.0 / 5L=1.19)
+    /// 3L 기준(=1.0)으로 단거리·장거리 감쇠/증폭 조정.
+    /// </summary>
+    public float LapScale(int laps, float exponent = 0.5f)
+        => Mathf.Pow(Mathf.Max(1, laps) / 3f, exponent);
+
+    /// <summary>
     /// 파워 기반 충돌 페널티 (상대 비교 방식)
     /// V_drop = BasePenalty × (1 - myPower / (myPower + opponentPower))
     /// 양쪽 모두 피해를 받되, Power가 높은 쪽이 덜 받음.

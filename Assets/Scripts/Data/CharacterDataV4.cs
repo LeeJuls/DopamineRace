@@ -93,9 +93,42 @@ public class CharacterDataV4
         // col 19 = char_passive (신규, 없으면 None으로 폴백)
         d.charPassive  = cols.Length > 19 ? cols[19].Trim() : "";
 
-        d.skillData   = SkillData.Parse(d.charAbility, d.charAbilityTimeSec);
-        d.passiveData = PassiveSkillData.Parse(d.charPassive);
+        d.skillData   = ResolveSkill(d.charAbility, d.charAbilityTimeSec);
+        d.passiveData = ResolvePassive(d.charPassive);
         return d;
+    }
+
+    /// <summary>
+    /// 액티브 스킬 라우터.
+    /// - 빈 값 → 기본 None SkillData
+    /// - ':' 포함 → 기존 인라인 포맷 (하위호환)
+    /// - 그 외 → SkillRegistry 조회
+    /// </summary>
+    private static SkillData ResolveSkill(string raw, float fallbackDur)
+    {
+        if (string.IsNullOrEmpty(raw))
+        {
+            var empty = new SkillData();
+            empty.triggerType = SkillTriggerType.None;
+            return empty;
+        }
+        if (raw.Contains(":")) return SkillData.Parse(raw, fallbackDur);
+        return SkillRegistry.GetActive(raw);
+    }
+
+    /// <summary>
+    /// 패시브 스킬 라우터 (액티브와 동일 원칙).
+    /// </summary>
+    private static PassiveSkillData ResolvePassive(string raw)
+    {
+        if (string.IsNullOrEmpty(raw))
+        {
+            var empty = new PassiveSkillData();
+            empty.triggerType = PassiveTriggerType.None;
+            return empty;
+        }
+        if (raw.Contains(":")) return PassiveSkillData.Parse(raw);
+        return SkillRegistry.GetPassive(raw);
     }
 
     private static CharacterType ParseType(string s)

@@ -64,7 +64,7 @@ public class RaceDebugOverlay : MonoBehaviour
     // ── HP 탭 UI ──
     // (탭 시스템으로 전환 — 별도 스크롤 불필요)
 
-    public enum EventType { Critical, CollisionHit, CollisionDodge, Slingshot, Attack, Finish, Track, Burst, Spurt, Slipstream }
+    public enum EventType { Critical, CollisionHit, CollisionDodge, Slingshot, Attack, Finish, Track, Burst, Spurt, Slipstream, Skill }
 
     public struct RaceEvent
     {
@@ -86,6 +86,7 @@ public class RaceDebugOverlay : MonoBehaviour
                 case EventType.Burst:          return "🔥";
                 case EventType.Spurt:          return "💨";
                 case EventType.Slipstream:     return "🌊";
+                case EventType.Skill:          return "✨";
                 default: return "•";
             }
         }
@@ -1212,6 +1213,7 @@ public class RaceDebugOverlay : MonoBehaviour
                     case EventType.Slingshot:      c = "#66FF66"; break;
                     case EventType.Attack:         c = "#FFD700"; break;
                     case EventType.Track:          c = "#CC88FF"; break;
+                    case EventType.Skill:          c = "#DDDDFF"; break;
                 }
                 GUILayout.Label(string.Format("<color={0}>[{1:F1}s] {2} {3}</color>",
                     c, e.time, e.GetIcon(), e.description), normalStyle);

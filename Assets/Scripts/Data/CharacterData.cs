@@ -204,10 +204,26 @@ public class CharacterData
             float.TryParse(cols[18].Trim(), out d.charAppearanceRate);
         if (d.charAppearanceRate <= 0f) d.charAppearanceRate = 10f; // 0 이하 방어
 
-        // ★ 스킬 데이터 파싱
-        d.skillData = SkillData.Parse(d.charAbility, d.charAbilityTimeSec);
+        // ★ 스킬 데이터 파싱 (skillKey 또는 인라인 모두 지원)
+        d.skillData = ResolveSkill(d.charAbility, d.charAbilityTimeSec);
 
         return d;
+    }
+
+    /// <summary>
+    /// 인라인 포맷(':' 포함)은 기존 SkillData.Parse, 그 외는 SkillRegistry 조회.
+    /// CharacterDataV4의 동일 라우터와 동등 동작.
+    /// </summary>
+    private static SkillData ResolveSkill(string raw, float fallbackDur)
+    {
+        if (string.IsNullOrEmpty(raw))
+        {
+            var empty = new SkillData();
+            empty.triggerType = SkillTriggerType.None;
+            return empty;
+        }
+        if (raw.Contains(":")) return SkillData.Parse(raw, fallbackDur);
+        return SkillRegistry.GetActive(raw);
     }
 
     private static CharacterType ParseType(string s)

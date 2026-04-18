@@ -134,9 +134,14 @@ public class CollisionSystem : MonoBehaviour
         var cdB = b.CharData;
         if (cdA == null || cdB == null) return;
 
-        // ── ★ 스킬 충돌 카운트 (양쪽 모두) ──
-        a.OnSkillCollisionHit();
-        b.OnSkillCollisionHit();
+        // ── ★ 스킬 충돌 카운트 (양쪽 모두, 방향 정보 포함) ──
+        // 뒤에 있는 쪽 = 추격자(ChaseHit), 앞에 있는 쪽 = 피격자(ChasedHit)
+        {
+            RacerController skillBehind = a.OverallProgress <= b.OverallProgress ? a : b;
+            RacerController skillAhead  = (skillBehind == a) ? b : a;
+            skillBehind.OnSkillCollisionHit(new CollisionContext { isChasing = true });
+            skillAhead.OnSkillCollisionHit(new CollisionContext { isChasing = false });
+        }
 
         // ── 승패 결정 ──
         RacerController winner, loser;

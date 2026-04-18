@@ -44,6 +44,7 @@ public partial class RacerController : MonoBehaviour
     private int skillCollisionCount = 0;       // 충돌 횟수 누적
     private bool skillActive = false;          // 현재 스킬 발동 중 (무기 꺼냄)
     private float skillRemainingTime = 0f;     // 스킬 남은 시간
+    private float skillCooldownTimer = 0f;     // 발동 후 재발동 쿨다운 (0이면 즉시 재발동 가능)
     private GameObject normalModel;            // 맨몸 모델
     private GameObject attackModel;            // 무기 든 모델 (미리 생성, 비활성)
     private Animator normalAnimator;           // 맨몸 Animator
@@ -263,9 +264,13 @@ public partial class RacerController : MonoBehaviour
         skillCollisionCount = 0;
         skillActive = false;
         skillRemainingTime = 0f;
+        skillCooldownTimer = 0f;
         passiveConditionActive = false;
         passiveCooldownTimer = 0f;
         DeactivateSkill();
+        // ── Step F.5: SKILL 리셋 로그 (라운드 간 쿨타임 누수 감시) ──
+        if (charData != null || charDataV4 != null)
+            Debug.Log(string.Format("[SKILL] {0} RESET", charDataV4?.charId ?? charData?.charId ?? "?"));
 
         // 흔들림 초기화
         deviationOffset = 0f;
@@ -312,6 +317,7 @@ public partial class RacerController : MonoBehaviour
         skillCollisionCount = 0; skillActive = false; skillRemainingTime = 0f;
         passiveConditionActive = false; passiveCooldownTimer = 0f;
         v4SkillHpTriggered = false; v4SkillRankTriggered = false;
+        skillCooldownTimer = 0f;
         DeactivateSkill();
 
         // HP 시스템
@@ -562,6 +568,13 @@ public partial class RacerController : MonoBehaviour
                 DeactivateSkill();
             }
         }
+
+        // ★ 스킬 쿨다운 감소
+        if (skillCooldownTimer > 0f)
+        {
+            skillCooldownTimer -= gameDt;
+            if (skillCooldownTimer < 0f) skillCooldownTimer = 0f;
+        }
     }
 
     // ══════════════════════════════════════
@@ -683,16 +696,28 @@ public partial class RacerController : MonoBehaviour
     // ══════════════════════════════════════
 
     /// <summary>
-    /// 충돌 시 호출 (CollisionSystem에서) → 충돌 횟수 증가 → 조건 달성 시 스킬 발동
+    /// 충돌 시 호출 (CollisionSystem에서) → 방향 필터 후 카운트 증가 → 조건 달성 시 스킬 발동.
+    /// ctx.isChasing true = 뒤→앞 추격자, false = 앞→뒤 피격자.
     /// </summary>
-    public void OnSkillCollisionHit()
+    public void OnSkillCollisionHit(CollisionContext ctx)
     {
-        if (skillActive) return;
+        if (skillActive || skillCooldownTimer > 0f) return;
         // V4 우선 사용, 없으면 구버전 폴백
         SkillData sd = (charDataV4?.skillData != null && charDataV4.skillData.triggerType != SkillTriggerType.None)
             ? charDataV4.skillData
             : charData?.skillData;
         if (sd == null) return;
+
+        // 방향별 필터
+        bool shouldCount;
+        switch (sd.triggerType)
+        {
+            case SkillTriggerType.E_Skill_Collision:  shouldCount = true; break;
+            case SkillTriggerType.E_Skill_ChaseHit:   shouldCount = ctx.isChasing; break;
+            case SkillTriggerType.E_Skill_ChasedHit:  shouldCount = !ctx.isChasing; break;
+            default: return;
+        }
+        if (!shouldCount) return;
 
         skillCollisionCount++;
         if (sd.CheckCollisionTrigger(skillCollisionCount))
@@ -713,7 +738,7 @@ public partial class RacerController : MonoBehaviour
         skillCollisionCount = 0; // 카운트 리셋 (재발동 가능)
         string displayName = charData?.DisplayName ?? charDataV4?.charId ?? "?";
 
-        // HpHeal: 즉발 회복 — skillActive 불필요
+        // HpHeal: 즉발 회복 — skillActive 불필요, 쿨타임은 아래 공통 블록에서 설정
         if (sd.effectType == SkillEffectType.HpHeal)
         {
             float heal = v4MaxStamina > 0f ? v4MaxStamina * sd.effectValue
@@ -722,14 +747,30 @@ public partial class RacerController : MonoBehaviour
             enduranceHP = v4CurrentStamina;
             Debug.Log(string.Format("[스킬 발동] {0} → HP 즉발 회복 +{1:P0} ({2:F0}HP)",
                 displayName, sd.effectValue, heal));
-            return;
+        }
+        else
+        {
+            // 타이머 기반 효과 (CollisionWin / SpeedBoost / DrainReduce)
+            skillActive = true;
+            skillRemainingTime = sd.durationSec;
+            Debug.Log(string.Format("[스킬 발동] {0} → {1} ({2}초)",
+                displayName, sd.effectType, sd.durationSec));
         }
 
-        // 타이머 기반 효과 (CollisionWin / SpeedBoost / DrainReduce)
-        skillActive = true;
-        skillRemainingTime = sd.durationSec;
-        Debug.Log(string.Format("[스킬 발동] {0} → {1} ({2}초)",
-            displayName, sd.effectType, sd.durationSec));
+        // 쿨다운 시작 (거리별 LapScale 지수 0.35 적용) — 모든 효과 공통
+        var gs4 = GameSettings.Instance?.v4Settings;
+        float realCd = 0f;
+        if (gs4 != null && sd.cooldownSec > 0f)
+        {
+            float cdLapScale = gs4.LapScale(GetTotalLaps(), 0.35f);
+            realCd = sd.cooldownSec * cdLapScale;
+            skillCooldownTimer = realCd;
+        }
+
+        // ── Step F.5: SKILL 집계용 로그 (AutoRaceRunner grep 집계) ──
+        Debug.Log(string.Format("[SKILL] L{0} {1} ACTIVATE trigger={2} val={3} effect={4} cd={5:F1}s",
+            GetTotalLaps(), charDataV4?.charId ?? charData?.charId ?? "?",
+            sd.triggerType, sd.triggerValue, sd.effectType, realCd));
     }
 
     /// <summary>

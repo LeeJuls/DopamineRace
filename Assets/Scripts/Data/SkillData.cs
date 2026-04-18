@@ -7,7 +7,9 @@ using UnityEngine;
 public enum SkillTriggerType
 {
     None,               // 스킬 없음
-    E_Skill_Collision,  // 충돌 N회 시 발동
+    E_Skill_Collision,  // 모든 충돌 N회 시 발동 (방향 무관)
+    E_Skill_ChaseHit,   // 따라잡는 충돌 N회 시 (내가 뒤 → 앞 타격)
+    E_Skill_ChasedHit,  // 따라잡히는 충돌 N회 시 (내가 앞 → 뒤에서 피격)
     E_Skill_Lap,        // N랩 완주 직후 발동
     E_Skill_HP,         // HP N% 이하 도달 시 1회 발동
     E_Skill_Rank,       // N등 이하가 되는 순간 1회 발동
@@ -47,6 +49,7 @@ public class SkillData
     public float durationSec;             // 발동 지속 시간 (초) — HpHeal은 0 허용
     public SkillEffectType effectType;    // 발동 효과 타입
     public float effectValue;             // 효과 값 (SpeedBoost: 배율, HpHeal/DrainReduce: 비율)
+    public float cooldownSec;             // 발동 후 재발동 쿨다운 (3L 기준값, LapScale 적용)
 
     // 안전 상한/하한 (balance 에이전트 권장)
     public const float SPEED_BOOST_MAX  = 1.15f;
@@ -66,6 +69,7 @@ public class SkillData
         data.durationSec  = 0f;
         data.effectType   = SkillEffectType.CollisionWin;
         data.effectValue  = 0f;
+        data.cooldownSec  = 0f;
 
         if (string.IsNullOrEmpty(abilityStr) || abilityStr.ToLower() == "none")
             return data;
@@ -134,6 +138,15 @@ public class SkillData
             data.durationSec = fallbackDurationSec;
         }
 
+        // cooldownSec 파싱 (세그먼트 5, 신규 — 생략/빈값/음수 → 0 폴백)
+        if (parts.Length > 5 && !string.IsNullOrEmpty(parts[5].Trim()))
+        {
+            float parsedCd;
+            if (float.TryParse(parts[5].Trim(), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out parsedCd))
+                data.cooldownSec = Mathf.Max(0f, parsedCd);   // 음수 클램프 → 0
+        }
+
         // HpHeal은 duration=0 허용 (즉발)
         bool durationRequired = data.effectType != SkillEffectType.HpHeal;
         if (durationRequired && data.durationSec <= 0f)
@@ -161,11 +174,14 @@ public class SkillData
     }
 
     /// <summary>
-    /// 충돌 기반 스킬 발동 조건 체크
+    /// 충돌 기반 스킬 발동 조건 체크 (3종 트리거 모두 — 방향 필터는 RacerController에서 선처리)
     /// </summary>
     public bool CheckCollisionTrigger(int collisionCount)
     {
-        if (triggerType != SkillTriggerType.E_Skill_Collision) return false;
+        bool isCollisionType = triggerType == SkillTriggerType.E_Skill_Collision
+                            || triggerType == SkillTriggerType.E_Skill_ChaseHit
+                            || triggerType == SkillTriggerType.E_Skill_ChasedHit;
+        if (!isCollisionType) return false;
         if (triggerValue <= 0) return false;
         return collisionCount >= triggerValue;
     }

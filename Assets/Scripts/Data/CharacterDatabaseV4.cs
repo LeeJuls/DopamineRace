@@ -14,6 +14,12 @@ public static class CharacterDatabaseV4
         return _db?.Find(c => c.charId == charId);
     }
 
+    /// <summary>CSV 핫리로드용 — 다음 호출에서 재로드.</summary>
+    public static void Reset()
+    {
+        _db = null;
+    }
+
     private static void Load()
     {
         var csv = Resources.Load<TextAsset>("Data/CharacterDB_V4");

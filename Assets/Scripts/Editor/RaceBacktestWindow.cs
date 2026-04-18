@@ -190,9 +190,10 @@ public class RaceBacktestWindow : EditorWindow
         public bool v4IsSpurting;
         public float v4SpurtHpRatio;   // 스퍼트 진입 시 HP 비율 스냅샷
 
-        // ★ 액티브 스킬 (Group B)
+        // ★ 액티브 스킬 (Group B + 쿨타임)
         public bool skillActive;
         public float skillRemainingTime;
+        public float skillCooldownTimer;     // 발동 후 재발동 쿨다운 (LapScale 지수 0.35 적용)
         public int skillCollisionCount;
         public bool skillHpTriggered;       // E_Skill_HP 1회 발동 추적
         public bool skillRankTriggered;     // E_Skill_Rank 1회 발동 추적
@@ -574,6 +575,7 @@ public class RaceBacktestWindow : EditorWindow
                         racer.skillActive = false;
                         racer.skillRemainingTime = 0f;
                         racer.skillCollisionCount = 0;
+                        racer.skillCooldownTimer = 0f;
                         racer.skillHpTriggered = false;
                         racer.skillRankTriggered = false;
                         racer.passiveConditionActive = false;
@@ -877,8 +879,11 @@ public class RaceBacktestWindow : EditorWindow
         // V4 스킬 충돌 카운트 증가 (양쪽 모두 — CollisionTrigger 발동 체크 포함)
         if (gs.useV4RaceSystem)
         {
-            SimOnSkillCollisionHit(a);
-            SimOnSkillCollisionHit(b);
+            // 뒤에 있는 쪽 = 추격자, 앞에 있는 쪽 = 피격자 (이후 slingshot용 behind와 분리)
+            SimRacer skillBehind = a.position <= b.position ? a : b;
+            SimRacer skillAhead  = (skillBehind == a) ? b : a;
+            SimOnSkillCollisionHit(skillBehind, isChasing: true);
+            SimOnSkillCollisionHit(skillAhead, isChasing: false);
         }
 
         SimRacer winner, loser;
@@ -1160,6 +1165,13 @@ public class RaceBacktestWindow : EditorWindow
             if (r.skillRemainingTime <= 0f) { r.skillActive = false; r.skillRemainingTime = 0f; }
         }
 
+        // 스킬 쿨다운 감소 (UpdateCollisionTimers 미러)
+        if (r.skillCooldownTimer > 0f)
+        {
+            r.skillCooldownTimer -= gameDt;
+            if (r.skillCooldownTimer < 0f) r.skillCooldownTimer = 0f;
+        }
+
         // V4 HP/Rank 스킬 트리거 체크 (1회성 — ProcessV4ThinkTick 미러)
         if (!r.skillActive && r.dataV4?.skillData != null && r.dataV4.skillData.triggerType != SkillTriggerType.None)
         {
@@ -1214,9 +1226,8 @@ public class RaceBacktestWindow : EditorWindow
                 else if (inRegularBurst) drain *= gs4.v4_burstDrainMul;
                 else if (inEmergencyBurst)
                 {
-                    // 거리별 스케일링 미러 (RacerController_V4 동기화)
-                    // lapScale = √(랩수/3): 2L=0.82, 3L=1.0, 4L=1.15, 5L=1.29
-                    float lapScale = Mathf.Pow((float)simLaps / 3f, 0.5f);
+                    // 거리별 스케일링 미러 (GameSettingsV4.LapScale, drain 지수 0.5)
+                    float lapScale = gs4.LapScale(simLaps, 0.5f);
                     drain *= gs4.GetV4EmergencyBurstDrainMul(dv4.charType) * lapScale;
                 }
             }
@@ -1346,7 +1357,7 @@ public class RaceBacktestWindow : EditorWindow
         }
     }
 
-    /// <summary>V4 스킬 발동 (ActivateSkill 미러 — HpHeal 즉발 / 나머지 타이머)</summary>
+    /// <summary>V4 스킬 발동 (ActivateSkill 미러 — HpHeal 즉발 / 나머지 타이머 + 쿨다운)</summary>
     private void SimActivateSkillV4(SimRacer r, SkillData sd)
     {
         r.skillCollisionCount = 0;
@@ -1361,14 +1372,32 @@ public class RaceBacktestWindow : EditorWindow
             r.skillActive = true;
             r.skillRemainingTime = sd.durationSec;
         }
+        // 쿨다운 시작 (LapScale 지수 0.35) — RacerController.ActivateSkill 미러
+        if (sd.cooldownSec > 0f)
+        {
+            var gs4 = GameSettings.Instance?.v4Settings;
+            float cdLapScale = gs4 != null ? gs4.LapScale(simLaps, 0.35f) : 1f;
+            r.skillCooldownTimer = sd.cooldownSec * cdLapScale;
+        }
     }
 
-    /// <summary>충돌 시 스킬 카운트 증가 (OnSkillCollisionHit 미러)</summary>
-    private void SimOnSkillCollisionHit(SimRacer r)
+    /// <summary>충돌 시 스킬 카운트 증가 (OnSkillCollisionHit 미러) — 방향 필터 포함</summary>
+    private void SimOnSkillCollisionHit(SimRacer r, bool isChasing)
     {
-        if (r.skillActive) return;
+        if (r.skillActive || r.skillCooldownTimer > 0f) return;
         var sd = r.dataV4?.skillData;
         if (sd == null || sd.triggerType == SkillTriggerType.None) return;
+
+        bool shouldCount;
+        switch (sd.triggerType)
+        {
+            case SkillTriggerType.E_Skill_Collision:  shouldCount = true; break;
+            case SkillTriggerType.E_Skill_ChaseHit:   shouldCount = isChasing; break;
+            case SkillTriggerType.E_Skill_ChasedHit:  shouldCount = !isChasing; break;
+            default: return;
+        }
+        if (!shouldCount) return;
+
         r.skillCollisionCount++;
         if (sd.CheckCollisionTrigger(r.skillCollisionCount))
             SimActivateSkillV4(r, sd);
