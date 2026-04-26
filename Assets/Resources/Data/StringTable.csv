@@ -210,12 +210,12 @@ str.char.031.skill.desc,충돌 5회시 스킬 발동,Skill activates after 5 col
 str.ui.char.winrate,승률 : {0}%,Win Rate : {0}%,勝率 : {0}%,胜率: {0}%,Siegquote: {0}%,% Victoria: {0}%,% Vitória: {0}%
 str.ui.char.rank_label,{0}위{1},{0}{1},{0}位{1},{0}名{1},{0}.{1},{0}º{1},{0}º{1}
 str.ui.char.no_record,출전 기록 없음,No race record,出走記録なし,无出赛记录,Kein Rennrekord,Sin historial,Sem histórico
-str.ui.char.stat.speed,Speed,Speed,Speed,Speed,Speed,Speed,Speed
-str.ui.char.stat.power,Power,Power,Power,Power,Power,Power,Power
-str.ui.char.stat.brave,Brave,Brave,Brave,Brave,Brave,Brave,Brave
-str.ui.char.stat.calm,Calm,Calm,Calm,Calm,Calm,Calm,Calm
-str.ui.char.stat.endurance,Endurance,Endurance,Endurance,Endurance,Endurance,Endurance,Endurance
-str.ui.char.stat.luck,Luck,Luck,Luck,Luck,Luck,Luck,Luck
+str.ui.char.stat.speed,속도,Speed,速度,速度,Tempo,Velocidad,Velocidade
+str.ui.char.stat.power,힘,Power,パワー,力量,Stärke,Fuerza,Força
+str.ui.char.stat.brave,용기,Brave,勇気,勇气,Mut,Valor,Coragem
+str.ui.char.stat.calm,침착,Calm,冷静,冷静,Ruhe,Calma,Calma
+str.ui.char.stat.endurance,인내,Endurance,持久,耐久,Ausdauer,Aguante,Resistência
+str.ui.char.stat.luck,운,Luck,運,幸运,Glück,Suerte,Sorte
 str.ui.char.stat.accel,가속,Accel,加速,加速,Beschl.,Aceler.,Aceler.
 str.ui.char.stat.stamina,지구력,Stamina,スタミナ,耐力,Ausdauer,Aguante,Resistência
 str.ui.char.stat.intelligence,지능,Int,知能,智力,Intelligenz,Inteligencia,Inteligência

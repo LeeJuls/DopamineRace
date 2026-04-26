@@ -29,6 +29,11 @@ public class CharacterInfoPopup : MonoBehaviour
     private Text longDistLabel;
     private Text longDistRanks;
 
+    // 경기기록 ScrollRect — 3개 동시 스크롤용 (LateUpdate polling)
+    private ScrollRect _shortScroll, _midScroll, _longScroll;
+    private float _lastShortH = -1f, _lastMidH = -1f, _lastLongH = -1f;
+    private float _lastShortV = -1f, _lastMidV = -1f, _lastLongV = -1f;
+
     // 차트 영역
     private GameObject radarChartArea;
 
@@ -87,6 +92,7 @@ public class CharacterInfoPopup : MonoBehaviour
             {
                 shortDistLabel = FindText(shortRow, "ShortDistLabel");
                 shortDistRanks = FindText(shortRow, "RanksScroll/ShortDistRanks");
+                _shortScroll = shortRow.Find("RanksScroll")?.GetComponent<ScrollRect>();
             }
 
             Transform midRow = layout1.Find("MidDistRow");
@@ -94,6 +100,7 @@ public class CharacterInfoPopup : MonoBehaviour
             {
                 midDistLabel = FindText(midRow, "MidDistLabel");
                 midDistRanks = FindText(midRow, "RanksScroll/MidDistRanks");
+                _midScroll = midRow.Find("RanksScroll")?.GetComponent<ScrollRect>();
             }
 
             Transform longRow = layout1.Find("LongDistRow");
@@ -101,6 +108,7 @@ public class CharacterInfoPopup : MonoBehaviour
             {
                 longDistLabel = FindText(longRow, "LongDistLabel");
                 longDistRanks = FindText(longRow, "RanksScroll/LongDistRanks");
+                _longScroll = longRow.Find("RanksScroll")?.GetComponent<ScrollRect>();
             }
         }
 
@@ -167,6 +175,9 @@ public class CharacterInfoPopup : MonoBehaviour
         RectTransform rt = GetComponent<RectTransform>();
         if (rt != null)
             targetPosition = rt.anchoredPosition;
+
+        // 폰트 일괄 적용 (모든 Text 컴포넌트에 GameSettings 한글 픽셀폰트)
+        ApplyFontAll();
 
         isInitialized = true;
         gameObject.SetActive(false);
@@ -305,6 +316,9 @@ public class CharacterInfoPopup : MonoBehaviour
         UpdateRadarChart(pendingData, pendingTrackInfo);
         UpdateRecentRecords(pendingRecord);
 
+        // 차트가 동적 생성한 Text에도 즉시 폰트 적용 (애니메이션 시작 전)
+        ApplyFontAll();
+
         // ── 슬라이드인 + 레이더차트 스탯 선 애니메이션 (동시 진행) ──
         RectTransform rt = GetComponent<RectTransform>();
         Vector2 startPos = targetPosition + new Vector2(0, -200);
@@ -350,6 +364,9 @@ public class CharacterInfoPopup : MonoBehaviour
             radarChart.RefreshChart();
         }
 
+        // RadarChart가 동적 생성한 Text(인디케이터·타이틀)에도 폰트 적용
+        ApplyFontAll();
+
         showCoroutine = null;
     }
 
@@ -373,7 +390,7 @@ public class CharacterInfoPopup : MonoBehaviour
         // ★ XCharts theme-level 폰트 설정 (textStyle.font보다 확실)
         // AddTextObject()에서 textStyle.font==null이면 theme.font를 사용하므로
         // theme.common.font를 설정하면 모든 라벨에 자동 적용됨
-        Font chartFont = FontHelper.GetMainFont();
+        Font chartFont = FontHelper.GetFontForCurrentLanguage();
         if (chartFont != null)
         {
             radarChart.theme.common.font = chartFont;
@@ -425,7 +442,7 @@ public class CharacterInfoPopup : MonoBehaviour
         radarChart.RemoveData();
 
         // ★ RemoveData() 후 theme 폰트 재확인 (혹시 초기화될 수 있으므로)
-        Font chartFont = FontHelper.GetMainFont();
+        Font chartFont = FontHelper.GetFontForCurrentLanguage();
         if (chartFont != null)
         {
             radarChart.theme.common.font = chartFont;
@@ -631,6 +648,78 @@ public class CharacterInfoPopup : MonoBehaviour
             case 3:  return "<color=#CD7F32>" + rankText + "</color>";
             default: return "<color=#000000>" + rankText + "</color>";
         }
+    }
+
+    // ═══ 폰트 ═══
+
+    /// <summary>
+    /// 팝업 내 모든 Text 컴포넌트에 현재 언어에 맞는 폰트 일괄 적용.
+    /// CurrentLang == "ko" → koreanFont, 그 외 → mainFont.
+    /// Init() + ShowSequence 끝에 호출 (RadarChart 동적 Text 포함).
+    /// </summary>
+    private void ApplyFontAll()
+    {
+        Font font = FontHelper.GetFontForCurrentLanguage();
+        if (font == null) font = FontHelper.GetMainFont(); // 폴백
+        if (font == null) return;
+
+        foreach (var t in GetComponentsInChildren<Text>(true))
+            t.font = font;
+    }
+
+    // ═══ 스크롤 동기화 ═══
+
+    /// <summary>
+    /// 매 프레임 polling: 어느 ScrollRect라도 hPos/vPos가 변하면 나머지 둘에 즉시 동기화.
+    /// onValueChanged 콜백이 일부 환경에서 발화 안 하는 문제 우회.
+    /// </summary>
+    private void LateUpdate()
+    {
+        if (!isInitialized) return;
+        if (!gameObject.activeInHierarchy) return;
+        if (_shortScroll == null || _midScroll == null || _longScroll == null) return;
+
+        float sH = _shortScroll.horizontalNormalizedPosition;
+        float mH = _midScroll.horizontalNormalizedPosition;
+        float lH = _longScroll.horizontalNormalizedPosition;
+        float sV = _shortScroll.verticalNormalizedPosition;
+        float mV = _midScroll.verticalNormalizedPosition;
+        float lV = _longScroll.verticalNormalizedPosition;
+
+        // 변화 감지 — 가장 최근 변화한 값을 master로
+        float targetH = sH;
+        if (Mathf.Abs(mH - _lastMidH) > 0.0005f) targetH = mH;
+        else if (Mathf.Abs(lH - _lastLongH) > 0.0005f) targetH = lH;
+        else if (Mathf.Abs(sH - _lastShortH) > 0.0005f) targetH = sH;
+
+        float targetV = sV;
+        if (Mathf.Abs(mV - _lastMidV) > 0.0005f) targetV = mV;
+        else if (Mathf.Abs(lV - _lastLongV) > 0.0005f) targetV = lV;
+        else if (Mathf.Abs(sV - _lastShortV) > 0.0005f) targetV = sV;
+
+        bool hChanged = Mathf.Abs(sH - _lastShortH) > 0.0005f || Mathf.Abs(mH - _lastMidH) > 0.0005f || Mathf.Abs(lH - _lastLongH) > 0.0005f;
+        bool vChanged = Mathf.Abs(sV - _lastShortV) > 0.0005f || Mathf.Abs(mV - _lastMidV) > 0.0005f || Mathf.Abs(lV - _lastLongV) > 0.0005f;
+
+        if (hChanged && _shortScroll.horizontal)
+        {
+            _shortScroll.horizontalNormalizedPosition = targetH;
+            _midScroll.horizontalNormalizedPosition   = targetH;
+            _longScroll.horizontalNormalizedPosition  = targetH;
+        }
+        if (vChanged && _shortScroll.vertical)
+        {
+            _shortScroll.verticalNormalizedPosition = targetV;
+            _midScroll.verticalNormalizedPosition   = targetV;
+            _longScroll.verticalNormalizedPosition  = targetV;
+        }
+
+        // 다음 프레임 비교용 저장
+        _lastShortH = _shortScroll.horizontalNormalizedPosition;
+        _lastMidH   = _midScroll.horizontalNormalizedPosition;
+        _lastLongH  = _longScroll.horizontalNormalizedPosition;
+        _lastShortV = _shortScroll.verticalNormalizedPosition;
+        _lastMidV   = _midScroll.verticalNormalizedPosition;
+        _lastLongV  = _longScroll.verticalNormalizedPosition;
     }
 
     // ═══ 유틸 ═══

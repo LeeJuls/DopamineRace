@@ -82,6 +82,22 @@ public static class FontHelper
     }
 
     /// <summary>
+    /// 현재 선택된 언어 기준 폰트 반환.
+    /// CurrentLang == "ko" → koreanFont (없으면 mainFont)
+    /// 그 외 언어 → mainFont
+    /// </summary>
+    public static Font GetFontForCurrentLanguage()
+    {
+        var gs = GameSettings.Instance;
+        if (gs == null) return null;
+
+        if (Loc.CurrentLang == "ko" && gs.koreanFont != null)
+            return gs.koreanFont;
+
+        return gs.mainFont;
+    }
+
+    /// <summary>
     /// UI용 OS fallback 폰트 생성 (mainFont가 없을 때 사용).
     /// </summary>
     public static Font GetUIFontWithFallback()

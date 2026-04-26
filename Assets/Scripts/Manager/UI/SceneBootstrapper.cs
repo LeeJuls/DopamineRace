@@ -146,8 +146,9 @@ public partial class SceneBootstrapper : MonoBehaviour
         // 다국어 초기화 (가장 먼저!)
         Loc.Init();
 
-        // 폰트 설정: FontHelper가 GameSettings → OS fallback 처리
-        font = FontHelper.GetUIFontWithFallback();
+        // 폰트 설정: 언어 기반 분기 (KR=koreanFont, 그 외=mainFont) + OS fallback
+        font = FontHelper.GetFontForCurrentLanguage();
+        if (font == null) font = FontHelper.GetUIFontWithFallback();
 
         // ═══ 매니저 초기화 순서 (변경 시 주의!) ═══
         // 1단계: 데이터 (다른 매니저가 참조)

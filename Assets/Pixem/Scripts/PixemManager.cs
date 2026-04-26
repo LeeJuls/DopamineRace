@@ -846,6 +846,16 @@ public class PixemManager : MonoBehaviour
         sheet.Apply();
         File.WriteAllBytes(_sheetSavePath, sheet.EncodeToPNG());
         AssetDatabase.ImportAsset(_sheetSavePath);
+
+        TextureImporter importer = AssetImporter.GetAtPath(_sheetSavePath) as TextureImporter;
+        if (importer != null)
+        {
+            importer.npotScale = TextureImporterNPOTScale.None;
+            importer.maxTextureSize = 1024;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.SaveAndReimport();
+        }
+
         return AssetDatabase.LoadAssetAtPath<Texture2D>(_sheetSavePath);
     }
 

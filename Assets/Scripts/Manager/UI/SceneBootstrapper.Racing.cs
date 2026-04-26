@@ -59,7 +59,7 @@ public partial class SceneBootstrapper
         // ── 내 배팅 표시 (상단 중앙) ──
         myBetText = MkText(parent, "",
             new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -10), new Vector2(600, 30), 20, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.3f));
+            new Vector2(0, -10), new Vector2(600, 40), 26, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.3f));
 
         // ── 라운드+바퀴 (상단 우측) ──
         racingRoundText = MkText(parent, "",
