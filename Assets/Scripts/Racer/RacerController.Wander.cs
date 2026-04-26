@@ -127,10 +127,15 @@ public partial class RacerController : MonoBehaviour
                 break;
 
             case WanderPhase.Swaying:
-                // 기준점에서 ±0.2 사인파 진동
-                float swayX = Mathf.Sin(Time.time * 4f) * 0.2f;
-                transform.position = new Vector3(
-                    _wanderBasePos.x + swayX, _wanderBasePos.y, 0f);
+                // 위치 고정 — 좌우 둘러보기는 sprite flip 토글로만 표현
+                // (FlipSprite는 lastPosition 기반이므로 transform을 살짝 흔들지 않으면 flip 발생 안 함
+                //  → lastPosition을 직접 토글해서 시각적 둘러보기 효과)
+                transform.position = _wanderBasePos;
+                // 1초 주기로 좌우 방향 토글 (Sin 부호로 결정)
+                float lookSign = Mathf.Sign(Mathf.Sin(Time.time * 2f));
+                float absScale = Mathf.Abs(transform.localScale.x);
+                transform.localScale = new Vector3(
+                    lookSign * absScale, transform.localScale.y, transform.localScale.z);
                 break;
 
             case WanderPhase.Pausing:
