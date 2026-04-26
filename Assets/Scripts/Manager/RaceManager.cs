@@ -29,6 +29,7 @@ public class RaceManager : MonoBehaviour
 
     // ═══ ★ 배회 연출용 스폰 위치 캐시 (SPEC-025) ═══
     private Vector3[] _cachedSpawnPos;
+    private Vector3 _firstFinisherPos;   // 1등이 결승선 통과한 위치 (입상 배치 기준점)
 
     // ═══ 웨이포인트 ═══
     private GameObject waypointParent;
@@ -379,7 +380,18 @@ public class RaceManager : MonoBehaviour
 
         // ★ 골인 모션 — 배팅 입상권은 AttackMagic, 권외는 Death (SPEC-026)
         int prizeCut = GameManager.Instance?.CurrentBet?.PrizeRankCut ?? 1;
-        racer.PlayFinishMotion(finishCount <= prizeCut ? "AttackMagic" : "Death");
+        bool isWinner = finishCount <= prizeCut;
+        if (isWinner)
+        {
+            // 입상권: 1등=중앙, 2등=좌하, 3등=우상으로 배치 (겹침 방지)
+            if (finishCount == 1) _firstFinisherPos = racer.transform.position;
+            racer.transform.position = GetPodiumPosition(finishCount, _firstFinisherPos);
+            racer.PlayFinishMotion("AttackMagic");
+        }
+        else
+        {
+            racer.PlayFinishMotion("Death");
+        }
 
         string name = racer.CharData != null ? racer.CharData.DisplayName
             : GameConstants.RACER_NAMES[racer.RacerIndex];
@@ -438,6 +450,21 @@ public class RaceManager : MonoBehaviour
     /// 레이서들을 랜덤 위치로 흩뿌리고 배회 시작.
     /// Round 1 Betting 진입 시 자동 호출.
     /// </summary>
+    /// <summary>
+    /// 입상 자리 좌표 계산 (SPEC-026).
+    /// 1등=baseFirst, 2등=baseFirst 좌하단, 3등=baseFirst 우상단.
+    /// </summary>
+    private Vector3 GetPodiumPosition(int rank, Vector3 baseFirst)
+    {
+        switch (rank)
+        {
+            case 1: return baseFirst;
+            case 2: return baseFirst + new Vector3(-0.6f, -0.6f, 0f);
+            case 3: return baseFirst + new Vector3( 0.6f,  0.6f, 0f);
+            default: return baseFirst;  // 4등 이상은 입상권 외라 호출 안 됨
+        }
+    }
+
     private void ScatterAndWander()
     {
         if (racers == null || racers.Count == 0) return;
