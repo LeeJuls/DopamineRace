@@ -437,8 +437,8 @@ public class RaceManager : MonoBehaviour
     private void ScatterAndWander()
     {
         if (racers == null || racers.Count == 0) return;
-        // 경기장 안쪽 안전 영역 (X:1~9, Y:-2~2) — 트랙 밖으로 나가지 않도록 보수적 설정
-        var bounds = new Bounds(new Vector3(5f, 0f, 0f), new Vector3(8f, 4f, 0f));
+        // 경기장 안쪽 영역 (X:-2.5~9.5, Y:-3~3) — 트랙(X:-3~10.1, Y:-3.8~3.2) 안쪽 안전마진
+        var bounds = new Bounds(new Vector3(3.5f, 0f, 0f), new Vector3(12f, 6f, 0f));
         foreach (var rc in racers)
         {
             if (rc == null) continue;
