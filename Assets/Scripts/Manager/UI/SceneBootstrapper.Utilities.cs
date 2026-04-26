@@ -91,11 +91,9 @@ public partial class SceneBootstrapper
             int sel = bet.selections[i];
             if (sel >= 0 && sel < racers.Count)
             {
-                string selLabel = bet.GetSelectionLabel(i);
                 string racerName = GameConstants.RACER_NAMES[sel];
-                string arrowLabel = selLabel + ":" + racerName;
                 Color c = arrowColors[Mathf.Min(i, arrowColors.Length - 1)];
-                GameObject arrow = MakeArrow(racers[sel].transform, arrowLabel, c);
+                GameObject arrow = MakeArrow(racers[sel].transform, racerName, c);
                 betArrows.Add(arrow);
             }
         }
