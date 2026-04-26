@@ -319,6 +319,7 @@ public partial class RacerController : MonoBehaviour
         v4SkillHpTriggered = false; v4SkillRankTriggered = false;
         skillCooldownTimer = 0f;
         DeactivateSkill();
+        StopWandering(); // ★ 배회 중이었다면 중단 (백테스트/라운드 리셋 안전)
 
         // HP 시스템
         enduranceHP = 0f; maxHP = 0f; totalConsumedHP = 0f;
@@ -339,6 +340,9 @@ public partial class RacerController : MonoBehaviour
     private void Update()
     {
         ApplyLiveSettings();
+
+        // ★ 배회 모드 — isRacing 로직보다 먼저 처리하고 return
+        if (_isWandering) { UpdateWander(); FlipSprite(); return; }
 
         if (!isRacing || isFinished) return;
         if (waypoints == null || waypoints.Count == 0) return;

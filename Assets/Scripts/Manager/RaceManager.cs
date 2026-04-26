@@ -27,6 +27,9 @@ public class RaceManager : MonoBehaviour
     private List<RacerController> racers = new List<RacerController>();
     public List<RacerController> Racers => racers;
 
+    // ═══ ★ 배회 연출용 스폰 위치 캐시 (SPEC-025) ═══
+    private Vector3[] _cachedSpawnPos;
+
     // ═══ 웨이포인트 ═══
     private GameObject waypointParent;
     private List<Transform> waypoints = new List<Transform>();
@@ -92,6 +95,16 @@ public class RaceManager : MonoBehaviour
         {
             GameManager.Instance.OnRaceStart += OnRaceStart;
             GameManager.Instance.OnStateChanged += OnGameStateChanged;
+        }
+
+        // ★ GameManager.Start()가 먼저 실행돼 ChangeState(Betting)이 이미 발생한 경우 보정
+        // Round 1 + Betting 상태이고 레이서가 스폰됐으면 즉시 배회 시작
+        if (GameManager.Instance != null
+            && GameManager.Instance.CurrentState == GameManager.GameState.Betting
+            && GameManager.Instance.CurrentRound == 1
+            && racers.Count > 0)
+        {
+            ScatterAndWander();
         }
     }
 
@@ -234,6 +247,11 @@ public class RaceManager : MonoBehaviour
             {
                 racerObj = CreateDefaultRacer(i);
             }
+
+            // ★ 스폰 위치 캐싱 (LineUp 연출용)
+            if (_cachedSpawnPos == null || _cachedSpawnPos.Length < racerCount)
+                _cachedSpawnPos = new Vector3[racerCount];
+            _cachedSpawnPos[i] = spawnPos;
 
             racerObj.transform.position = spawnPos;
 
@@ -401,8 +419,69 @@ public class RaceManager : MonoBehaviour
             {
                 if (debugOverlay != null)
                     debugOverlay.ClearAllLogs();
+
+                // ★ Round 1 진입: 캐릭터 배회 연출 시작 (SPEC-025)
+                ScatterAndWander();
             }
         }
+    }
+
+    // ══════════════════════════════════════
+    //  ★ 배회 연출 (SPEC-025)
+    // ══════════════════════════════════════
+
+    /// <summary>
+    /// 레이서들을 랜덤 위치로 흩뿌리고 배회 시작.
+    /// Round 1 Betting 진입 시 자동 호출.
+    /// </summary>
+    private void ScatterAndWander()
+    {
+        if (racers == null || racers.Count == 0) return;
+        var bounds = new Bounds(new Vector3(4.5f, 0f, 0f), new Vector3(9f, 7f, 0f));
+        foreach (var rc in racers)
+        {
+            if (rc == null) continue;
+            rc.transform.position = new Vector3(
+                UnityEngine.Random.Range(bounds.min.x, bounds.max.x),
+                UnityEngine.Random.Range(bounds.min.y, bounds.max.y),
+                0f);
+            rc.StartWandering(bounds);
+        }
+        Debug.Log("[RaceManager] ScatterAndWander 시작: " + racers.Count + "명");
+    }
+
+    /// <summary>
+    /// 배회 중지 → 출발선으로 Lerp 이동 → 완료 시 callback 호출.
+    /// Start 버튼(Round 1) 클릭 시 SceneBootstrapper에서 호출.
+    /// </summary>
+    public void LineUpAndStart(System.Action callback)
+    {
+        StartCoroutine(LineUpCoroutine(callback));
+        Debug.Log("[RaceManager] LineUp 시작");
+    }
+
+    private System.Collections.IEnumerator LineUpCoroutine(System.Action callback)
+    {
+        // 1) 배회 중지
+        foreach (var rc in racers)
+            if (rc != null) rc.StopWandering();
+
+        // 2) 병렬 이동 (각자 SmoothStep Lerp)
+        int done = 0;
+        int total = racers.Count;
+        for (int i = 0; i < total; i++)
+        {
+            int idx = i;
+            Vector3 dest = (_cachedSpawnPos != null && idx < _cachedSpawnPos.Length)
+                ? _cachedSpawnPos[idx]
+                : racers[idx].transform.position;
+            StartCoroutine(racers[idx].MoveToPosition(dest, 1.2f, () => done++));
+        }
+
+        yield return new WaitUntil(() => done >= total);
+
+        Debug.Log("[RaceManager] LineUp 완료");
+        callback?.Invoke();
     }
 
     // ══════════════════════════════════════

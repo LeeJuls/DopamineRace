@@ -659,7 +659,20 @@ public partial class SceneBootstrapper
         if (charInfoPopup != null)
             charInfoPopup.Hide();
 
-        GameManager.Instance?.StartRace();
+        // ★ Round 1: 배회 중이면 출발선 정렬 연출 후 레이스 시작 (SPEC-025)
+        if (GameManager.Instance?.CurrentRound == 1 && RaceManager.Instance != null)
+        {
+            startButton.interactable = false;   // 더블클릭 방지
+            RaceManager.Instance.LineUpAndStart(() =>
+            {
+                startButton.interactable = true;
+                GameManager.Instance?.StartRace();
+            });
+        }
+        else
+        {
+            GameManager.Instance?.StartRace();
+        }
     }
 
     // ══════════════════════════════════════
