@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 87cb01e4ed4b5ad43bd0cbbb125a0a05
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 33229
+  packageName: Pixel Weather FX
+  packageVersion: 1.13
+  assetPath: Assets/PixelWeatherFX/Materials/mat_ground.mat
+  uploadId: 220994

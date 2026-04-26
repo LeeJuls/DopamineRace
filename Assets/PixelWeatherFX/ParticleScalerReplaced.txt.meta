@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ed006e7e4dac9c741b287d95e82c76d5
+timeCreated: 1489466577
+licenseType: Store
+TextScriptImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 33229
+  packageName: Pixel Weather FX
+  packageVersion: 1.13
+  assetPath: Assets/PixelWeatherFX/ParticleScalerReplaced.txt
+  uploadId: 220994

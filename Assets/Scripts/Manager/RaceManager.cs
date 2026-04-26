@@ -378,6 +378,10 @@ public class RaceManager : MonoBehaviour
         racer.FinishOrder = finishCount;
         racer.OnFinished -= OnRacerFinished;
 
+        // ★ 도착 순위에 따라 sortingOrder 부여 — 1등이 가장 앞 (SPEC-026 v3)
+        //    1등 49 > 2등 48 > 3등 47 > ... > 9등 41 (모두 미완주 0보다 위)
+        SetRacerSortingOrder(racer, 50 - finishCount);
+
         // ★ 골인 모션 — 배팅 입상권은 AttackMagic, 권외는 Death (SPEC-026)
         int prizeCut = GameManager.Instance?.CurrentBet?.PrizeRankCut ?? 1;
         bool isWinner = finishCount <= prizeCut;
@@ -465,11 +469,26 @@ public class RaceManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 레이서 자식의 모든 SpriteRenderer sortingOrder 일괄 설정 (SPEC-026 v3).
+    /// 도착 순서로 호출 → 1등이 화면 가장 앞.
+    /// </summary>
+    private void SetRacerSortingOrder(RacerController racer, int order)
+    {
+        if (racer == null) return;
+        var srs = racer.GetComponentsInChildren<SpriteRenderer>(true);
+        foreach (var sr in srs)
+        {
+            if (sr != null) sr.sortingOrder = order;
+        }
+    }
+
     private void ScatterAndWander()
     {
         if (racers == null || racers.Count == 0) return;
-        // 경기장 안쪽 영역 (X:-2.5~9.5, Y:-3~3) — 트랙(X:-3~10.1, Y:-3.8~3.2) 안쪽 안전마진
-        var bounds = new Bounds(new Vector3(3.5f, 0f, 0f), new Vector3(12f, 6f, 0f));
+        // 경기장 안쪽 영역 (X:-2~8, Y:-2.3~2.3) — Highland 등 트랙 면적이 작은 맵 기준
+        // 이전: center(3.5, 0), size(12, 6) → Highland에서 캐릭터가 산 위로 빠지는 문제
+        var bounds = new Bounds(new Vector3(3.0f, 0f, 0f), new Vector3(10f, 4.6f, 0f));
         foreach (var rc in racers)
         {
             if (rc == null) continue;
@@ -547,6 +566,7 @@ public class RaceManager : MonoBehaviour
 
             racers[i].ResetRacer(spawnPos);
             racers[i].OnFinished -= OnRacerFinished;
+            SetRacerSortingOrder(racers[i], 0); // ★ 다음 라운드 sortingOrder 리셋
         }
 
         // 충돌 시스템 리셋

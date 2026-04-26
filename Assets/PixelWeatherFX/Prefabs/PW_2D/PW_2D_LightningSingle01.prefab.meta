@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 83bd1722e1aa06c4eb4d065fb404918e
+timeCreated: 1439413411
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 33229
+  packageName: Pixel Weather FX
+  packageVersion: 1.13
+  assetPath: Assets/PixelWeatherFX/Prefabs/PW_2D/PW_2D_LightningSingle01.prefab
+  uploadId: 220994

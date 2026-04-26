@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: dc0f95bb341548f4d81e13791673291f
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 33229
+  packageName: Pixel Weather FX
+  packageVersion: 1.13
+  assetPath: Assets/PixelWeatherFX/Animation/Point light.controller
+  uploadId: 220994

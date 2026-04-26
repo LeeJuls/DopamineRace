@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 7ec1563b325c7b644b446aa914a5d67d
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 33229
+  packageName: Pixel Weather FX
+  packageVersion: 1.13
+  assetPath: Assets/PixelWeatherFX/Scripts/TranslateObject.cs
+  uploadId: 220994

@@ -14,9 +14,9 @@ public class TitleCharacterRunner : MonoBehaviour
     //  설정
     // ══════════════════════════════════════
     private const int MAX_CHARACTERS = 12;
-    private const float FIRST_SPAWN_DELAY = 1.0f;
-    private const float SPAWN_INTERVAL_MIN = 0.8f;
-    private const float SPAWN_INTERVAL_MAX = 1.5f;
+    private const float FIRST_SPAWN_DELAY = 0.15f;
+    private const float SPAWN_INTERVAL_MIN = 0.4f;
+    private const float SPAWN_INTERVAL_MAX = 0.75f;
     private const float BASE_SPEED = 2.5f;
     private const float SPEED_VARIATION = 1.0f;
     private const float SPAWN_X_OFFSET = -2.0f;    // 화면 왼쪽 밖

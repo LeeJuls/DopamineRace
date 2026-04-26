@@ -15,6 +15,16 @@ public partial class GameSettings : ScriptableObject
     [Tooltip("라운드별 바퀴 수 (배열 길이 = 총 라운드 수)\n예: [1,2,1,5,3,1,4] → 7라운드")]
     public int[] roundLaps = new int[] { 2, 2, 3, 5, 3, 2, 4 };
 
+    [Tooltip("라운드별 트랙 선택. Random = 가중 랜덤 (이전 트랙 제외).\n" +
+            "배열 길이는 roundLaps와 같게 유지.")]
+    public TrackChoice[] roundTracks = new TrackChoice[]
+    {
+        TrackChoice.Normal,   // R1: 게임 시작 화면에 표시
+        TrackChoice.Rainy,    // R2
+        TrackChoice.Random,   // R3
+        TrackChoice.Random    // R4
+    };
+
     /// <summary>
     /// 총 라운드 수 (roundLaps 배열 길이)
     /// </summary>
@@ -28,6 +38,18 @@ public partial class GameSettings : ScriptableObject
         if (roundLaps == null || roundLaps.Length == 0) return 1;
         int idx = Mathf.Clamp(round - 1, 0, roundLaps.Length - 1);
         return Mathf.Max(1, roundLaps[idx]);
+    }
+
+    /// <summary>
+    /// 해당 라운드의 트랙 ID 가져오기 (1-based).
+    /// 반환값이 빈 문자열 또는 "random" 이면 가중 랜덤으로 선택해야 함.
+    /// 배열 범위 밖이면 빈 문자열 반환.
+    /// </summary>
+    public string GetTrackIdForRound(int round)
+    {
+        if (roundTracks == null || roundTracks.Length == 0) return "";
+        int idx = Mathf.Clamp(round - 1, 0, roundTracks.Length - 1);
+        return roundTracks[idx].ToTrackId();
     }
 
     [Header("═══ 배당 점수 설정 ═══")]

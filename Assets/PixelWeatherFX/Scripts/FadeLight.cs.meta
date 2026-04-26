@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: d4e723767b5ccf94a91d02f7d4367725
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 33229
+  packageName: Pixel Weather FX
+  packageVersion: 1.13
+  assetPath: Assets/PixelWeatherFX/Scripts/FadeLight.cs
+  uploadId: 220994

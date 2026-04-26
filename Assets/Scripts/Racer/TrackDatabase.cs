@@ -205,19 +205,33 @@ public class TrackDatabase : MonoBehaviour
 
     /// <summary>
     /// 선택된 트랙을 GameSettings에 적용
-    /// Round 1 → 기본 트랙, Round 2+ → 가중 랜덤
+    /// 우선순위: GameSettings.roundTracks[round-1] 지정값 → (빈 문자열 또는 "random" 이면) 가중 랜덤 → Round 1 fallback 기본 트랙
     /// </summary>
     public TrackInfo ApplyTrackForRound(int roundNumber)
     {
-        TrackInfo selected;
+        TrackInfo selected = null;
 
-        if (roundNumber <= 1)
+        // ① GameSettings.roundTracks 지정값 우선
+        string forcedId = GameSettings.Instance != null
+            ? GameSettings.Instance.GetTrackIdForRound(roundNumber)
+            : "";
+        bool isRandom = string.IsNullOrEmpty(forcedId) ||
+                        forcedId.Equals("random", System.StringComparison.OrdinalIgnoreCase);
+
+        if (!isRandom)
         {
-            selected = GetDefaultTrack();
+            selected = GetTrackById(forcedId);
+            if (selected == null)
+                Debug.LogWarning("[TrackDB] roundTracks 지정 ID 없음: '" + forcedId + "' → fallback");
         }
-        else
+
+        // ② 랜덤 또는 지정 실패 시 기존 로직
+        if (selected == null)
         {
-            selected = SelectNextTrack(previousTrackId);
+            if (roundNumber <= 1)
+                selected = GetDefaultTrack();
+            else
+                selected = SelectNextTrack(previousTrackId);
         }
 
         if (selected == null)

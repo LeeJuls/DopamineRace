@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: cd8ccc295cdb35c4ab067503492d4c5f
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 33229
+  packageName: Pixel Weather FX
+  packageVersion: 1.13
+  assetPath: Assets/PixelWeatherFX/Materials/mat_line.mat
+  uploadId: 220994

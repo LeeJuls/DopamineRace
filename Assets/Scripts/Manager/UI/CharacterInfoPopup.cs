@@ -135,8 +135,9 @@ public class CharacterInfoPopup : MonoBehaviour
                     storyIcon.sprite = bookSpr;
             }
 
-            // WinRateBg/WinRateLabel (패치 후) 또는 WinRateLabel (패치 전) 양쪽 호환
-            Transform winRateBg = layout2Left.Find("WinRateBg");
+            // WinRateBg: IllustrationMask 안(오버레이) → layout2Left 직속 순으로 탐색
+            Transform winRateBg = layout2Left.Find("IllustrationMask/WinRateBg");
+            if (winRateBg == null) winRateBg = layout2Left.Find("WinRateBg");
             if (winRateBg != null)
                 winRateLabel = FindText(winRateBg, "WinRateLabel");
             else
@@ -239,8 +240,8 @@ public class CharacterInfoPopup : MonoBehaviour
                 string aDesc = SkillRegistry.GetDescription(data.charAbility);
                 if (!string.IsNullOrEmpty(aName) && aName != data.charAbility)
                 {
-                    sb.Append("<b>⚔ ").Append(aName).Append("</b>");
-                    if (!string.IsNullOrEmpty(aDesc)) sb.Append("\n").Append(aDesc);
+                    sb.Append("<color=#FFC000>⚔ ").Append(aName).Append("</color>");
+                    if (!string.IsNullOrEmpty(aDesc)) sb.Append("\n<color=#FFFFFF>").Append(aDesc).Append("</color>");
                 }
             }
 
@@ -253,8 +254,8 @@ public class CharacterInfoPopup : MonoBehaviour
                 if (!string.IsNullOrEmpty(pName) && pName != v4.charPassive)
                 {
                     if (sb.Length > 0) sb.Append("\n\n");
-                    sb.Append("<b>✨ ").Append(pName).Append("</b>");
-                    if (!string.IsNullOrEmpty(pDesc)) sb.Append("\n").Append(pDesc);
+                    sb.Append("<color=#FFC000>✨ ").Append(pName).Append("</color>");
+                    if (!string.IsNullOrEmpty(pDesc)) sb.Append("\n<color=#FFFFFF>").Append(pDesc).Append("</color>");
                 }
             }
 
@@ -314,7 +315,7 @@ public class CharacterInfoPopup : MonoBehaviour
 
         // ── 데이터 갱신 ──
         UpdateRadarChart(pendingData, pendingTrackInfo);
-        UpdateRecentRecords(pendingRecord);
+        UpdateRecentRecords(pendingRecord, pendingData);
 
         // 차트가 동적 생성한 Text에도 즉시 폰트 적용 (애니메이션 시작 전)
         ApplyFontAll();
@@ -588,11 +589,14 @@ public class CharacterInfoPopup : MonoBehaviour
     /// <summary>
     /// 최근 경기기록을 거리별(단/중/장)로 분류하여 텍스트 갱신
     /// </summary>
-    private void UpdateRecentRecords(CharacterRecord record)
+    private void UpdateRecentRecords(CharacterRecord record, CharacterData data = null)
     {
-        // 헤더
+        // 헤더 — 캐릭터 이름 포함 (예: "도파니 꽃비 정보")
         if (recentRecordHeader != null)
-            recentRecordHeader.text = Loc.Get("str.ui.char.recent_record");
+        {
+            string charName = data != null ? Loc.Get(data.charName) : "";
+            recentRecordHeader.text = Loc.Get("str.ui.char.recent_record", charName);
+        }
 
         // 거리별 라벨
         if (shortDistLabel != null)

@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 0fe47807e3c5038448c5c6480a71a003
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 33229
+  packageName: Pixel Weather FX
+  packageVersion: 1.13
+  assetPath: Assets/PixelWeatherFX/Materials/mat_circle_flat.mat
+  uploadId: 220994
