@@ -377,6 +377,10 @@ public class RaceManager : MonoBehaviour
         racer.FinishOrder = finishCount;
         racer.OnFinished -= OnRacerFinished;
 
+        // ★ 골인 모션 — 배팅 입상권은 AttackMagic, 권외는 Death (SPEC-026)
+        int prizeCut = GameManager.Instance?.CurrentBet?.PrizeRankCut ?? 1;
+        racer.PlayFinishMotion(finishCount <= prizeCut ? "AttackMagic" : "Death");
+
         string name = racer.CharData != null ? racer.CharData.DisplayName
             : GameConstants.RACER_NAMES[racer.RacerIndex];
 

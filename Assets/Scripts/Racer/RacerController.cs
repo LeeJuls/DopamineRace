@@ -391,7 +391,8 @@ public partial class RacerController : MonoBehaviour
                 }
 
                 isFinished = true; isRacing = false; currentSpeed = 0f;
-                if (animator != null) animator.SetTrigger("Idle");
+                // ★ 골인 모션은 OnFinished 구독자(RaceManager)가 입상 여부에 따라 결정 (SPEC-026)
+                // → 여기서는 Idle 트리거 호출 안 함 (구독자가 AttackMagic / Death 트리거)
                 OnFinished?.Invoke(this);
                 return;
             }

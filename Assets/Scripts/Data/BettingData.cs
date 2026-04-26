@@ -52,6 +52,27 @@ public class BetInfo
     public bool IsComplete => selections.Count >= RequiredSelections;
 
     /// <summary>
+    /// 입상 순위 컷 — 이 등수까지가 입상권 (SPEC-026 골인 모션 결정용).
+    /// 배팅 타입에 따라 1·2·3등이 결정됨.
+    /// </summary>
+    public int PrizeRankCut
+    {
+        get
+        {
+            switch (type)
+            {
+                case BetType.Win:      return 1;  // 단승: 1등까지
+                case BetType.Place:    return 2;  // 연승: 1~2등
+                case BetType.Quinella: return 2;  // 복승: 1~2등
+                case BetType.Exacta:   return 2;  // 쌍승: 1~2등
+                case BetType.Trio:     return 3;  // 삼복승: 1~3등
+                case BetType.Wide:     return 3;  // 복연승: 1~3등
+                default: return 1;
+            }
+        }
+    }
+
+    /// <summary>
     /// 현재 선택 안내 텍스트
     /// </summary>
     public string GetSelectionGuide()

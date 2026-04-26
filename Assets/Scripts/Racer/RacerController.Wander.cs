@@ -51,6 +51,16 @@ public partial class RacerController : MonoBehaviour
         if (animator != null) animator.SetTrigger("Idle");
     }
 
+    /// <summary>
+    /// 골인 후 입상 여부에 따른 모션 트리거 (SPEC-026).
+    /// trigger 예: "AttackMagic" (입상), "Death" (권외).
+    /// </summary>
+    public void PlayFinishMotion(string trigger)
+    {
+        if (animator != null && !string.IsNullOrEmpty(trigger))
+            animator.SetTrigger(trigger);
+    }
+
     /// <summary>지정 위치까지 SmoothStep Lerp 이동. 완료 시 onDone 호출.</summary>
     public IEnumerator MoveToPosition(Vector3 target, float duration, System.Action onDone)
     {
