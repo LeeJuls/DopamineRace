@@ -21,6 +21,9 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ══════════════════════════════════════
     private Font font;
 
+    // 메인 캔버스 (OptionPanel 부모로 사용)
+    private Canvas _mainCanvas;
+
     // UI 루트 오브젝트
     private GameObject bettingUI;
     private GameObject racingUI;
@@ -138,6 +141,9 @@ public partial class SceneBootstrapper : MonoBehaviour
     private float raceTimer;
     private List<GameObject> betArrows = new List<GameObject>();
 
+    // ── 옵션 패널 ──
+    private OptionPanel _optionPanel;
+
     // ══════════════════════════════════════
     //  초기화
     // ══════════════════════════════════════
@@ -197,6 +203,16 @@ public partial class SceneBootstrapper : MonoBehaviour
 
         BuildUI();
         ApplyFontToAllText();
+
+        // 옵션 패널 인스턴스화 — Canvas 자식으로 붙어야 렌더링됨
+        if (GameSettings.Instance != null && GameSettings.Instance.optionPanelPrefab != null)
+        {
+            Transform panelParent = _mainCanvas != null ? _mainCanvas.transform : transform;
+            var optionGo = Instantiate(GameSettings.Instance.optionPanelPrefab, panelParent);
+            _optionPanel = optionGo.GetComponent<OptionPanel>();
+            optionGo.SetActive(false);
+        }
+
         Debug.Log("도파민 경마 - 씬 구성 완료!");
     }
 
@@ -222,6 +238,15 @@ public partial class SceneBootstrapper : MonoBehaviour
 
     private void Update()
     {
+        // ESC 키 → 옵션 패널 열기/닫기
+        if (Input.GetKeyDown(KeyCode.Escape) && _optionPanel != null)
+        {
+            if (_optionPanel.gameObject.activeSelf)
+                _optionPanel.Hide();
+            else
+                _optionPanel.Show();
+        }
+
         if (GameManager.Instance == null) return;
         if (GameManager.Instance.CurrentState == GameManager.GameState.Racing)
         {
@@ -246,6 +271,7 @@ public partial class SceneBootstrapper : MonoBehaviour
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.pixelPerfect = true;
         canvas.sortingOrder = 100;
+        _mainCanvas = canvas;
 
         CanvasScaler sc = canvasObj.AddComponent<CanvasScaler>();
         sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;

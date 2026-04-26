@@ -12,6 +12,7 @@ public class SFXManager : MonoBehaviour
 
     private AudioSource sfxSource;
     private AudioClip clickClip;
+    private bool _muted;
 
     private void Awake()
     {
@@ -35,10 +36,16 @@ public class SFXManager : MonoBehaviour
     }
 
     /// <summary>
+    /// SFX 음소거 ON/OFF
+    /// </summary>
+    public void Mute(bool muted) => _muted = muted;
+
+    /// <summary>
     /// 클릭 사운드 재생 (외부에서 수동 호출 가능)
     /// </summary>
     public void PlayClick()
     {
+        if (_muted) return;
         if (clickClip != null && sfxSource != null)
         {
             float vol = GameSettings.Instance != null ? GameSettings.Instance.sfxVolume : 0.3f;
@@ -51,6 +58,7 @@ public class SFXManager : MonoBehaviour
     /// </summary>
     public void PlaySFX(AudioClip clip, float volumeScale = 1f)
     {
+        if (_muted) return;
         if (clip != null && sfxSource != null)
         {
             float vol = GameSettings.Instance != null ? GameSettings.Instance.sfxVolume : 0.3f;

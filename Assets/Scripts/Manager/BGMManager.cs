@@ -14,6 +14,7 @@ public class BGMManager : MonoBehaviour
 
     private AudioSource audioSource;
     private Coroutine fadeCoroutine;
+    private bool _muted;
 
     private void Awake()
     {
@@ -49,9 +50,8 @@ public class BGMManager : MonoBehaviour
 
         audioSource.clip = clip;
         audioSource.loop = loop;
-        audioSource.volume = GameSettings.Instance != null
-            ? GameSettings.Instance.bgmVolume
-            : 0.5f;
+        float targetVol = GameSettings.Instance != null ? GameSettings.Instance.bgmVolume : 0.5f;
+        audioSource.volume = _muted ? 0f : targetVol;
         audioSource.Play();
 
         Debug.Log($"[BGMManager] PlayBGM: {resourcePath}");
@@ -108,7 +108,21 @@ public class BGMManager : MonoBehaviour
     /// </summary>
     public void SetVolume(float vol)
     {
-        audioSource.volume = Mathf.Clamp01(vol);
+        if (!_muted)
+            audioSource.volume = Mathf.Clamp01(vol);
+    }
+
+    /// <summary>
+    /// BGM 음소거 ON/OFF
+    /// </summary>
+    public void Mute(bool muted)
+    {
+        _muted = muted;
+        if (audioSource != null)
+        {
+            float targetVol = GameSettings.Instance != null ? GameSettings.Instance.bgmVolume : 0.5f;
+            audioSource.volume = _muted ? 0f : targetVol;
+        }
     }
 
     /// <summary>
