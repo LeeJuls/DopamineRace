@@ -651,7 +651,7 @@ public partial class SceneBootstrapper
     }
 
     // ══════════════════════════════════════
-    //  Start 버튼
+    //  Start 버튼 (SPEC-028 Step 2.5: 베팅액 모달 분기)
     // ══════════════════════════════════════
     private void OnStartClicked()
     {
@@ -659,6 +659,64 @@ public partial class SceneBootstrapper
         if (charInfoPopup != null)
             charInfoPopup.Hide();
 
+        // SPEC-028 Step 2.5: START → BetAmountModal 표시
+        // 모달에서 [배팅 확정] → ProceedRoundStart() 호출 / [취소] → 베팅 화면 복귀
+        if (TryShowBetAmountModal())
+            return;
+
+        // 모달이 없거나 (구버전) WalletManager 미존재 → 기존 흐름 직접 진행
+        ProceedRoundStart();
+    }
+
+    /// <summary>
+    /// BetAmountModal 표시. 성공 시 true 반환 (모달이 흐름 인계).
+    /// 실패 시 false → 호출처가 기존 흐름 진행.
+    /// </summary>
+    private bool TryShowBetAmountModal()
+    {
+        if (_betAmountModal == null) return false;
+        if (WalletManager.Instance == null) return false;
+        if (WalletManager.Instance.Jelly < 1)
+        {
+            // 보유 젤리 0 — 정상 흐름이면 GameOver가 이미 진입했어야 함
+            Debug.LogWarning("[Betting] 보유 젤리 0 → GameOver 진입");
+            GameManager.Instance?.ChangeState(GameManager.GameState.GameOver);
+            return true;   // 호출처에서 추가 동작 X
+        }
+
+        var gm = GameManager.Instance;
+        if (gm == null || gm.CurrentBet == null) return false;
+
+        // 배당 계산 (모달 내 미리보기·표시용)
+        var racers = CharacterDatabase.Instance?.SelectedCharacters;
+        float oddsForBet = 1.1f;
+        if (racers != null && racers.Count > 0)
+        {
+            oddsForBet = OddsCalculator.GetExpectedOdds(gm.CurrentBet, racers);
+            oddsForBet = Mathf.Max(1.1f, oddsForBet);
+        }
+
+        // 선택 캐릭터 라벨 (쉼표 구분)
+        string selectionLabel = "";
+        if (racers != null)
+        {
+            var names = new System.Collections.Generic.List<string>();
+            foreach (int idx in gm.CurrentBet.selections)
+            {
+                if (idx >= 0 && idx < racers.Count)
+                    names.Add(GameConstants.RACER_NAMES[idx]);
+            }
+            selectionLabel = string.Join(", ", names);
+        }
+
+        _betAmountModal.Show(gm.CurrentBet, oddsForBet, selectionLabel,
+            onConfirmed: (amount) => ProceedRoundStart(),
+            onCancelled: () => { /* 베팅 화면 유지, 추가 동작 없음 */ });
+        return true;
+    }
+
+    private void ProceedRoundStart()
+    {
         // ★ Round 1: 배회 중이면 출발선 정렬 연출 후 레이스 시작 (SPEC-025)
         if (GameManager.Instance?.CurrentRound == 1 && RaceManager.Instance != null)
         {

@@ -144,6 +144,12 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ── 옵션 패널 ──
     private OptionPanel _optionPanel;
 
+    // ── SPEC-028 Phase 2: 통화·베팅액 모달·환전 ──
+    private CurrencyHeader _currencyHeader;
+    private BetAmountModal _betAmountModal;
+    private ExchangeModal _exchangeModal;
+    private Button _exchangeIconButton;
+
     // ══════════════════════════════════════
     //  초기화
     // ══════════════════════════════════════
@@ -326,6 +332,25 @@ public partial class SceneBootstrapper : MonoBehaviour
         AddFullRect(leaderboardPopup);
         BuildLeaderboardPopup(leaderboardPopup.transform);
         leaderboardPopup.SetActive(false);
+
+        // SPEC-028 Step 3.2: GameOver UI 생성
+        _gameOverUI = new GameObject("GameOverUI");
+        _gameOverUI.transform.SetParent(root, false);
+        AddFullRect(_gameOverUI);
+        BuildGameOverUI(_gameOverUI.transform);
+        _gameOverUI.SetActive(false);
+
+        // SPEC-028 Step 2.4: BetAmountModal 임시 레이아웃 생성
+        BuildBetAmountModal(root);
+
+        // SPEC-028 Step 2.16: ExchangeModal 임시 레이아웃 생성
+        BuildExchangeModal(root);
+
+        // SPEC-028 Step 2.2: CurrencyHeader 베팅 UI 우상단 배치
+        BuildCurrencyHeader(bettingUI.transform);
+
+        // SPEC-028 Step 2.15: 환전 아이콘 헤더 옆 배치
+        BuildExchangeIcon(bettingUI.transform);
     }
 
     // ══════════════════════════════════════
@@ -338,6 +363,7 @@ public partial class SceneBootstrapper : MonoBehaviour
         resultUI.SetActive(false);
         countdownUI.SetActive(false);
         finishUI.SetActive(false);
+        if (_gameOverUI != null) _gameOverUI.SetActive(false);   // SPEC-028 Step 3.3
 
         switch (state)
         {
@@ -380,6 +406,12 @@ public partial class SceneBootstrapper : MonoBehaviour
                 ShowAllRaceLabels();
                 finishUI.SetActive(true);
                 ShowFinish();
+                break;
+            case GameManager.GameState.GameOver:
+                // SPEC-028 Step 3.3: GAME OVER 진입 자동 표시
+                DestroyArrows();
+                ShowAllRaceLabels();
+                ShowGameOverPanel();
                 break;
         }
     }

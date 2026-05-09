@@ -135,30 +135,63 @@ public partial class SceneBootstrapper
         if (finishTop100BtnText  != null) finishTop100BtnText.text  = Loc.Get("str.ui.btn.top100");
         if (finishTitleText      != null) finishTitleText.text      = Loc.Get("str.finish.title");
 
-        string detail = Loc.Get("str.finish.round_header") + "\n";
-        detail += "─────────────────────────\n";
+        // SPEC-028 Step 3.5·3.6: 메인/부수 분리 — 메인 영역 (큰 글씨 강조)
+        // "획득한 도파민 스톤: N💎" + 라운드별 ✓/✗ 결과
+        var wallet = WalletManager.Instance;
+        int stoneTotal = wallet != null ? wallet.Stone : 0;
+
+        string mainArea = "<size=42><color=#4DDDDD>" + SafeLocFor("str.finish.stone_total",
+            "획득한 도파민 스톤: {0} 💎", stoneTotal) + "</color></size>\n\n";
+
+        // 라운드별 ✓/✗ + 획득 스톤 (베팅액 = 획득 스톤이므로 betAmount가 ScoreManager 저장 안 되는 한
+        // 임시로 score>0 케이스는 적중 / 0은 빗나감으로 표시)
+        foreach (var r in sm.RoundHistory)
+        {
+            if (r.isWin)
+                mainArea += "<size=24><color=#66FF66>" + SafeLocFor("str.finish.round.hit",
+                    "R{0}: ✓ 적중   (+{1} 💎)", r.round, r.score) + "</color></size>\n";
+            else
+                mainArea += "<size=24><color=#FF6666>" + SafeLocFor("str.finish.round.miss",
+                    "R{0}: ✗ 빗나감", r.round) + "</color></size>\n";
+        }
+
+        // 부수 영역 (작은 글씨) — 베팅 상세 + 최종 보유 젤리
+        string detailArea = "\n<size=18><color=#888888>── " + SafeLocFor("str.finish.detail.section",
+            "라운드별 상세") + " ──</color></size>\n";
         foreach (var r in sm.RoundHistory)
         {
             string typeName = BettingCalculator.GetTypeName(r.betType);
             string scoreStr = r.score > 0
-                ? "<color=#FFD700>" + Loc.Get("str.finish.score_plus", r.score) + "</color>"
-                : "<color=#888888>" + Loc.Get("str.finish.score_zero") + "</color>";
+                ? "<color=#FFD700>+" + r.score + "</color>"
+                : "<color=#888888>+0</color>";
             string result = r.isWin
-                ? "<color=#66FF66>" + Loc.Get("str.finish.hit") + "</color>"
-                : "<color=#FF6666>" + Loc.Get("str.finish.miss") + "</color>";
-            detail += "R" + r.round + "  |  " + typeName + "  |  " + result + "  " + scoreStr + "\n";
+                ? "<color=#66FF66>적중</color>"
+                : "<color=#FF6666>빗나감</color>";
+            detailArea += "<size=16>R" + r.round + " | " + typeName + " | " + result + " | " + scoreStr + "</size>\n";
         }
-        detail += "─────────────────────────";
 
-        if (finishRoundDetailText != null) finishRoundDetailText.text = detail;
+        if (wallet != null)
+        {
+            detailArea += "\n<size=20><color=#AACFFF>" + SafeLocFor("str.finish.final_jelly",
+                "최종 보유: 🟦 {0}", wallet.Jelly) + "</color></size>";
+        }
 
-        int total = sm.CurrentGameScore;
-        int wins  = 0;
-        foreach (var r in sm.RoundHistory)
-            if (r.isWin) wins++;
+        if (finishRoundDetailText != null)
+        {
+            finishRoundDetailText.text = mainArea + detailArea;
+            // RichText 활성 (size·color 태그 동작용)
+            finishRoundDetailText.supportRichText = true;
+        }
 
+        // 메인 totalScoreText는 큰 글씨 통화 강조 (이미 mainArea에 포함됐으나 호환성 위해 같이 표시)
         if (finishTotalScoreText != null)
+        {
+            int total = sm.CurrentGameScore;
+            int wins = 0;
+            foreach (var r in sm.RoundHistory)
+                if (r.isWin) wins++;
             finishTotalScoreText.text = Loc.Get("str.finish.total", total, wins, sm.RoundHistory.Count);
+        }
 
         // 스크롤 맨 위로 리셋 (Canvas 레이아웃 갱신 후)
         if (finishScrollRect != null)
@@ -166,5 +199,27 @@ public partial class SceneBootstrapper
             Canvas.ForceUpdateCanvases();
             finishScrollRect.normalizedPosition = new Vector2(0f, 1f);
         }
+
+        // SPEC-028 Step 3.6: 페이드인 애니메이션 (단순 alpha 보간)
+        if (finishUI != null)
+        {
+            var cg = finishUI.GetComponent<CanvasGroup>();
+            if (cg == null) cg = finishUI.AddComponent<CanvasGroup>();
+            cg.alpha = 0f;
+            StartCoroutine(FadeInFinishPanel(cg));
+        }
+    }
+
+    private System.Collections.IEnumerator FadeInFinishPanel(CanvasGroup cg)
+    {
+        const float duration = 0.5f;
+        float t = 0f;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            cg.alpha = Mathf.Clamp01(t / duration);
+            yield return null;
+        }
+        cg.alpha = 1f;
     }
 }

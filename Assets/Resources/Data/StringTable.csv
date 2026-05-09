@@ -324,3 +324,46 @@ str.ui.option.confirm_restart,모든 기록이 사라지고 처음부터\n도파
 str.ui.option.confirm_quit,다시 도파니들과 함께 달리러 오실꺼죠?\n기다릴께요.,Come back and race with the Dopanis!\nWe'll be waiting for you.,またドーパニたちと走りに来ますよね？\n待ってますよ。,你还会来和多帕尼们奔跑的吧？\n我们等你回来！,Du kommst zum Rennen mit uns zurück?\nDie Dopanis warten auf dich!,¿Volverás a correr con los Dopanis?\n¡Te estaremos esperando!,Você vai voltar para correr conosco?\nOs Dopanis estarão esperando!
 str.ui.option.yes,예,Yes,はい,是,Ja,Sí,Sim
 str.ui.option.no,아니오,No,いいえ,否,Nein,No,Não
+str.currency.jelly.name,도파민 젤리,Dopamine Jelly,ドーパミンゼリー,多巴胺果冻,Dopamin-Gelee,Gelatina de Dopamina,Geleia de Dopamina
+str.currency.jelly.desc,베팅에 사용되는 통화 — 매 게임 100개 지급,Betting currency — 100 per game,賭けに使用される通貨 — 毎ゲーム100個支給,用于投注的货币 — 每局100个,Wettwährung — 100 pro Spiel,Moneda para apuestas — 100 por juego,Moeda para apostas — 100 por jogo
+str.currency.stone.name,도파민 스톤,Dopamine Stone,ドーパミンストーン,多巴胺石,Dopamin-Stein,Piedra de Dopamina,Pedra de Dopamina
+str.currency.stone.desc,베팅 적중 시 획득 — 글로벌 랭킹 점수,Earned by hitting bets — global ranking score,賭けに当たると獲得 — グローバルランキングのスコア,投注命中时获得 — 全球排行榜分数,Erhalten durch Wettgewinn — globaler Ranking-Punkt,Ganada al acertar apuestas — puntuación de ranking global,Ganha ao acertar apostas — pontuação do ranking global
+str.bet.modal.title,🎰 배팅액을 정하세요,🎰 Set your bet amount,🎰 賭け金を決めてください,🎰 设置投注金额,🎰 Setze deinen Einsatz,🎰 Establece tu apuesta,🎰 Defina sua aposta
+str.bet.modal.bet_type,종목: {0},Type: {0},種目: {0},类型：{0},Wettart: {0},Tipo: {0},Tipo: {0}
+str.bet.modal.selection,선택: {0},Selection: {0},選択: {0},选择：{0},Auswahl: {0},Selección: {0},Seleção: {0}
+str.bet.modal.odds,배당: {0}x,Odds: {0}x,オッズ: {0}x,赔率：{0}x,Quote: {0}x,Cuota: {0}x,Cota: {0}x
+str.bet.modal.amount_label,베팅액,Bet Amount,賭け金,投注金额,Einsatz,Apuesta,Aposta
+str.bet.modal.quick.minus10,-10,-10,-10,-10,-10,-10,-10
+str.bet.modal.quick.minus1,-1,-1,-1,-1,-1,-1,-1
+str.bet.modal.quick.plus1,+1,+1,+1,+1,+1,+1,+1
+str.bet.modal.quick.plus10,+10,+10,+10,+10,+10,+10,+10
+str.bet.modal.preview.win,적중 시: +{0} 🟦 (+{1} 💎),Win: +{0} 🟦 (+{1} 💎),当たり: +{0} 🟦 (+{1} 💎),命中：+{0} 🟦 (+{1} 💎),Treffer: +{0} 🟦 (+{1} 💎),Acierto: +{0} 🟦 (+{1} 💎),Acerto: +{0} 🟦 (+{1} 💎)
+str.bet.modal.preview.lose,실패 시: -{0} 🟦,Lose: -{0} 🟦,はずれ: -{0} 🟦,失败：-{0} 🟦,Verlust: -{0} 🟦,Pérdida: -{0} 🟦,Perda: -{0} 🟦
+str.bet.modal.cancel,취소,Cancel,キャンセル,取消,Abbrechen,Cancelar,Cancelar
+str.bet.modal.confirm,배팅 확정 →,Confirm Bet →,賭け確定 →,确认投注 →,Wette bestätigen →,Confirmar apuesta →,Confirmar aposta →
+str.bet.modal.error.too_high,보유 젤리보다 많이 베팅할 수 없습니다,Cannot bet more than your jelly,所持ゼリー以上は賭けられません,投注金额不能超过所持果冻,Du kannst nicht mehr als dein Jelly setzen,No puedes apostar más que tu gelatina,Você não pode apostar mais do que sua geleia
+str.bet.modal.error.too_low,최소 1 베팅 필요,Minimum bet is 1,最低1賭ける必要があります,最低投注为1,Mindesteinsatz ist 1,Apuesta mínima es 1,Aposta mínima é 1
+str.exchange.icon.tooltip,스톤 환전,Exchange Stone,ストーン両替,兑换石头,Stein tauschen,Cambiar piedra,Trocar pedra
+str.exchange.modal.title,💱 도파민 스톤 환전,💱 Dopamine Stone Exchange,💱 ドーパミンストーン両替,💱 多巴胺石兑换,💱 Dopamin-Stein-Tausch,💱 Cambio de Piedra,💱 Troca de Pedra
+str.exchange.modal.rate,이번 라운드 환전율: {0}:1,This round exchange rate: {0}:1,今ラウンドの両替レート: {0}:1,本回合兑换率：{0}:1,Wechselkurs diese Runde: {0}:1,Tasa de esta ronda: {0}:1,Taxa desta rodada: {0}:1
+str.exchange.modal.rate_desc,(스톤 {0}개 → 젤리 1개),({0} stones → 1 jelly),(ストーン{0}個 → ゼリー1個),({0}个石头 → 1个果冻),({0} Steine → 1 Gelee),({0} piedras → 1 gelatina),({0} pedras → 1 geleia)
+str.exchange.modal.holding,현재 보유: 🟦{0}  💎{1},Holdings: 🟦{0}  💎{1},現在所持: 🟦{0}  💎{1},当前持有：🟦{0}  💎{1},Bestand: 🟦{0}  💎{1},Tenencias: 🟦{0}  💎{1},Posses: 🟦{0}  💎{1}
+str.exchange.modal.options_title,─── 환전 옵션 ───,─── Exchange Options ───,─── 両替オプション ───,─── 兑换选项 ───,─── Tauschoptionen ───,─── Opciones de cambio ───,─── Opções de troca ───
+str.exchange.btn,환전: 💎{0} → 🟦1,Exchange: 💎{0} → 🟦1,両替: 💎{0} → 🟦1,兑换：💎{0} → 🟦1,Tausch: 💎{0} → 🟦1,Cambio: 💎{0} → 🟦1,Troca: 💎{0} → 🟦1
+str.exchange.btn.rescue,⚡ 구제 환전 (1회 한정),⚡ Rescue Exchange (Once Only),⚡ 救済両替 (1回限り),⚡ 救济兑换（仅限一次）,⚡ Rettungstausch (1x),⚡ Cambio de rescate (1 vez),⚡ Troca de resgate (1 vez)
+str.exchange.btn.rescue_action,환전: 💎{0} → 🟦1 (구제),Exchange: 💎{0} → 🟦1 (Rescue),両替: 💎{0} → 🟦1 (救済),兑换：💎{0} → 🟦1（救济）,Tausch: 💎{0} → 🟦1 (Rettung),Cambio: 💎{0} → 🟦1 (Rescate),Troca: 💎{0} → 🟦1 (Resgate)
+str.exchange.completed,✅ 이번 라운드 환전 완료,✅ Exchange completed this round,✅ 今ラウンド両替完了,✅ 本回合兑换完成,✅ Tausch in dieser Runde abgeschlossen,✅ Cambio completado esta ronda,✅ Troca concluída nesta rodada
+str.exchange.completed_next,다음 라운드에 다시 가능,Available next round,次のラウンドで再度可能,下回合可再次兑换,Nächste Runde verfügbar,Disponible próxima ronda,Disponível próxima rodada
+str.exchange.btn.close,닫기,Close,閉じる,关闭,Schließen,Cerrar,Fechar
+str.exchange.note.once_per_round,※ 라운드당 1회만 가능,※ Once per round only,※ 1ラウンドに1回のみ,※ 每回合仅限一次,※ Nur 1x pro Runde,※ Solo 1 vez por ronda,※ Apenas 1 vez por rodada
+str.exchange.error.insufficient,스톤이 부족합니다 ({0}개 필요),Insufficient stones ({0} needed),ストーン不足 ({0}個必要),石头不足（需要{0}个）,Steine fehlen ({0} nötig),Piedras insuficientes ({0} necesarias),Pedras insuficientes ({0} necessárias)
+str.gameover.headline,💔 GAME OVER,💔 GAME OVER,💔 GAME OVER,💔 游戏结束,💔 SPIEL VORBEI,💔 GAME OVER,💔 FIM DE JOGO
+str.gameover.desc,도파민 젤리가 모두 소진됐습니다,All Dopamine Jelly is gone,ドーパミンゼリーが尽きました,多巴胺果冻已耗尽,Dopamin-Gelee aufgebraucht,Toda la gelatina se acabó,Toda a geleia acabou
+str.gameover.progress,{0} / {1} 라운드에서 종료,Ended at round {0} / {1},{0} / {1} ラウンドで終了,在第{0} / {1}回合结束,Beendet in Runde {0} / {1},Terminó en ronda {0} / {1},Terminou na rodada {0} / {1}
+str.gameover.no_ranking,랭킹에 등록되지 않았습니다,Not registered in rankings,ランキングに登録されません,未登记到排行榜,Nicht im Ranking eingetragen,No registrado en el ranking,Não registrado no ranking
+str.gameover.btn.restart,다시 도전,Try Again,再挑戦,再次挑战,Erneut versuchen,Intentar de nuevo,Tentar novamente
+str.finish.stone_total,획득한 도파민 스톤: {0} 💎,Dopamine Stones earned: {0} 💎,獲得したドーパミンストーン: {0} 💎,获得多巴胺石：{0} 💎,Verdiente Dopamin-Steine: {0} 💎,Piedras ganadas: {0} 💎,Pedras ganhas: {0} 💎
+str.finish.round.hit,R{0}: ✓ 적중   (+{1} 💎),R{0}: ✓ Hit   (+{1} 💎),R{0}: ✓ 当たり   (+{1} 💎),R{0}: ✓ 命中   (+{1} 💎),R{0}: ✓ Treffer   (+{1} 💎),R{0}: ✓ Acierto   (+{1} 💎),R{0}: ✓ Acerto   (+{1} 💎)
+str.finish.round.miss,R{0}: ✗ 빗나감,R{0}: ✗ Miss,R{0}: ✗ はずれ,R{0}: ✗ 失败,R{0}: ✗ Verfehlt,R{0}: ✗ Fallo,R{0}: ✗ Erro
+str.finish.detail.section,라운드별 상세,Round details,ラウンド別詳細,各回合详情,Rundendetails,Detalles por ronda,Detalhes por rodada
+str.finish.final_jelly,최종 보유: 🟦 {0},Final: 🟦 {0},最終所持: 🟦 {0},最终持有：🟦 {0},Endbestand: 🟦 {0},Final: 🟦 {0},Final: 🟦 {0}

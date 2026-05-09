@@ -79,6 +79,9 @@ public class GameManager : MonoBehaviour
         // SPEC-028 Step 1.8: WalletManager 리셋 — 젤리 100 / 스톤 0
         WalletManager.Instance?.ResetForNewGame();
 
+        // SPEC-028 Step 3.10: 1라운드 환전 비율 초기화 (R17·R18)
+        WalletManager.Instance?.RollExchangeRate();
+
         // ★ 트랙 히스토리 리셋
         if (TrackDatabase.Instance != null)
         {
@@ -318,18 +321,22 @@ public class GameManager : MonoBehaviour
 
         // ScoreManager에 라운드 결과 기록
         ScoreManager.Instance?.RecordRound(CurrentBet.type, score, trackName, racerResults, selectedIds);
+
+        // SPEC-028 Step 3.9 / R20·R21: Game Over 즉시 체크
+        // — Wallet.ShouldGameOver()가 true면 다음 라운드 진입 X, 즉시 GameOver 분기
+        // — Jelly=0 + (스톤 0 또는 환전 사용 후) 인 경우만 종료 (R19 구제 룰 포함)
+        if (WalletManager.Instance != null && WalletManager.Instance.ShouldGameOver())
+        {
+            Debug.Log($"[GameManager] SPEC-028 Step 3.9: ShouldGameOver=true → 즉시 GameOver 진입 (Jelly={WalletManager.Instance.Jelly} Stone={WalletManager.Instance.Stone})");
+            ChangeState(GameState.GameOver);
+        }
     }
 
     // ═══ 다음 라운드 ═══
     public void NextRound()
     {
-        // SPEC-028 Step 1.9: 젤리 0 체크 — GameOver 분기 (Finish 진입 전 우선)
-        if (WalletManager.Instance != null && WalletManager.Instance.Jelly <= 0)
-        {
-            Debug.Log($"═══ GAME OVER — 도파민 젤리 소진 (Round {CurrentRound}/{TotalRounds}에서 종료) ═══");
-            ChangeState(GameState.GameOver);
-            return;
-        }
+        // SPEC-028 Step 3.9 (R3.0): jelly==0 체크 폐기 — CalcScore에서 즉시 처리됨
+        // (회귀 안전망으로 한 번 더 체크는 남길 수 있으나 룰 일관성을 위해 제거)
 
         if (IsLastRound)
         {
@@ -341,6 +348,9 @@ public class GameManager : MonoBehaviour
         }
 
         CurrentRound++;
+
+        // SPEC-028 Step 3.10: 다음 라운드 진입 시 환전 비율 갱신 + 카운터 리셋 (R17·R18)
+        WalletManager.Instance?.RollExchangeRate();
         ApplyRoundLaps();
         RaceManager.Instance?.ResetRace();
 
