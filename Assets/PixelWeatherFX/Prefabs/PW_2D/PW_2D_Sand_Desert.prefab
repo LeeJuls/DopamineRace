@@ -1206,7 +1206,7 @@ ParticleSystem:
         m_RotationOrder: 4
     z:
       serializedVersion: 2
-      minMaxState: 3
+      minMaxState: 2
       scalar: 0
       minScalar: 0
       maxCurve:
