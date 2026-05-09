@@ -6,6 +6,17 @@
 **후속**: spec028_step04
 **마스터**: spec028 (개요)
 
+## 빠른 인덱스 (에이전트별 읽기 가이드)
+
+| 에이전트 | 우선 읽기 섹션 | 산출물 |
+|---|---|---|
+| **leader** | 전체 + Phase 내 협업 시퀀스(끝) + UC4 메인/부수 분리 강조 | Phase 3 브리프, Finish 분리 검토, 산출물 검수 |
+| **balance** | §QA TC-C2-03·C2-04 (라운드별 데이터 정확성) | 라운드 결과 데이터 일관성 검증 |
+| **client** | §설계(클래스 다이어그램·와이어프레임), §스프린트 분해(8 step), §수정 파일 목록 | GameOverPanelPrefab 신규 + Finish 메인/부수 분리 |
+| **qa** | §QA 체크리스트(12 TC), §게이트 통과 기준 | TC 12건 실행 + 두 분기 시나리오 검증 |
+
+> 마스터 SPEC §A~F **공통 필수 숙지**.
+
 ## 배경
 
 게임 끝 분기 2개를 시각화. **GAME OVER**(파산, 랭킹 미등록)와 **Finish**(완주, 랭킹 등록 가능)는 완전히 다른 결과 화면이어야 함. Finish 화면은 오너 인사이트 따라 **메인(적중·획득 스톤)** vs **부수(베팅 상세)** 영역을 분리해 도파민 핵심 정보를 강조.
@@ -265,3 +276,70 @@ Phase 3 통과 = 다음 모두 충족
 - partial class 추가 시 `SceneBootstrapper.cs` (필드 정의)도 반드시 같이 수정 (CLAUDE.md 규칙)
 - Finish 메인 영역의 페이드인은 Update 루프 내 alpha 보간으로 구현 (코루틴 또는 LerpUnclamped)
 - Resources/Prefabs/UI/ 경로 일관성 유지 (CurrencyHeaderPrefab, BetAmountModalPrefab과 동일 위치)
+
+---
+
+## ★ Phase 3 내 에이전트 협업 시퀀스
+
+### 작업 순서
+
+```
+[leader] Phase 3 브리프 + UC3 직설적 톤 + UC4 메인/부수 분리 강조
+   │
+   ├─→ [client] Step 3.1 (SceneBootstrapper.GameOver.cs partial)
+   │     │
+   │     └─→ [client] Step 3.2 (GameOverPanelPrefab — 처음부터 프리팹)
+   │           │
+   │           └─→ [client] Step 3.3 (GameState.GameOver 진입 시 자동 표시)
+   │                 │
+   │                 └─→ [client] Step 3.4 (다시 도전 → 새 게임)
+   │
+   ├─→ [client] Step 3.5 (Finish 메인/부수 영역 분리)
+   │     │
+   │     └─→ [client] Step 3.6 (메인 영역 페이드인 + ✓/✗)
+   │
+   ├─→ [client+leader] Step 3.7 (StringTable UID 키 15개 7언어)
+   │
+   └─→ [qa] Step 3.8 (GameOver vs Finish 분기 시나리오 검증)
+         │
+         └─→ [leader] 게이트 검수
+               ├─ PASS → Phase 4 진입 가능 (Phase 1+3 통과 상태)
+               └─ FAIL → 재작업 사이클 (§E)
+```
+
+### 핸드오프 체크리스트
+
+| 송출자 | 수신자 | 핸드오프 조건 |
+|---|---|---|
+| client (Step 3.1~3.4) | client (Step 3.5~3.6) | GameOver 패널 단독 동작 검증 (Wallet.Jelly=0 시뮬) |
+| client (Step 3.5~3.6) | qa | Finish 패널 메인/부수 분리 + 페이드인 정상 |
+| client (Step 3.7 Loc 키) | leader+qa | StringTableValidator 통과 + 7언어 입력 확인 |
+| qa (Step 3.8) | leader | 두 시나리오 (a) Jelly 0 → GameOver, (b) 마지막 라운드 → Finish 모두 PASS |
+| leader | 오너 | 게이트 통과 보고 + Phase 4 진입 가능성 명시 |
+
+## 예상 재작업 시나리오 (사전 대비)
+
+| 시나리오 | 발생 단계 | 처리 |
+|---|---|---|
+| Wallet.Jelly=0 시 GameOver 안 뜸 | TC-C1-01 fail | client → GameManager.CalcScore의 jelly==0 체크 누락 점검 (Phase 1 Step 1.9 의존) |
+| [다시 도전] 후 Wallet 리셋 안 됨 | TC-C1-02 fail | client → SceneManager.LoadScene 후 WalletManager.ResetForNewGame 호출 누락 |
+| Finish 메인/부수 영역이 동시에 표시 (접힘 무시) | TC-C2-02 fail | client → 부수 영역 GameObject 기본 비활성 설정 누락 |
+| 라운드별 ✓/✗ 데이터가 실제 결과와 불일치 | TC-C2-03 fail | balance + client → ScoreManager에서 가져오는 데이터 키 매핑 점검 |
+| 페이드인 애니메이션이 너무 느리거나 빠름 | TC-C2-05 | client → CanvasGroup.alpha 보간 시간 조정 (0.5초 권장) |
+| 7언어 표시 시 메인 영역 텍스트 잘림 | TC-C3-03 | client → TMP_Text autoSize 또는 wrapping 설정 |
+| Phase 2 의존성 누락 (CurrencyHeader 안 보임) | 통합 검증 | leader → Phase 2 게이트 재검증 → 미통과 시 Phase 2 처음부터 |
+
+## Phase 3 게이트 통과 = 다음 Phase 진입 조건
+
+```
+✓ TC-C1-01 ~ TC-C3-04 모두 PASS (Unity MCP 결과 첨부)
+✓ 두 분기 시나리오 (GameOver vs Finish) 충돌 없음
+✓ Finish 메인/부수 영역 분리 + 토글 동작
+✓ Phase 1+2 의존성 정상 (회귀 없음)
+✓ StringTableValidator 통과 (신규 키 15개)
+✓ 7언어 표시 깨짐 없음
+✓ leader 검수 통과 → 오너 보고 → Push 컨펌
+✓ Phase 4 진입 가능 (Phase 1+3 통과 = Phase 4 시작 가능)
+```
+
+> Phase 4의 NicknameInputModal은 Finish 화면 위에 오버레이로 표시되므로 Phase 3 완료 필수.
