@@ -75,15 +75,15 @@ MonoBehaviour:
   oddsCoef_exacta: 1.1
   oddsCoef_wide: 0.45
   oddsCoef_trio: 0.2
-  oddsMin_place: 1
+  oddsMin_place: 1.1
   oddsMax_place: 15
-  oddsMin_quinella: 2
+  oddsMin_quinella: 1.1
   oddsMax_quinella: 200
-  oddsMin_exacta: 3
+  oddsMin_exacta: 1.1
   oddsMax_exacta: 500
-  oddsMin_wide: 1.5
+  oddsMin_wide: 1.1
   oddsMax_wide: 100
-  oddsMin_trio: 5
+  oddsMin_trio: 1.1
   oddsMax_trio: 999
   shortDistanceMax: 2
   midDistanceMax: 4

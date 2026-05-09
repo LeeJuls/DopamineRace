@@ -231,51 +231,66 @@ public static class OddsCalculator
         return Mathf.Round(odds * 10f) / 10f;
     }
 
-    /// <summary>복합 승식 배당 계산</summary>
+    /// <summary>
+    /// 복합 승식 배당 계산.
+    /// SPEC-028 Step 1.6: 모든 타입 결과에 Mathf.Max(1.1f, odds) 안전망 적용.
+    /// 자연 배당이 1.1 미만이면 1.1로 보정 표시 (옵션 차단 X).
+    /// 1.1 보장은 GameSettings.asset의 oddsMin_* 값 정규화(Step 1.7)와 이중 안전.
+    /// </summary>
     private static float CalcComboOdds(BetType type, List<float> selectedOdds)
     {
-        if (selectedOdds.Count == 0) return 1f;
+        if (selectedOdds.Count == 0) return 1.1f;  // SPEC-028: 1f → 1.1f 보강
         var gs = GameSettings.Instance;
 
+        float result;
         switch (type)
         {
             case BetType.Win:
-                return Mathf.Clamp(selectedOdds[0], 1.1f, 99f);
+                result = Mathf.Clamp(selectedOdds[0], 1.1f, 99f);
+                break;
 
             case BetType.Place:
                 // 연승: 여러 말 중 하나 적중 → 평균 단승배당 × 계수
                 float sum = 0f;
                 foreach (float o in selectedOdds) sum += o;
-                return Mathf.Clamp(
+                result = Mathf.Clamp(
                     (sum / selectedOdds.Count) * gs.oddsCoef_place,
                     gs.oddsMin_place, gs.oddsMax_place);
+                break;
 
             case BetType.Quinella:
-                if (selectedOdds.Count < 2) return gs.oddsMin_quinella;
-                return Mathf.Clamp(
+                if (selectedOdds.Count < 2) { result = gs.oddsMin_quinella; break; }
+                result = Mathf.Clamp(
                     selectedOdds[0] * selectedOdds[1] * gs.oddsCoef_quinella,
                     gs.oddsMin_quinella, gs.oddsMax_quinella);
+                break;
 
             case BetType.Exacta:
-                if (selectedOdds.Count < 2) return gs.oddsMin_exacta;
-                return Mathf.Clamp(
+                if (selectedOdds.Count < 2) { result = gs.oddsMin_exacta; break; }
+                result = Mathf.Clamp(
                     selectedOdds[0] * selectedOdds[1] * gs.oddsCoef_exacta,
                     gs.oddsMin_exacta, gs.oddsMax_exacta);
+                break;
 
             case BetType.Wide:
-                if (selectedOdds.Count < 2) return gs.oddsMin_wide;
-                return Mathf.Clamp(
+                if (selectedOdds.Count < 2) { result = gs.oddsMin_wide; break; }
+                result = Mathf.Clamp(
                     selectedOdds[0] * selectedOdds[1] * gs.oddsCoef_wide,
                     gs.oddsMin_wide, gs.oddsMax_wide);
+                break;
 
             case BetType.Trio:
-                if (selectedOdds.Count < 3) return gs.oddsMin_trio;
-                return Mathf.Clamp(
+                if (selectedOdds.Count < 3) { result = gs.oddsMin_trio; break; }
+                result = Mathf.Clamp(
                     selectedOdds[0] * selectedOdds[1] * selectedOdds[2] * gs.oddsCoef_trio,
                     gs.oddsMin_trio, gs.oddsMax_trio);
+                break;
 
-            default: return 1f;
+            default: result = 1.1f; break;
         }
+
+        // SPEC-028 Step 1.6: 모든 타입 결과에 1.1 최소 보장
+        return Mathf.Max(1.1f, result);
     }
 
     /// <summary>적중 여부 확인</summary>

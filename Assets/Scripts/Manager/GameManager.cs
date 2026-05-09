@@ -5,7 +5,8 @@ using System.Collections.Generic;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
-    public enum GameState { Betting, Countdown, Racing, Result, Finish }
+    // SPEC-028 Step 1.9: GameOver 신규 — 젤리 0 도달 시 진입
+    public enum GameState { Betting, Countdown, Racing, Result, Finish, GameOver }
     public GameState CurrentState { get; private set; } = GameState.Betting;
 
     public event Action<GameState> OnStateChanged;
@@ -56,24 +57,27 @@ public class GameManager : MonoBehaviour
     // ═══ 게임 초기화 (새 게임 시작) ═══
     public void StartNewGame()
     {
-        // ★ 라운드 복귀: 저장된 라운드/트랙이 있으면 거기서부터 시작
+        // SPEC-028 Step 1.10: enableRoundResume 강제 OFF
+        // — 도중 종료 = GAME OVER 처리 (오너 결정), 항상 1라운드부터 시작
+        // — 기존 PlayerPrefs 키가 남아있으면 정리
+        if (PlayerPrefs.HasKey(PREF_LAST_ROUND))
+        {
+            PlayerPrefs.DeleteKey(PREF_LAST_ROUND);
+            PlayerPrefs.DeleteKey(PREF_LAST_TRACK);
+            PlayerPrefs.Save();
+            Debug.Log("[GameManager] SPEC-028: 기존 라운드 복귀 키 정리 — 항상 1라운드부터 시작");
+        }
+
         int startRound = 1;
         string resumeTrackId = "";
         var gs = GameSettings.Instance;
-        if (gs != null && gs.enableRoundResume && PlayerPrefs.HasKey(PREF_LAST_ROUND))
-        {
-            int saved = PlayerPrefs.GetInt(PREF_LAST_ROUND, 1);
-            if (saved >= 1 && saved <= TotalRounds)
-            {
-                startRound = saved;
-                resumeTrackId = PlayerPrefs.GetString(PREF_LAST_TRACK, "");
-                Debug.Log($"[GameManager] 라운드 복귀: Round {saved}부터 시작 (트랙: {(string.IsNullOrEmpty(resumeTrackId) ? "기본" : resumeTrackId)})");
-            }
-        }
 
         CurrentRound = startRound;
         CurrentBet = new BetInfo(BetType.Exacta);   // 기본 = 쌍승
         ScoreManager.Instance?.ResetAll();
+
+        // SPEC-028 Step 1.8: WalletManager 리셋 — 젤리 100 / 스톤 0
+        WalletManager.Instance?.ResetForNewGame();
 
         // ★ 트랙 히스토리 리셋
         if (TrackDatabase.Instance != null)
@@ -174,19 +178,14 @@ public class GameManager : MonoBehaviour
         {
             // 배팅 타입은 유지, 선택만 리셋
             if (CurrentBet != null)
+            {
                 CurrentBet.selections.Clear();
+                CurrentBet.betAmount = 0;  // SPEC-028 Step 1.5: 베팅액도 리셋
+            }
             BetFirst = -1;
             BetSecond = -1;
 
-            // ★ 라운드 복귀용 저장 (라운드 + 트랙)
-            var gs2 = GameSettings.Instance;
-            if (gs2 != null && gs2.enableRoundResume)
-            {
-                PlayerPrefs.SetInt(PREF_LAST_ROUND, CurrentRound);
-                string trackId = TrackDatabase.Instance?.CurrentTrackInfo?.trackId ?? "";
-                PlayerPrefs.SetString(PREF_LAST_TRACK, trackId);
-                PlayerPrefs.Save();
-            }
+            // SPEC-028 Step 1.10: enableRoundResume 강제 OFF — 라운드 복귀 저장 안 함
         }
         if (s == GameState.Countdown) countdownTimer = 3f;
         if (s == GameState.Racing) OnRaceStart?.Invoke();
@@ -250,6 +249,22 @@ public class GameManager : MonoBehaviour
 
         int score = BettingCalculator.Calculate(CurrentBet, rankingIndices);
 
+        // SPEC-028 Step 1.8: 통화 시스템 통합 — 베팅액 기반 보상 계산
+        // betAmount > 0인 경우에만 통화 흐름 적용 (Phase 2 모달 진입 후부터 활성)
+        if (CurrentBet != null && CurrentBet.betAmount > 0 && WalletManager.Instance != null)
+        {
+            BetReward reward = BettingCalculator.CalculateReward(CurrentBet, rankingIndices, CurrentBet.betAmount);
+            if (reward.hit)
+            {
+                WalletManager.Instance.Reward(reward.jelly, reward.stone);
+                Debug.Log($"[Wallet] 적중 보상: +{reward.jelly}🟦 +{reward.stone}💎 (베팅 {CurrentBet.betAmount} × 배당)");
+            }
+            else
+            {
+                Debug.Log($"[Wallet] 빗나감 — 베팅 {CurrentBet.betAmount}🟦 손실");
+            }
+        }
+
         Debug.Log("[결과] Round " + CurrentRound + " | "
             + BettingCalculator.GetTypeName(CurrentBet.type) + " → "
             + (score > 0 ? "적중! +" + score + "점" : "실패 +0점"));
@@ -308,6 +323,14 @@ public class GameManager : MonoBehaviour
     // ═══ 다음 라운드 ═══
     public void NextRound()
     {
+        // SPEC-028 Step 1.9: 젤리 0 체크 — GameOver 분기 (Finish 진입 전 우선)
+        if (WalletManager.Instance != null && WalletManager.Instance.Jelly <= 0)
+        {
+            Debug.Log($"═══ GAME OVER — 도파민 젤리 소진 (Round {CurrentRound}/{TotalRounds}에서 종료) ═══");
+            ChangeState(GameState.GameOver);
+            return;
+        }
+
         if (IsLastRound)
         {
             // 마지막 라운드 → Finish 화면

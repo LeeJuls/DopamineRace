@@ -15,6 +15,19 @@ public enum BetType
 }
 
 /// <summary>
+/// 적중 보상 결과 (SPEC-028 Step 1.4).
+/// hit=true면 jelly·stone 둘 다 양수, hit=false면 둘 다 0.
+/// </summary>
+public struct BetReward
+{
+    public int jelly;   // 적중 시 받는 젤리 = Mathf.CeilToInt(betAmount × 배당)
+    public int stone;   // 적중 시 받는 스톤 = betAmount × 1
+    public bool hit;    // 적중 여부
+
+    public static BetReward Miss => new BetReward { jelly = 0, stone = 0, hit = false };
+}
+
+/// <summary>
 /// 배팅 1건의 정보
 /// </summary>
 [System.Serializable]
@@ -23,10 +36,18 @@ public class BetInfo
     public BetType type;
     public List<int> selections = new List<int>();
 
+    /// <summary>
+    /// 베팅한 도파민 젤리 양 (SPEC-028 Step 1.5).
+    /// 런타임 전용 — 직렬화 X. 모달에서 결정 후 GameManager가 채움.
+    /// </summary>
+    [System.NonSerialized]
+    public int betAmount;
+
     public BetInfo(BetType t)
     {
         type = t;
         selections = new List<int>();
+        betAmount = 0;
     }
 
     /// <summary>
@@ -151,6 +172,47 @@ public static class BettingCalculator
 
         int basePt = GetPayout(bet.type);
         return Mathf.Max(1, Mathf.FloorToInt(basePt * multiplier));
+    }
+
+    /// <summary>
+    /// SPEC-028 통화 시스템 보상 계산 (Step 1.4).
+    /// 적중 시: 젤리 = Mathf.CeilToInt(betAmount × 배당), 스톤 = betAmount × 1
+    /// 빗나감 시: 젤리/스톤 모두 0
+    ///
+    /// 배당 최소값 1.1 보장은 OddsCalculator.CalcComboOdds 내부 클램프에 의존 (Step 1.6).
+    /// 실제 배당은 OddsCalculator.CalcPayout(bet, rankings, racers)을 통해 계산.
+    /// </summary>
+    public static BetReward CalculateReward(BetInfo bet, List<int> rankings, int betAmount)
+    {
+        if (bet == null || rankings == null || rankings.Count < 3) return BetReward.Miss;
+        if (!bet.IsComplete) return BetReward.Miss;
+        if (betAmount <= 0) return BetReward.Miss;
+
+        // OddsCalculator 미초기화 시 기본 배당으로 fallback (1.1 안전망)
+        var racers = CharacterDatabase.Instance?.SelectedCharacters;
+        if (racers == null || racers.Count == 0)
+            return BetReward.Miss;
+
+        if (OddsCalculator.CurrentOdds == null || OddsCalculator.CurrentOdds.Count == 0)
+            return BetReward.Miss;
+
+        float odds = OddsCalculator.CalcPayout(bet, rankings, racers);
+        if (odds <= 0f)
+            return BetReward.Miss;   // 미적중
+
+        // 1.1 안전망 (OddsCalculator에서 이미 클램프되지만 이중 안전)
+        odds = Mathf.Max(1.1f, odds);
+
+        // Mathf.CeilToInt: 소수점이 있으면 정수로 올림 (33×1.1=36.3 → 37)
+        int jellyGain = Mathf.CeilToInt(betAmount * odds);
+        int stoneGain = betAmount;  // 1:1
+
+        return new BetReward
+        {
+            jelly = jellyGain,
+            stone = stoneGain,
+            hit = true
+        };
     }
 
     /// <summary>기존 고정 배당 방식 (fallback)</summary>

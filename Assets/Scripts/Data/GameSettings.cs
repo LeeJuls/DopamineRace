@@ -152,11 +152,14 @@ public partial class GameSettings : ScriptableObject
     public float oddsCoef_trio     = 0.20f;
 
     [Header("═══ 복합 승식 배당 상한/하한 ═══")]
-    public float oddsMin_place    = 1.0f;  public float oddsMax_place    = 15f;
-    public float oddsMin_quinella = 2.0f;  public float oddsMax_quinella = 200f;
-    public float oddsMin_exacta   = 3.0f;  public float oddsMax_exacta   = 500f;
-    public float oddsMin_wide     = 1.5f;  public float oddsMax_wide     = 100f;
-    public float oddsMin_trio     = 5.0f;  public float oddsMax_trio     = 999f;
+    // SPEC-028 Step 1.7: oddsMin_* 1.1 정규화 (배당 최소값 통일)
+    // — Place는 평균 단승배당 기반이라 1.0 → 1.1로만 보정
+    // — Quinella/Exacta/Trio/Wide는 곱셈 기반이라 보통 훨씬 큰 값이 나옴 → 안전망 1.1
+    public float oddsMin_place    = 1.1f;  public float oddsMax_place    = 15f;
+    public float oddsMin_quinella = 1.1f;  public float oddsMax_quinella = 200f;
+    public float oddsMin_exacta   = 1.1f;  public float oddsMax_exacta   = 500f;
+    public float oddsMin_wide     = 1.1f;  public float oddsMax_wide     = 100f;
+    public float oddsMin_trio     = 1.1f;  public float oddsMax_trio     = 999f;
 
     [Header("═══ 거리 구분 설정 ═══")]
     [Tooltip("이 바퀴 수 이하 = 단거리")]
