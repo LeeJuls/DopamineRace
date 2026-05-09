@@ -23,6 +23,7 @@
 
 ## 요구사항
 
+- **R3.0** ★ Game Over 트리거 시점 변경 (마스터 R21 반영): `GameManager.NextRound`의 jelly==0 체크 폐기 → **`CalcScore` 끝나고 즉시 `WalletManager.ShouldGameOver()` 체크**.
 - **R3.1** `GameState.GameOver` 진입 시 자동으로 GAME OVER 패널 표시 (어두운 백드롭 + 모달).
 - **R3.2** GAME OVER 화면 정보: 헤드라인, 도달 라운드 ("X / N 라운드에서 종료"), 랭킹 미등록 안내, [다시 도전] 버튼.
 - **R3.3** [다시 도전] 클릭 → 새 게임 시작 (`WalletManager.ResetForNewGame()` + 씬 재로드).
@@ -160,6 +161,8 @@
 | **3.6** | Finish 메인 영역 — 큰 글씨 + 페이드인 + ✓/✗ 라운드 리스트 | 시각적 임팩트 | TC-C2-03 | client |
 | **3.7** | StringTable UID 키 ~15개 추가 | str.gameover.* / str.finish.* | StringTableValidator 통과 | client+leader |
 | **3.8** | QA 시나리오 — GameOver vs Finish 분리 검증 | Unity MCP 시뮬 2건 | TC-C3-01 | qa |
+| **3.9** ★ | `GameManager.CalcScore` 끝에 `Wallet.ShouldGameOver()` 체크 추가 + `NextRound`의 jelly==0 체크 제거 (R3.0) | Game Over 트리거 시점 이동 | TC-C4-01~04 PASS | client |
+| **3.10** ★ | `StartNewGame` + `NextRound`에 `WalletManager.RollExchangeRate()` 호출 추가 | 라운드 시작마다 환전율 갱신 | 매 라운드 비율 변경 확인 | client |
 
 ### 의존성
 
@@ -187,6 +190,10 @@
 | TC-C3-02 | StringTableValidator | 누락·미사용 0건 |
 | TC-C3-03 | 7언어 깨짐 없음 | en/ja/zh_CN/de/es/br 모두 표시 정상 |
 | TC-C3-04 | Unity 콘솔 에러 0 | Phase 3 종료 후 read_unity_console_logs 결과 0 |
+| **TC-C4-01** | Game Over 트리거 시점 (R3.0) | CalcScore 끝나고 즉시 ShouldGameOver 체크 → GameState.GameOver 진입 (NextRound 호출 전) |
+| **TC-C4-02** | NextRound 진입 시 jelly==0 체크 폐기 | NextRound 호출 시 jelly 체크 코드 미존재 (이중 체크 X) |
+| **TC-C4-03** | 1라운드 100젤리 올인 → 빗나감 → 즉시 Game Over | CalcScore 직후 GameOver 표시 (다음 라운드 진입 X) |
+| **TC-C4-04** | 1라운드 100젤리 올인 → 적중 → 다음 라운드 정상 | Stone 100 누적, NextRound 정상 진입, RollExchangeRate 호출 |
 
 ### Unity MCP 실행 예시 (TC-C1-01)
 
