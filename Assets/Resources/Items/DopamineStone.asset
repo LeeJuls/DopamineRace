@@ -15,5 +15,5 @@ MonoBehaviour:
   id: stone
   nameKey: str.currency.stone.name
   descKey: str.currency.stone.desc
-  icon: {fileID: -8387648929117166848, guid: c3529e4f61adecd4f82ca92e17b69e1a, type: 2}
+  icon: {fileID: 21300000, guid: 1562bedecbbf4774abba2a3118c458ac, type: 3}
   defaultColor: {r: 0.3, g: 0.9, b: 0.9, a: 1}

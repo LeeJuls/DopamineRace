@@ -19,23 +19,71 @@ public static class CurrencyUIPrefabCreator
         EnsureFolder("Assets/Resources/Prefabs");
         EnsureFolder("Assets/Resources/Prefabs/UI");
 
-        var jellySprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Items/dopamine_jelly_icon.asset");
-        var stoneSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Items/dopamine_stone_icon.asset");
+        // 디자이너 sprite 우선, 없으면 임시 procedural sprite fallback
+        var jellySprite = LoadDesignerOrTempSprite(
+            "Assets/Resources/Icon/dopaminejelly_1.png",
+            "Assets/Resources/Items/dopamine_jelly_icon.asset");
+        var stoneSprite = LoadDesignerOrTempSprite(
+            "Assets/Resources/Icon/dopaminestone_1.png",
+            "Assets/Resources/Items/dopamine_stone_icon.asset");
+        var changeSprite = LoadDesignerOrTempSprite(
+            "Assets/Resources/Icon/dopamine_change.png",
+            null);
 
         if (jellySprite == null || stoneSprite == null)
         {
-            Debug.LogError("[Prefab] dopamine_jelly_icon.asset 또는 dopamine_stone_icon.asset 없음 — 먼저 sprite 생성");
+            Debug.LogError("[Prefab] jelly/stone sprite 없음 — Resources/Icon 또는 Items 확인");
             return;
         }
 
         BuildCurrencyHeaderPrefab(jellySprite, stoneSprite);
-        BuildExchangeIconPrefab();
+        BuildExchangeIconPrefab(changeSprite);
         BuildBetAmountModalPrefab();
         BuildExchangeModalPrefab();
 
+        // CurrencyItem.asset의 icon 필드도 디자이너 sprite로 갱신
+        UpdateCurrencyItemIcon("Assets/Resources/Items/DopamineJelly.asset", jellySprite);
+        UpdateCurrencyItemIcon("Assets/Resources/Items/DopamineStone.asset", stoneSprite);
+
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log("[Prefab] Currency UI 프리팹 4개 생성 완료 (Header + ExchangeIcon + BetAmountModal + ExchangeModal)");
+        Debug.Log("[Prefab] Currency UI 프리팹 4개 생성 완료 + 디자이너 sprite 적용");
+    }
+
+    private static Sprite LoadDesignerOrTempSprite(string designerPath, string tempAssetPath)
+    {
+        // 1순위: 디자이너 PNG
+        if (System.IO.File.Exists(designerPath))
+        {
+            var sp = AssetDatabase.LoadAssetAtPath<Sprite>(designerPath);
+            if (sp != null)
+            {
+                Debug.Log($"[Sprite] 디자이너 sprite 사용: {designerPath}");
+                return sp;
+            }
+        }
+        // 2순위: 임시 procedural .asset
+        if (!string.IsNullOrEmpty(tempAssetPath))
+        {
+            var sp = AssetDatabase.LoadAssetAtPath<Sprite>(tempAssetPath);
+            if (sp != null)
+            {
+                Debug.Log($"[Sprite] 임시 sprite fallback: {tempAssetPath}");
+                return sp;
+            }
+        }
+        return null;
+    }
+
+    private static void UpdateCurrencyItemIcon(string itemAssetPath, Sprite sprite)
+    {
+        var item = AssetDatabase.LoadAssetAtPath<CurrencyItem>(itemAssetPath);
+        if (item == null) return;
+        var so = new SerializedObject(item);
+        so.FindProperty("icon").objectReferenceValue = sprite;
+        so.ApplyModifiedProperties();
+        EditorUtility.SetDirty(item);
+        Debug.Log($"[CurrencyItem] {itemAssetPath} icon → {sprite.name}");
     }
 
     // ═══════════════════════════════════════════════════════
@@ -115,37 +163,48 @@ public static class CurrencyUIPrefabCreator
     }
 
     // ═══════════════════════════════════════════════════════
-    //  ExchangeIconPrefab
+    //  ExchangeIconPrefab — 디자이너 sprite 있으면 Image로, 없으면 텍스트 💱 fallback
     // ═══════════════════════════════════════════════════════
-    private static void BuildExchangeIconPrefab()
+    private static void BuildExchangeIconPrefab(Sprite changeSprite)
     {
         var root = new GameObject("ExchangeIcon");
         var rt = root.AddComponent<RectTransform>();
         rt.sizeDelta = new Vector2(64, 64);
 
         var bg = root.AddComponent<Image>();
-        bg.color = new Color(0.25f, 0.4f, 0.6f, 0.95f);
+        // 디자이너 sprite 있으면 그대로 사용 + 배경 투명, 없으면 컬러 박스
+        if (changeSprite != null) {
+            bg.sprite = changeSprite;
+            bg.color = Color.white;
+            bg.preserveAspect = true;
+        } else {
+            bg.color = new Color(0.25f, 0.4f, 0.6f, 0.95f);
+        }
         bg.raycastTarget = true;
 
         var btn = root.AddComponent<Button>();
         btn.targetGraphic = bg;
 
-        var labelGo = NewRect("Label", root.transform,
-            new Vector2(0, 0), new Vector2(1, 1),
-            Vector2.zero, Vector2.zero);
-        var label = labelGo.AddComponent<Text>();
-        label.text = "💱";
-        label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        label.fontSize = 36;
-        label.fontStyle = FontStyle.Bold;
-        label.alignment = TextAnchor.MiddleCenter;
-        label.color = Color.white;
-        label.raycastTarget = false;
+        // 디자이너 sprite가 없을 때만 💱 텍스트 라벨
+        if (changeSprite == null)
+        {
+            var labelGo = NewRect("Label", root.transform,
+                new Vector2(0, 0), new Vector2(1, 1),
+                Vector2.zero, Vector2.zero);
+            var label = labelGo.AddComponent<Text>();
+            label.text = "💱";
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = 36;
+            label.fontStyle = FontStyle.Bold;
+            label.alignment = TextAnchor.MiddleCenter;
+            label.color = Color.white;
+            label.raycastTarget = false;
+        }
 
         string path = "Assets/Resources/Prefabs/UI/ExchangeIconPrefab.prefab";
         PrefabUtility.SaveAsPrefabAsset(root, path);
         Object.DestroyImmediate(root);
-        Debug.Log($"[Prefab] {path}");
+        Debug.Log($"[Prefab] {path} {(changeSprite != null ? "(디자이너 sprite)" : "(텍스트 💱)")}");
     }
 
     // ═══════════════════════════════════════════════════════

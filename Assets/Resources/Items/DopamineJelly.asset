@@ -15,5 +15,5 @@ MonoBehaviour:
   id: jelly
   nameKey: str.currency.jelly.name
   descKey: str.currency.jelly.desc
-  icon: {fileID: 6907558725718387676, guid: 889947657f67548468a7371b5f54df53, type: 2}
+  icon: {fileID: 21300000, guid: 942d33837b2186341a5a432d70e05c03, type: 3}
   defaultColor: {r: 0.4, g: 0.7, b: 1, a: 1}

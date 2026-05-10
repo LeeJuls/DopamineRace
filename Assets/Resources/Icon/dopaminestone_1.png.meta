@@ -1,0 +1,1131 @@
+fileFormatVersion: 2
+guid: 1562bedecbbf4774abba2a3118c458ac
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6884124325656290901
+    second: dopaminestone_1_0
+  - first:
+      213: -2491886266579458290
+    second: dopaminestone_1_1
+  - first:
+      213: -5060873505191960415
+    second: dopaminestone_1_2
+  - first:
+      213: -6678938993039670221
+    second: dopaminestone_1_3
+  - first:
+      213: 6328490271688167772
+    second: dopaminestone_1_4
+  - first:
+      213: -6919404464452403301
+    second: dopaminestone_1_5
+  - first:
+      213: -1738435311082518441
+    second: dopaminestone_1_6
+  - first:
+      213: 2996990100558729020
+    second: dopaminestone_1_7
+  - first:
+      213: -195966949257355388
+    second: dopaminestone_1_8
+  - first:
+      213: -2959180673918629562
+    second: dopaminestone_1_9
+  - first:
+      213: -6299184224964585122
+    second: dopaminestone_1_10
+  - first:
+      213: -2650908077684312802
+    second: dopaminestone_1_11
+  - first:
+      213: 1835028756469709217
+    second: dopaminestone_1_12
+  - first:
+      213: -8257919363413406700
+    second: dopaminestone_1_13
+  - first:
+      213: 8644445681397368088
+    second: dopaminestone_1_14
+  - first:
+      213: 5447221584234775133
+    second: dopaminestone_1_15
+  - first:
+      213: -7216498610426555726
+    second: dopaminestone_1_16
+  - first:
+      213: -1760479207023646686
+    second: dopaminestone_1_17
+  - first:
+      213: 8439307298732773498
+    second: dopaminestone_1_18
+  - first:
+      213: -349989960688229709
+    second: dopaminestone_1_19
+  - first:
+      213: 4978528913158789465
+    second: dopaminestone_1_20
+  - first:
+      213: -987905090162061583
+    second: dopaminestone_1_21
+  - first:
+      213: 7549950463950094590
+    second: dopaminestone_1_22
+  - first:
+      213: 8820642173374151450
+    second: dopaminestone_1_23
+  - first:
+      213: -6921234082742168280
+    second: dopaminestone_1_24
+  - first:
+      213: -5661359120972953359
+    second: dopaminestone_1_25
+  - first:
+      213: 2603895166655867186
+    second: dopaminestone_1_26
+  - first:
+      213: 3582506243676712514
+    second: dopaminestone_1_27
+  - first:
+      213: -6214723762941250506
+    second: dopaminestone_1_28
+  - first:
+      213: -121580467615204155
+    second: dopaminestone_1_29
+  - first:
+      213: -2629279903873882862
+    second: dopaminestone_1_30
+  - first:
+      213: 898616187482960090
+    second: dopaminestone_1_31
+  - first:
+      213: -3311741446344759103
+    second: dopaminestone_1_32
+  - first:
+      213: 1914841455270069889
+    second: dopaminestone_1_33
+  - first:
+      213: 981448392341436620
+    second: dopaminestone_1_34
+  - first:
+      213: -2884240212681476072
+    second: dopaminestone_1_35
+  - first:
+      213: 4393205859727088672
+    second: dopaminestone_1_36
+  - first:
+      213: 8200347635042320772
+    second: dopaminestone_1_37
+  - first:
+      213: -5362823770585798696
+    second: dopaminestone_1_38
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 64
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: dopaminestone_1_0
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 57
+        width: 767
+        height: 962
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba991a3466da670a0800000000000000
+      internalID: -6884124325656290901
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_1
+      rect:
+        serializedVersion: 2
+        x: 571
+        y: 853
+        width: 37
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e076bd3a4aa0b6dd0800000000000000
+      internalID: -2491886266579458290
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_2
+      rect:
+        serializedVersion: 2
+        x: 115
+        y: 640
+        width: 47
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a0e8d55c5a24c9b0800000000000000
+      internalID: -5060873505191960415
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_3
+      rect:
+        serializedVersion: 2
+        x: 847
+        y: 663
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3348d535f54af43a0800000000000000
+      internalID: -6678938993039670221
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_4
+      rect:
+        serializedVersion: 2
+        x: 147
+        y: 619
+        width: 14
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c511d705f5053d750800000000000000
+      internalID: 6328490271688167772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_5
+      rect:
+        serializedVersion: 2
+        x: 849
+        y: 626
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9fff07dc4659ff90800000000000000
+      internalID: -6919404464452403301
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_6
+      rect:
+        serializedVersion: 2
+        x: 879
+        y: 581
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7584ee19b46dfd7e0800000000000000
+      internalID: -1738435311082518441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_7
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 569
+        width: 11
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3f4a232e92779920800000000000000
+      internalID: 2996990100558729020
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_8
+      rect:
+        serializedVersion: 2
+        x: 157
+        y: 527
+        width: 37
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48f5cc11919c74df0800000000000000
+      internalID: -195966949257355388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_9
+      rect:
+        serializedVersion: 2
+        x: 835
+        y: 488
+        width: 31
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 64901e00bd0eee6d0800000000000000
+      internalID: -2959180673918629562
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_10
+      rect:
+        serializedVersion: 2
+        x: 851
+        y: 423
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e59dd38625dc498a0800000000000000
+      internalID: -6299184224964585122
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_11
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 235
+        width: 11
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e15b9610625163bd0800000000000000
+      internalID: -2650908077684312802
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_12
+      rect:
+        serializedVersion: 2
+        x: 353
+        y: 239
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a9f00e7ee4577910800000000000000
+      internalID: 1835028756469709217
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_13
+      rect:
+        serializedVersion: 2
+        x: 374
+        y: 235
+        width: 12
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 41c8cef571af56d80800000000000000
+      internalID: -8257919363413406700
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_14
+      rect:
+        serializedVersion: 2
+        x: 402
+        y: 237
+        width: 70
+        height: 68
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 81589d70c8d37f770800000000000000
+      internalID: 8644445681397368088
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_15
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 234
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d5287259b2b689b40800000000000000
+      internalID: 5447221584234775133
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_16
+      rect:
+        serializedVersion: 2
+        x: 469
+        y: 219
+        width: 32
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b2dc6b9fb8d9db90800000000000000
+      internalID: -7216498610426555726
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_17
+      rect:
+        serializedVersion: 2
+        x: 521
+        y: 232
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 228e4e61d758197e0800000000000000
+      internalID: -1760479207023646686
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_18
+      rect:
+        serializedVersion: 2
+        x: 552
+        y: 218
+        width: 71
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a70145b56417e1570800000000000000
+      internalID: 8439307298732773498
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_19
+      rect:
+        serializedVersion: 2
+        x: 622
+        y: 216
+        width: 29
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3b2a93e2cf5942bf0800000000000000
+      internalID: -349989960688229709
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_20
+      rect:
+        serializedVersion: 2
+        x: 677
+        y: 239
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95957dc4ba9471540800000000000000
+      internalID: 4978528913158789465
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_21
+      rect:
+        serializedVersion: 2
+        x: 746
+        y: 231
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1fe071dfd814a42f0800000000000000
+      internalID: -987905090162061583
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_22
+      rect:
+        serializedVersion: 2
+        x: 269
+        y: 228
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef08a8312ffc6c860800000000000000
+      internalID: 7549950463950094590
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_23
+      rect:
+        serializedVersion: 2
+        x: 333
+        y: 223
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a1bbbcaa257396a70800000000000000
+      internalID: 8820642173374151450
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_24
+      rect:
+        serializedVersion: 2
+        x: 410
+        y: 230
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82593d2a546d2ff90800000000000000
+      internalID: -6921234082742168280
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_25
+      rect:
+        serializedVersion: 2
+        x: 503
+        y: 223
+        width: 13
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f84d78efdfce61b0800000000000000
+      internalID: -5661359120972953359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_26
+      rect:
+        serializedVersion: 2
+        x: 555
+        y: 215
+        width: 15
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23921e8abd4e22420800000000000000
+      internalID: 2603895166655867186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_27
+      rect:
+        serializedVersion: 2
+        x: 655
+        y: 227
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 24e28fb927e97b130800000000000000
+      internalID: 3582506243676712514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_28
+      rect:
+        serializedVersion: 2
+        x: 678
+        y: 227
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63435b42aadd0c9a0800000000000000
+      internalID: -6214723762941250506
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_29
+      rect:
+        serializedVersion: 2
+        x: 315
+        y: 217
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5cc7b28753f005ef0800000000000000
+      internalID: -121580467615204155
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_30
+      rect:
+        serializedVersion: 2
+        x: 351
+        y: 215
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2152682abdbe28bd0800000000000000
+      internalID: -2629279903873882862
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_31
+      rect:
+        serializedVersion: 2
+        x: 466
+        y: 216
+        width: 10
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad0765459a6887c00800000000000000
+      internalID: 898616187482960090
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_32
+      rect:
+        serializedVersion: 2
+        x: 478
+        y: 194
+        width: 11
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c8aeae63b45a02d0800000000000000
+      internalID: -3311741446344759103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_33
+      rect:
+        serializedVersion: 2
+        x: 526
+        y: 207
+        width: 15
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18680968822e29a10800000000000000
+      internalID: 1914841455270069889
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_34
+      rect:
+        serializedVersion: 2
+        x: 586
+        y: 201
+        width: 8
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc8b3e6ec1ece9d00800000000000000
+      internalID: 981448392341436620
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_35
+      rect:
+        serializedVersion: 2
+        x: 719
+        y: 213
+        width: 15
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8183934dece19f7d0800000000000000
+      internalID: -2884240212681476072
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_36
+      rect:
+        serializedVersion: 2
+        x: 415
+        y: 195
+        width: 8
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 02c9236047dc7fc30800000000000000
+      internalID: 4393205859727088672
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_37
+      rect:
+        serializedVersion: 2
+        x: 619
+        y: 207
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 481896d0abc7dc170800000000000000
+      internalID: 8200347635042320772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dopaminestone_1_38
+      rect:
+        serializedVersion: 2
+        x: 305
+        y: 186
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d76631b13c6395b0800000000000000
+      internalID: -5362823770585798696
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      dopaminestone_1_0: -6884124325656290901
+      dopaminestone_1_1: -2491886266579458290
+      dopaminestone_1_10: -6299184224964585122
+      dopaminestone_1_11: -2650908077684312802
+      dopaminestone_1_12: 1835028756469709217
+      dopaminestone_1_13: -8257919363413406700
+      dopaminestone_1_14: 8644445681397368088
+      dopaminestone_1_15: 5447221584234775133
+      dopaminestone_1_16: -7216498610426555726
+      dopaminestone_1_17: -1760479207023646686
+      dopaminestone_1_18: 8439307298732773498
+      dopaminestone_1_19: -349989960688229709
+      dopaminestone_1_2: -5060873505191960415
+      dopaminestone_1_20: 4978528913158789465
+      dopaminestone_1_21: -987905090162061583
+      dopaminestone_1_22: 7549950463950094590
+      dopaminestone_1_23: 8820642173374151450
+      dopaminestone_1_24: -6921234082742168280
+      dopaminestone_1_25: -5661359120972953359
+      dopaminestone_1_26: 2603895166655867186
+      dopaminestone_1_27: 3582506243676712514
+      dopaminestone_1_28: -6214723762941250506
+      dopaminestone_1_29: -121580467615204155
+      dopaminestone_1_3: -6678938993039670221
+      dopaminestone_1_30: -2629279903873882862
+      dopaminestone_1_31: 898616187482960090
+      dopaminestone_1_32: -3311741446344759103
+      dopaminestone_1_33: 1914841455270069889
+      dopaminestone_1_34: 981448392341436620
+      dopaminestone_1_35: -2884240212681476072
+      dopaminestone_1_36: 4393205859727088672
+      dopaminestone_1_37: 8200347635042320772
+      dopaminestone_1_38: -5362823770585798696
+      dopaminestone_1_4: 6328490271688167772
+      dopaminestone_1_5: -6919404464452403301
+      dopaminestone_1_6: -1738435311082518441
+      dopaminestone_1_7: 2996990100558729020
+      dopaminestone_1_8: -195966949257355388
+      dopaminestone_1_9: -2959180673918629562
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
