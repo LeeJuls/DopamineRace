@@ -329,9 +329,35 @@ public partial class SceneBootstrapper : MonoBehaviour
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  CurrencyHeader (Step 2.1·2.2) — 베팅 화면 우상단 통화 표시
+    //  CurrencyHeader (Step 2.1·2.2·2.13) — 프리팹 인스턴스화
+    //  Resources/Prefabs/UI/CurrencyHeaderPrefab.prefab
     // ══════════════════════════════════════════════════════════════
     private void BuildCurrencyHeader(Transform bettingUIRoot)
+    {
+        var prefab = Resources.Load<GameObject>("Prefabs/UI/CurrencyHeaderPrefab");
+        if (prefab == null)
+        {
+            Debug.LogWarning("[CurrencyHeader] 프리팹 미발견 — 동적 폴백 (DopamineRace > Create Currency UI Prefabs 메뉴 실행 필요)");
+            BuildCurrencyHeaderFallback(bettingUIRoot);
+            return;
+        }
+
+        var go = Instantiate(prefab, bettingUIRoot);
+        go.name = "CurrencyHeader";
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(1, 1);
+        rt.anchorMax = new Vector2(1, 1);
+        rt.pivot = new Vector2(1, 1);
+        rt.anchoredPosition = new Vector2(-30, -30);
+
+        _currencyHeader = go.GetComponent<CurrencyHeader>();
+
+        // SPEC-028 UC9: 기존 myPointLabel 비활성화 (총점 영역 교체)
+        if (myPointLabel != null)
+            myPointLabel.gameObject.SetActive(false);
+    }
+
+    private void BuildCurrencyHeaderFallback(Transform bettingUIRoot)
     {
         var headerGo = new GameObject("CurrencyHeader");
         headerGo.transform.SetParent(bettingUIRoot, false);
@@ -340,9 +366,8 @@ public partial class SceneBootstrapper : MonoBehaviour
         rt.anchorMax = new Vector2(1, 1);
         rt.pivot = new Vector2(1, 1);
         rt.sizeDelta = new Vector2(360, 60);
-        rt.anchoredPosition = new Vector2(-30, -30);   // 우상단
+        rt.anchoredPosition = new Vector2(-30, -30);
 
-        // 백그라운드 (반투명 패널)
         var bg = headerGo.AddComponent<Image>();
         bg.color = new Color(0, 0, 0, 0.5f);
 
@@ -350,7 +375,6 @@ public partial class SceneBootstrapper : MonoBehaviour
             new Vector2(0, 0), new Vector2(0.5f, 1),
             Vector2.zero, Vector2.zero,
             24, TextAnchor.MiddleCenter, new Color(0.5f, 0.8f, 1f));
-
         var stoneText = MkText(headerGo.transform, "💎 0",
             new Vector2(0.5f, 0), new Vector2(1, 1),
             Vector2.zero, Vector2.zero,
@@ -359,15 +383,37 @@ public partial class SceneBootstrapper : MonoBehaviour
         _currencyHeader = headerGo.AddComponent<CurrencyHeader>();
         _currencyHeader.SetReferences(jellyText, stoneText);
 
-        // SPEC-028 UC9: 기존 myPointLabel 비활성화 (총점 영역 교체)
         if (myPointLabel != null)
             myPointLabel.gameObject.SetActive(false);
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  Exchange Icon (Step 2.15) — 헤더 우측 환전 아이콘 (작게)
+    //  Exchange Icon (Step 2.15·2.13) — 프리팹 인스턴스화
+    //  Resources/Prefabs/UI/ExchangeIconPrefab.prefab
     // ══════════════════════════════════════════════════════════════
     private void BuildExchangeIcon(Transform bettingUIRoot)
+    {
+        var prefab = Resources.Load<GameObject>("Prefabs/UI/ExchangeIconPrefab");
+        if (prefab == null)
+        {
+            Debug.LogWarning("[ExchangeIcon] 프리팹 미발견 — 동적 폴백");
+            BuildExchangeIconFallback(bettingUIRoot);
+            return;
+        }
+
+        var go = Instantiate(prefab, bettingUIRoot);
+        go.name = "ExchangeIcon";
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(1, 1);
+        rt.anchorMax = new Vector2(1, 1);
+        rt.pivot = new Vector2(1, 1);
+        rt.anchoredPosition = new Vector2(-30, -120);   // 헤더 아래
+
+        _exchangeIconButton = go.GetComponent<Button>();
+        _exchangeIconButton?.onClick.AddListener(() => _exchangeModal?.Show());
+    }
+
+    private void BuildExchangeIconFallback(Transform bettingUIRoot)
     {
         var btnGo = new GameObject("ExchangeIcon");
         btnGo.transform.SetParent(bettingUIRoot, false);
@@ -376,7 +422,7 @@ public partial class SceneBootstrapper : MonoBehaviour
         rt.anchorMax = new Vector2(1, 1);
         rt.pivot = new Vector2(1, 1);
         rt.sizeDelta = new Vector2(56, 56);
-        rt.anchoredPosition = new Vector2(-30, -100);  // 헤더 아래 (중요 정보 X — 작게)
+        rt.anchoredPosition = new Vector2(-30, -120);
 
         var img = btnGo.AddComponent<Image>();
         img.color = new Color(0.2f, 0.35f, 0.5f, 0.9f);
@@ -385,7 +431,6 @@ public partial class SceneBootstrapper : MonoBehaviour
         _exchangeIconButton.targetGraphic = img;
         _exchangeIconButton.onClick.AddListener(() => _exchangeModal?.Show());
 
-        // 아이콘 라벨 (텍스트 — 추후 디자이너 PNG로 교체 가능)
         MkText(btnGo.transform, "💱",
             new Vector2(0, 0), new Vector2(1, 1),
             Vector2.zero, Vector2.zero,
