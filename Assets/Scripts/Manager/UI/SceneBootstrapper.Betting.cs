@@ -636,7 +636,9 @@ public partial class SceneBootstrapper
         float odds = OddsCalculator.GetExpectedOdds(bet, racers);
 
         int basePt = BettingCalculator.GetPayout(bet.type);
-        int result = Mathf.RoundToInt(basePt * odds);
+        // SPEC-028 R2 일관성: 적중 시 받는 값은 Mathf.CeilToInt (3.3 → 4)
+        // 기존 RoundToInt는 반올림이라 3.3 → 3으로 잘림 — 실제 보상과 미리보기 표시 불일치 버그 수정
+        int result = Mathf.CeilToInt(basePt * Mathf.Max(1.1f, odds));
 
         if (pointsLabelText != null)
             pointsLabelText.text = Loc.Get("str.ui.betting.points_label",

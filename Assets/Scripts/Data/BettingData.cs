@@ -171,7 +171,9 @@ public static class BettingCalculator
         if (multiplier <= 0f) return 0;
 
         int basePt = GetPayout(bet.type);
-        return Mathf.Max(1, Mathf.FloorToInt(basePt * multiplier));
+        // SPEC-028 R2 일관성: Calculate (legacy 점수 계산)도 CeilToInt 적용
+        // 베팅 미리보기·실제 보상이 동일한 룰 따르도록 (3.3 → 4)
+        return Mathf.Max(1, Mathf.CeilToInt(basePt * multiplier));
     }
 
     /// <summary>
