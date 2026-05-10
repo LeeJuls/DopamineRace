@@ -95,10 +95,7 @@ public static class CurrencyUIPrefabCreator
         var rt = root.AddComponent<RectTransform>();
         rt.sizeDelta = new Vector2(360, 80);
 
-        // 반투명 배경
-        var bg = root.AddComponent<Image>();
-        bg.color = new Color(0, 0, 0, 0.55f);
-        bg.raycastTarget = false;
+        // 배경 없음 (오너 요청 — 반투명 판 제거)
 
         // ── Jelly 영역 (좌측 50%) ──
         var jellyContainer = NewRect("JellyContainer", root.transform,
