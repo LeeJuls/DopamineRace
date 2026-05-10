@@ -30,10 +30,12 @@ public static class CurrencyUIPrefabCreator
 
         BuildCurrencyHeaderPrefab(jellySprite, stoneSprite);
         BuildExchangeIconPrefab();
+        BuildBetAmountModalPrefab();
+        BuildExchangeModalPrefab();
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log("[Prefab] CurrencyHeader + ExchangeIcon 프리팹 생성 완료");
+        Debug.Log("[Prefab] Currency UI 프리팹 4개 생성 완료 (Header + ExchangeIcon + BetAmountModal + ExchangeModal)");
     }
 
     // ═══════════════════════════════════════════════════════
@@ -147,6 +149,244 @@ public static class CurrencyUIPrefabCreator
     }
 
     // ═══════════════════════════════════════════════════════
+    //  BetAmountModalPrefab — 베팅액 입력 모달
+    // ═══════════════════════════════════════════════════════
+    private static void BuildBetAmountModalPrefab()
+    {
+        var root = new GameObject("BetAmountModalRoot");
+        var rootRt = root.AddComponent<RectTransform>();
+        SetFullStretch(rootRt);
+
+        // 백드롭
+        var backdrop = NewRect("Backdrop", root.transform,
+            Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        var bdImg = backdrop.AddComponent<Image>();
+        bdImg.color = new Color(0, 0, 0, 0.7f);
+
+        // 모달 패널
+        var panel = NewRectCenter("Modal", root.transform, new Vector2(640, 580));
+        var panelImg = panel.AddComponent<Image>();
+        panelImg.color = new Color(0.12f, 0.10f, 0.18f, 0.95f);
+
+        // 제목
+        var title = MakeText(panel.transform, "🎰 배팅액을 정하세요",
+            new Vector2(0, 1), new Vector2(1, 1),
+            new Vector2(0, -25), new Vector2(0, 75),
+            32, FontStyle.Bold, new Color(1f, 0.85f, 0.4f), TextAnchor.MiddleCenter);
+
+        // 정보
+        var betType = MakeText(panel.transform, "종목: 단승",
+            new Vector2(0, 1), new Vector2(1, 1),
+            new Vector2(0, -125), new Vector2(0, -95),
+            22, FontStyle.Normal, Color.white, TextAnchor.MiddleCenter);
+        var selection = MakeText(panel.transform, "선택: -",
+            new Vector2(0, 1), new Vector2(1, 1),
+            new Vector2(0, -160), new Vector2(0, -130),
+            22, FontStyle.Normal, Color.white, TextAnchor.MiddleCenter);
+        var odds = MakeText(panel.transform, "배당: 1.1x",
+            new Vector2(0, 1), new Vector2(1, 1),
+            new Vector2(0, -195), new Vector2(0, -165),
+            22, FontStyle.Bold, new Color(1f, 0.7f, 0.2f), TextAnchor.MiddleCenter);
+
+        // 슬라이더
+        var sliderObj = NewRect("AmountSlider", panel.transform,
+            new Vector2(0.1f, 0.5f), new Vector2(0.6f, 0.5f),
+            new Vector2(0, 15), new Vector2(0, 45));
+        var slider = sliderObj.AddComponent<Slider>();
+        slider.minValue = 1; slider.maxValue = 100; slider.wholeNumbers = true; slider.value = 25;
+
+        var sliderBg = NewRect("SliderBg", sliderObj.transform,
+            Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        sliderBg.AddComponent<Image>().color = new Color(0.3f, 0.3f, 0.3f);
+
+        var fillArea = NewRect("FillArea", sliderObj.transform,
+            new Vector2(0, 0), new Vector2(1, 1),
+            new Vector2(5, 5), new Vector2(-5, -5));
+        var fillObj = NewRect("Fill", fillArea.transform,
+            Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        var fillImg = fillObj.AddComponent<Image>();
+        fillImg.color = new Color(0.4f, 0.7f, 1.0f);
+        slider.fillRect = fillObj.GetComponent<RectTransform>();
+
+        var handleArea = NewRect("HandleArea", sliderObj.transform,
+            new Vector2(0, 0), new Vector2(1, 1),
+            new Vector2(10, 0), new Vector2(-10, 0));
+        var handleObj = new GameObject("Handle");
+        handleObj.transform.SetParent(handleArea.transform, false);
+        var handleRt = handleObj.AddComponent<RectTransform>();
+        handleRt.sizeDelta = new Vector2(20, 30);
+        var handleImg = handleObj.AddComponent<Image>();
+        handleImg.color = new Color(1f, 0.85f, 0.4f);
+        slider.handleRect = handleRt;
+        slider.targetGraphic = handleImg;
+
+        // InputField
+        var inputObj = NewRect("AmountInput", panel.transform,
+            new Vector2(0.65f, 0.5f), new Vector2(0.9f, 0.5f),
+            new Vector2(0, 10), new Vector2(0, 50));
+        inputObj.AddComponent<Image>().color = new Color(0.2f, 0.2f, 0.25f);
+        var input = inputObj.AddComponent<InputField>();
+        input.contentType = InputField.ContentType.IntegerNumber;
+
+        var inputTextObj = NewRect("Text", inputObj.transform,
+            Vector2.zero, Vector2.one, new Vector2(10, 5), new Vector2(-10, -5));
+        var inputText = inputTextObj.AddComponent<Text>();
+        inputText.text = "25";
+        inputText.color = Color.white;
+        inputText.alignment = TextAnchor.MiddleCenter;
+        inputText.fontSize = 24;
+        inputText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        input.textComponent = inputText;
+
+        // 빠른 버튼 4개 (-10/-1/+1/+10)
+        var btnMinus10 = MakeButton(panel.transform, "-10",
+            new Vector2(0.1f, 0.35f), new Vector2(0.275f, 0.42f), new Color(0.4f, 0.4f, 0.5f));
+        var btnMinus1 = MakeButton(panel.transform, "-1",
+            new Vector2(0.295f, 0.35f), new Vector2(0.47f, 0.42f), new Color(0.4f, 0.4f, 0.5f));
+        var btnPlus1 = MakeButton(panel.transform, "+1",
+            new Vector2(0.49f, 0.35f), new Vector2(0.665f, 0.42f), new Color(0.4f, 0.4f, 0.5f));
+        var btnPlus10 = MakeButton(panel.transform, "+10",
+            new Vector2(0.685f, 0.35f), new Vector2(0.86f, 0.42f), new Color(0.4f, 0.4f, 0.5f));
+
+        // 미리보기
+        var previewWin = MakeText(panel.transform, "적중 시: +0 🟦 (+0 💎)",
+            new Vector2(0, 0.22f), new Vector2(1, 0.28f),
+            Vector2.zero, Vector2.zero,
+            22, FontStyle.Bold, new Color(0.4f, 1f, 0.4f), TextAnchor.MiddleCenter);
+        var previewLose = MakeText(panel.transform, "실패 시: -0 🟦",
+            new Vector2(0, 0.16f), new Vector2(1, 0.22f),
+            Vector2.zero, Vector2.zero,
+            22, FontStyle.Normal, new Color(1f, 0.5f, 0.5f), TextAnchor.MiddleCenter);
+
+        // 에러 텍스트
+        var errorTxt = MakeText(panel.transform, "",
+            new Vector2(0, 0.10f), new Vector2(1, 0.15f),
+            Vector2.zero, Vector2.zero,
+            18, FontStyle.Normal, new Color(1f, 0.4f, 0.4f), TextAnchor.MiddleCenter);
+
+        // 취소·확정 버튼
+        var btnCancel = MakeButton(panel.transform, "취소",
+            new Vector2(0.1f, 0.03f), new Vector2(0.45f, 0.10f), new Color(0.3f, 0.3f, 0.35f));
+        var btnConfirm = MakeButton(panel.transform, "배팅 확정 →",
+            new Vector2(0.55f, 0.03f), new Vector2(0.9f, 0.10f), new Color(0.3f, 0.6f, 0.3f));
+
+        // 컴포넌트 연결
+        var modal = root.AddComponent<BetAmountModal>();
+        modal.SetReferences(
+            title, betType, selection, odds,
+            slider, input,
+            btnMinus10, btnMinus1, btnPlus1, btnPlus10,
+            previewWin, previewLose,
+            btnCancel, btnConfirm, errorTxt,
+            backdrop);
+
+        string path = "Assets/Resources/Prefabs/UI/BetAmountModalPrefab.prefab";
+        PrefabUtility.SaveAsPrefabAsset(root, path);
+        Object.DestroyImmediate(root);
+        Debug.Log($"[Prefab] {path}");
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  ExchangeModalPrefab — 환전 팝업
+    // ═══════════════════════════════════════════════════════
+    private static void BuildExchangeModalPrefab()
+    {
+        var root = new GameObject("ExchangeModalRoot");
+        var rootRt = root.AddComponent<RectTransform>();
+        SetFullStretch(rootRt);
+
+        var backdrop = NewRect("Backdrop", root.transform,
+            Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        backdrop.AddComponent<Image>().color = new Color(0, 0, 0, 0.7f);
+
+        var panel = NewRectCenter("Modal", root.transform, new Vector2(560, 480));
+        panel.AddComponent<Image>().color = new Color(0.12f, 0.10f, 0.18f, 0.95f);
+
+        var title = MakeText(panel.transform, "💱 도파민 스톤 환전",
+            new Vector2(0, 1), new Vector2(1, 1),
+            new Vector2(0, -25), new Vector2(0, 75),
+            28, FontStyle.Bold, new Color(1f, 0.85f, 0.4f), TextAnchor.MiddleCenter);
+
+        var rate = MakeText(panel.transform, "이번 라운드 환전율: 5:1",
+            new Vector2(0, 1), new Vector2(1, 1),
+            new Vector2(0, -125), new Vector2(0, -95),
+            22, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter);
+        var rateDesc = MakeText(panel.transform, "(스톤 5개 → 젤리 1개)",
+            new Vector2(0, 1), new Vector2(1, 1),
+            new Vector2(0, -158), new Vector2(0, -132),
+            18, FontStyle.Normal, new Color(0.7f, 0.7f, 0.8f), TextAnchor.MiddleCenter);
+
+        var holding = MakeText(panel.transform, "현재 보유: 🟦0  💎0",
+            new Vector2(0, 1), new Vector2(1, 1),
+            new Vector2(0, -215), new Vector2(0, -185),
+            20, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter);
+
+        var optionsTitle = MakeText(panel.transform, "─── 환전 옵션 ───",
+            new Vector2(0, 1), new Vector2(1, 1),
+            new Vector2(0, -274), new Vector2(0, -246),
+            18, FontStyle.Normal, new Color(0.6f, 0.6f, 0.7f), TextAnchor.MiddleCenter);
+
+        // 구제 라벨 컨테이너
+        var rescueIndic = NewRect("RescueIndicator", panel.transform,
+            new Vector2(0, 1), new Vector2(1, 1),
+            new Vector2(0, -309), new Vector2(0, -281));
+        var rescueText = MakeText(rescueIndic.transform, "⚡ 구제 환전 (1회 한정)",
+            Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
+            18, FontStyle.Bold, new Color(1f, 0.7f, 0.2f), TextAnchor.MiddleCenter);
+        rescueIndic.SetActive(false);
+
+        // 환전 버튼
+        var exchangeBtn = MakeButton(panel.transform, "환전: 💎0 → 🟦1",
+            new Vector2(0.15f, 0.30f), new Vector2(0.85f, 0.40f), new Color(0.3f, 0.5f, 0.7f));
+        var exchangeBtnText = exchangeBtn.GetComponentInChildren<Text>();
+
+        // 완료 라벨 컨테이너
+        var completedIndic = NewRect("CompletedIndicator", panel.transform,
+            new Vector2(0, 0.30f), new Vector2(1, 0.40f),
+            Vector2.zero, Vector2.zero);
+        var completedTxt = MakeText(completedIndic.transform, "✅ 이번 라운드 환전 완료",
+            new Vector2(0, 0.5f), new Vector2(1, 1),
+            Vector2.zero, Vector2.zero,
+            22, FontStyle.Bold, new Color(0.5f, 1f, 0.5f), TextAnchor.MiddleCenter);
+        var completedNextTxt = MakeText(completedIndic.transform, "다음 라운드에 다시 가능",
+            new Vector2(0, 0), new Vector2(1, 0.5f),
+            Vector2.zero, Vector2.zero,
+            16, FontStyle.Normal, new Color(0.7f, 0.9f, 0.7f), TextAnchor.MiddleCenter);
+        completedIndic.SetActive(false);
+
+        // 에러 텍스트
+        var errorTxt = MakeText(panel.transform, "스톤이 부족합니다",
+            new Vector2(0, 0.30f), new Vector2(1, 0.40f),
+            Vector2.zero, Vector2.zero,
+            18, FontStyle.Normal, new Color(1f, 0.5f, 0.5f), TextAnchor.MiddleCenter);
+        errorTxt.gameObject.SetActive(false);
+
+        // 노트
+        var note = MakeText(panel.transform, "※ 라운드당 1회만 가능",
+            new Vector2(0, 0.18f), new Vector2(1, 0.24f),
+            Vector2.zero, Vector2.zero,
+            14, FontStyle.Italic, new Color(0.6f, 0.6f, 0.7f), TextAnchor.MiddleCenter);
+
+        // 닫기 버튼
+        var closeBtn = MakeButton(panel.transform, "닫기",
+            new Vector2(0.3f, 0.04f), new Vector2(0.7f, 0.13f), new Color(0.3f, 0.3f, 0.35f));
+
+        var modal = root.AddComponent<ExchangeModal>();
+        modal.SetReferences(
+            title, rate, rateDesc, holding, optionsTitle,
+            exchangeBtn, exchangeBtnText,
+            rescueIndic, rescueText,
+            completedIndic, completedTxt, completedNextTxt,
+            errorTxt, note,
+            closeBtn, backdrop);
+
+        string path = "Assets/Resources/Prefabs/UI/ExchangeModalPrefab.prefab";
+        PrefabUtility.SaveAsPrefabAsset(root, path);
+        Object.DestroyImmediate(root);
+        Debug.Log($"[Prefab] {path}");
+    }
+
+    // ═══════════════════════════════════════════════════════
     //  Helpers
     // ═══════════════════════════════════════════════════════
     private static GameObject NewRect(string name, Transform parent,
@@ -161,6 +401,64 @@ public static class CurrencyUIPrefabCreator
         rt.offsetMin = offsetMin;
         rt.offsetMax = offsetMax;
         return go;
+    }
+
+    private static GameObject NewRectCenter(string name, Transform parent, Vector2 size)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        var rt = go.AddComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = size;
+        return go;
+    }
+
+    private static void SetFullStretch(RectTransform rt)
+    {
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+    }
+
+    private static Text MakeText(Transform parent, string text,
+        Vector2 anchorMin, Vector2 anchorMax,
+        Vector2 offsetMin, Vector2 offsetMax,
+        int fontSize, FontStyle style, Color color, TextAnchor anchor)
+    {
+        var go = NewRect("Text", parent, anchorMin, anchorMax, offsetMin, offsetMax);
+        var t = go.AddComponent<Text>();
+        t.text = text;
+        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        t.fontSize = fontSize;
+        t.fontStyle = style;
+        t.color = color;
+        t.alignment = anchor;
+        t.raycastTarget = false;
+        return t;
+    }
+
+    private static Button MakeButton(Transform parent, string label,
+        Vector2 anchorMin, Vector2 anchorMax, Color color)
+    {
+        var go = NewRect(label + "Btn", parent, anchorMin, anchorMax, Vector2.zero, Vector2.zero);
+        var img = go.AddComponent<Image>();
+        img.color = color;
+        var btn = go.AddComponent<Button>();
+        btn.targetGraphic = img;
+
+        var labelGo = NewRect("Text", go.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        var t = labelGo.AddComponent<Text>();
+        t.text = label;
+        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        t.fontSize = 22;
+        t.fontStyle = FontStyle.Bold;
+        t.color = Color.white;
+        t.alignment = TextAnchor.MiddleCenter;
+        t.raycastTarget = false;
+        return btn;
     }
 
     private static void EnsureFolder(string path)

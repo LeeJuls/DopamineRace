@@ -14,9 +14,27 @@ using UnityEngine.UI;
 public partial class SceneBootstrapper : MonoBehaviour
 {
     // ══════════════════════════════════════════════════════════════
-    //  BetAmountModal (Step 2.3·2.4)
+    //  BetAmountModal (Step 2.3·2.4·2.13) — 프리팹 인스턴스화
     // ══════════════════════════════════════════════════════════════
     private void BuildBetAmountModal(Transform root)
+    {
+        var prefab = Resources.Load<GameObject>("Prefabs/UI/BetAmountModalPrefab");
+        if (prefab != null)
+        {
+            var instance = Instantiate(prefab, root);
+            instance.name = "BetAmountModalRoot";
+            var rt = instance.GetComponent<RectTransform>();
+            if (rt != null) { rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero; }
+            _betAmountModal = instance.GetComponent<BetAmountModal>();
+            instance.SetActive(false);
+            return;
+        }
+
+        Debug.LogWarning("[BetAmountModal] 프리팹 미발견 — 동적 폴백 (DopamineRace > Create Currency UI Prefabs 메뉴 실행 필요)");
+        BuildBetAmountModalFallback(root);
+    }
+
+    private void BuildBetAmountModalFallback(Transform root)
     {
         var modalRoot = new GameObject("BetAmountModalRoot");
         modalRoot.transform.SetParent(root, false);
@@ -174,9 +192,27 @@ public partial class SceneBootstrapper : MonoBehaviour
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  ExchangeModal (Step 2.16) — 환전 팝업
+    //  ExchangeModal (Step 2.16·2.13) — 환전 팝업 프리팹 인스턴스화
     // ══════════════════════════════════════════════════════════════
     private void BuildExchangeModal(Transform root)
+    {
+        var prefab = Resources.Load<GameObject>("Prefabs/UI/ExchangeModalPrefab");
+        if (prefab != null)
+        {
+            var instance = Instantiate(prefab, root);
+            instance.name = "ExchangeModalRoot";
+            var rt = instance.GetComponent<RectTransform>();
+            if (rt != null) { rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero; }
+            _exchangeModal = instance.GetComponent<ExchangeModal>();
+            instance.SetActive(false);
+            return;
+        }
+
+        Debug.LogWarning("[ExchangeModal] 프리팹 미발견 — 동적 폴백");
+        BuildExchangeModalFallback(root);
+    }
+
+    private void BuildExchangeModalFallback(Transform root)
     {
         var modalRoot = new GameObject("ExchangeModalRoot");
         modalRoot.transform.SetParent(root, false);
