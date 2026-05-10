@@ -120,7 +120,7 @@ public static class CurrencyUIPrefabCreator
         jellyText.fontSize = 32;
         jellyText.fontStyle = FontStyle.Bold;
         jellyText.alignment = TextAnchor.MiddleLeft;
-        jellyText.color = new Color(0.9f, 0.95f, 1f);
+        jellyText.color = Color.black;   // 오너 요청: 검은색 폰트
         jellyText.raycastTarget = false;
 
         // ── Stone 영역 (우측 50%) ──
@@ -146,7 +146,7 @@ public static class CurrencyUIPrefabCreator
         stoneText.fontSize = 32;
         stoneText.fontStyle = FontStyle.Bold;
         stoneText.alignment = TextAnchor.MiddleLeft;
-        stoneText.color = new Color(0.85f, 1f, 1f);
+        stoneText.color = Color.black;   // 오너 요청: 검은색 폰트
         stoneText.raycastTarget = false;
 
         // CurrencyHeader 컴포넌트 + 참조 주입
