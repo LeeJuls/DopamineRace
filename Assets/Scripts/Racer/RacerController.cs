@@ -875,6 +875,10 @@ public partial class RacerController : MonoBehaviour
 
     private void UpdateDeviation()
     {
+        // SPEC-030: 결승 진입 후에는 랜덤 경로이탈 정지 → 레인 정렬로 도착
+        //           (도착 스냅 좌표가 레인 밖으로 튀어 트랙 이탈하는 버그 방지)
+        if (headingToFinish) { deviationOffset = 0f; return; }
+
         var gs = GameSettings.Instance;
         float weight = gs.pathDeviation;
         if (weight <= 0f) { deviationOffset = 0f; return; }
@@ -938,6 +942,16 @@ public partial class RacerController : MonoBehaviour
         Vector3 wpPos = waypoints[wpIndex].position;
         Vector3 trackCenter = RaceManager.TrackCenter;
         Vector3 outward = (wpPos - trackCenter).normalized;
-        return wpPos + outward * (laneOffset + deviationOffset);
+
+        // SPEC-030: 결승 진입 시 랜덤 경로이탈 제외 (레인 오프셋만 → 질서 정렬 도착)
+        float dev = headingToFinish ? 0f : deviationOffset;
+
+        // SPEC-030: 횡오프셋을 레인 밴드 내로 클램프 → 어떤 경우에도 트랙 이탈 방지
+        //           laneBand = 최외곽 레인 중심 거리 (idx 0 기준 |idx - RACER_COUNT/2| 최대)
+        float lo = (GameSettings.Instance != null ? GameSettings.Instance.laneOffset : 0.05f);
+        float laneBand = (GameConstants.RACER_COUNT / 2f) * lo;
+        float lateral = Mathf.Clamp(laneOffset + dev, -laneBand, laneBand);
+
+        return wpPos + outward * lateral;
     }
 }
