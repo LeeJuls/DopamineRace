@@ -39,7 +39,7 @@ MonoBehaviour:
   - hpRatio: 0.05
     speedReduction: 0.4
   v4_speedStatFactor: 0.02
-  v4_spurtVmaxBonus: 1.5
+  v4_spurtVmaxBonus: 1.35
   v4_accelStatFactor: 0.05
   v4_spurtAccelBonus: 2
   v4_spurtHpSpeedBonus: 1.2
@@ -62,19 +62,19 @@ MonoBehaviour:
   v4_luckCritBoost: 1.4
   v4_luckCritDuration: 2
   v4_intDodgeChance: 0.02
-  v4_normalSpeedRatio: 0.85
-  v4_burstSpeedRatio: 1.4
-  v4_finalSpurtStart: 0.8
-  v4_burstDrainMul: 4
+  v4_normalSpeedRatio: 0.88
+  v4_burstSpeedRatio: 1.35
+  v4_finalSpurtStart: 0.84
+  v4_burstDrainMul: 3
   v4_spurtDrainMul: 7
-  v4_runnerBurstStart: 0.1
-  v4_runnerBurstEnd: 0.24
-  v4_leaderBurstStart: 0.25
-  v4_leaderBurstEnd: 0.4
-  v4_chaserBurstStart: 0.43
-  v4_chaserBurstEnd: 0.66
-  v4_reckonerBurstStart: 0.5
-  v4_reckonerBurstEnd: 0.8
+  v4_runnerBurstStart: 0.08
+  v4_runnerBurstEnd: 0.36
+  v4_leaderBurstStart: 0.34
+  v4_leaderBurstEnd: 0.6
+  v4_chaserBurstStart: 0.44
+  v4_chaserBurstEnd: 0.6
+  v4_reckonerBurstStart: 0.46
+  v4_reckonerBurstEnd: 0.64
   v4_disableBurst: 0
   v4_applyCondition: 1
   v4_runnerTargetRank: 1
