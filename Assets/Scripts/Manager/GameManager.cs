@@ -322,21 +322,25 @@ public class GameManager : MonoBehaviour
         // ScoreManager에 라운드 결과 기록
         ScoreManager.Instance?.RecordRound(CurrentBet.type, score, trackName, racerResults, selectedIds);
 
-        // SPEC-028 Step 3.9 / R20·R21: Game Over 즉시 체크
-        // — Wallet.ShouldGameOver()가 true면 다음 라운드 진입 X, 즉시 GameOver 분기
-        // — Jelly=0 + (스톤 0 또는 환전 사용 후) 인 경우만 종료 (R19 구제 룰 포함)
-        if (WalletManager.Instance != null && WalletManager.Instance.ShouldGameOver())
-        {
-            Debug.Log($"[GameManager] SPEC-028 Step 3.9: ShouldGameOver=true → 즉시 GameOver 진입 (Jelly={WalletManager.Instance.Jelly} Stone={WalletManager.Instance.Stone})");
-            ChangeState(GameState.GameOver);
-        }
+        // SPEC-029: GameOver 판정은 NextRound()로 이관.
+        // CalcScore()는 ChangeState(Result) 내부에서 동기 호출되므로
+        // 여기서 ChangeState(GameOver)를 호출하면 바깥 ChangeState(Result)의
+        // OnStateChanged(Result)가 GameOver를 덮어버림 (중첩 상태전환 버그).
+        // → NextRound() 진입 시점(버튼 클릭, 비중첩)에 판정한다.
     }
 
     // ═══ 다음 라운드 ═══
     public void NextRound()
     {
-        // SPEC-028 Step 3.9 (R3.0): jelly==0 체크 폐기 — CalcScore에서 즉시 처리됨
-        // (회귀 안전망으로 한 번 더 체크는 남길 수 있으나 룰 일관성을 위해 제거)
+        // SPEC-029 / R20·R21: GameOver 즉시 체크 (IsLastRound보다 먼저).
+        // Jelly=0 + 환전 불가(스톤 0 또는 환전 사용 후, R19 구제 포함) → 즉시 GameOver.
+        // NextRound는 Result UI 버튼에서 호출 → ChangeState 중첩이 아니라 정상 전환.
+        if (WalletManager.Instance != null && WalletManager.Instance.ShouldGameOver())
+        {
+            Debug.Log($"[GameManager] SPEC-029: ShouldGameOver=true → GameOver 진입 (Jelly={WalletManager.Instance.Jelly} Stone={WalletManager.Instance.Stone})");
+            ChangeState(GameState.GameOver);
+            return;
+        }
 
         if (IsLastRound)
         {

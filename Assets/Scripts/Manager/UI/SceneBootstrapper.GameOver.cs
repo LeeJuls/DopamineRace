@@ -3,124 +3,96 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// GAME OVER 화면 partial.
+/// GAME OVER 화면 partial (SPEC-029 간소화).
 /// 젤리 0 + 환전 불가 = GameState.GameOver 진입 시 자동 표시.
-///
-/// SPEC-028 Steps 3.1, 3.2, 3.3, 3.4 (R20·R21)
+/// "GAME OVER" 텍스트(폰트 42)만 잠깐 보여주고 타이틀 화면으로 자동 이동.
+/// 스코어/리더보드는 저장 안 함, 캐릭터 개별 기록은 CalcScore에서 이미 저장됨.
 /// </summary>
 public partial class SceneBootstrapper : MonoBehaviour
 {
     // ── GameOver UI ──
     private GameObject _gameOverUI;
     private Text _gameOverHeadlineText;
-    private Text _gameOverDescText;
-    private Text _gameOverProgressText;
-    private Text _gameOverNoRankText;
-    private Button _gameOverRestartButton;
-    private Text _gameOverRestartBtnText;
+
+    private const float GAMEOVER_TITLE_DELAY = 2.5f;
 
     /// <summary>
-    /// BuildUI에서 호출 — GameOver 패널 임시 생성 (SPEC-028 Step 3.2).
-    /// 디자인은 추후 프리팹화 (Step 2.13).
+    /// BuildUI에서 호출 — GameOver 패널 생성 (SPEC-029).
+    /// 프리팹(GameSettings.gameOverPanelPrefab) 우선, 없으면 코드 폴백.
+    /// 화면 중앙에 모달 박스로 "GAME OVER"(폰트 42) 표시.
     /// </summary>
     private void BuildGameOverUI(Transform root)
     {
-        // 어두운 백드롭 (전체 화면)
+        var gs = GameSettings.Instance;
+        if (gs != null && gs.gameOverPanelPrefab != null)
+        {
+            GameObject panelObj = Instantiate(gs.gameOverPanelPrefab, root);
+            panelObj.name = "GameOverPanel";
+
+            // 전체 화면 채우기 (프리팹 루트는 full-rect로 설계됨)
+            var rt = panelObj.GetComponent<RectTransform>();
+            if (rt != null)
+            {
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+            }
+
+            // 중앙 박스 내 헤드라인 텍스트 캐싱
+            Transform headline = panelObj.transform.Find("Panel/HeadlineText");
+            if (headline != null)
+                _gameOverHeadlineText = headline.GetComponent<Text>();
+
+            if (_gameOverHeadlineText == null)
+                Debug.LogWarning("[SceneBootstrapper] GameOverPanel 프리팹에서 Panel/HeadlineText를 찾지 못했습니다.");
+            return;
+        }
+
+        // ── 프리팹 미연결 시 코드 폴백 ──
+        Debug.LogWarning("[SceneBootstrapper] gameOverPanelPrefab이 없습니다! " +
+            "Unity 메뉴 DopamineRace > Create GameOver UI Prefabs 실행 권장.");
+        BuildGameOverUIFallback(root);
+    }
+
+    /// <summary>프리팹 미연결 시 최소 코드 생성 (화면 중앙 박스 + 텍스트).</summary>
+    private void BuildGameOverUIFallback(Transform root)
+    {
+        // 전체 화면 어두운 백드롭
         var backdrop = MkImage(root, "GameOverBackdrop",
             new Vector2(0, 0), new Vector2(1, 1),
             Vector2.zero, Vector2.zero,
-            new Color(0, 0, 0, 0.85f));
+            new Color(0, 0, 0, 0.9f));
 
-        // 모달 패널 (중앙)
-        var modal = new GameObject("GameOverModal");
-        modal.transform.SetParent(backdrop.transform, false);
-        var modalRT = modal.AddComponent<RectTransform>();
-        modalRT.anchorMin = new Vector2(0.5f, 0.5f);
-        modalRT.anchorMax = new Vector2(0.5f, 0.5f);
-        modalRT.pivot = new Vector2(0.5f, 0.5f);
-        modalRT.sizeDelta = new Vector2(720, 480);
-        modalRT.anchoredPosition = Vector2.zero;
-        var modalImg = modal.AddComponent<Image>();
-        modalImg.color = new Color(0.15f, 0.05f, 0.05f, 0.95f);
+        // 화면 중앙 모달 박스
+        var panel = MkImage(backdrop.transform, "Panel",
+            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+            Vector2.zero, new Vector2(760, 360),
+            new Color(0.12f, 0.04f, 0.04f, 0.96f));
 
-        // 헤드라인 (큰 글씨)
-        _gameOverHeadlineText = MkText(modal.transform, "💔 GAME OVER",
-            new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -90), new Vector2(0, 80),
-            64, TextAnchor.MiddleCenter,
-            new Color(1f, 0.3f, 0.3f));
-
-        // 설명
-        _gameOverDescText = MkText(modal.transform, "도파민 젤리가 모두 소진됐습니다",
-            new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -180), new Vector2(0, 40),
-            28, TextAnchor.MiddleCenter,
-            new Color(0.95f, 0.95f, 0.95f));
-
-        // 도달 라운드
-        _gameOverProgressText = MkText(modal.transform, "{0} / {1} 라운드에서 종료",
-            new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -240), new Vector2(0, 40),
-            32, TextAnchor.MiddleCenter,
-            new Color(1f, 0.85f, 0.4f));
-
-        // 랭킹 미등록 안내
-        _gameOverNoRankText = MkText(modal.transform, "랭킹에 등록되지 않았습니다",
-            new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -310), new Vector2(0, 36),
-            24, TextAnchor.MiddleCenter,
-            new Color(0.8f, 0.8f, 0.8f));
-
-        // 다시 도전 버튼
-        var btnGo = new GameObject("RestartButton");
-        btnGo.transform.SetParent(modal.transform, false);
-        var btnRT = btnGo.AddComponent<RectTransform>();
-        btnRT.anchorMin = new Vector2(0.5f, 0);
-        btnRT.anchorMax = new Vector2(0.5f, 0);
-        btnRT.pivot = new Vector2(0.5f, 0);
-        btnRT.sizeDelta = new Vector2(280, 70);
-        btnRT.anchoredPosition = new Vector2(0, 50);
-        var btnImg = btnGo.AddComponent<Image>();
-        btnImg.color = new Color(0.85f, 0.25f, 0.25f);
-        _gameOverRestartButton = btnGo.AddComponent<Button>();
-        _gameOverRestartButton.targetGraphic = btnImg;
-
-        _gameOverRestartBtnText = MkText(btnGo.transform, "다시 도전",
+        // 중앙 "GAME OVER" 텍스트 (폰트 42)
+        _gameOverHeadlineText = MkText(panel.transform, "GAME OVER",
             new Vector2(0, 0), new Vector2(1, 1),
             Vector2.zero, Vector2.zero,
-            28, TextAnchor.MiddleCenter,
-            Color.white);
-
-        _gameOverRestartButton.onClick.AddListener(OnGameOverRestartClicked);
+            42, TextAnchor.MiddleCenter,
+            new Color(1f, 0.35f, 0.35f));
     }
 
     /// <summary>
     /// GameOver 상태 진입 시 호출 (OnStateChanged에서 분기).
-    /// SPEC-028 Step 3.3
+    /// 텍스트 표시 후 일정 시간 뒤 타이틀 화면으로 자동 이동.
     /// </summary>
     private void ShowGameOverPanel()
     {
         if (_gameOverUI != null) _gameOverUI.SetActive(true);
 
-        // 라벨 갱신
         if (_gameOverHeadlineText != null)
-            _gameOverHeadlineText.text = SafeLocFor("str.gameover.headline", "💔 GAME OVER");
-        if (_gameOverDescText != null)
-            _gameOverDescText.text = SafeLocFor("str.gameover.desc", "도파민 젤리가 모두 소진됐습니다");
-        if (_gameOverNoRankText != null)
-            _gameOverNoRankText.text = SafeLocFor("str.gameover.no_ranking", "랭킹에 등록되지 않았습니다");
-        if (_gameOverRestartBtnText != null)
-            _gameOverRestartBtnText.text = SafeLocFor("str.gameover.btn.restart", "다시 도전");
+            _gameOverHeadlineText.text = SafeLocFor("str.gameover.headline", "GAME OVER");
 
-        // 도달 라운드
-        var gm = GameManager.Instance;
-        if (_gameOverProgressText != null && gm != null)
-        {
-            _gameOverProgressText.text = SafeLocFor("str.gameover.progress",
-                "{0} / {1} 라운드에서 종료", gm.CurrentRound, gm.TotalRounds);
-        }
+        Debug.Log("[GameOver] 패널 표시 → " + GAMEOVER_TITLE_DELAY + "초 후 타이틀 이동");
 
-        Debug.Log("[GameOver] 패널 표시 (Step 3.3)");
+        CancelInvoke(nameof(LoadTitleScene));
+        Invoke(nameof(LoadTitleScene), GAMEOVER_TITLE_DELAY);
     }
 
     private void HideGameOverPanel()
@@ -129,14 +101,13 @@ public partial class SceneBootstrapper : MonoBehaviour
     }
 
     /// <summary>
-    /// [다시 도전] 클릭 — 새 게임 시작 (씬 재로드).
-    /// SPEC-028 Step 3.4
+    /// 타이틀 화면으로 이동 (CLAUDE.md: TitleScene = 빌드 인덱스 0).
+    /// 스코어 정보는 저장하지 않음. 캐릭터 개별 기록은 CalcScore에서 이미 저장됨.
     /// </summary>
-    private void OnGameOverRestartClicked()
+    private void LoadTitleScene()
     {
-        Debug.Log("[GameOver] 다시 도전 클릭 → 씬 재로드");
-        // SampleScene 재로드 — 모든 상태 초기화 (WalletManager Awake에서 100/0 리셋)
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        Debug.Log("[GameOver] 타이틀 화면 이동");
+        SceneManager.LoadScene("TitleScene");
     }
 
     // ───── 유틸 ─────

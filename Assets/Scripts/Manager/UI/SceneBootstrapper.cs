@@ -183,6 +183,9 @@ public partial class SceneBootstrapper : MonoBehaviour
             new GameObject("RaceManager").AddComponent<RaceManager>();
         if (ScoreManager.Instance == null)
             new GameObject("ScoreManager").AddComponent<ScoreManager>();
+        // SPEC-028 Step 1.3: WalletManager — 젤리/스톤 재화 관리
+        if (WalletManager.Instance == null)
+            new GameObject("WalletManager").AddComponent<WalletManager>();
 
         // 3단계: 유틸리티
         if (TrackTransition.Instance == null)

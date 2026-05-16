@@ -180,6 +180,8 @@ public partial class GameSettings : ScriptableObject
     public GameObject leaderboardPanelPrefab;
     [Tooltip("옵션 패널 프리팹 (OptionPanelPrefabCreator로 자동 생성)")]
     public GameObject optionPanelPrefab;
+    [Tooltip("게임오버 패널 프리팹 (GameOverUIPrefabCreator로 자동 생성)")]
+    public GameObject gameOverPanelPrefab;
     [Tooltip("트랙 프로그레스 바 프리팹 (추후 디자인 적용 시 사용)")]
     public GameObject trackProgressBarPrefab;
     [Tooltip("트랙바 마커 보간 속도 (0=즉시, 8~15=부드럽게, 기본 12)")]
