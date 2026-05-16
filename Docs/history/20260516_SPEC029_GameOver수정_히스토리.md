@@ -47,7 +47,15 @@
 - `Assets/Scripts/Manager/UI/SceneBootstrapper.GameOver.cs`
 - `Assets/Scripts/Manager/UI/SceneBootstrapper.cs` (선행: WalletManager 생성)
 
+## SPEC-029.1 — 클릭 이동 + 베팅화면 프리팹 확인 (후속, 2026-05-16)
+
+- 오너 요청: GameOver 2.5초 자동이동 → **화면 클릭 시 이동**
+- 조사 결과: 젤리 베팅 화면은 **이미 프리팹**(`BettingPanel.prefab`/`BetAmountModalPrefab.prefab`/`CharacterItem.prefab`) → 추가 작업 불필요, 보고만
+- 구현: 전체화면 `Button`(코드베이스 표준) + 하단 안내 `HintText`(7개 언어) + Invoke 자동이동 제거
+- 프리팹: `GameOverUIPrefabCreator.PatchPrefabs()` MCP 호출로 안전 재생성 (강제 재컴파일 후)
+- Harness QA: Gate A·B·C·D 전부 PASS (MCP 리플렉션 결정적 검증, Roslyn UI 미참조 → Type.GetType 우회)
+- 커밋 `[C] SPEC-029.1 GameOver 클릭 이동 + 베팅화면 프리팹 확인`
+
 ## 미결 / 후속
 
-- 실제 Play 풀사이클 수동 확인 (베팅 반복 패배 → GameOver → 타이틀) — 오너 검증 권장
-- 커밋 `[C] SPEC-029 GameOver 미발동 수정 + 간소화 + 타이틀 이동` (push는 오너 확인 후)
+- 실제 Play 풀사이클 수동 확인 (베팅 반복 패배 → GameOver → **클릭** → 타이틀) — 오너 검증 권장

@@ -24,6 +24,7 @@ public static class GameOverUIPrefabCreator
     private static readonly Color COLOR_BACKDROP = new Color(0f, 0f, 0f, 0.9f);
     private static readonly Color COLOR_PANEL    = new Color(0.12f, 0.04f, 0.04f, 0.96f);
     private static readonly Color COLOR_HEADLINE = new Color(1f, 0.35f, 0.35f, 1f);
+    private static readonly Color COLOR_HINT     = new Color(0.85f, 0.85f, 0.85f, 0.7f);
 
     // ══════════════════════════════════════════════
     //  메뉴: Create (완전 재생성)
@@ -90,16 +91,32 @@ public static class GameOverUIPrefabCreator
         {
             Transform root = scope.prefabContentsRoot.transform;
 
+            // SPEC-029.1: 루트에 전체화면 Button (클릭 → 타이틀 이동) 없으면 추가
+            if (scope.prefabContentsRoot.GetComponent<Button>() == null)
+            {
+                Debug.Log("[GameOverUIPrefabCreator][Patch] 루트 Button 없음 → 추가 (클릭 이동)");
+                scope.prefabContentsRoot.AddComponent<Button>();
+            }
+
             Transform panel = root.Find("Panel");
             if (panel == null)
             {
                 Debug.Log("[GameOverUIPrefabCreator][Patch] Panel 없음 → 추가");
                 CreateCenterPanel(root, font);
             }
-            else if (panel.Find("HeadlineText") == null)
+            else
             {
-                Debug.Log("[GameOverUIPrefabCreator][Patch] HeadlineText 없음 → 추가");
-                MkHeadline(panel, font);
+                if (panel.Find("HeadlineText") == null)
+                {
+                    Debug.Log("[GameOverUIPrefabCreator][Patch] HeadlineText 없음 → 추가");
+                    MkHeadline(panel, font);
+                }
+                // SPEC-029.1: 클릭 안내 HintText 없으면 추가
+                if (panel.Find("HintText") == null)
+                {
+                    Debug.Log("[GameOverUIPrefabCreator][Patch] HintText 없음 → 추가");
+                    MkHint(panel, font);
+                }
             }
         }
 
@@ -128,6 +145,9 @@ public static class GameOverUIPrefabCreator
         Image bg = root.AddComponent<Image>();
         bg.color = COLOR_BACKDROP;
 
+        // SPEC-029.1: 전체화면 클릭 타깃 (클릭 시 타이틀 이동, 런타임에서 onClick 연결)
+        root.AddComponent<Button>();
+
         // 중앙 모달 박스
         CreateCenterPanel(root.transform, font);
 
@@ -148,6 +168,7 @@ public static class GameOverUIPrefabCreator
         img.color = COLOR_PANEL;
 
         MkHeadline(panel.transform, font);
+        MkHint(panel.transform, font);
     }
 
     private static void MkHeadline(Transform panel, Font font)
@@ -165,6 +186,27 @@ public static class GameOverUIPrefabCreator
         t.fontSize = 42;
         t.alignment = TextAnchor.MiddleCenter;
         t.color = COLOR_HEADLINE;
+        t.supportRichText = false;
+        if (font != null) t.font = font;
+    }
+
+    // SPEC-029.1: 클릭 안내 서브텍스트 (패널 하단)
+    private static void MkHint(Transform panel, Font font)
+    {
+        GameObject go = new GameObject("HintText");
+        go.transform.SetParent(panel, false);
+        RectTransform rt = go.AddComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 0f);
+        rt.anchorMax = new Vector2(1f, 0f);
+        rt.pivot     = new Vector2(0.5f, 0f);
+        rt.anchoredPosition = new Vector2(0f, 28f);
+        rt.sizeDelta = new Vector2(0f, 40f);
+
+        Text t = go.AddComponent<Text>();
+        t.text = "화면을 클릭하면 타이틀로 돌아갑니다";
+        t.fontSize = 20;
+        t.alignment = TextAnchor.MiddleCenter;
+        t.color = COLOR_HINT;
         t.supportRichText = false;
         if (font != null) t.font = font;
     }

@@ -362,6 +362,7 @@ str.gameover.desc,도파민 젤리가 모두 소진됐습니다,All Dopamine Jel
 str.gameover.progress,{0} / {1} 라운드에서 종료,Ended at round {0} / {1},{0} / {1} ラウンドで終了,在第{0} / {1}回合结束,Beendet in Runde {0} / {1},Terminó en ronda {0} / {1},Terminou na rodada {0} / {1}
 str.gameover.no_ranking,랭킹에 등록되지 않았습니다,Not registered in rankings,ランキングに登録されません,未登记到排行榜,Nicht im Ranking eingetragen,No registrado en el ranking,Não registrado no ranking
 str.gameover.btn.restart,다시 도전,Try Again,再挑戦,再次挑战,Erneut versuchen,Intentar de nuevo,Tentar novamente
+str.gameover.hint,화면을 클릭하면 타이틀로 돌아갑니다,Click anywhere to return to title,画面をクリックするとタイトルに戻ります,点击屏幕返回标题,Klicke zum Zurückkehren zum Titel,Haz clic para volver al título,Clique para voltar ao título
 str.finish.stone_total,획득한 도파민 스톤: {0} 💎,Dopamine Stones earned: {0} 💎,獲得したドーパミンストーン: {0} 💎,获得多巴胺石：{0} 💎,Verdiente Dopamin-Steine: {0} 💎,Piedras ganadas: {0} 💎,Pedras ganhas: {0} 💎
 str.finish.round.hit,R{0}: ✓ 적중   (+{1} 💎),R{0}: ✓ Hit   (+{1} 💎),R{0}: ✓ 当たり   (+{1} 💎),R{0}: ✓ 命中   (+{1} 💎),R{0}: ✓ Treffer   (+{1} 💎),R{0}: ✓ Acierto   (+{1} 💎),R{0}: ✓ Acerto   (+{1} 💎)
 str.finish.round.miss,R{0}: ✗ 빗나감,R{0}: ✗ Miss,R{0}: ✗ はずれ,R{0}: ✗ 失败,R{0}: ✗ Verfehlt,R{0}: ✗ Fallo,R{0}: ✗ Erro

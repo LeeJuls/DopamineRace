@@ -3,9 +3,9 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// GAME OVER 화면 partial (SPEC-029 간소화).
+/// GAME OVER 화면 partial (SPEC-029 / SPEC-029.1).
 /// 젤리 0 + 환전 불가 = GameState.GameOver 진입 시 자동 표시.
-/// "GAME OVER" 텍스트(폰트 42)만 잠깐 보여주고 타이틀 화면으로 자동 이동.
+/// "GAME OVER" 텍스트(폰트 42) 표시 후 화면을 클릭하면 타이틀 화면으로 이동.
 /// 스코어/리더보드는 저장 안 함, 캐릭터 개별 기록은 CalcScore에서 이미 저장됨.
 /// </summary>
 public partial class SceneBootstrapper : MonoBehaviour
@@ -13,8 +13,8 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ── GameOver UI ──
     private GameObject _gameOverUI;
     private Text _gameOverHeadlineText;
-
-    private const float GAMEOVER_TITLE_DELAY = 2.5f;
+    private Text _gameOverHintText;
+    private Button _gameOverButton;
 
     /// <summary>
     /// BuildUI에서 호출 — GameOver 패널 생성 (SPEC-029).
@@ -46,6 +46,18 @@ public partial class SceneBootstrapper : MonoBehaviour
 
             if (_gameOverHeadlineText == null)
                 Debug.LogWarning("[SceneBootstrapper] GameOverPanel 프리팹에서 Panel/HeadlineText를 찾지 못했습니다.");
+
+            // SPEC-029.1: 클릭 안내 텍스트 캐싱
+            Transform hint = panelObj.transform.Find("Panel/HintText");
+            if (hint != null)
+                _gameOverHintText = hint.GetComponent<Text>();
+
+            // SPEC-029.1: 전체화면 Button 캐싱 → 클릭 시 타이틀 이동
+            _gameOverButton = panelObj.GetComponent<Button>();
+            if (_gameOverButton == null)
+                Debug.LogWarning("[SceneBootstrapper] GameOverPanel 프리팹 루트에 Button이 없습니다. " +
+                    "Unity 메뉴 DopamineRace > Patch GameOver UI Prefabs (Safe) 실행 권장.");
+            WireGameOverButton();
             return;
         }
 
@@ -53,6 +65,7 @@ public partial class SceneBootstrapper : MonoBehaviour
         Debug.LogWarning("[SceneBootstrapper] gameOverPanelPrefab이 없습니다! " +
             "Unity 메뉴 DopamineRace > Create GameOver UI Prefabs 실행 권장.");
         BuildGameOverUIFallback(root);
+        WireGameOverButton();
     }
 
     /// <summary>프리팹 미연결 시 최소 코드 생성 (화면 중앙 박스 + 텍스트).</summary>
@@ -63,6 +76,9 @@ public partial class SceneBootstrapper : MonoBehaviour
             new Vector2(0, 0), new Vector2(1, 1),
             Vector2.zero, Vector2.zero,
             new Color(0, 0, 0, 0.9f));
+
+        // SPEC-029.1: 백드롭 전체를 클릭 타깃으로 (클릭 시 타이틀 이동)
+        _gameOverButton = backdrop.gameObject.AddComponent<Button>();
 
         // 화면 중앙 모달 박스
         var panel = MkImage(backdrop.transform, "Panel",
@@ -76,11 +92,27 @@ public partial class SceneBootstrapper : MonoBehaviour
             Vector2.zero, Vector2.zero,
             42, TextAnchor.MiddleCenter,
             new Color(1f, 0.35f, 0.35f));
+
+        // SPEC-029.1: 클릭 안내 서브텍스트 (패널 하단)
+        _gameOverHintText = MkText(panel.transform, "화면을 클릭하면 타이틀로 돌아갑니다",
+            new Vector2(0f, 0f), new Vector2(1f, 0f),
+            new Vector2(0f, 28f), new Vector2(0f, 40f),
+            20, TextAnchor.MiddleCenter,
+            new Color(0.85f, 0.85f, 0.85f, 0.7f));
+    }
+
+    /// <summary>SPEC-029.1: 전체화면 Button onClick → LoadTitleScene 연결.</summary>
+    private void WireGameOverButton()
+    {
+        if (_gameOverButton == null) return;
+        _gameOverButton.onClick.RemoveAllListeners();
+        _gameOverButton.onClick.AddListener(LoadTitleScene);
+        _gameOverButton.transition = Selectable.Transition.None;
     }
 
     /// <summary>
     /// GameOver 상태 진입 시 호출 (OnStateChanged에서 분기).
-    /// 텍스트 표시 후 일정 시간 뒤 타이틀 화면으로 자동 이동.
+    /// 텍스트 표시 후 화면 클릭을 기다림 (SPEC-029.1 — 자동 이동 제거).
     /// </summary>
     private void ShowGameOverPanel()
     {
@@ -89,10 +121,13 @@ public partial class SceneBootstrapper : MonoBehaviour
         if (_gameOverHeadlineText != null)
             _gameOverHeadlineText.text = SafeLocFor("str.gameover.headline", "GAME OVER");
 
-        Debug.Log("[GameOver] 패널 표시 → " + GAMEOVER_TITLE_DELAY + "초 후 타이틀 이동");
+        if (_gameOverHintText != null)
+            _gameOverHintText.text = SafeLocFor("str.gameover.hint", "화면을 클릭하면 타이틀로 돌아갑니다");
 
-        CancelInvoke(nameof(LoadTitleScene));
-        Invoke(nameof(LoadTitleScene), GAMEOVER_TITLE_DELAY);
+        // 재진입 대비 클릭 활성 복구
+        if (_gameOverButton != null) _gameOverButton.interactable = true;
+
+        Debug.Log("[GameOver] 패널 표시 → 화면 클릭 대기 (클릭 시 타이틀 이동)");
     }
 
     private void HideGameOverPanel()
@@ -106,7 +141,9 @@ public partial class SceneBootstrapper : MonoBehaviour
     /// </summary>
     private void LoadTitleScene()
     {
-        Debug.Log("[GameOver] 타이틀 화면 이동");
+        // SPEC-029.1: 중복 클릭 방지
+        if (_gameOverButton != null) _gameOverButton.interactable = false;
+        Debug.Log("[GameOver] 화면 클릭 → 타이틀 화면 이동");
         SceneManager.LoadScene("TitleScene");
     }
 
