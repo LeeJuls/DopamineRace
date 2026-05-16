@@ -346,12 +346,16 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             default: return false;
         }
 
-        // 지능 modifier: (지능 - 10) / 10 × modMax
-        // 지능20 → +10%, 지능10 → ±0%, 지능0 → -10%
+        // SPEC-031: 지능 = 구간 '폭' 연장(함정) → 구간 '시점' 시프트로 변경.
+        // intModifier: 지능20 → +modMax, 지능10 → 0, 지능0 → -modMax
+        // shift = (구간폭) × intModifier × v4_intBurstShift
+        //   고지능 → 부스트를 결승 쪽으로 늦게(HP 비축 후 정밀 킥)
+        //   저지능 → 일찍 피크 후 소진(직관적 페이싱 페널티)
+        // 폭(end-start)은 지능 무관 유지 → 드레인 누적 증가 함정 제거
         float intModifier = (charDataV4.v4Intelligence - 10f) / 10f * gs.v4_intelligenceModMax;
-        float effectiveEnd = start + (end - start) * (1f + intModifier);
+        float shift = (end - start) * intModifier * gs.v4_intBurstShift;
 
-        return progress >= start && progress < effectiveEnd;
+        return progress >= start + shift && progress < end + shift;
     }
 
     // ──────────────────────────────────────────────
@@ -379,7 +383,14 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         if (!gs.v4_disableBurst)
         {
             if      (currentProgress >= gs.v4_finalSpurtStart)                       drain *= gs.v4_spurtDrainMul;
-            else if (IsInBurstZone(gs, currentProgress)) drain *= gs.v4_burstDrainMul;
+            else if (IsInBurstZone(gs, currentProgress))
+            {
+                // SPEC-031: 지능 비례 부스트 드레인 할인 (함정 해소).
+                // 지능20 → ×v4_intBurstDrainFloor, 지능10 → ×1.0, 지능<10 → ×1.0(할인 없음)
+                float t  = Mathf.Clamp01((charDataV4.v4Intelligence - 10f) / 10f);
+                float bm = gs.v4_burstDrainMul * Mathf.Lerp(1f, gs.v4_intBurstDrainFloor, t);
+                drain *= bm;
+            }
             else if (v4EmergencyBurst)
             {
                 // 거리별 스케일링(drain 지수 0.5): 2L=0.82, 3L=1.0, 4L=1.15, 5L=1.29

@@ -178,6 +178,18 @@ public class GameSettingsV4 : ScriptableObject
              "예: 0.10 → 지능20 = +10%, 지능0 = -10%")]
     public float v4_intelligenceModMax = 0.10f;
 
+    [Tooltip("SPEC-031: 지능이 부스트 구간 '폭'이 아니라 '시점'을 이동시키는 비율\n" +
+             "0 = 시프트 없음(현행), 0.5 = intMod×구간폭의 절반만큼 구간을 통째로 늦게/일찍 이동\n" +
+             "고지능 = 부스트를 결승 쪽으로 늦게 → HP 비축 후 막판 정밀 킥")]
+    [Range(0f, 1f)]
+    public float v4_intBurstShift = 0.5f;
+
+    [Tooltip("SPEC-031: 지능 비례 부스트 드레인 할인 바닥값\n" +
+             "지능20 → 부스트 드레인 ×(이 값), 지능10 → ×1.0(할인 없음)\n" +
+             "0.55 = 고지능 시 부스트 HP 소모 최대 45% 절감 → 막판 스퍼트 생존")]
+    [Range(0.4f, 1f)]
+    public float v4_intBurstDrainFloor = 0.55f;
+
     [Header("  [판단 틱 T_tick = T_base - (Int/IntMax × T_bonus)]")]
     [Tooltip("AI 기본 판단 주기 (초) — 낮은 지능 캐릭터")]
     public float v4_thinkTickBase = 1.0f;

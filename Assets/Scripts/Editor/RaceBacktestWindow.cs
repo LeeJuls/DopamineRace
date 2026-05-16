@@ -1223,7 +1223,12 @@ public class RaceBacktestWindow : EditorWindow
             if (!gs4.v4_disableBurst)
             {
                 if (inSpurtZone) drain *= gs4.v4_spurtDrainMul;
-                else if (inRegularBurst) drain *= gs4.v4_burstDrainMul;
+                else if (inRegularBurst)
+                {
+                    // SPEC-031 미러: 지능 비례 부스트 드레인 할인
+                    float tt = Mathf.Clamp01((dv4.v4Intelligence - 10f) / 10f);
+                    drain *= gs4.v4_burstDrainMul * Mathf.Lerp(1f, gs4.v4_intBurstDrainFloor, tt);
+                }
                 else if (inEmergencyBurst)
                 {
                     // 거리별 스케일링 미러 (GameSettingsV4.LapScale, drain 지수 0.5)
@@ -1416,11 +1421,11 @@ public class RaceBacktestWindow : EditorWindow
             default: return false;
         }
 
-        // 지능 modifier (지능20 → +10%, 지능10 → ±0%, 지능0 → -10%)
+        // SPEC-031 미러: 지능 = 구간 '시점' 시프트 (폭 연장 아님)
         float intModifier = (dv4.v4Intelligence - 10f) / 10f * gs4.v4_intelligenceModMax;
-        float effectiveEnd = start + (end - start) * (1f + intModifier);
+        float shift = (end - start) * intModifier * gs4.v4_intBurstShift;
 
-        return progress >= start && progress < effectiveEnd;
+        return progress >= start + shift && progress < end + shift;
     }
 
     /// <summary>V4 부스트 구간 시작점</summary>
