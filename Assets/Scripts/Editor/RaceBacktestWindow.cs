@@ -24,6 +24,17 @@ public class RaceBacktestWindow : EditorWindow
     private bool saveLog = true;
     private bool equalStats = false;
     private int equalStatValue = 20;
+
+    // ★ SPEC-033 통제 단일스탯 스윕 계측 (에디터 전용, 게임런타임 무관)
+    private bool statSweepMode = false;
+    private int sweepStat = 0;        // 0=SPD 1=ACC 2=POW 3=STA 4=INT 5=LUCK
+    private int sweepBase = 14;       // 비스윕 스탯 + 슬롯0 기준값
+    private int sweepStep = 1;        // 슬롯당 증가폭
+    private int sweepType = 1;        // CharacterType (0=Runner 1=Leader 2=Chaser 3=Reckoner)
+    private int sweepSeedBase = 73101;
+    // 값버킷별 집계 (슬롯-값 로테이션으로 위치편향 상쇄)
+    private long[] _sweepBucketWins;
+    private long[] _sweepBucketRaces;
     private Vector2 scrollPos;
     private string resultText = "";
     private string lastLogPath = "";
@@ -421,6 +432,99 @@ public class RaceBacktestWindow : EditorWindow
     }
 
     // ══════════════════════════════════════
+    //  ★ SPEC-033 통제 단일스탯 스윕 (에디터 전용)
+    // ══════════════════════════════════════
+
+    private void RunStatSweep()
+    {
+        isRunning = true; lastLogPath = "";
+        try
+        {
+            var allChars = LoadAllCharacters();
+            if (allChars == null || allChars.Count == 0) return;
+            HiddenStatWeights.Reload();   // CSV 편집 즉시 반영 (튜닝 루프)
+            statSweepMode = true;
+            equalStats = false;
+            selectedTrack = null;
+            cancelRequested = false;
+            var result = RunSimulationCore(allChars, 0, 1, "sweep");
+            BuildSweepResult(result, allChars);
+        }
+        catch (System.Exception e)
+        {
+            resultText = "❌ sweep 에러: " + e.Message + "\n" + e.StackTrace;
+            Debug.LogError("[sweep] " + e);
+        }
+        finally
+        {
+            statSweepMode = false;
+            EditorUtility.ClearProgressBar();
+            isRunning = false;
+        }
+    }
+
+    private void BuildSweepResult(TrackResult result, List<CharacterData> allChars)
+    {
+        string[] names = { "SPD", "ACC", "POW", "STA", "INT", "LUCK" };
+        string[] typeNames = { "Runner", "Leader", "Chaser", "Reckoner" };
+        int rc = Mathf.Min(simRacers, allChars.Count);
+        int st = Mathf.Clamp(sweepStat, 0, 5);
+
+        var xs = new List<double>();
+        var ys = new List<double>();
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("# 스탯 스윕 — " + names[st]);
+        sb.AppendLine();
+        sb.AppendLine(string.Format("> 스탯={0} 타입={1} base={2} step={3} N={4} seedBase={5} laps={6}",
+            names[st], typeNames[Mathf.Clamp(sweepType, 0, 3)], sweepBase, sweepStep,
+            simCount, sweepSeedBase, simLaps));
+        sb.AppendLine();
+        sb.AppendLine("| 버킷 | 스탯값 | 출전 | 1착 | 승률% |");
+        sb.AppendLine("|------|--------|------|-----|-------|");
+        for (int i = 0; i < rc; i++)
+        {
+            long races = (_sweepBucketRaces != null && i < _sweepBucketRaces.Length) ? _sweepBucketRaces[i] : 0;
+            long wins  = (_sweepBucketWins  != null && i < _sweepBucketWins.Length)  ? _sweepBucketWins[i]  : 0;
+            int sv = sweepBase + i * sweepStep;
+            double wr = races > 0 ? 100.0 * wins / races : 0.0;
+            xs.Add(sv); ys.Add(wr);
+            sb.AppendLine(string.Format("| {0} | {1} | {2} | {3} | {4:0.0} |",
+                i, sv, races, wins, wr));
+        }
+
+        // 선형회귀 y = a + βx  (β = Δ승률%p / +1스탯pt)
+        int n = xs.Count;
+        double beta = 0, r2 = 0;
+        if (n >= 2)
+        {
+            double mx = 0, my = 0;
+            for (int i = 0; i < n; i++) { mx += xs[i]; my += ys[i]; }
+            mx /= n; my /= n;
+            double sxy = 0, sxx = 0, syy = 0;
+            for (int i = 0; i < n; i++)
+            {
+                double dx = xs[i] - mx, dy = ys[i] - my;
+                sxy += dx * dy; sxx += dx * dx; syy += dy * dy;
+            }
+            beta = sxx > 0 ? sxy / sxx : 0;
+            r2 = (sxx > 0 && syy > 0) ? (sxy * sxy) / (sxx * syy) : 0;
+        }
+        sb.AppendLine();
+        sb.AppendLine(string.Format("**β = {0:0.0000} %p/+1pt | R² = {1:0.000}**", beta, r2));
+
+        resultText = sb.ToString();
+        if (saveLog)
+        {
+            string dir = Path.Combine("Docs", "logs");
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            string fn = string.Format("sweep_{0}_{1}.md", names[st],
+                System.DateTime.Now.ToString("yyyyMMdd_HHmmss"));
+            lastLogPath = Path.Combine(dir, fn);
+            File.WriteAllText(lastLogPath, sb.ToString());
+        }
+    }
+
+    // ══════════════════════════════════════
     //  캐릭터 로드
     // ══════════════════════════════════════
 
@@ -466,6 +570,7 @@ public class RaceBacktestWindow : EditorWindow
     {
         int racerCount = Mathf.Min(simRacers, allChars.Count);
         var gs = gameSettings;
+        HiddenStatWeights.Reload();   // SPEC-033: 에디터 재실행마다 CSV 최신값 반영 (stale 방지)
 
         Dictionary<string, CharStats> stats = new Dictionary<string, CharStats>();
         foreach (var c in allChars)
@@ -495,12 +600,68 @@ public class RaceBacktestWindow : EditorWindow
             typeLapPhaseRankCount[typeName] = new int[lapPhaseCount];
         }
 
+        if (statSweepMode)
+        {
+            _sweepBucketWins  = new long[racerCount];
+            _sweepBucketRaces = new long[racerCount];
+        }
+
         for (int race = 0; race < simCount; race++)
         {
-            // 랜덤 선발
-            List<CharacterData> selected = new List<CharacterData>(allChars);
-            while (selected.Count > racerCount)
-                selected.RemoveAt(Random.Range(0, selected.Count));
+            // ★ SPEC-033: 스윕 모드 시드 고정 (재현성·before/after 차분)
+            if (statSweepMode) UnityEngine.Random.InitState(sweepSeedBase + race);
+            int[] slotBucket = null;   // 슬롯i → 값버킷 (로테이션으로 위치편향 상쇄)
+
+            // 선발
+            List<CharacterData> selected;
+            if (statSweepMode)
+            {
+                // 결정적 선발: 앞 racerCount개 (서로 다른 charId = 슬롯)
+                selected = new List<CharacterData>();
+                for (int i = 0; i < racerCount && i < allChars.Count; i++)
+                    selected.Add(allChars[i]);
+            }
+            else
+            {
+                selected = new List<CharacterData>(allChars);
+                while (selected.Count > racerCount)
+                    selected.RemoveAt(Random.Range(0, selected.Count));
+            }
+
+            // ★ SPEC-033 통제 스윕 오버라이드: 전원 동일 가상캐릭, 슬롯 i에 1스탯만 차등
+            if (statSweepMode && gs.useV4RaceSystem && v4DataMap != null)
+            {
+                slotBucket = new int[selected.Count];
+                for (int i = 0; i < selected.Count; i++)
+                {
+                    // 로테이션: 값버킷이 레이스마다 슬롯을 순회 → 위치편향 상쇄
+                    int bucket = (i + race) % selected.Count;
+                    slotBucket[i] = bucket;
+                    var cd = selected[i];
+                    cd.charBaseSpeed = cd.charBasePower = cd.charBaseBrave =
+                        cd.charBaseCalm = cd.charBaseEndurance = cd.charBaseLuck = sweepBase;
+                    cd.charAbility = "";
+                    CharacterDataV4 dvs;
+                    if (v4DataMap.TryGetValue(cd.charId, out dvs))
+                    {
+                        int b = sweepBase, v = sweepBase + bucket * sweepStep;
+                        dvs.v4Speed = b; dvs.v4Accel = b; dvs.v4Stamina = b;
+                        dvs.v4Power = b; dvs.v4Intelligence = b; dvs.v4Luck = b;
+                        switch (sweepStat)
+                        {
+                            case 0: dvs.v4Speed = v; break;
+                            case 1: dvs.v4Accel = v; break;
+                            case 2: dvs.v4Power = v; break;
+                            case 3: dvs.v4Stamina = v; break;
+                            case 4: dvs.v4Intelligence = v; break;
+                            case 5: dvs.v4Luck = v; break;
+                        }
+                        dvs.charType = (CharacterType)sweepType;
+                        dvs.skillData = null;
+                        dvs.passiveData = null;
+                    }
+                }
+            }
 
             // 균등 스탯 오버라이드
             if (equalStats)
@@ -557,7 +718,7 @@ public class RaceBacktestWindow : EditorWindow
                     if (dv4 != null)
                     {
                         var gs4 = gs.v4Settings;
-                        racer.v4MaxStamina = gs4.v4_staminaBase + dv4.v4Stamina * gs4.v4_staminaPerStat;
+                        racer.v4MaxStamina = gs4.v4_staminaBase + (dv4.v4Stamina * HiddenStatWeights.Stamina) * gs4.v4_staminaPerStat;
                         racer.v4Stamina = racer.v4MaxStamina;
                         racer.v4CurrentSpeed = gs.globalSpeedMultiplier * 0.5f;
                         racer.v4LastProgress = 0f;
@@ -759,6 +920,17 @@ public class RaceBacktestWindow : EditorWindow
             // 미완주
             var unfinished = racers.Where(r => !r.finished).OrderByDescending(r => r.position).ToList();
             for (int i = 0; i < unfinished.Count; i++) { finishedCount++; unfinished[i].finishOrder = finishedCount; }
+
+            // ★ SPEC-033 값버킷 집계 (racers 순서 == selected/slotBucket 순서)
+            if (statSweepMode && slotBucket != null)
+            {
+                for (int k = 0; k < racers.Count && k < slotBucket.Length; k++)
+                {
+                    int bk = slotBucket[k];
+                    _sweepBucketRaces[bk]++;
+                    if (racers[k].finishOrder == 1) _sweepBucketWins[bk]++;
+                }
+            }
 
             // 통계 수집
             foreach (var r in racers)
@@ -1099,15 +1271,15 @@ public class RaceBacktestWindow : EditorWindow
 
         // ── 3. 속도 계산 (CalcSpeedV4 미러) ──
         float baseSpeed = gs.globalSpeedMultiplier;
-        float vmax = baseSpeed * (1f + dv4.v4Speed * gs4.v4_speedStatFactor)
-                              * (1f + dv4.v4Power * gs4.v4_powerSpeedFactor);
+        float vmax = baseSpeed * (1f + (dv4.v4Speed * HiddenStatWeights.Speed) * gs4.v4_speedStatFactor)
+                              * (1f + (dv4.v4Power * HiddenStatWeights.Power) * gs4.v4_powerSpeedFactor);
 
         // HP 임계값 기반 속도 배율
         float staminaRatio = r.v4MaxStamina > 0 ? r.v4Stamina / r.v4MaxStamina : 0f;
         float hpSpeedMul = gs4.GetHpSpeedMultiplier(staminaRatio);
         vmax *= hpSpeedMul;
 
-        float accelRate = dv4.v4Accel * gs4.v4_accelStatFactor;
+        float accelRate = (dv4.v4Accel * HiddenStatWeights.Accel) * gs4.v4_accelStatFactor;
 
         // 구간 판별
         bool burstActive = !gs4.v4_disableBurst;
@@ -1226,7 +1398,7 @@ public class RaceBacktestWindow : EditorWindow
                 else if (inRegularBurst)
                 {
                     // SPEC-031 미러: 지능 비례 부스트 드레인 할인
-                    float tt = Mathf.Clamp01((dv4.v4Intelligence - 10f) / 10f);
+                    float tt = Mathf.Clamp01(((dv4.v4Intelligence * HiddenStatWeights.Intelligence) - 10f) / 10f);
                     drain *= gs4.v4_burstDrainMul * Mathf.Lerp(1f, gs4.v4_intBurstDrainFloor, tt);
                 }
                 else if (inEmergencyBurst)
@@ -1314,11 +1486,11 @@ public class RaceBacktestWindow : EditorWindow
         if (r.v4LuckTimer <= 0f)
         {
             r.v4LuckTimer = gs4.v4_luckCheckInterval;
-            float chance = r.dataV4.v4Luck * gs4.v4_luckCritChance;
+            float chance = (r.dataV4.v4Luck * HiddenStatWeights.Luck) * gs4.v4_luckCritChance;
             if (Random.value < chance)
             {
                 // 지능 modifier
-                float intModifier = (r.dataV4.v4Intelligence - 10f) / 10f * gs4.v4_intelligenceModMax;
+                float intModifier = ((r.dataV4.v4Intelligence * HiddenStatWeights.Intelligence) - 10f) / 10f * gs4.v4_intelligenceModMax;
                 r.v4CritBoostRemaining = gs4.v4_luckCritDuration * (1f + intModifier);
                 r.critCount++;
             }
@@ -1422,7 +1594,7 @@ public class RaceBacktestWindow : EditorWindow
         }
 
         // SPEC-031 미러: 지능 = 구간 '시점' 시프트 (폭 연장 아님)
-        float intModifier = (dv4.v4Intelligence - 10f) / 10f * gs4.v4_intelligenceModMax;
+        float intModifier = ((dv4.v4Intelligence * HiddenStatWeights.Intelligence) - 10f) / 10f * gs4.v4_intelligenceModMax;
         float shift = (end - start) * intModifier * gs4.v4_intBurstShift;
 
         return progress >= start + shift && progress < end + shift;

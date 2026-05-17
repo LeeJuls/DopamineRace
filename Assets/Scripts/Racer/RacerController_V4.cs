@@ -98,7 +98,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             return;
         }
 
-        v4MaxStamina    = gs.v4_staminaBase + charDataV4.v4Stamina * gs.v4_staminaPerStat;
+        HiddenStatWeights.EnsureLoaded();
+        v4MaxStamina    = gs.v4_staminaBase + (charDataV4.v4Stamina * HiddenStatWeights.Stamina) * gs.v4_staminaPerStat;
 
         // 컨디션은 SPD/STA 스탯에만 적용, HP풀(MaxStamina)에는 미적용
         // → 저STA + 낮은 컨디션 캐릭터의 단거리 탈진 방지
@@ -177,8 +178,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         if (charDataV4 == null) return GameSettings.Instance.globalSpeedMultiplier;
 
         float baseSpeed = GameSettings.Instance.globalSpeedMultiplier;
-        float vmax      = baseSpeed * (1f + charDataV4.v4Speed * gs.v4_speedStatFactor)
-                                   * (1f + charDataV4.v4Power * gs.v4_powerSpeedFactor);
+        float vmax      = baseSpeed * (1f + (charDataV4.v4Speed * HiddenStatWeights.Speed) * gs.v4_speedStatFactor)
+                                   * (1f + (charDataV4.v4Power * HiddenStatWeights.Power) * gs.v4_powerSpeedFactor);
 
         // 컨디션 적용: Vmax에 conditionMul 배율
         if (gs.v4_applyCondition)
@@ -190,7 +191,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         float progress  = GetOverallProgress(); // 0~1 전체 진행도
 
         float target;
-        float accelRate = charDataV4.v4Accel * gs.v4_accelStatFactor;
+        float accelRate = (charDataV4.v4Accel * HiddenStatWeights.Accel) * gs.v4_accelStatFactor;
 
         // ── 구간 판별 (boolean으로 먼저 확정 → 두 번째 패스에서 재활용) ──
         bool burstActive  = !gs.v4_disableBurst;
@@ -352,7 +353,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         //   고지능 → 부스트를 결승 쪽으로 늦게(HP 비축 후 정밀 킥)
         //   저지능 → 일찍 피크 후 소진(직관적 페이싱 페널티)
         // 폭(end-start)은 지능 무관 유지 → 드레인 누적 증가 함정 제거
-        float intModifier = (charDataV4.v4Intelligence - 10f) / 10f * gs.v4_intelligenceModMax;
+        float intModifier = ((charDataV4.v4Intelligence * HiddenStatWeights.Intelligence) - 10f) / 10f * gs.v4_intelligenceModMax;
         float shift = (end - start) * intModifier * gs.v4_intBurstShift;
 
         return progress >= start + shift && progress < end + shift;
@@ -387,7 +388,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             {
                 // SPEC-031: 지능 비례 부스트 드레인 할인 (함정 해소).
                 // 지능20 → ×v4_intBurstDrainFloor, 지능10 → ×1.0, 지능<10 → ×1.0(할인 없음)
-                float t  = Mathf.Clamp01((charDataV4.v4Intelligence - 10f) / 10f);
+                float t  = Mathf.Clamp01(((charDataV4.v4Intelligence * HiddenStatWeights.Intelligence) - 10f) / 10f);
                 float bm = gs.v4_burstDrainMul * Mathf.Lerp(1f, gs.v4_intBurstDrainFloor, t);
                 drain *= bm;
             }
@@ -534,12 +535,12 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         {
             v4LuckTimer = gs.v4_luckCheckInterval;
 
-            float chance = charDataV4.v4Luck * gs.v4_luckCritChance;
+            float chance = (charDataV4.v4Luck * HiddenStatWeights.Luck) * gs.v4_luckCritChance;
             if (UnityEngine.Random.value < chance)
             {
                 // 지능 modifier: (지능 - 10) / 10 × modMax
                 // 지능20 → +10%, 지능10 → ±0%, 지능0 → -10%
-                float intModifier = (charDataV4.v4Intelligence - 10f) / 10f * gs.v4_intelligenceModMax;
+                float intModifier = ((charDataV4.v4Intelligence * HiddenStatWeights.Intelligence) - 10f) / 10f * gs.v4_intelligenceModMax;
                 v4CritInitialDuration = gs.v4_luckCritDuration * (1f + intModifier);
                 v4CritBoostRemaining = v4CritInitialDuration;
                 isCritActive = true;
