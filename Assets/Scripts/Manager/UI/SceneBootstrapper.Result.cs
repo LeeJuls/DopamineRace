@@ -270,12 +270,14 @@ public partial class SceneBootstrapper
             }
         }
 
-        int totalScore = ScoreManager.Instance?.CurrentGameScore ?? 0;
+        // SPEC-035: 점수 → 도파민 스톤 획득량 표시
+        int stoneGain = gm?.LastRoundStoneGain ?? 0;
+        int totalStone = WalletManager.Instance?.Stone ?? 0;
         if (resultTotalScoreText != null)
         {
             resultTotalScoreText.text = score > 0
-                ? Loc.Get("str.result.score_win", score, totalScore)
-                : Loc.Get("str.result.score_lose", totalScore);
+                ? Loc.Get("str.result.score_win", stoneGain, totalStone)
+                : Loc.Get("str.result.score_lose", totalStone);
             resultTotalScoreText.color = score > 0 ? COLOR_RESULT_WIN : COLOR_RESULT_LOSE;
         }
 

@@ -137,8 +137,8 @@ str.result.rank2,2착: {0},2nd: {0},2着: {0},第2名: {0},2.: {0},2º: {0},2º:
 str.result.rank3,3착: {0},3rd: {0},3着: {0},第3名: {0},3.: {0},3º: {0},3º: {0}
 str.result.bet_type,"배팅: {0} ({1})","Bet: {0} ({1})","ベット: {0}（{1}）","投注: {0}（{1}）","Wette: {0} ({1})","Apuesta: {0} ({1})","Aposta: {0} ({1})"
 str.result.my_pick,내 {0} 예측: {1} → 실제 {2}착,My {0}: {1} → Actual {2}nd,マイ{0}: {1} → 実際{2}着,我的{0}预测: {1} → 实际第{2}名,Mein {0}: {1} → Tatsächlich {2}.,Mi {0}: {1} → Real {2}º,Meu {0}: {1} → Real {2}º
-str.result.score_win,"+{0}점 획득!  (총점: {1})","+{0} pts!  (Total: {1})","+{0}点獲得！（合計: {1}）","+{0}分！（总分: {1}）","+{0} Pkt!  (Gesamt: {1})","+{0} pts  (Total: {1})","+{0} pts  (Total: {1})"
-str.result.score_lose,"0점  (총점: {0})","0 pts  (Total: {0})","0点（合計: {0}）","0分（总分: {0}）","0 Pkt  (Gesamt: {0})","0 pts  (Total: {0})","0 pts  (Total: {0})"
+str.result.score_win,"도파민 스톤 +{0}개 획득!  (총: {1}개)","+{0} Dopamine Stones!  (Total: {1})","ドーパミンストーン +{0}個獲得！（合計: {1}個）","获得多巴胺石 +{0}个！（共: {1}个）","+{0} Dopamin-Steine!  (Gesamt: {1})","+{0} Piedras de Dopamina!  (Total: {1})","+{0} Pedras de Dopamina!  (Total: {1})"
+str.result.score_lose,"스톤 획득 실패  (총: {0}개)","No stones earned  (Total: {0})","ストーン獲得失敗（合計: {0}個）","未获得石头（共: {0}个）","Keine Steine erhalten  (Gesamt: {0})","Sin piedras  (Total: {0})","Sem pedras  (Total: {0})"
 str.result.rank_header,순위,Rankings,順位,排名,Rang,Posición,Classificação
 str.finish.title,Finish!!,Finish!!,フィニッシュ！！,终点！！,Ziel!!,¡¡Meta!!,Chegada!!
 str.finish.round_header,라운드별 결과,Round Results,ラウンド別結果,各轮结果,Rundenergebnisse,Resultados por Ronda,Resultados por Rodada

@@ -30,6 +30,9 @@ public class GameManager : MonoBehaviour
     // ═══ 배팅 시스템 ═══
     public BetInfo CurrentBet { get; private set; }
 
+    /// <summary>이번 라운드 도파민 스톤 획득량 (적중=betAmount, 미적중·비통화=0). 결과 화면 표시용 (SPEC-035)</summary>
+    public int LastRoundStoneGain { get; private set; }
+
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -259,12 +262,14 @@ public class GameManager : MonoBehaviour
 
         // SPEC-028 Step 1.8: 통화 시스템 통합 — 베팅액 기반 보상 계산
         // betAmount > 0인 경우에만 통화 흐름 적용 (Phase 2 모달 진입 후부터 활성)
+        LastRoundStoneGain = 0;  // SPEC-035: 기본 0 (미적중·비통화)
         if (CurrentBet != null && CurrentBet.betAmount > 0 && WalletManager.Instance != null)
         {
             BetReward reward = BettingCalculator.CalculateReward(CurrentBet, rankingIndices, CurrentBet.betAmount);
             if (reward.hit)
             {
                 WalletManager.Instance.Reward(reward.jelly, reward.stone);
+                LastRoundStoneGain = reward.stone;  // SPEC-035: 결과 화면 표시용
                 Debug.Log($"[Wallet] 적중 보상: +{reward.jelly}🟦 +{reward.stone}💎 (베팅 {CurrentBet.betAmount} × 배당)");
             }
             else
