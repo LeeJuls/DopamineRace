@@ -55,8 +55,8 @@ MonoBehaviour:
   v4_panicDuration: 2
   v4_intelligenceStatMax: 20
   v4_intelligenceModMax: 0.2
-  v4_intBurstShift: 0.5
-  v4_intBurstDrainFloor: 0.55
+  v4_intBurstShiftAbs: 0.015
+  v4_intBurstDrainFloor: 0.7
   v4_thinkTickBase: 1
   v4_thinkTickBonus: 0.8
   v4_luckCheckInterval: 3

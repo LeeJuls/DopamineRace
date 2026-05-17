@@ -335,7 +335,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     //  타입별 부스트 구간 판별
     // ──────────────────────────────────────────────
 
-    private bool IsInBurstZone(GameSettingsV4 gs, float progress)
+    // SPEC-031.P2: zoneWidth out 오버로드 (드레인 정규화용)
+    private bool IsInBurstZone(GameSettingsV4 gs, float progress, out float zoneWidth)
     {
         float start, end;
         switch (charDataV4.charType)
@@ -344,19 +345,23 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             case CharacterType.Leader:   start = gs.v4_leaderBurstStart;   end = gs.v4_leaderBurstEnd;   break;
             case CharacterType.Chaser:   start = gs.v4_chaserBurstStart;   end = gs.v4_chaserBurstEnd;   break;
             case CharacterType.Reckoner: start = gs.v4_reckonerBurstStart; end = gs.v4_reckonerBurstEnd; break;
-            default: return false;
+            default: zoneWidth = 0f; return false;
         }
+        zoneWidth = end - start;
 
-        // SPEC-031: 지능 = 구간 '폭' 연장(함정) → 구간 '시점' 시프트로 변경.
-        // intModifier: 지능20 → +modMax, 지능10 → 0, 지능0 → -modMax
-        // shift = (구간폭) × intModifier × v4_intBurstShift
-        //   고지능 → 부스트를 결승 쪽으로 늦게(HP 비축 후 정밀 킥)
-        //   저지능 → 일찍 피크 후 소진(직관적 페이싱 페널티)
-        // 폭(end-start)은 지능 무관 유지 → 드레인 누적 증가 함정 제거
-        float intModifier = ((charDataV4.v4Intelligence * HiddenStatWeights.Intelligence) - 10f) / 10f * gs.v4_intelligenceModMax;
-        float shift = (end - start) * intModifier * gs.v4_intBurstShift;
+        // SPEC-031.P2: 타입 무관 절대 시프트 (폭 비례 제거)
+        // intModifier: INT 20 → +1.0, INT 10 → 0, INT 0 → -1.0
+        // 고지능 → 부스트를 결승 쪽으로 늦게(막판 정밀 킥), 저지능 → 반대
+        float intModifier = ((charDataV4.v4Intelligence * HiddenStatWeights.Intelligence) - 10f) / 10f;
+        float shift = gs.v4_intBurstShiftAbs * intModifier;
 
         return progress >= start + shift && progress < end + shift;
+    }
+
+    private bool IsInBurstZone(GameSettingsV4 gs, float progress)
+    {
+        float unused;
+        return IsInBurstZone(gs, progress, out unused);
     }
 
     // ──────────────────────────────────────────────
@@ -384,12 +389,18 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         if (!gs.v4_disableBurst)
         {
             if      (currentProgress >= gs.v4_finalSpurtStart)                       drain *= gs.v4_spurtDrainMul;
-            else if (IsInBurstZone(gs, currentProgress))
+            else if (IsInBurstZone(gs, currentProgress, out float zoneWidth))
             {
-                // SPEC-031: 지능 비례 부스트 드레인 할인 (함정 해소).
-                // 지능20 → ×v4_intBurstDrainFloor, 지능10 → ×1.0, 지능<10 → ×1.0(할인 없음)
+                // SPEC-031.P2: 구간폭 정규화 드레인 할인 (타입간 총 절약량 균등화).
+                // avgZoneWidth = 4타입 평균 폭 → 좁은 구간 타입(Chaser)은 더 깊은 할인 적용
+                // normFloor = 1 - (1-floor) × avgWidth/zoneWidth → 총 savings ∝ avgWidth (타입 무관)
+                float avgZoneWidth = ((gs.v4_runnerBurstEnd - gs.v4_runnerBurstStart)
+                                    + (gs.v4_leaderBurstEnd - gs.v4_leaderBurstStart)
+                                    + (gs.v4_chaserBurstEnd - gs.v4_chaserBurstStart)
+                                    + (gs.v4_reckonerBurstEnd - gs.v4_reckonerBurstStart)) / 4f;
+                float normFloor = 1f - (1f - gs.v4_intBurstDrainFloor) * avgZoneWidth / zoneWidth;
                 float t  = Mathf.Clamp01(((charDataV4.v4Intelligence * HiddenStatWeights.Intelligence) - 10f) / 10f);
-                float bm = gs.v4_burstDrainMul * Mathf.Lerp(1f, gs.v4_intBurstDrainFloor, t);
+                float bm = gs.v4_burstDrainMul * Mathf.Lerp(1f, normFloor, t);
                 drain *= bm;
             }
             else if (v4EmergencyBurst)

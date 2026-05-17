@@ -201,6 +201,11 @@ public class RaceBacktestWindow : EditorWindow
         public bool v4IsSpurting;
         public float v4SpurtHpRatio;   // 스퍼트 진입 시 HP 비율 스냅샷
 
+        // ★ SPEC-031.P2 INT 진단 (레이스별 리셋)
+        public float v4BurstDrainAccum;   // burst 구간 누적 drain
+        public float v4BurstFirstEntry;   // burst 첫 진입 progress (-1 = 미진입)
+        public float v4BurstZoneWidth;    // 이 레이서 타입의 burst 구간 폭 (드레인 정규화용)
+
         // ★ 액티브 스킬 (Group B + 쿨타임)
         public bool skillActive;
         public float skillRemainingTime;
@@ -315,6 +320,11 @@ public class RaceBacktestWindow : EditorWindow
         public Dictionary<string, float[]> typeLapPhaseRankSum;
         public Dictionary<string, int[]>   typeLapPhaseRankCount;
         public int lapPhaseSimLaps;
+
+        // ★ SPEC-031.P2 INT 진단 (bucket: 0=INT 0-9, 1=INT 10-14, 2=INT 15-20)
+        public Dictionary<string, float[]> intDiagDrainSum;   // [typeName][bucket]
+        public Dictionary<string, float[]> intDiagEntrySum;   // [typeName][bucket]
+        public Dictionary<string, int[]>   intDiagCount;       // [typeName][bucket]
     }
 
     // ══════════════════════════════════════
@@ -590,6 +600,17 @@ public class RaceBacktestWindow : EditorWindow
             typeSegRankCount[typeName] = new int[segCount];
         }
 
+        // ★ SPEC-031.P2 INT 진단 초기화 (bucket: 0=INT 0-9, 1=INT 10-14, 2=INT 15-20)
+        var intDiagDrainSum  = new Dictionary<string, float[]>();
+        var intDiagEntrySum  = new Dictionary<string, float[]>();
+        var intDiagCount     = new Dictionary<string, int[]>();
+        foreach (string typeName in new[] { "도주", "선행", "선입", "추입" })
+        {
+            intDiagDrainSum[typeName] = new float[3];
+            intDiagEntrySum[typeName] = new float[3];
+            intDiagCount[typeName]    = new int[3];
+        }
+
         // ★ 랩×구간 순위 추적 초기화 (phase: 0=25%, 1=50%, 2=100%)
         int lapPhaseCount = simLaps * 3;
         Dictionary<string, float[]> typeLapPhaseRankSum   = new Dictionary<string, float[]>();
@@ -722,6 +743,16 @@ public class RaceBacktestWindow : EditorWindow
                         racer.v4Stamina = racer.v4MaxStamina;
                         racer.v4CurrentSpeed = gs.globalSpeedMultiplier * 0.5f;
                         racer.v4LastProgress = 0f;
+                        racer.v4BurstDrainAccum = 0f;
+                        racer.v4BurstFirstEntry = -1f;
+                        // burst zone width for drain normalization (SPEC-031.P2)
+                        switch (dv4.charType)
+                        {
+                            case CharacterType.Runner:   racer.v4BurstZoneWidth = gs4.v4_runnerBurstEnd   - gs4.v4_runnerBurstStart;   break;
+                            case CharacterType.Leader:   racer.v4BurstZoneWidth = gs4.v4_leaderBurstEnd   - gs4.v4_leaderBurstStart;   break;
+                            case CharacterType.Chaser:   racer.v4BurstZoneWidth = gs4.v4_chaserBurstEnd   - gs4.v4_chaserBurstStart;   break;
+                            default:                     racer.v4BurstZoneWidth = gs4.v4_reckonerBurstEnd - gs4.v4_reckonerBurstStart; break;
+                        }
                         racer.v4EmergencyBurst = false;
                         racer.v4EmergencyBurstCooldownTimer = 0f;
                         racer.v4CritBoostRemaining = 0f;
@@ -957,6 +988,21 @@ public class RaceBacktestWindow : EditorWindow
                 if (r.finishOrder == 1) s.winCount++;
                 if (r.finishOrder <= 3) s.top3Count++;
 
+                // ★ SPEC-031.P2 INT 진단 수집 (V4 + burst 진입 기록 있는 레이서만)
+                if (r.dataV4 != null)
+                {
+                    string diagType = r.data.GetTypeName();
+                    if (intDiagCount.ContainsKey(diagType))
+                    {
+                        int intVal  = (int)r.dataV4.v4Intelligence;
+                        int bucket  = intVal < 10 ? 0 : (intVal < 15 ? 1 : 2);
+                        intDiagDrainSum[diagType][bucket] += r.v4BurstDrainAccum;
+                        if (r.v4BurstFirstEntry >= 0f)
+                            intDiagEntrySum[diagType][bucket] += r.v4BurstFirstEntry;
+                        intDiagCount[diagType][bucket]++;
+                    }
+                }
+
                 // ★ 랩 구간별 순위 누적
                 string tname = r.data.GetTypeName();
                 if (typeLapPhaseRankSum.ContainsKey(tname))
@@ -999,6 +1045,9 @@ public class RaceBacktestWindow : EditorWindow
             typeLapPhaseRankSum   = typeLapPhaseRankSum,
             typeLapPhaseRankCount = typeLapPhaseRankCount,
             lapPhaseSimLaps       = simLaps,
+            intDiagDrainSum  = intDiagDrainSum,
+            intDiagEntrySum  = intDiagEntrySum,
+            intDiagCount     = intDiagCount,
         };
     }
 
@@ -1397,9 +1446,17 @@ public class RaceBacktestWindow : EditorWindow
                 if (inSpurtZone) drain *= gs4.v4_spurtDrainMul;
                 else if (inRegularBurst)
                 {
-                    // SPEC-031 미러: 지능 비례 부스트 드레인 할인
+                    // SPEC-031.P2 미러: 구간폭 정규화 드레인 할인 (RacerController_V4 동기)
+                    float avgZoneWidth = ((gs4.v4_runnerBurstEnd - gs4.v4_runnerBurstStart)
+                                        + (gs4.v4_leaderBurstEnd - gs4.v4_leaderBurstStart)
+                                        + (gs4.v4_chaserBurstEnd - gs4.v4_chaserBurstStart)
+                                        + (gs4.v4_reckonerBurstEnd - gs4.v4_reckonerBurstStart)) / 4f;
+                    float normFloor = 1f - (1f - gs4.v4_intBurstDrainFloor) * avgZoneWidth / r.v4BurstZoneWidth;
                     float tt = Mathf.Clamp01(((dv4.v4Intelligence * HiddenStatWeights.Intelligence) - 10f) / 10f);
-                    drain *= gs4.v4_burstDrainMul * Mathf.Lerp(1f, gs4.v4_intBurstDrainFloor, tt);
+                    drain *= gs4.v4_burstDrainMul * Mathf.Lerp(1f, normFloor, tt);
+                    // INT 진단: burst 드레인·첫 진입 기록
+                    r.v4BurstDrainAccum += drain;
+                    if (r.v4BurstFirstEntry < 0f) r.v4BurstFirstEntry = currentProgress;
                 }
                 else if (inEmergencyBurst)
                 {
@@ -1593,9 +1650,9 @@ public class RaceBacktestWindow : EditorWindow
             default: return false;
         }
 
-        // SPEC-031 미러: 지능 = 구간 '시점' 시프트 (폭 연장 아님)
-        float intModifier = ((dv4.v4Intelligence * HiddenStatWeights.Intelligence) - 10f) / 10f * gs4.v4_intelligenceModMax;
-        float shift = (end - start) * intModifier * gs4.v4_intBurstShift;
+        // SPEC-031.P2 미러: 타입 무관 절대 시프트 (폭 비례 제거 — RacerController_V4 동기)
+        float intModifier = ((dv4.v4Intelligence * HiddenStatWeights.Intelligence) - 10f) / 10f;
+        float shift = gs4.v4_intBurstShiftAbs * intModifier;
 
         return progress >= start + shift && progress < end + shift;
     }
@@ -1903,6 +1960,55 @@ public class RaceBacktestWindow : EditorWindow
                     row.AppendFormat(" {0:F1} |", avg);
                 }
                 md.AppendLine(row.ToString());
+            }
+            md.AppendLine();
+        }
+
+        // ═══════════════════════════════════
+        //  2-b. SPEC-031.P2 INT 진단 (V4 전용)
+        // ═══════════════════════════════════
+        bool hasIntDiag = results.Any(tr => tr.intDiagCount != null &&
+                          tr.intDiagCount.Values.Any(v => v.Any(c => c > 0)));
+        if (hasIntDiag)
+        {
+            md.AppendLine("---");
+            md.AppendLine();
+            md.AppendLine("## 🧠 INT 진단 — burst 드레인 & 첫 진입 progress");
+            md.AppendLine();
+            md.AppendLine("> bucket: Low=INT 0-9 / Mid=INT 10-14 / High=INT 15-20  ");
+            md.AppendLine("> drain ↓ with INT = 함정역전 보존 ✅ / entry ↑ with INT = 늦은 킥 ✅");
+            md.AppendLine();
+            md.AppendLine("| 타입 | 지표 | Low | Mid | High | 방향성 |");
+            md.AppendLine("|------|------|-----|-----|------|--------|");
+
+            var diagTypeOrder = new[] { "도주", "선행", "선입", "추입" };
+            foreach (var tr in results)
+            {
+                if (tr.intDiagCount == null) continue;
+                foreach (var typeName in diagTypeOrder)
+                {
+                    if (!tr.intDiagCount.ContainsKey(typeName)) continue;
+                    var cnt   = tr.intDiagCount[typeName];
+                    var drain = tr.intDiagDrainSum[typeName];
+                    var entry = tr.intDiagEntrySum[typeName];
+
+                    float dLow  = cnt[0] > 0 ? drain[0] / cnt[0] : 0f;
+                    float dMid  = cnt[1] > 0 ? drain[1] / cnt[1] : 0f;
+                    float dHigh = cnt[2] > 0 ? drain[2] / cnt[2] : 0f;
+                    float eLow  = cnt[0] > 0 ? entry[0] / cnt[0] : 0f;
+                    float eMid  = cnt[1] > 0 ? entry[1] / cnt[1] : 0f;
+                    float eHigh = cnt[2] > 0 ? entry[2] / cnt[2] : 0f;
+
+                    bool drainOk = dHigh < dLow && dHigh > 0f;
+                    bool entryOk = eHigh > eLow;
+                    string drainDir = drainOk ? "✅ Low>High" : "❌";
+                    string entryDir = entryOk ? "✅ High>Low" : (cnt[2] == 0 ? "-" : "❌");
+
+                    md.AppendFormat("| {0} | drain | {1:F1} | {2:F1} | {3:F1} | {4} |\n",
+                        typeName, dLow, dMid, dHigh, drainDir);
+                    md.AppendFormat("| {0} | entry | {1:F3} | {2:F3} | {3:F3} | {4} |\n",
+                        "", eLow, eMid, eHigh, entryDir);
+                }
             }
             md.AppendLine();
         }

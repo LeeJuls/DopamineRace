@@ -178,11 +178,12 @@ public class GameSettingsV4 : ScriptableObject
              "예: 0.10 → 지능20 = +10%, 지능0 = -10%")]
     public float v4_intelligenceModMax = 0.10f;
 
-    [Tooltip("SPEC-031: 지능이 부스트 구간 '폭'이 아니라 '시점'을 이동시키는 비율\n" +
-             "0 = 시프트 없음(현행), 0.5 = intMod×구간폭의 절반만큼 구간을 통째로 늦게/일찍 이동\n" +
-             "고지능 = 부스트를 결승 쪽으로 늦게 → HP 비축 후 막판 정밀 킥")]
-    [Range(0f, 1f)]
-    public float v4_intBurstShift = 0.5f;
+    [Tooltip("SPEC-031.P2: 지능 최대치(INT 20)일 때 부스트 구간을 이동하는 절대 거리\n" +
+             "타입별 구간 폭에 무관하게 모든 타입이 동일 절대량 이동 → β 타입 의존성 해소\n" +
+             "예: 0.022 → INT20 시 구간을 +0.022 늦게, INT0 시 -0.022 일찍 이동\n" +
+             "고지능 = 부스트를 결승 쪽으로 늦게(막판 정밀 킥), 저지능 = 반대")]
+    [Range(0f, 0.1f)]
+    public float v4_intBurstShiftAbs = 0.022f;
 
     [Tooltip("SPEC-031: 지능 비례 부스트 드레인 할인 바닥값\n" +
              "지능20 → 부스트 드레인 ×(이 값), 지능10 → ×1.0(할인 없음)\n" +
