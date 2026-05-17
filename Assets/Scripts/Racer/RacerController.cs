@@ -237,6 +237,7 @@ public partial class RacerController : MonoBehaviour
 
     public void StartRacing()
     {
+        StopWandering(); // ★ 배회 중이었다면 반드시 중단 (LineUpAndStart 타이밍 미스 안전망)
         isRacing = true; isFinished = false; headingToFinish = false; FinishOrder = -1;
         currentLap = 0; currentWP = 1; // WP1부터 시작 — WP0(결승선)은 측면이라 방향 틀어짐 방지
         _cumulativeDistance = 0f;       // 누적 거리 리셋

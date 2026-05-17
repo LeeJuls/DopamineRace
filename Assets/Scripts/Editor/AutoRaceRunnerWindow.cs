@@ -175,44 +175,19 @@ public class AutoRaceRunnerWindow : EditorWindow
 
         Subscribe();
 
-        // 첫 게임 시작
-        var gm = GameManager.Instance;
-        if (gm != null)
+        // 첫 게임 시작 — 항상 StartNewGame으로 클린 초기화 (Round=1, 배회 포함)
+        currentGameLog = new GameIterationLog { gameNumber = currentGame + 1 };
+        AppendLog(string.Format("══ 게임 #{0} 시작 ══", currentGame + 1));
+        ScheduleNextFrame(() =>
         {
-            currentGameLog = new GameIterationLog { gameNumber = currentGame + 1 };
-            AppendLog(string.Format("══ 게임 #{0} 시작 ══", currentGame + 1));
-
-            if (gm.CurrentState == GameManager.GameState.Betting)
+            var g = GameManager.Instance;
+            if (g == null) g = UnityEngine.Object.FindFirstObjectByType<GameManager>();
+            if (g != null && isRunning)
             {
+                g.StartNewGame();
                 ScheduleNextFrame(() => AutoBetAndStart());
             }
-            else if (gm.CurrentState == GameManager.GameState.Finish)
-            {
-                // Finish 상태: StartNewGame 후 배팅 진행
-                ScheduleNextFrame(() =>
-                {
-                    var g = GameManager.Instance;
-                    if (g != null && isRunning)
-                    {
-                        g.StartNewGame();
-                        ScheduleNextFrame(() => AutoBetAndStart());
-                    }
-                });
-            }
-            else
-            {
-                // Result / Racing 등 다른 상태: StartNewGame으로 강제 초기화
-                ScheduleNextFrame(() =>
-                {
-                    var g = GameManager.Instance;
-                    if (g != null && isRunning)
-                    {
-                        g.StartNewGame();
-                        ScheduleNextFrame(() => AutoBetAndStart());
-                    }
-                });
-            }
-        }
+        });
     }
 
     private void StopAndSave()
@@ -322,12 +297,31 @@ public class AutoRaceRunnerWindow : EditorWindow
     {
         if (!isRunning) return;
         var gm = GameManager.Instance;
+        if (gm == null) gm = UnityEngine.Object.FindFirstObjectByType<GameManager>();
         if (gm == null || gm.CurrentState != GameManager.GameState.Betting) return;
+
+        var rm = RaceManager.Instance;
+        if (rm == null) rm = UnityEngine.Object.FindFirstObjectByType<RaceManager>();
 
         // 단승 (Win), 0번 캐릭터 자동 선택
         gm.SelectBetType(BetType.Win);
         gm.AddSelection(0);
-        gm.StartRace();
+
+        // Round 1: LineUpAndStart 콜백 후 StartRace (SPEC-025 배회→정렬 연출 연동)
+        // StartNewGame()이 항상 Round=1에서 시작하므로 rm != null이면 항상 이 경로
+        if (gm.CurrentRound == 1 && rm != null)
+        {
+            rm.LineUpAndStart(() =>
+            {
+                var g = GameManager.Instance;
+                if (g == null) g = UnityEngine.Object.FindFirstObjectByType<GameManager>();
+                if (isRunning) g?.StartRace();
+            });
+        }
+        else
+        {
+            gm.StartRace();
+        }
     }
 
     // ── 결과 수집 ──
@@ -393,6 +387,7 @@ public class AutoRaceRunnerWindow : EditorWindow
     {
         if (!isRunning) return;
         var gm = GameManager.Instance;
+        if (gm == null) gm = UnityEngine.Object.FindFirstObjectByType<GameManager>();
         if (gm == null) return;
         gm.NextRound();
     }

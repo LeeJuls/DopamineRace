@@ -111,6 +111,8 @@ public class RaceManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (Instance == this) Instance = null;
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnRaceStart -= OnRaceStart;

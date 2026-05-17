@@ -32,6 +32,8 @@ public partial class RacerController : MonoBehaviour
     /// <summary>배회 시작. bounds 안에서 자유롭게 이동.</summary>
     public void StartWandering(Bounds bounds)
     {
+        // ★ 레이스 중에는 배회 무시 (ScatterAndWander 타이밍 미스 안전망)
+        if (isRacing) return;
         _wanderBounds = bounds;
         _isWandering = true;
         if (_wanderCoroutine != null) StopCoroutine(_wanderCoroutine);
