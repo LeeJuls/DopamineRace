@@ -204,28 +204,29 @@ public static class ResultUIPrefabCreator
             if (i > 0) pickRow.SetActive(false);
         }
 
-        // ── ScoreSection ──
+        // ── ScoreSection ── (SPEC-035: 스톤 문구가 길어 박스 확대 + bestFit)
         GameObject scoreSection = MkContainer(root.transform, "ScoreSection",
             new Vector2(0.5f, 0.355f), new Vector2(0.5f, 0.355f),
-            Vector2.zero, new Vector2(640, 90));
+            Vector2.zero, new Vector2(820, 120));
         Image scoreBg = scoreSection.AddComponent<Image>();
         scoreBg.color = COLOR_SECTION_BG;
         VerticalLayoutGroup scoreVlg = scoreSection.AddComponent<VerticalLayoutGroup>();
         scoreVlg.childAlignment = TextAnchor.MiddleCenter;
-        scoreVlg.spacing = 4f;
-        scoreVlg.padding = new RectOffset(12, 12, 8, 8);
+        scoreVlg.spacing = 6f;
+        scoreVlg.padding = new RectOffset(16, 16, 10, 10);
         scoreVlg.childControlWidth = true;
         scoreVlg.childControlHeight = false;
         scoreVlg.childForceExpandWidth = true;
         scoreVlg.childForceExpandHeight = false;
 
         GameObject formulaLbl = MkTextChild(scoreSection.transform, "ScoreFormulaText", "",
-            new Vector2(580, 28), 20, TextAnchor.MiddleCenter, COLOR_WHITE, font, true);
-        SetLayoutElement(formulaLbl, 580, 28);
+            new Vector2(760, 32), 20, TextAnchor.MiddleCenter, COLOR_WHITE, font, true);
+        SetLayoutElement(formulaLbl, 760, 32);
 
         GameObject totalLbl = MkTextChild(scoreSection.transform, "TotalScoreText", "",
-            new Vector2(580, 38), 30, TextAnchor.MiddleCenter, COLOR_WIN, font, true);
-        SetLayoutElement(totalLbl, 580, 38);
+            new Vector2(760, 50), 30, TextAnchor.MiddleCenter, COLOR_WIN, font, true);
+        SetLayoutElement(totalLbl, 760, 50);
+        EnableBestFit(totalLbl, 18, 32);  // 7개 언어 문구 길이 차이 자동 수용
 
         // ── NextRoundBtn ──
         GameObject btn = new GameObject("NextRoundBtn");
@@ -454,26 +455,47 @@ public static class ResultUIPrefabCreator
             Debug.Log("[ResultUIPrefabCreator][Patch] ScoreSection 없음 → 추가");
             GameObject sSec = MkContainer(root, "ScoreSection",
                 new Vector2(0.5f, 0.355f), new Vector2(0.5f, 0.355f),
-                Vector2.zero, new Vector2(640, 90));
+                Vector2.zero, new Vector2(820, 120));
             sSec.AddComponent<Image>().color = COLOR_SECTION_BG;
             VerticalLayoutGroup vlg = sSec.AddComponent<VerticalLayoutGroup>();
-            vlg.spacing = 4f;
-            vlg.padding = new RectOffset(12, 12, 8, 8);
+            vlg.spacing = 6f;
+            vlg.padding = new RectOffset(16, 16, 10, 10);
             vlg.childAlignment = TextAnchor.MiddleCenter;
             vlg.childControlWidth = true;
             vlg.childControlHeight = false;
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
             scoreSection = sSec.transform;
-            MkTextChild(scoreSection, "ScoreFormulaText", "", new Vector2(580, 28), 20, TextAnchor.MiddleCenter, COLOR_WHITE, font, true);
-            MkTextChild(scoreSection, "TotalScoreText", "", new Vector2(580, 38), 30, TextAnchor.MiddleCenter, COLOR_WIN, font, true);
+            MkTextChild(scoreSection, "ScoreFormulaText", "", new Vector2(760, 32), 20, TextAnchor.MiddleCenter, COLOR_WHITE, font, true);
+            MkTextChild(scoreSection, "TotalScoreText", "", new Vector2(760, 50), 30, TextAnchor.MiddleCenter, COLOR_WIN, font, true);
         }
         else
         {
             if (scoreSection.Find("ScoreFormulaText") == null)
-                MkTextChild(scoreSection, "ScoreFormulaText", "", new Vector2(580, 28), 20, TextAnchor.MiddleCenter, COLOR_WHITE, font, true);
+                MkTextChild(scoreSection, "ScoreFormulaText", "", new Vector2(760, 32), 20, TextAnchor.MiddleCenter, COLOR_WHITE, font, true);
             if (scoreSection.Find("TotalScoreText") == null)
-                MkTextChild(scoreSection, "TotalScoreText", "", new Vector2(580, 38), 30, TextAnchor.MiddleCenter, COLOR_WIN, font, true);
+                MkTextChild(scoreSection, "TotalScoreText", "", new Vector2(760, 50), 30, TextAnchor.MiddleCenter, COLOR_WIN, font, true);
+        }
+
+        // SPEC-035: 기존 프리팹도 강제로 박스/텍스트 확대 + bestFit 재적용
+        {
+            RectTransform ssRt = scoreSection.GetComponent<RectTransform>();
+            if (ssRt != null) ssRt.sizeDelta = new Vector2(820, 120);
+            Transform fT = scoreSection.Find("ScoreFormulaText");
+            if (fT != null)
+            {
+                fT.GetComponent<RectTransform>().sizeDelta = new Vector2(760, 32);
+                var le = fT.GetComponent<LayoutElement>() ?? fT.gameObject.AddComponent<LayoutElement>();
+                le.preferredWidth = 760; le.preferredHeight = 32;
+            }
+            Transform tT = scoreSection.Find("TotalScoreText");
+            if (tT != null)
+            {
+                tT.GetComponent<RectTransform>().sizeDelta = new Vector2(760, 50);
+                var le = tT.GetComponent<LayoutElement>() ?? tT.gameObject.AddComponent<LayoutElement>();
+                le.preferredWidth = 760; le.preferredHeight = 50;
+                EnableBestFit(tT.gameObject, 18, 32);
+            }
         }
 
         // NextRoundBtn
@@ -572,6 +594,17 @@ public static class ResultUIPrefabCreator
         LayoutElement le = go.AddComponent<LayoutElement>();
         le.preferredWidth = preferredWidth;
         le.preferredHeight = preferredHeight;
+    }
+
+    /// <summary>긴 다국어 문구가 박스를 넘지 않도록 폰트 자동 축소 (SPEC-035)</summary>
+    private static void EnableBestFit(GameObject go, int minSize, int maxSize)
+    {
+        Text t = go.GetComponent<Text>();
+        if (t == null) return;
+        t.resizeTextForBestFit = true;
+        t.resizeTextMinSize = minSize;
+        t.resizeTextMaxSize = maxSize;
+        t.horizontalOverflow = HorizontalWrapMode.Wrap;
     }
 
     private static void PatchEnsureText(Transform root, string name, string defaultText,

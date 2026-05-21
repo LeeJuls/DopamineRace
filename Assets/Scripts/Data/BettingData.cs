@@ -207,7 +207,8 @@ public static class BettingCalculator
 
         // Mathf.CeilToInt: 소수점이 있으면 정수로 올림 (33×1.1=36.3 → 37)
         int jellyGain = Mathf.CeilToInt(betAmount * odds);
-        int stoneGain = betAmount;  // 1:1
+        // SPEC-035: 스톤 = 배율 보상 (베팅젤리 × 배당). odds는 캐릭터 인기도+베팅타입 난이도 포함.
+        int stoneGain = jellyGain;
 
         return new BetReward
         {

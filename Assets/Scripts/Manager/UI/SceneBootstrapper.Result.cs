@@ -252,17 +252,20 @@ public partial class SceneBootstrapper
             }
         }
 
-        // ── ScoreSection ──
+        // SPEC-035: 점수 → 도파민 스톤 획득량 표시
+        int stoneGain = gm?.LastRoundStoneGain ?? 0;
+        int totalStone = WalletManager.Instance?.Stone ?? 0;
+        int betAmt = bet?.betAmount ?? 0;
+
+        // ── ScoreSection: 스톤 산식 (베팅젤리 × 배당 = 스톤) ──
         if (resultScoreFormulaText != null)
         {
-            if (score > 0 && bet != null)
+            if (score > 0 && betAmt > 0 && stoneGain > 0)
             {
-                // basePt × odds = score (역산으로 배율 표시)
-                int basePt = BettingCalculator.GetPayout(bet.type);
-                float odds = basePt > 0 ? (float)score / basePt : 1f;
+                float odds = (float)stoneGain / betAmt;
                 resultScoreFormulaText.text = string.Format(
-                    "<color=#FFE000>{0}</color> × <color=#FF8C00>{1}</color> = {2}",
-                    basePt, odds.ToString("F1"), score);
+                    "<color=#7EC8FF>{0}</color> × <color=#FF8C00>{1}</color> = <color=#FFE000>{2}</color>",
+                    betAmt, odds.ToString("F1"), stoneGain);
             }
             else
             {
@@ -270,9 +273,6 @@ public partial class SceneBootstrapper
             }
         }
 
-        // SPEC-035: 점수 → 도파민 스톤 획득량 표시
-        int stoneGain = gm?.LastRoundStoneGain ?? 0;
-        int totalStone = WalletManager.Instance?.Stone ?? 0;
         if (resultTotalScoreText != null)
         {
             resultTotalScoreText.text = score > 0
