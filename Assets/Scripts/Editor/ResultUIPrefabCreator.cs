@@ -220,8 +220,8 @@ public static class ResultUIPrefabCreator
         scoreVlg.childForceExpandHeight = false;
 
         GameObject formulaLbl = MkTextChild(scoreSection.transform, "ScoreFormulaText", "",
-            new Vector2(760, 32), 20, TextAnchor.MiddleCenter, COLOR_WHITE, font, true);
-        SetLayoutElement(formulaLbl, 760, 32);
+            new Vector2(760, 50), 28, TextAnchor.MiddleCenter, COLOR_WHITE, font, true);
+        SetLayoutElement(formulaLbl, 760, 50);
 
         GameObject totalLbl = MkTextChild(scoreSection.transform, "TotalScoreText", "",
             new Vector2(760, 50), 30, TextAnchor.MiddleCenter, COLOR_WIN, font, true);
@@ -466,13 +466,13 @@ public static class ResultUIPrefabCreator
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
             scoreSection = sSec.transform;
-            MkTextChild(scoreSection, "ScoreFormulaText", "", new Vector2(760, 32), 20, TextAnchor.MiddleCenter, COLOR_WHITE, font, true);
+            MkTextChild(scoreSection, "ScoreFormulaText", "", new Vector2(760, 50), 28, TextAnchor.MiddleCenter, COLOR_WHITE, font, true);
             MkTextChild(scoreSection, "TotalScoreText", "", new Vector2(760, 50), 30, TextAnchor.MiddleCenter, COLOR_WIN, font, true);
         }
         else
         {
             if (scoreSection.Find("ScoreFormulaText") == null)
-                MkTextChild(scoreSection, "ScoreFormulaText", "", new Vector2(760, 32), 20, TextAnchor.MiddleCenter, COLOR_WHITE, font, true);
+                MkTextChild(scoreSection, "ScoreFormulaText", "", new Vector2(760, 50), 28, TextAnchor.MiddleCenter, COLOR_WHITE, font, true);
             if (scoreSection.Find("TotalScoreText") == null)
                 MkTextChild(scoreSection, "TotalScoreText", "", new Vector2(760, 50), 30, TextAnchor.MiddleCenter, COLOR_WIN, font, true);
         }
@@ -484,9 +484,11 @@ public static class ResultUIPrefabCreator
             Transform fT = scoreSection.Find("ScoreFormulaText");
             if (fT != null)
             {
-                fT.GetComponent<RectTransform>().sizeDelta = new Vector2(760, 32);
+                fT.GetComponent<RectTransform>().sizeDelta = new Vector2(760, 50);
                 var le = fT.GetComponent<LayoutElement>() ?? fT.gameObject.AddComponent<LayoutElement>();
-                le.preferredWidth = 760; le.preferredHeight = 32;
+                le.preferredWidth = 760; le.preferredHeight = 50;
+                var txt = fT.GetComponent<Text>();
+                if (txt != null) txt.fontSize = 28;
             }
             Transform tT = scoreSection.Find("TotalScoreText");
             if (tT != null)
