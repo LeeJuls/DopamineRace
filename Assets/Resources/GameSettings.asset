@@ -97,7 +97,6 @@ MonoBehaviour:
   trackProgressBarPrefab: {fileID: 0}
   currencyHeaderPrefab: {fileID: 7682440908267050688, guid: 78708be7a92347f4d8a78346bf6dc59f, type: 3}
   betAmountModalPrefab: {fileID: 1084653558380844656, guid: 54699688c2f4ec34296f67cec809b2c9, type: 3}
-  exchangeIconPrefab: {fileID: 864937021574516837, guid: a30ac4f225d7fff4587a6f6d4608feb9, type: 3}
   exchangeModalPrefab: {fileID: 1364091916340533889, guid: b67c5d2d9c4edc046a7f4194c4f11786, type: 3}
   trackBarLerpSpeed: 12
   enableRoundResume: 0

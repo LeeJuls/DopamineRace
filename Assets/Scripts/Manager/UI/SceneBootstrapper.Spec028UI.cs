@@ -427,30 +427,29 @@ public partial class SceneBootstrapper : MonoBehaviour
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  Exchange Icon (Step 2.15·2.13) — 프리팹 인스턴스화
-    //  Resources/Prefabs/UI/ExchangeIconPrefab.prefab
+    //  Exchange Icon (Step 2.15) — BettingPanel 자식으로 통합됨
+    //  BettingPanel/ExchangeIcon Button을 찾아 onClick 연결만 수행
     // ══════════════════════════════════════════════════════════════
     private void BuildExchangeIcon(Transform bettingUIRoot)
     {
-        var gs2 = GameSettings.Instance;
-        var prefab = (gs2 != null) ? gs2.exchangeIconPrefab : null;
-        if (prefab == null)
+        var iconTr = bettingUIRoot.Find("ExchangeIcon");
+        if (iconTr == null)
         {
-            Debug.LogWarning("[ExchangeIcon] 프리팹 미발견 — 동적 폴백");
+            Debug.LogWarning("[ExchangeIcon] BettingPanel/ExchangeIcon 자식이 없습니다 — 동적 폴백");
             BuildExchangeIconFallback(bettingUIRoot);
             return;
         }
 
-        var go = Instantiate(prefab, bettingUIRoot);
-        go.name = "ExchangeIcon";
-        var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(1, 1);
-        rt.anchorMax = new Vector2(1, 1);
-        rt.pivot = new Vector2(1, 1);
-        rt.anchoredPosition = new Vector2(-30, -120);   // 헤더 아래
+        _exchangeIconButton = iconTr.GetComponent<Button>();
+        if (_exchangeIconButton == null)
+        {
+            Debug.LogWarning("[ExchangeIcon] Button 컴포넌트 없음 — 추가");
+            _exchangeIconButton = iconTr.gameObject.AddComponent<Button>();
+            _exchangeIconButton.targetGraphic = iconTr.GetComponent<Image>();
+        }
 
-        _exchangeIconButton = go.GetComponent<Button>();
-        _exchangeIconButton?.onClick.AddListener(() => _exchangeModal?.Show());
+        _exchangeIconButton.onClick.RemoveAllListeners();
+        _exchangeIconButton.onClick.AddListener(() => _exchangeModal?.Show());
     }
 
     private void BuildExchangeIconFallback(Transform bettingUIRoot)

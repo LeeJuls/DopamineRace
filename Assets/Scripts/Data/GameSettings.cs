@@ -190,8 +190,6 @@ public partial class GameSettings : ScriptableObject
     public GameObject currencyHeaderPrefab;
     [Tooltip("베팅액 입력 모달 — CurrencyUIPrefabCreator로 자동 생성")]
     public GameObject betAmountModalPrefab;
-    [Tooltip("환전 아이콘 버튼 — CurrencyUIPrefabCreator로 자동 생성")]
-    public GameObject exchangeIconPrefab;
     [Tooltip("환전 팝업 모달 — CurrencyUIPrefabCreator로 자동 생성")]
     public GameObject exchangeModalPrefab;
     [Tooltip("트랙바 마커 보간 속도 (0=즉시, 8~15=부드럽게, 기본 12)")]
