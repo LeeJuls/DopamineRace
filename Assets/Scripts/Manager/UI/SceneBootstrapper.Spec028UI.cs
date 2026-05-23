@@ -428,14 +428,21 @@ public partial class SceneBootstrapper : MonoBehaviour
 
     // ══════════════════════════════════════════════════════════════
     //  Exchange Icon (Step 2.15) — BettingPanel 자식으로 통합됨
-    //  BettingPanel/ExchangeIcon Button을 찾아 onClick 연결만 수행
+    //  bettingUIRoot 하위에서 재귀 검색 → onClick 연결만 수행
+    //  (BettingPanel은 bettingUIRoot의 자식이고, ExchangeIcon은 그 자식)
     // ══════════════════════════════════════════════════════════════
     private void BuildExchangeIcon(Transform bettingUIRoot)
     {
-        var iconTr = bettingUIRoot.Find("ExchangeIcon");
+        Transform iconTr = null;
+        var allChildren = bettingUIRoot.GetComponentsInChildren<Transform>(true);
+        foreach (var t in allChildren)
+        {
+            if (t.name == "ExchangeIcon") { iconTr = t; break; }
+        }
+
         if (iconTr == null)
         {
-            Debug.LogWarning("[ExchangeIcon] BettingPanel/ExchangeIcon 자식이 없습니다 — 동적 폴백");
+            Debug.LogWarning("[ExchangeIcon] bettingUIRoot 하위에 ExchangeIcon 없음 — 동적 폴백");
             BuildExchangeIconFallback(bettingUIRoot);
             return;
         }
