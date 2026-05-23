@@ -18,7 +18,8 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ══════════════════════════════════════════════════════════════
     private void BuildBetAmountModal(Transform root)
     {
-        var prefab = Resources.Load<GameObject>("Prefabs/UI/BetAmountModalPrefab");
+        var gs = GameSettings.Instance;
+        var prefab = (gs != null) ? gs.betAmountModalPrefab : null;
         if (prefab != null)
         {
             var instance = Instantiate(prefab, root);
@@ -196,7 +197,8 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ══════════════════════════════════════════════════════════════
     private void BuildExchangeModal(Transform root)
     {
-        var prefab = Resources.Load<GameObject>("Prefabs/UI/ExchangeModalPrefab");
+        var gs = GameSettings.Instance;
+        var prefab = (gs != null) ? gs.exchangeModalPrefab : null;
         if (prefab != null)
         {
             var instance = Instantiate(prefab, root);
@@ -370,7 +372,8 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ══════════════════════════════════════════════════════════════
     private void BuildCurrencyHeader(Transform bettingUIRoot)
     {
-        var prefab = Resources.Load<GameObject>("Prefabs/UI/CurrencyHeaderPrefab");
+        var gs = GameSettings.Instance;
+        var prefab = (gs != null) ? gs.currencyHeaderPrefab : null;
         if (prefab == null)
         {
             Debug.LogWarning("[CurrencyHeader] 프리팹 미발견 — 동적 폴백 (DopamineRace > Create Currency UI Prefabs 메뉴 실행 필요)");
@@ -429,7 +432,8 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ══════════════════════════════════════════════════════════════
     private void BuildExchangeIcon(Transform bettingUIRoot)
     {
-        var prefab = Resources.Load<GameObject>("Prefabs/UI/ExchangeIconPrefab");
+        var gs2 = GameSettings.Instance;
+        var prefab = (gs2 != null) ? gs2.exchangeIconPrefab : null;
         if (prefab == null)
         {
             Debug.LogWarning("[ExchangeIcon] 프리팹 미발견 — 동적 폴백");

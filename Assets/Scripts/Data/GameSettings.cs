@@ -184,6 +184,16 @@ public partial class GameSettings : ScriptableObject
     public GameObject gameOverPanelPrefab;
     [Tooltip("트랙 프로그레스 바 프리팹 (추후 디자인 적용 시 사용)")]
     public GameObject trackProgressBarPrefab;
+
+    [Header("── SPEC-028 Phase 2 — 통화·베팅 모달 ──")]
+    [Tooltip("통화 헤더 HUD (젤리/스톤 표시) — CurrencyUIPrefabCreator로 자동 생성")]
+    public GameObject currencyHeaderPrefab;
+    [Tooltip("베팅액 입력 모달 — CurrencyUIPrefabCreator로 자동 생성")]
+    public GameObject betAmountModalPrefab;
+    [Tooltip("환전 아이콘 버튼 — CurrencyUIPrefabCreator로 자동 생성")]
+    public GameObject exchangeIconPrefab;
+    [Tooltip("환전 팝업 모달 — CurrencyUIPrefabCreator로 자동 생성")]
+    public GameObject exchangeModalPrefab;
     [Tooltip("트랙바 마커 보간 속도 (0=즉시, 8~15=부드럽게, 기본 12)")]
     [Range(0f, 30f)]
     public float trackBarLerpSpeed = 12f;
