@@ -13,7 +13,7 @@ using UnityEngine.UI;
 public partial class SceneBootstrapper
 {
     private static readonly Color COLOR_RESULT_WIN  = new Color(1f, 0.85f, 0.2f, 1f);
-    private static readonly Color COLOR_RESULT_LOSE = new Color(0.4f, 0.4f, 0.4f, 1f);
+    private static readonly Color COLOR_RESULT_LOSE = new Color(0.55f, 0.55f, 0.55f, 1f);
     private static readonly Color COLOR_PICK_HIT    = new Color(0.4f, 1f,  0.4f,  1f);
     private static readonly Color COLOR_PICK_MISS   = new Color(1f,  0.4f, 0.4f,  1f);
 
