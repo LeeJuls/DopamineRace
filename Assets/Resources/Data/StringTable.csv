@@ -120,7 +120,7 @@ str.leaderboard.empty,"기록이 없습니다.\n게임을 완료하면 자동으
 str.hud.round,Round {0}/{1},Round {0}/{1},ラウンド{0}/{1},第{0}/{1}轮,Runde {0}/{1},Ronda {0}/{1},Rodada {0}/{1}
 str.hud.lap,{0}바퀴,{0} Laps,{0}周,{0}圈,{0} Runden,{0} Vueltas,{0} Voltas
 str.hud.this_race,이번 경기: {0}바퀴,This Race: {0} Laps,このレース: {0}周,本场比赛: {0}圈,Dieses Rennen: {0} Runden,Esta Carrera: {0} Vueltas,Esta Corrida: {0} Voltas
-str.hud.total_score,총점: {0},Total: {0},合計: {0},总分: {0},Gesamt: {0},Total: {0},Total: {0}
+str.hud.total_score,도파민 스톤: {0},Dopamine Stone: {0},ドーパミンストーン: {0},多巴胺石: {0},Dopaminstein: {0},Piedra Dopamina: {0},Pedra Dopamina: {0}
 str.hud.timer,{0}초,{0}s,{0}秒,{0}秒,{0}s,{0}s,{0}s
 str.hud.rank,{0}위,{0}.,{0}位,{0}名,{0}.,{0}º,{0}º
 str.hud.lap_progress,{0}/{1}바퀴,{0}/{1} Laps,{0}/{1}周,{0}/{1}圈,{0}/{1} Runden,{0}/{1} Vueltas,{0}/{1} Voltas
@@ -152,7 +152,7 @@ str.ui.betting.round,{0}라운드,Round {0},{0}ラウンド,第{0}轮,Runde {0},
 str.ui.betting.title,배팅 선택!,Bet Select!,ベット選択！,投注选择！,Wett-Auswahl!,¡Selección de Apuesta!,Seleção de Aposta!
 str.ui.betting.odds,배당률 : {0}배,Odds : {0}x,配当率 : {0}倍,赔率: {0}倍,Quote: {0}x,Cuota: {0}x,Cota: {0}x
 str.ui.betting.odds_empty,배당률 : - 배,Odds : -,配当率 : -,赔率: -,Quote: -,Cuota: -,Cota: -
-str.ui.betting.points_label,{0} 획득 포인트,{0} Points,{0} 獲得ポイント,{0} 获得积分,{0} Punkte,{0} Puntos,{0} Pontos
+str.ui.betting.points_label,{0} 획득 도파민 스톤,{0} Dopamine Stone,{0} 獲得ドーパミンストーン,{0} 获得多巴胺石,{0} Dopaminstein,{0} Piedra Dopamina,{0} Pedra Dopamina
 str.ui.betting.points_formula,{0}x{1} = {2},{0}x{1} = {2},{0}x{1} = {2},{0}x{1} = {2},{0}x{1} = {2},{0}x{1} = {2},{0}x{1} = {2}
 str.ui.betting.points_empty,- 획득 포인트,- Points,- ポイント,- 获得积分,- Punkte,- Puntos,- Pontos
 str.ui.betting.hide_info,캐릭터 정보 안보기,Hide Char Info,キャラ情報非表示,隐藏角色信息,Char-Info ausblenden,Ocultar Info,Ocultar Info
