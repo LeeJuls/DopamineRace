@@ -95,7 +95,6 @@ MonoBehaviour:
   optionPanelPrefab: {fileID: 6007032697297080370, guid: e3b568c712468c240b7bf80552544c54, type: 3}
   gameOverPanelPrefab: {fileID: 6687789135757760158, guid: 21d3304aaac300b4899b78dfe2ae27d4, type: 3}
   trackProgressBarPrefab: {fileID: 0}
-  currencyHeaderPrefab: {fileID: 7682440908267050688, guid: 78708be7a92347f4d8a78346bf6dc59f, type: 3}
   betAmountModalPrefab: {fileID: 1084653558380844656, guid: 54699688c2f4ec34296f67cec809b2c9, type: 3}
   exchangeModalPrefab: {fileID: 1364091916340533889, guid: b67c5d2d9c4edc046a7f4194c4f11786, type: 3}
   trackBarLerpSpeed: 12

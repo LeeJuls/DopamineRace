@@ -186,8 +186,6 @@ public partial class GameSettings : ScriptableObject
     public GameObject trackProgressBarPrefab;
 
     [Header("── SPEC-028 Phase 2 — 통화·베팅 모달 ──")]
-    [Tooltip("통화 헤더 HUD (젤리/스톤 표시) — CurrencyUIPrefabCreator로 자동 생성")]
-    public GameObject currencyHeaderPrefab;
     [Tooltip("베팅액 입력 모달 — CurrencyUIPrefabCreator로 자동 생성")]
     public GameObject betAmountModalPrefab;
     [Tooltip("환전 팝업 모달 — CurrencyUIPrefabCreator로 자동 생성")]

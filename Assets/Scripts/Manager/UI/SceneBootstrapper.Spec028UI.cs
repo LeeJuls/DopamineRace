@@ -367,29 +367,31 @@ public partial class SceneBootstrapper : MonoBehaviour
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  CurrencyHeader (Step 2.1·2.2·2.13) — 프리팹 인스턴스화
-    //  Resources/Prefabs/UI/CurrencyHeaderPrefab.prefab
+    //  CurrencyHeader (Step 2.1·2.2) — BettingPanel 자식으로 통합됨
+    //  bettingUIRoot 하위에서 재귀 검색 → CurrencyHeader 컴포넌트 캐싱만 수행
     // ══════════════════════════════════════════════════════════════
     private void BuildCurrencyHeader(Transform bettingUIRoot)
     {
-        var gs = GameSettings.Instance;
-        var prefab = (gs != null) ? gs.currencyHeaderPrefab : null;
-        if (prefab == null)
+        Transform headerTr = null;
+        var allChildren = bettingUIRoot.GetComponentsInChildren<Transform>(true);
+        foreach (var t in allChildren)
         {
-            Debug.LogWarning("[CurrencyHeader] 프리팹 미발견 — 동적 폴백 (DopamineRace > Create Currency UI Prefabs 메뉴 실행 필요)");
+            if (t.name == "CurrencyHeader") { headerTr = t; break; }
+        }
+
+        if (headerTr == null)
+        {
+            Debug.LogWarning("[CurrencyHeader] bettingUIRoot 하위에 CurrencyHeader 없음 — 동적 폴백");
             BuildCurrencyHeaderFallback(bettingUIRoot);
             return;
         }
 
-        var go = Instantiate(prefab, bettingUIRoot);
-        go.name = "CurrencyHeader";
-        var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(1, 1);
-        rt.anchorMax = new Vector2(1, 1);
-        rt.pivot = new Vector2(1, 1);
-        rt.anchoredPosition = new Vector2(-30, -30);
-
-        _currencyHeader = go.GetComponent<CurrencyHeader>();
+        _currencyHeader = headerTr.GetComponent<CurrencyHeader>();
+        if (_currencyHeader == null)
+        {
+            Debug.LogWarning("[CurrencyHeader] CurrencyHeader 컴포넌트 없음 — 추가");
+            _currencyHeader = headerTr.gameObject.AddComponent<CurrencyHeader>();
+        }
 
         // SPEC-028 UC9: 기존 myPointLabel 비활성화 (총점 영역 교체)
         if (myPointLabel != null)
