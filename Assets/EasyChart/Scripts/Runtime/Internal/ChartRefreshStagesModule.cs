@@ -26,6 +26,10 @@ namespace EasyChart
         {
             if (_owner == null) return;
 
+            // Clear all labels from ChartLabelController before rebuild
+            // This prevents label residue when switching coordinate systems
+            _owner.LabelControllerInternal?.HideAll();
+
             _owner.EditorOnRebuildRenderersStartInternal();
             bool transposed = _owner.IsCartesianTransposedInternal;
             bool deferVisualChanges = _owner.EditorIsDeferredCoordSwitchApplyingInternal;
@@ -149,7 +153,19 @@ namespace EasyChart
 
             bool showCartesian = _owner.Data.CoordinateSystem == CoordinateSystemType.Cartesian2D;
             if (_owner.GridLayerInternal != null) _owner.GridLayerInternal.visible = showCartesian;
-            if (_owner.AxisLayerInternal != null) _owner.AxisLayerInternal.visible = showCartesian;
+            if (_owner.AxisLayerInternal != null)
+            {
+                _owner.AxisLayerInternal.visible = showCartesian;
+                // Clear labels when hiding to prevent residual labels after coordinate system switch
+                if (!showCartesian) _owner.AxisLayerInternal.ClearLabels();
+            }
+            
+            // Hide all ChartLabelController labels when not in Cartesian2D mode
+            // This prevents label residue from RadarSeriesRenderer and other renderers
+            if (!showCartesian)
+            {
+                _owner.LabelControllerInternal?.HideAll();
+            }
 
             if (_owner.EditorTryDeferVisualWorkInternal("RefreshLayersNoLegend deferred (coord change flag still set)")) return;
 

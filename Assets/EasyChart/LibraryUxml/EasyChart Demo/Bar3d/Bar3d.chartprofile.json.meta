@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5b0d40ad7177f384097db1b5479e8758
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/LibraryUxml/EasyChart Demo/Bar3d/Bar3d.chartprofile.json
+  uploadId: 906968

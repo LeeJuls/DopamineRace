@@ -1,172 +1,86 @@
 using UnityEngine;
 using UnityEditor;
-using UnityEngine.TextCore.Text;
+using UnityEditor.UIElements;
+using UnityEngine.UIElements;
 
 namespace EasyChart.Editor
 {
     [CustomEditor(typeof(ChartTheme))]
     public class ChartThemeEditor : UnityEditor.Editor
     {
-        private static readonly Color BoxBorderColor = new Color(0.1f, 0.1f, 0.1f);
-        private static readonly Color BoxBackgroundColor = new Color(0.18f, 0.18f, 0.18f);
-
-        private bool _fontSettingsExpanded = true;
-        private bool _fontSizeExpanded = true;
-        private bool _colorsExpanded = true;
-        private bool _panelExpanded = true;
-        private bool _plotAreaExpanded = true;
-
-        private SerializedProperty _primaryFont;
-        private SerializedProperty _monoFont;
-        private SerializedProperty _fontScale;
-
-        private SerializedProperty _axisFontSize;
-        private SerializedProperty _legendFontSize;
-        private SerializedProperty _tooltipFontSize;
-        private SerializedProperty _seriesLabelFontSize;
-        private SerializedProperty _titleFontSize;
-        private SerializedProperty _subtitleFontSize;
-
-        private SerializedProperty _seriesColors;
-        private SerializedProperty _paletteSeed;
-        private SerializedProperty _positiveColor;
-        private SerializedProperty _negativeColor;
-        private SerializedProperty _neutralColor;
-        private SerializedProperty _disabledAlpha;
-
-        private SerializedProperty _backgroundColor;
-        private SerializedProperty _panelPadding;
-        private SerializedProperty _panelRadius;
-        private SerializedProperty _plotBackgroundColor;
-        private SerializedProperty _plotBorderColor;
-        private SerializedProperty _plotBorderWidth;
-
-        private void OnEnable()
+        public override VisualElement CreateInspectorGUI()
         {
-            _primaryFont = serializedObject.FindProperty("primaryFont");
-            _monoFont = serializedObject.FindProperty("monoFont");
-            _fontScale = serializedObject.FindProperty("fontScale");
+            var root = new VisualElement();
+            root.style.paddingTop = 4;
+            root.style.paddingBottom = 4;
 
-            _axisFontSize = serializedObject.FindProperty("axisFontSize");
-            _legendFontSize = serializedObject.FindProperty("legendFontSize");
-            _tooltipFontSize = serializedObject.FindProperty("tooltipFontSize");
-            _seriesLabelFontSize = serializedObject.FindProperty("seriesLabelFontSize");
-            _titleFontSize = serializedObject.FindProperty("titleFontSize");
-            _subtitleFontSize = serializedObject.FindProperty("subtitleFontSize");
+            var so = serializedObject;
 
-            _seriesColors = serializedObject.FindProperty("seriesColors");
-            _paletteSeed = serializedObject.FindProperty("paletteSeed");
-            _positiveColor = serializedObject.FindProperty("positiveColor");
-            _negativeColor = serializedObject.FindProperty("negativeColor");
-            _neutralColor = serializedObject.FindProperty("neutralColor");
-            _disabledAlpha = serializedObject.FindProperty("disabledAlpha");
+            root.Add(BuildSection(so, "Font", new[]
+            {
+                ("primaryFont",        "Primary Font",  "Main font for chart text (supports SDF FontAsset)"),
+                ("monoFont",           "Mono Font",     "Monospace font for numeric values"),
+                ("fontScale",          "Font Scale",    "Global font size multiplier"),
+            }));
 
-            _backgroundColor = serializedObject.FindProperty("backgroundColor");
-            _panelPadding = serializedObject.FindProperty("panelPadding");
-            _panelRadius = serializedObject.FindProperty("panelRadius");
-            _plotBackgroundColor = serializedObject.FindProperty("plotBackgroundColor");
-            _plotBorderColor = serializedObject.FindProperty("plotBorderColor");
-            _plotBorderWidth = serializedObject.FindProperty("plotBorderWidth");
+            root.Add(BuildSection(so, "Font Size", new[]
+            {
+                ("titleFontSize",       "Title",        "Override title font size (-1 = use USS default)"),
+                ("subtitleFontSize",    "Subtitle",     "Override subtitle font size (-1 = use USS default)"),
+                ("axisFontSize",        "Axis",         "Override axis label font size (-1 = use USS default)"),
+                ("legendFontSize",      "Legend",       "Override legend font size (-1 = use USS default)"),
+                ("tooltipFontSize",     "Tooltip",      "Override tooltip font size (-1 = use USS default)"),
+                ("seriesLabelFontSize", "Series Label", "Override series label font size (-1 = use USS default)"),
+            }));
+
+            root.Add(BuildSection(so, "Default Template", new[]
+            {
+                ("baseProfile", "Base Profile", "Template profile used when creating new charts. If empty, clones the first profile in current library."),
+            }));
+
+            root.Bind(so);
+            return root;
         }
 
-        public override void OnInspectorGUI()
+        private static VisualElement BuildSection(SerializedObject so, string title, (string prop, string label, string tooltip)[] fields)
         {
-            serializedObject.Update();
+            // Create foldout with box styling matching Settings window style
+            var foldout = new Foldout { text = title };
+            foldout.bindingPath = string.Empty;
+            foldout.SetValueWithoutNotify(true);
 
-            // Font Settings
-            DrawFoldoutSection("Font Settings", ref _fontSettingsExpanded, () =>
+            var borderColor = new Color(0.1f, 0.1f, 0.1f);
+            var backgroundColor = new Color(0.18f, 0.18f, 0.18f);
+
+            foldout.style.borderTopWidth = 1;
+            foldout.style.borderBottomWidth = 1;
+            foldout.style.borderLeftWidth = 1;
+            foldout.style.borderRightWidth = 1;
+            foldout.style.borderTopColor = borderColor;
+            foldout.style.borderBottomColor = borderColor;
+            foldout.style.borderLeftColor = borderColor;
+            foldout.style.borderRightColor = borderColor;
+            foldout.style.backgroundColor = backgroundColor;
+            foldout.style.marginTop = 6;
+            foldout.style.marginBottom = 6;
+            foldout.style.paddingLeft = 6;
+            foldout.style.paddingRight = 6;
+            foldout.style.paddingTop = 4;
+            foldout.style.paddingBottom = 6;
+            foldout.style.borderTopLeftRadius = 3;
+            foldout.style.borderTopRightRadius = 3;
+            foldout.style.borderBottomLeftRadius = 3;
+            foldout.style.borderBottomRightRadius = 3;
+
+            foreach (var (propName, labelText, tooltipText) in fields)
             {
-                // Use ObjectField with FontAsset (SDF) type filter
-                EditorGUI.BeginChangeCheck();
-                var primaryFont = EditorGUILayout.ObjectField(
-                    new GUIContent("Primary Font", "Main SDF font for chart text"),
-                    _primaryFont.objectReferenceValue,
-                    typeof(FontAsset),
-                    false);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    _primaryFont.objectReferenceValue = primaryFont;
-                }
-
-                EditorGUI.BeginChangeCheck();
-                var monoFont = EditorGUILayout.ObjectField(
-                    new GUIContent("Mono Font", "Monospace SDF font for numeric values"),
-                    _monoFont.objectReferenceValue,
-                    typeof(FontAsset),
-                    false);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    _monoFont.objectReferenceValue = monoFont;
-                }
-
-                EditorGUILayout.PropertyField(_fontScale, new GUIContent("Font Scale"));
-            });
-
-            // Font Size Settings
-            DrawFoldoutSection("Font Size", ref _fontSizeExpanded, () =>
-            {
-                EditorGUILayout.PropertyField(_titleFontSize, new GUIContent("Title"));
-                EditorGUILayout.PropertyField(_subtitleFontSize, new GUIContent("Subtitle"));
-                EditorGUILayout.PropertyField(_axisFontSize, new GUIContent("Axis"));
-                EditorGUILayout.PropertyField(_legendFontSize, new GUIContent("Legend"));
-                EditorGUILayout.PropertyField(_tooltipFontSize, new GUIContent("Tooltip"));
-                EditorGUILayout.PropertyField(_seriesLabelFontSize, new GUIContent("Series Label"));
-            });
-
-            // Color Settings
-            DrawFoldoutSection("Colors", ref _colorsExpanded, () =>
-            {
-                EditorGUILayout.PropertyField(_seriesColors, new GUIContent("Series Colors"), true);
-                EditorGUILayout.PropertyField(_paletteSeed, new GUIContent("Palette Seed"));
-                EditorGUILayout.Space(4);
-                EditorGUILayout.PropertyField(_positiveColor, new GUIContent("Positive"));
-                EditorGUILayout.PropertyField(_negativeColor, new GUIContent("Negative"));
-                EditorGUILayout.PropertyField(_neutralColor, new GUIContent("Neutral"));
-                EditorGUILayout.PropertyField(_disabledAlpha, new GUIContent("Disabled Alpha"));
-            });
-
-            // Panel Settings
-            DrawFoldoutSection("Panel", ref _panelExpanded, () =>
-            {
-                EditorGUILayout.PropertyField(_backgroundColor, new GUIContent("Background Color"));
-                EditorGUILayout.PropertyField(_panelPadding, new GUIContent("Padding"));
-                EditorGUILayout.PropertyField(_panelRadius, new GUIContent("Radius"));
-            });
-
-            // Plot Settings
-            DrawFoldoutSection("Plot Area", ref _plotAreaExpanded, () =>
-            {
-                EditorGUILayout.PropertyField(_plotBackgroundColor, new GUIContent("Background Color"));
-                EditorGUILayout.PropertyField(_plotBorderColor, new GUIContent("Border Color"));
-                EditorGUILayout.PropertyField(_plotBorderWidth, new GUIContent("Border Width"));
-            });
-
-            serializedObject.ApplyModifiedProperties();
-        }
-
-        private static void DrawFoldoutSection(string title, ref bool expanded, System.Action drawContent)
-        {
-            EditorGUILayout.Space(4);
-
-            // Use GUIStyle box for proper background
-            var boxStyle = new GUIStyle("helpbox")
-            {
-                padding = new RectOffset(8, 8, 6, 8),
-                margin = new RectOffset(0, 0, 2, 2)
-            };
-
-            EditorGUILayout.BeginVertical(boxStyle);
-
-            // Header with foldout
-            expanded = EditorGUILayout.Foldout(expanded, title, true, EditorStyles.foldoutHeader);
-
-            if (expanded)
-            {
-                GUILayout.Space(4);
-                drawContent?.Invoke();
+                var prop = so.FindProperty(propName);
+                if (prop == null) continue;
+                var pf = new PropertyField(prop, labelText) { tooltip = tooltipText };
+                foldout.Add(pf);
             }
 
-            EditorGUILayout.EndVertical();
+            return foldout;
         }
     }
 }

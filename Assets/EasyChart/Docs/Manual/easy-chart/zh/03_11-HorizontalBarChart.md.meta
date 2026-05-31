@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 8b803a4f146e1c44a994914f7c197200
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/docs/Manual/easy-chart/zh/03_11-HorizontalBarChart.md
+  uploadId: 906968

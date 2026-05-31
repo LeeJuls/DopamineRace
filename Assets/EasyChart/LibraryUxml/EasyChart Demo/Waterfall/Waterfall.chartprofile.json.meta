@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 3ec02aad49158ea4dba947b1c6ca27ab
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/LibraryUxml/EasyChart Demo/Waterfall/Waterfall.chartprofile.json
+  uploadId: 906968

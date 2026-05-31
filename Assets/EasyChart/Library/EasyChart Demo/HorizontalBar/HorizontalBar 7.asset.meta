@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: a788911dc297333438b8970e774cc035
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/Library/EasyChart Demo/HorizontalBar/HorizontalBar
+    7.asset
+  uploadId: 906968

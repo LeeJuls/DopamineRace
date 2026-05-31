@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: b5dc8a36bb606bc43a20bebe2d3c68d7
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/docs/Manual/easy-chart/en/01_02-LibraryPanel.md
+  uploadId: 906968

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 481e31c82a0b90b46a0070aa2c34a688
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/UGUI/Prefabs/EasyChart Demo/Line3D/Line3D 2.prefab
+  uploadId: 906968

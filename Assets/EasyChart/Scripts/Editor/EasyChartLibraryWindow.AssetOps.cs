@@ -271,10 +271,88 @@ namespace EasyChart.Editor
         {
             if (string.IsNullOrEmpty(folder) || !AssetDatabase.IsValidFolder(folder)) return;
 
-            var profile = ScriptableObject.CreateInstance<ChartProfile>();
-            string fullPath = AssetDatabase.GenerateUniqueAssetPath($"{folder}/NewChart.asset");
+            // Find template: theme.baseProfile -> first profile in library -> null
+            var theme = GetActiveLibraryThemeAsset(createIfMissing: false);
+            ChartProfile template = theme?.baseProfile;
 
-            AssetDatabase.CreateAsset(profile, fullPath);
+            if (template == null)
+            {
+                // Fallback: find first profile in current library
+                string libRoot = GetActiveProfileRootPath();
+                var guids = AssetDatabase.FindAssets("t:ChartProfile", new[] { libRoot });
+                if (guids.Length > 0)
+                {
+                    string firstPath = AssetDatabase.GUIDToAssetPath(guids[0]);
+                    template = AssetDatabase.LoadAssetAtPath<ChartProfile>(firstPath);
+                }
+            }
+
+            if (template != null)
+            {
+                // Clone from template
+                string templatePath = AssetDatabase.GetAssetPath(template);
+                CloneProfileToFolder(templatePath, folder, "NewChart");
+            }
+            else
+            {
+                // No template available, create blank profile
+                var profile = ScriptableObject.CreateInstance<ChartProfile>();
+                
+                // Apply animation duration from settings
+                var settings = EasyChartSettings.Instance;
+                profile.animationDuration = (settings?.animationDuration ?? 1000f) / 1000f; // Convert ms to seconds
+                
+                string fullPath = AssetDatabase.GenerateUniqueAssetPath($"{folder}/NewChart.asset");
+                AssetDatabase.CreateAsset(profile, fullPath);
+                AssetDatabase.SaveAssets();
+                RefreshTree();
+            }
+        }
+
+        private void CloneProfileToFolder(string sourcePath, string destFolder, string desiredName)
+        {
+            if (string.IsNullOrEmpty(sourcePath) || string.IsNullOrEmpty(destFolder)) return;
+            if (!AssetDatabase.IsValidFolder(destFolder)) return;
+
+            string ext = Path.GetExtension(sourcePath);
+            if (!ext.Equals(".asset", StringComparison.OrdinalIgnoreCase)) return;
+
+            // Generate unique name
+            string newPath = null;
+            string newName = desiredName;
+            for (int i = 1; i <= 9999; i++)
+            {
+                string candidate = $"{destFolder}/{newName}{ext}";
+                if (!AssetPathExists(candidate))
+                {
+                    newPath = candidate;
+                    break;
+                }
+                newName = $"{desiredName} {i}";
+            }
+
+            if (string.IsNullOrEmpty(newPath))
+            {
+                EditorUtility.DisplayDialog("Error", "Failed to create a unique profile name.", "OK");
+                return;
+            }
+
+            bool ok = AssetDatabase.CopyAsset(sourcePath, newPath);
+            if (!ok)
+            {
+                EditorUtility.DisplayDialog("Error", "Failed to clone ChartProfile.", "OK");
+                return;
+            }
+
+            // Apply animation duration from settings
+            var clonedProfile = AssetDatabase.LoadAssetAtPath<ChartProfile>(newPath);
+            if (clonedProfile != null)
+            {
+                var settings = EasyChartSettings.Instance;
+                clonedProfile.animationDuration = (settings?.animationDuration ?? 1000f) / 1000f; // Convert ms to seconds
+                EditorUtility.SetDirty(clonedProfile);
+            }
+
             AssetDatabase.SaveAssets();
             RefreshTree();
         }

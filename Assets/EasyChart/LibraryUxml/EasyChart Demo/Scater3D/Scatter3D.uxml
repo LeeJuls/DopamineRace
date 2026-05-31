@@ -1,0 +1,3 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ec="EasyChart" editor-extension-mode="False">
+    <ec:ChartElement profile-name="Scatter3D" profile-guid="5d245431e79cc1649b3d6f74a88cb515" style="width: 450px; height: 300px;" />
+</ui:UXML>

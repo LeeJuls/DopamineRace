@@ -1,0 +1,3 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ec="EasyChart" editor-extension-mode="False">
+    <ec:ChartElement profile-name="HeatMap 3" profile-guid="1d13656567eefea4f8c0cf1155a6adf6" style="width: 450px; height: 300px;" />
+</ui:UXML>

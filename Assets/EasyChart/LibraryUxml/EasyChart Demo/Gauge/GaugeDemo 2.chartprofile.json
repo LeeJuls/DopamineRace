@@ -1,0 +1,2175 @@
+{
+    "MonoBehaviour": {
+        "m_Enabled": true,
+        "m_EditorHideFlags": 0,
+        "m_Name": "GaugeDemo 2",
+        "m_EditorClassIdentifier": "",
+        "chartName": "GaugeDemo",
+        "chartId": "374ae497c6a0471a81d0f430d0b3a157",
+        "coordinateSystem": 3,
+        "cartesian": {
+            "xAxisId": 0,
+            "yAxisId": 2
+        },
+        "cartesian3D": {
+            "xAxisId": 0,
+            "yAxisId": 2,
+            "zAxisId": 4
+        },
+        "axes": [
+            {
+                "id": 0,
+                "axisType": 0,
+                "labels": [
+                    "A",
+                    "B",
+                    "C",
+                    "D",
+                    "E"
+                ],
+                "visible": true,
+                "color": {
+                    "r": 1.0,
+                    "g": 1.0,
+                    "b": 1.0,
+                    "a": 1.0
+                },
+                "width": 2.0,
+                "labelStyle": {
+                    "enabled": true,
+                    "fontSize": 10,
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "position": 0,
+                    "offset": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": 0.0
+                },
+                "showLabels": true,
+                "fontSize": 10,
+                "labelColor": {
+                    "r": 1.0,
+                    "g": 1.0,
+                    "b": 1.0,
+                    "a": 1.0
+                },
+                "labelPosition": 0,
+                "labelPlacement": 0,
+                "labelOffset": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "autoRangeMin": true,
+                "autoRangeMax": true,
+                "autoRangeRounding": 2,
+                "autoRangeUnit": 1.0,
+                "minValue": 0.0,
+                "maxValue": 1.0,
+                "autoTicks": true,
+                "splitCount": 5,
+                "labelFormat": "",
+                "categoryAutoScroll": false,
+                "categorySmoothScroll": true,
+                "categoryScrollInterval": 1.0,
+                "categoryScrollStep": 1,
+                "showUnit": false,
+                "unitText": "",
+                "unitLabelStyle": {
+                    "enabled": true,
+                    "fontSize": 10,
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "position": 0,
+                    "offset": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": 0.0
+                }
+            },
+            {
+                "id": 2,
+                "axisType": 1,
+                "labels": [],
+                "visible": true,
+                "color": {
+                    "r": 1.0,
+                    "g": 1.0,
+                    "b": 1.0,
+                    "a": 1.0
+                },
+                "width": 2.0,
+                "labelStyle": {
+                    "enabled": true,
+                    "fontSize": 10,
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "position": 0,
+                    "offset": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": 0.0
+                },
+                "showLabels": true,
+                "fontSize": 10,
+                "labelColor": {
+                    "r": 1.0,
+                    "g": 1.0,
+                    "b": 1.0,
+                    "a": 1.0
+                },
+                "labelPosition": 0,
+                "labelPlacement": 0,
+                "labelOffset": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "autoRangeMin": true,
+                "autoRangeMax": true,
+                "autoRangeRounding": 2,
+                "autoRangeUnit": 1.0,
+                "minValue": 0.0,
+                "maxValue": 1.0,
+                "autoTicks": true,
+                "splitCount": 5,
+                "labelFormat": "",
+                "categoryAutoScroll": false,
+                "categorySmoothScroll": true,
+                "categoryScrollInterval": 1.0,
+                "categoryScrollStep": 1,
+                "showUnit": false,
+                "unitText": "",
+                "unitLabelStyle": {
+                    "enabled": true,
+                    "fontSize": 10,
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "position": 0,
+                    "offset": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": 0.0
+                }
+            },
+            {
+                "id": 4,
+                "axisType": 1,
+                "labels": [],
+                "visible": true,
+                "color": {
+                    "r": 1.0,
+                    "g": 1.0,
+                    "b": 1.0,
+                    "a": 1.0
+                },
+                "width": 2.0,
+                "labelStyle": {
+                    "enabled": true,
+                    "fontSize": 10,
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "position": 0,
+                    "offset": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": 0.0
+                },
+                "showLabels": true,
+                "fontSize": 10,
+                "labelColor": {
+                    "r": 1.0,
+                    "g": 1.0,
+                    "b": 1.0,
+                    "a": 1.0
+                },
+                "labelPosition": 0,
+                "labelPlacement": 0,
+                "labelOffset": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "autoRangeMin": true,
+                "autoRangeMax": true,
+                "autoRangeRounding": 2,
+                "autoRangeUnit": 1.0,
+                "minValue": 0.0,
+                "maxValue": 1.0,
+                "autoTicks": true,
+                "splitCount": 5,
+                "labelFormat": "",
+                "categoryAutoScroll": false,
+                "categorySmoothScroll": true,
+                "categoryScrollInterval": 1.0,
+                "categoryScrollStep": 1,
+                "showUnit": false,
+                "unitText": "",
+                "unitLabelStyle": {
+                    "enabled": true,
+                    "fontSize": 10,
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "position": 0,
+                    "offset": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": 0.0
+                }
+            }
+        ],
+        "xAxisId": 0,
+        "yAxisId": 2,
+        "axisSelectionInitialized": true,
+        "axisTypeSelectionInitialized": true,
+        "animationDuration": 1.0,
+        "background": {
+            "show": true,
+            "textureFill": {
+                "texture": {
+                    "fileID": 2800000,
+                    "guid": "bdde8ca846f9dac408680bcf16c76c34",
+                    "type": 3
+                },
+                "tiling": {
+                    "x": 1.0,
+                    "y": 1.0
+                },
+                "offset": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "color": {
+                    "r": 1.0,
+                    "g": 1.0,
+                    "b": 1.0,
+                    "a": 1.0
+                },
+                "adaptiveTiling": false
+            }
+        },
+        "backgroundFX": {
+            "enabled": true,
+            "padding": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 0.0
+            },
+            "backgroundColor": {
+                "r": 0.0,
+                "g": 0.0,
+                "b": 0.0,
+                "a": 0.0
+            },
+            "layers": [
+                {
+                    "fill": {
+                        "texture": {
+                            "fileID": 2800000,
+                            "guid": "8e927b147ba4b8940a72fefe34ca1f69",
+                            "type": 3
+                        },
+                        "tiling": {
+                            "x": 5.0,
+                            "y": 5.0
+                        },
+                        "offset": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "color": {
+                            "r": 0.4103773832321167,
+                            "g": 0.6413636207580566,
+                            "b": 1.0,
+                            "a": 0.3529411852359772
+                        },
+                        "adaptiveTiling": false
+                    },
+                    "animationType": 1,
+                    "uvMoveSpeed": {
+                        "x": 0.0,
+                        "y": -0.33000001311302187
+                    },
+                    "scaleType": 2,
+                    "scaleSpeed": 1.0,
+                    "scaleFrom": {
+                        "x": 1.0,
+                        "y": 1.0
+                    },
+                    "scaleTo": {
+                        "x": 1.2000000476837159,
+                        "y": 1.2000000476837159
+                    },
+                    "rotateSpeed": 30.0,
+                    "layerCount": 3,
+                    "colorOverLife": {
+                        "serializedVersion": "2",
+                        "key0": {
+                            "r": 1.0,
+                            "g": 1.0,
+                            "b": 1.0,
+                            "a": 1.0
+                        },
+                        "key1": {
+                            "r": 1.0,
+                            "g": 1.0,
+                            "b": 1.0,
+                            "a": 1.0
+                        },
+                        "key2": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key3": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key4": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key5": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key6": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key7": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "ctime0": 0,
+                        "ctime1": 65535,
+                        "ctime2": 0,
+                        "ctime3": 0,
+                        "ctime4": 0,
+                        "ctime5": 0,
+                        "ctime6": 0,
+                        "ctime7": 0,
+                        "atime0": 0,
+                        "atime1": 65535,
+                        "atime2": 0,
+                        "atime3": 0,
+                        "atime4": 0,
+                        "atime5": 0,
+                        "atime6": 0,
+                        "atime7": 0,
+                        "m_Mode": 0,
+                        "m_ColorSpace": -1,
+                        "m_NumColorKeys": 2,
+                        "m_NumAlphaKeys": 2
+                    },
+                    "colorAnimationType": 2,
+                    "colorAnimationSpeed": 1.0,
+                    "colorAnimationGradient": {
+                        "serializedVersion": "2",
+                        "key0": {
+                            "r": 0.2216981053352356,
+                            "g": 0.5809695720672607,
+                            "b": 1.0,
+                            "a": 1.0
+                        },
+                        "key1": {
+                            "r": 1.0,
+                            "g": 1.0,
+                            "b": 1.0,
+                            "a": 0.8470588326454163
+                        },
+                        "key2": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.843137264251709
+                        },
+                        "key3": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key4": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key5": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key6": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key7": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "ctime0": 0,
+                        "ctime1": 65535,
+                        "ctime2": 0,
+                        "ctime3": 0,
+                        "ctime4": 0,
+                        "ctime5": 0,
+                        "ctime6": 0,
+                        "ctime7": 0,
+                        "atime0": 0,
+                        "atime1": 65150,
+                        "atime2": 65535,
+                        "atime3": 0,
+                        "atime4": 0,
+                        "atime5": 0,
+                        "atime6": 0,
+                        "atime7": 0,
+                        "m_Mode": 0,
+                        "m_ColorSpace": -1,
+                        "m_NumColorKeys": 2,
+                        "m_NumAlphaKeys": 3
+                    },
+                    "fadeType": 1,
+                    "fadeIntensity": 0.0,
+                    "fadeSoftness": 0.382999986410141,
+                    "deformType": 0,
+                    "deformIntensity": 0.10000000149011612,
+                    "deformSpeed": 1.0,
+                    "waveFrequency": 4.0
+                },
+                {
+                    "fill": {
+                        "texture": {
+                            "fileID": 2800000,
+                            "guid": "6ec35f4866f96f7488e860ed5f997e73",
+                            "type": 3
+                        },
+                        "tiling": {
+                            "x": 1.0,
+                            "y": 0.30000001192092898
+                        },
+                        "offset": {
+                            "x": 0.0,
+                            "y": -0.3499999940395355
+                        },
+                        "color": {
+                            "r": 1.0,
+                            "g": 1.0,
+                            "b": 1.0,
+                            "a": 1.0
+                        },
+                        "adaptiveTiling": false
+                    },
+                    "animationType": 1,
+                    "uvMoveSpeed": {
+                        "x": 0.20000000298023225,
+                        "y": 0.0
+                    },
+                    "scaleType": 2,
+                    "scaleSpeed": 1.0,
+                    "scaleFrom": {
+                        "x": 1.0,
+                        "y": 1.0
+                    },
+                    "scaleTo": {
+                        "x": 1.2000000476837159,
+                        "y": 1.2000000476837159
+                    },
+                    "rotateSpeed": 30.0,
+                    "layerCount": 3,
+                    "colorOverLife": {
+                        "serializedVersion": "2",
+                        "key0": {
+                            "r": 1.0,
+                            "g": 1.0,
+                            "b": 1.0,
+                            "a": 1.0
+                        },
+                        "key1": {
+                            "r": 1.0,
+                            "g": 1.0,
+                            "b": 1.0,
+                            "a": 1.0
+                        },
+                        "key2": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key3": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key4": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key5": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key6": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key7": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "ctime0": 0,
+                        "ctime1": 65535,
+                        "ctime2": 0,
+                        "ctime3": 0,
+                        "ctime4": 0,
+                        "ctime5": 0,
+                        "ctime6": 0,
+                        "ctime7": 0,
+                        "atime0": 0,
+                        "atime1": 65535,
+                        "atime2": 0,
+                        "atime3": 0,
+                        "atime4": 0,
+                        "atime5": 0,
+                        "atime6": 0,
+                        "atime7": 0,
+                        "m_Mode": 0,
+                        "m_ColorSpace": -1,
+                        "m_NumColorKeys": 2,
+                        "m_NumAlphaKeys": 2
+                    },
+                    "colorAnimationType": 0,
+                    "colorAnimationSpeed": 1.0,
+                    "colorAnimationGradient": {
+                        "serializedVersion": "2",
+                        "key0": {
+                            "r": 1.0,
+                            "g": 1.0,
+                            "b": 1.0,
+                            "a": 1.0
+                        },
+                        "key1": {
+                            "r": 1.0,
+                            "g": 1.0,
+                            "b": 1.0,
+                            "a": 0.0
+                        },
+                        "key2": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key3": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key4": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key5": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key6": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "key7": {
+                            "r": 0.0,
+                            "g": 0.0,
+                            "b": 0.0,
+                            "a": 0.0
+                        },
+                        "ctime0": 0,
+                        "ctime1": 65535,
+                        "ctime2": 0,
+                        "ctime3": 0,
+                        "ctime4": 0,
+                        "ctime5": 0,
+                        "ctime6": 0,
+                        "ctime7": 0,
+                        "atime0": 0,
+                        "atime1": 65535,
+                        "atime2": 0,
+                        "atime3": 0,
+                        "atime4": 0,
+                        "atime5": 0,
+                        "atime6": 0,
+                        "atime7": 0,
+                        "m_Mode": 0,
+                        "m_ColorSpace": -1,
+                        "m_NumColorKeys": 2,
+                        "m_NumAlphaKeys": 2
+                    },
+                    "fadeType": 1,
+                    "fadeIntensity": 0.0,
+                    "fadeSoftness": 0.5,
+                    "deformType": 0,
+                    "deformIntensity": 0.10000000149011612,
+                    "deformSpeed": 1.0,
+                    "waveFrequency": 4.0
+                }
+            ]
+        },
+        "chartWidth": 450.0,
+        "chartHeight": 300.0,
+        "padding": {
+            "x": 10.0,
+            "y": 10.0,
+            "z": 10.0,
+            "w": 10.0
+        },
+        "paddingInitialized": true,
+        "xGridColor": {
+            "r": 0.5,
+            "g": 0.5,
+            "b": 0.5,
+            "a": 0.20000000298023225
+        },
+        "xGridLineWidth": 1.0,
+        "yGridColor": {
+            "r": 0.5,
+            "g": 0.5,
+            "b": 0.5,
+            "a": 0.20000000298023225
+        },
+        "yGridLineWidth": 1.0,
+        "cartesianGrid": {
+            "xGridColor": {
+                "r": 0.5,
+                "g": 0.5,
+                "b": 0.5,
+                "a": 0.20000000298023225
+            },
+            "xGridLineWidth": 1.0,
+            "xGridDashed": false,
+            "xGridDashLength": 4.0,
+            "xGridDashGap": 2.0,
+            "xGridDashOffset": 0.0,
+            "yGridColor": {
+                "r": 0.5,
+                "g": 0.5,
+                "b": 0.5,
+                "a": 0.20000000298023225
+            },
+            "yGridLineWidth": 1.0,
+            "yGridDashed": false,
+            "yGridDashLength": 4.0,
+            "yGridDashGap": 2.0,
+            "yGridDashOffset": 0.0
+        },
+        "cartesian3DGrid": {
+            "show": true,
+            "gridColor": {
+                "r": 0.4000000059604645,
+                "g": 0.4000000059604645,
+                "b": 0.4000000059604645,
+                "a": 0.5
+            },
+            "gridLineWidth": 1.0,
+            "showXYPlane": true,
+            "showXZPlane": true,
+            "showYZPlane": true,
+            "useAxisColors": false,
+            "xGridColor": {
+                "r": 0.5,
+                "g": 0.5,
+                "b": 0.5,
+                "a": 0.30000001192092898
+            },
+            "yGridColor": {
+                "r": 0.5,
+                "g": 0.5,
+                "b": 0.5,
+                "a": 0.30000001192092898
+            },
+            "zGridColor": {
+                "r": 0.5,
+                "g": 0.5,
+                "b": 0.5,
+                "a": 0.30000001192092898
+            },
+            "gridWidth": 4.0,
+            "gridHeight": 2.0,
+            "gridDepth": 2.0,
+            "showLabels": true,
+            "labelColor": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "labelFontSize": 12
+        },
+        "hover": {
+            "cursorLineDashed": false,
+            "cursorLineWidth": 1.0,
+            "cursorLineColor": {
+                "r": 1.0,
+                "g": 0.9215686321258545,
+                "b": 0.01568627543747425,
+                "a": 1.0
+            },
+            "cursorLineDashLength": 4.0,
+            "cursorLineDashGap": 2.0,
+            "cursorLineDashOffset": 0.0
+        },
+        "polarAxes": {
+            "angleAxis": {
+                "labels": [
+                    "A",
+                    "B",
+                    "C",
+                    "D",
+                    "E"
+                ],
+                "visible": true,
+                "color": {
+                    "r": 1.0,
+                    "g": 1.0,
+                    "b": 1.0,
+                    "a": 1.0
+                },
+                "edgeColor": {
+                    "r": 1.0,
+                    "g": 1.0,
+                    "b": 1.0,
+                    "a": 1.0
+                },
+                "width": 2.0,
+                "labelStyle": {
+                    "enabled": true,
+                    "fontSize": 10,
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "position": 0,
+                    "offset": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": 0.0
+                },
+                "showLabels": true,
+                "fontSize": 10,
+                "labelColor": {
+                    "r": 1.0,
+                    "g": 1.0,
+                    "b": 1.0,
+                    "a": 1.0
+                },
+                "labelPosition": 0,
+                "labelOffset": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "autoRangeMin": true,
+                "autoRangeMax": true,
+                "autoRangeRounding": 2,
+                "autoRangeUnit": 1.0,
+                "minValue": 0.0,
+                "maxValue": 1.0,
+                "autoTicks": true,
+                "splitCount": 5,
+                "labelFormat": ""
+            },
+            "radiusAxis": {
+                "labels": [],
+                "visible": true,
+                "color": {
+                    "r": 1.0,
+                    "g": 1.0,
+                    "b": 1.0,
+                    "a": 1.0
+                },
+                "edgeColor": {
+                    "r": 1.0,
+                    "g": 1.0,
+                    "b": 1.0,
+                    "a": 1.0
+                },
+                "width": 2.0,
+                "labelStyle": {
+                    "enabled": true,
+                    "fontSize": 10,
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "position": 0,
+                    "offset": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": 0.0
+                },
+                "showLabels": true,
+                "fontSize": 10,
+                "labelColor": {
+                    "r": 1.0,
+                    "g": 1.0,
+                    "b": 1.0,
+                    "a": 1.0
+                },
+                "labelPosition": 0,
+                "labelOffset": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "autoRangeMin": true,
+                "autoRangeMax": true,
+                "autoRangeRounding": 2,
+                "autoRangeUnit": 1.0,
+                "minValue": 0.0,
+                "maxValue": 1.0,
+                "autoTicks": true,
+                "splitCount": 5,
+                "labelFormat": ""
+            }
+        },
+        "gridSettingsInitialized": true,
+        "grid3DSettingsInitialized": false,
+        "hoverSettingsInitialized": true,
+        "legendSettings": {
+            "enabled": true,
+            "position": 1,
+            "fontSize": 12,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "backgroundColor": {
+                "r": 0.0,
+                "g": 0.0,
+                "b": 0.0,
+                "a": 0.0
+            },
+            "itemSpacing": 10.0,
+            "offset": {
+                "x": 0.0,
+                "y": -30.0
+            },
+            "icon": {
+                "instanceID": 0
+            },
+            "iconSize": {
+                "x": 10.0,
+                "y": 10.0
+            },
+            "iconRadius": 2.0
+        },
+        "plotSettings": {
+            "overrideTheme": true,
+            "backgroundColor": {
+                "r": 0.0,
+                "g": 0.0,
+                "b": 0.0,
+                "a": 0.0
+            },
+            "borderColor": {
+                "r": 0.0,
+                "g": 0.0,
+                "b": 0.0,
+                "a": 0.0
+            },
+            "borderWidth": 0.0,
+            "labelEdgeFadePx": 20.0
+        },
+        "series": [
+            {
+                "name": "Series 1",
+                "id": "b13606dffc0345528036ddd7987fae2a",
+                "type": 8,
+                "visible": true,
+                "settings": {
+                    "rid": 6289704794077790210
+                },
+                "_cachedLineSettings": {
+                    "rid": 6289704794077790208
+                },
+                "_cachedBarSettings": {
+                    "rid": -2
+                },
+                "_cachedPieSettings": {
+                    "rid": -2
+                },
+                "_cachedRingChartSettings": {
+                    "rid": -2
+                },
+                "_cachedScatterSettings": {
+                    "rid": -2
+                },
+                "_cachedRadarSettings": {
+                    "rid": -2
+                },
+                "_cachedHeatmapSettings": {
+                    "rid": -2
+                },
+                "labelSettings": {
+                    "enabled": true,
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "fontSize": 10,
+                    "decimalPlaces": 0,
+                    "showName": false,
+                    "offset": {
+                        "x": 20.0,
+                        "y": 10.0
+                    },
+                    "position": 0,
+                    "background": {
+                        "texture": {
+                            "fileID": 2800000,
+                            "guid": "579899521d0e9b94186142999d8d941d",
+                            "type": 3
+                        },
+                        "tiling": {
+                            "x": 1.0,
+                            "y": 1.0
+                        },
+                        "offset": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "color": {
+                            "r": 0.10849058628082276,
+                            "g": 0.4994165599346161,
+                            "b": 1.0,
+                            "a": 1.0
+                        },
+                        "adaptiveTiling": true
+                    }
+                },
+                "legendOverride": {
+                    "enabled": false,
+                    "icon": {
+                        "instanceID": 0
+                    },
+                    "iconSize": {
+                        "x": -1.0,
+                        "y": -1.0
+                    },
+                    "iconRadius": -1.0,
+                    "useColor": false,
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    }
+                },
+                "seriesData": [
+                    {
+                        "id": "b6605114af6e46e59298d1ee4ac884c5",
+                        "x": 0.0,
+                        "value": 48.400001525878909,
+                        "y": 0.0,
+                        "z": 0.0,
+                        "w": 0.0,
+                        "v": 0.0,
+                        "name": "",
+                        "useColor": false,
+                        "color": {
+                            "r": 1.0,
+                            "g": 0.6556603908538818,
+                            "b": 0.6556603908538818,
+                            "a": 1.0
+                        }
+                    }
+                ]
+            }
+        ],
+        "references": {
+            "version": 2,
+            "RefIds": [
+                {
+                    "rid": -2,
+                    "type": {
+                        "class": "",
+                        "ns": "",
+                        "asm": ""
+                    },
+                    "data": {}
+                },
+                {
+                    "rid": 6289704794077790208,
+                    "type": {
+                        "class": "LineSettings",
+                        "ns": "EasyChart",
+                        "asm": "EasyChart.Runtime"
+                    },
+                    "data": {
+                        "stroke": {
+                            "lineType": 0,
+                            "width": 2.0,
+                            "color": {
+                                "r": 0.0,
+                                "g": 1.0,
+                                "b": 1.0,
+                                "a": 1.0
+                            },
+                            "textureFill": {
+                                "texture": {
+                                    "instanceID": 0
+                                },
+                                "tiling": {
+                                    "x": 1.0,
+                                    "y": 1.0
+                                },
+                                "offset": {
+                                    "x": 0.0,
+                                    "y": 0.0
+                                },
+                                "color": {
+                                    "r": 1.0,
+                                    "g": 1.0,
+                                    "b": 1.0,
+                                    "a": 1.0
+                                },
+                                "adaptiveTiling": false
+                            },
+                            "textureFXLayers": []
+                        },
+                        "point": {
+                            "show": true,
+                            "size": 4.0,
+                            "textureFill": {
+                                "texture": {
+                                    "instanceID": 0
+                                },
+                                "tiling": {
+                                    "x": 1.0,
+                                    "y": 1.0
+                                },
+                                "offset": {
+                                    "x": 0.0,
+                                    "y": 0.0
+                                },
+                                "color": {
+                                    "r": 1.0,
+                                    "g": 1.0,
+                                    "b": 1.0,
+                                    "a": 1.0
+                                },
+                                "adaptiveTiling": false
+                            },
+                            "textureFXLayers": []
+                        },
+                        "hover": {
+                            "enabled": false,
+                            "_scale": 1.5,
+                            "_textureFill": {
+                                "texture": {
+                                    "instanceID": 0
+                                },
+                                "tiling": {
+                                    "x": 1.0,
+                                    "y": 1.0
+                                },
+                                "offset": {
+                                    "x": 0.0,
+                                    "y": 0.0
+                                },
+                                "color": {
+                                    "r": 1.0,
+                                    "g": 1.0,
+                                    "b": 1.0,
+                                    "a": 0.3499999940395355
+                                },
+                                "adaptiveTiling": false
+                            },
+                            "pickRadius": 8.0,
+                            "point": {
+                                "show": true,
+                                "size": 4.0,
+                                "textureFill": {
+                                    "texture": {
+                                        "instanceID": 0
+                                    },
+                                    "tiling": {
+                                        "x": 1.0,
+                                        "y": 1.0
+                                    },
+                                    "offset": {
+                                        "x": 0.0,
+                                        "y": 0.0
+                                    },
+                                    "color": {
+                                        "r": 1.0,
+                                        "g": 1.0,
+                                        "b": 1.0,
+                                        "a": 1.0
+                                    },
+                                    "adaptiveTiling": false
+                                },
+                                "textureFXLayers": []
+                            },
+                            "lineColor": {
+                                "r": 1.0,
+                                "g": 1.0,
+                                "b": 1.0,
+                                "a": 0.3499999940395355
+                            }
+                        },
+                        "area": {
+                            "show": false,
+                            "textureFill": {
+                                "texture": {
+                                    "instanceID": 0
+                                },
+                                "tiling": {
+                                    "x": 1.0,
+                                    "y": 1.0
+                                },
+                                "offset": {
+                                    "x": 0.0,
+                                    "y": 0.0
+                                },
+                                "color": {
+                                    "r": 1.0,
+                                    "g": 1.0,
+                                    "b": 1.0,
+                                    "a": 0.20000000298023225
+                                },
+                                "adaptiveTiling": false
+                            },
+                            "textureFXLayers": []
+                        },
+                        "stacked": false,
+                        "legendColorSource": 0
+                    }
+                },
+                {
+                    "rid": 6289704794077790210,
+                    "type": {
+                        "class": "GaugeSettings",
+                        "ns": "EasyChart.Pro",
+                        "asm": "EasyChart.Pro.Runtime"
+                    },
+                    "data": {
+                        "layout": {
+                            "startAngleDeg": 45.0,
+                            "endAngleDeg": 315.0,
+                            "clockwise": true,
+                            "outerRadius": 115.0,
+                            "textureFill": {
+                                "texture": {
+                                    "fileID": 2800000,
+                                    "guid": "04193cc5e7d0d98449fdf20bf931ff49",
+                                    "type": 3
+                                },
+                                "tiling": {
+                                    "x": 1.0,
+                                    "y": 1.0
+                                },
+                                "offset": {
+                                    "x": 0.0,
+                                    "y": 0.0
+                                },
+                                "color": {
+                                    "r": 1.0,
+                                    "g": 1.0,
+                                    "b": 1.0,
+                                    "a": 1.0
+                                },
+                                "adaptiveTiling": false
+                            },
+                            "textureFXLayers": [
+                                {
+                                    "fill": {
+                                        "texture": {
+                                            "fileID": 2800000,
+                                            "guid": "13a202466997fd443a4f3a9e2c6ef9fc",
+                                            "type": 3
+                                        },
+                                        "tiling": {
+                                            "x": 1.0,
+                                            "y": 1.0
+                                        },
+                                        "offset": {
+                                            "x": 0.0,
+                                            "y": 0.0
+                                        },
+                                        "color": {
+                                            "r": 1.0,
+                                            "g": 1.0,
+                                            "b": 1.0,
+                                            "a": 1.0
+                                        },
+                                        "adaptiveTiling": false
+                                    },
+                                    "animationType": 3,
+                                    "uvMoveSpeed": {
+                                        "x": 0.20000000298023225,
+                                        "y": 0.0
+                                    },
+                                    "scaleType": 1,
+                                    "scaleSpeed": 0.10000000149011612,
+                                    "scaleFrom": {
+                                        "x": 0.800000011920929,
+                                        "y": 0.800000011920929
+                                    },
+                                    "scaleTo": {
+                                        "x": 0.949999988079071,
+                                        "y": 0.949999988079071
+                                    },
+                                    "rotateSpeed": 30.0,
+                                    "layerCount": 4,
+                                    "colorOverLife": {
+                                        "serializedVersion": "2",
+                                        "key0": {
+                                            "r": 0.0,
+                                            "g": 0.642719030380249,
+                                            "b": 1.0,
+                                            "a": 1.0
+                                        },
+                                        "key1": {
+                                            "r": 0.36320751905441286,
+                                            "g": 0.5762646198272705,
+                                            "b": 1.0,
+                                            "a": 0.0
+                                        },
+                                        "key2": {
+                                            "r": 0.34433960914611819,
+                                            "g": 0.8729724287986755,
+                                            "b": 1.0,
+                                            "a": 0.0
+                                        },
+                                        "key3": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key4": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key5": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key6": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key7": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "ctime0": 0,
+                                        "ctime1": 33731,
+                                        "ctime2": 65150,
+                                        "ctime3": 0,
+                                        "ctime4": 0,
+                                        "ctime5": 0,
+                                        "ctime6": 0,
+                                        "ctime7": 0,
+                                        "atime0": 0,
+                                        "atime1": 65535,
+                                        "atime2": 0,
+                                        "atime3": 0,
+                                        "atime4": 0,
+                                        "atime5": 0,
+                                        "atime6": 0,
+                                        "atime7": 0,
+                                        "m_Mode": 0,
+                                        "m_ColorSpace": -1,
+                                        "m_NumColorKeys": 3,
+                                        "m_NumAlphaKeys": 2
+                                    },
+                                    "colorAnimationType": 0,
+                                    "colorAnimationSpeed": 1.0,
+                                    "colorAnimationGradient": {
+                                        "serializedVersion": "2",
+                                        "key0": {
+                                            "r": 1.0,
+                                            "g": 1.0,
+                                            "b": 1.0,
+                                            "a": 0.0
+                                        },
+                                        "key1": {
+                                            "r": 1.0,
+                                            "g": 1.0,
+                                            "b": 1.0,
+                                            "a": 0.7969112396240234
+                                        },
+                                        "key2": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key3": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key4": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key5": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key6": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key7": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "ctime0": 0,
+                                        "ctime1": 65535,
+                                        "ctime2": 0,
+                                        "ctime3": 0,
+                                        "ctime4": 0,
+                                        "ctime5": 0,
+                                        "ctime6": 0,
+                                        "ctime7": 0,
+                                        "atime0": 0,
+                                        "atime1": 32382,
+                                        "atime2": 65535,
+                                        "atime3": 0,
+                                        "atime4": 0,
+                                        "atime5": 0,
+                                        "atime6": 0,
+                                        "atime7": 0,
+                                        "m_Mode": 0,
+                                        "m_ColorSpace": -1,
+                                        "m_NumColorKeys": 2,
+                                        "m_NumAlphaKeys": 3
+                                    },
+                                    "fadeType": 0,
+                                    "fadeIntensity": 0.0,
+                                    "fadeSoftness": 0.5,
+                                    "deformType": 0,
+                                    "deformIntensity": 1.0,
+                                    "deformSpeed": 1.0,
+                                    "waveFrequency": 1.0
+                                },
+                                {
+                                    "fill": {
+                                        "texture": {
+                                            "fileID": 2800000,
+                                            "guid": "1658e50ea966d5346a87b8662f52e7e1",
+                                            "type": 3
+                                        },
+                                        "tiling": {
+                                            "x": 2.0,
+                                            "y": 2.0
+                                        },
+                                        "offset": {
+                                            "x": 0.0,
+                                            "y": 0.0
+                                        },
+                                        "color": {
+                                            "r": 0.4103773832321167,
+                                            "g": 0.6413636207580566,
+                                            "b": 1.0,
+                                            "a": 0.3529411852359772
+                                        },
+                                        "adaptiveTiling": false
+                                    },
+                                    "animationType": 0,
+                                    "uvMoveSpeed": {
+                                        "x": 0.0,
+                                        "y": -0.33000001311302187
+                                    },
+                                    "scaleType": 2,
+                                    "scaleSpeed": 1.0,
+                                    "scaleFrom": {
+                                        "x": 1.0,
+                                        "y": 1.0
+                                    },
+                                    "scaleTo": {
+                                        "x": 1.2000000476837159,
+                                        "y": 1.2000000476837159
+                                    },
+                                    "rotateSpeed": 45.0,
+                                    "layerCount": 1,
+                                    "colorOverLife": {
+                                        "serializedVersion": "2",
+                                        "key0": {
+                                            "r": 1.0,
+                                            "g": 1.0,
+                                            "b": 1.0,
+                                            "a": 1.0
+                                        },
+                                        "key1": {
+                                            "r": 1.0,
+                                            "g": 1.0,
+                                            "b": 1.0,
+                                            "a": 1.0
+                                        },
+                                        "key2": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key3": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key4": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key5": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key6": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key7": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "ctime0": 0,
+                                        "ctime1": 65535,
+                                        "ctime2": 0,
+                                        "ctime3": 0,
+                                        "ctime4": 0,
+                                        "ctime5": 0,
+                                        "ctime6": 0,
+                                        "ctime7": 0,
+                                        "atime0": 0,
+                                        "atime1": 65535,
+                                        "atime2": 0,
+                                        "atime3": 0,
+                                        "atime4": 0,
+                                        "atime5": 0,
+                                        "atime6": 0,
+                                        "atime7": 0,
+                                        "m_Mode": 0,
+                                        "m_ColorSpace": -1,
+                                        "m_NumColorKeys": 2,
+                                        "m_NumAlphaKeys": 2
+                                    },
+                                    "colorAnimationType": 2,
+                                    "colorAnimationSpeed": 1.0,
+                                    "colorAnimationGradient": {
+                                        "serializedVersion": "2",
+                                        "key0": {
+                                            "r": 0.2216981053352356,
+                                            "g": 0.5809695720672607,
+                                            "b": 1.0,
+                                            "a": 0.5176470875740051
+                                        },
+                                        "key1": {
+                                            "r": 0.2705882787704468,
+                                            "g": 0.9927811622619629,
+                                            "b": 1.0,
+                                            "a": 0.4156862795352936
+                                        },
+                                        "key2": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key3": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key4": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key5": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key6": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key7": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "ctime0": 0,
+                                        "ctime1": 65535,
+                                        "ctime2": 0,
+                                        "ctime3": 0,
+                                        "ctime4": 0,
+                                        "ctime5": 0,
+                                        "ctime6": 0,
+                                        "ctime7": 0,
+                                        "atime0": 0,
+                                        "atime1": 65535,
+                                        "atime2": 0,
+                                        "atime3": 0,
+                                        "atime4": 0,
+                                        "atime5": 0,
+                                        "atime6": 0,
+                                        "atime7": 0,
+                                        "m_Mode": 0,
+                                        "m_ColorSpace": -1,
+                                        "m_NumColorKeys": 2,
+                                        "m_NumAlphaKeys": 2
+                                    },
+                                    "fadeType": 3,
+                                    "fadeIntensity": 1.0,
+                                    "fadeSoftness": 1.0,
+                                    "deformType": 0,
+                                    "deformIntensity": 0.10000000149011612,
+                                    "deformSpeed": 1.0,
+                                    "waveFrequency": 4.0
+                                }
+                            ],
+                            "backgroundSize": {
+                                "x": 260.0,
+                                "y": 260.0
+                            },
+                            "minValue": 0.0,
+                            "maxValue": 100.0
+                        },
+                        "axis": {
+                            "show": true,
+                            "textureFill": {
+                                "texture": {
+                                    "fileID": 2800000,
+                                    "guid": "1881263b73f39ea47bade0bf0209f034",
+                                    "type": 3
+                                },
+                                "tiling": {
+                                    "x": 1.0,
+                                    "y": 1.0
+                                },
+                                "offset": {
+                                    "x": 0.0,
+                                    "y": 0.0
+                                },
+                                "color": {
+                                    "r": 0.44811320304870608,
+                                    "g": 0.5917518138885498,
+                                    "b": 1.0,
+                                    "a": 1.0
+                                },
+                                "adaptiveTiling": false
+                            },
+                            "textureFXLayers": [
+                                {
+                                    "fill": {
+                                        "texture": {
+                                            "fileID": 2800000,
+                                            "guid": "72226aeddb4546b43a4ebdd3e898ae8d",
+                                            "type": 3
+                                        },
+                                        "tiling": {
+                                            "x": 1.0,
+                                            "y": 1.0
+                                        },
+                                        "offset": {
+                                            "x": 0.0,
+                                            "y": 0.0
+                                        },
+                                        "color": {
+                                            "r": 1.0,
+                                            "g": 1.0,
+                                            "b": 1.0,
+                                            "a": 1.0
+                                        },
+                                        "adaptiveTiling": false
+                                    },
+                                    "animationType": 1,
+                                    "uvMoveSpeed": {
+                                        "x": 0.10000000149011612,
+                                        "y": 0.0
+                                    },
+                                    "scaleType": 0,
+                                    "scaleSpeed": 0.0,
+                                    "scaleFrom": {
+                                        "x": 0.0,
+                                        "y": 0.0
+                                    },
+                                    "scaleTo": {
+                                        "x": 0.0,
+                                        "y": 0.0
+                                    },
+                                    "rotateSpeed": 0.0,
+                                    "layerCount": 0,
+                                    "colorOverLife": {
+                                        "serializedVersion": "2",
+                                        "key0": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key1": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key2": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key3": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key4": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key5": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key6": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key7": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "ctime0": 0,
+                                        "ctime1": 65535,
+                                        "ctime2": 0,
+                                        "ctime3": 0,
+                                        "ctime4": 0,
+                                        "ctime5": 0,
+                                        "ctime6": 0,
+                                        "ctime7": 0,
+                                        "atime0": 0,
+                                        "atime1": 65535,
+                                        "atime2": 0,
+                                        "atime3": 0,
+                                        "atime4": 0,
+                                        "atime5": 0,
+                                        "atime6": 0,
+                                        "atime7": 0,
+                                        "m_Mode": 0,
+                                        "m_ColorSpace": 0,
+                                        "m_NumColorKeys": 2,
+                                        "m_NumAlphaKeys": 2
+                                    },
+                                    "colorAnimationType": 0,
+                                    "colorAnimationSpeed": 0.0,
+                                    "colorAnimationGradient": {
+                                        "serializedVersion": "2",
+                                        "key0": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key1": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key2": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key3": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key4": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key5": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key6": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key7": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "ctime0": 0,
+                                        "ctime1": 65535,
+                                        "ctime2": 0,
+                                        "ctime3": 0,
+                                        "ctime4": 0,
+                                        "ctime5": 0,
+                                        "ctime6": 0,
+                                        "ctime7": 0,
+                                        "atime0": 0,
+                                        "atime1": 65535,
+                                        "atime2": 0,
+                                        "atime3": 0,
+                                        "atime4": 0,
+                                        "atime5": 0,
+                                        "atime6": 0,
+                                        "atime7": 0,
+                                        "m_Mode": 0,
+                                        "m_ColorSpace": 0,
+                                        "m_NumColorKeys": 2,
+                                        "m_NumAlphaKeys": 2
+                                    },
+                                    "fadeType": 0,
+                                    "fadeIntensity": 0.0,
+                                    "fadeSoftness": 0.0,
+                                    "deformType": 0,
+                                    "deformIntensity": 0.0,
+                                    "deformSpeed": 0.0,
+                                    "waveFrequency": 0.0
+                                }
+                            ],
+                            "width": 80.0
+                        },
+                        "progress": {
+                            "show": true,
+                            "textureFill": {
+                                "texture": {
+                                    "instanceID": 0
+                                },
+                                "tiling": {
+                                    "x": 1.0,
+                                    "y": 1.0
+                                },
+                                "offset": {
+                                    "x": 0.0,
+                                    "y": 0.0
+                                },
+                                "color": {
+                                    "r": 1.0,
+                                    "g": 1.0,
+                                    "b": 1.0,
+                                    "a": 0.0
+                                },
+                                "adaptiveTiling": false
+                            },
+                            "textureFXLayers": [
+                                {
+                                    "fill": {
+                                        "texture": {
+                                            "fileID": 2800000,
+                                            "guid": "198e2891f237328498e0d440a2881758",
+                                            "type": 3
+                                        },
+                                        "tiling": {
+                                            "x": 1.0,
+                                            "y": 1.0
+                                        },
+                                        "offset": {
+                                            "x": 0.0,
+                                            "y": 0.0
+                                        },
+                                        "color": {
+                                            "r": 1.0,
+                                            "g": 1.0,
+                                            "b": 1.0,
+                                            "a": 1.0
+                                        },
+                                        "adaptiveTiling": false
+                                    },
+                                    "animationType": 1,
+                                    "uvMoveSpeed": {
+                                        "x": 0.20000000298023225,
+                                        "y": 0.0
+                                    },
+                                    "scaleType": 3,
+                                    "scaleSpeed": 1.0,
+                                    "scaleFrom": {
+                                        "x": 1.5,
+                                        "y": 1.5
+                                    },
+                                    "scaleTo": {
+                                        "x": 0.5,
+                                        "y": 0.5
+                                    },
+                                    "rotateSpeed": 30.0,
+                                    "layerCount": 2,
+                                    "colorOverLife": {
+                                        "serializedVersion": "2",
+                                        "key0": {
+                                            "r": 0.0,
+                                            "g": 0.8783557415008545,
+                                            "b": 1.0,
+                                            "a": 0.0
+                                        },
+                                        "key1": {
+                                            "r": 0.0,
+                                            "g": 0.8783557415008545,
+                                            "b": 1.0,
+                                            "a": 1.0
+                                        },
+                                        "key2": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key3": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key4": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key5": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key6": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key7": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "ctime0": 0,
+                                        "ctime1": 65535,
+                                        "ctime2": 0,
+                                        "ctime3": 0,
+                                        "ctime4": 0,
+                                        "ctime5": 0,
+                                        "ctime6": 0,
+                                        "ctime7": 0,
+                                        "atime0": 3855,
+                                        "atime1": 32575,
+                                        "atime2": 65535,
+                                        "atime3": 0,
+                                        "atime4": 0,
+                                        "atime5": 0,
+                                        "atime6": 0,
+                                        "atime7": 0,
+                                        "m_Mode": 0,
+                                        "m_ColorSpace": -1,
+                                        "m_NumColorKeys": 2,
+                                        "m_NumAlphaKeys": 3
+                                    },
+                                    "colorAnimationType": 0,
+                                    "colorAnimationSpeed": 1.0,
+                                    "colorAnimationGradient": {
+                                        "serializedVersion": "2",
+                                        "key0": {
+                                            "r": 1.0,
+                                            "g": 1.0,
+                                            "b": 1.0,
+                                            "a": 0.0
+                                        },
+                                        "key1": {
+                                            "r": 1.0,
+                                            "g": 1.0,
+                                            "b": 1.0,
+                                            "a": 0.7969112396240234
+                                        },
+                                        "key2": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key3": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key4": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key5": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key6": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "key7": {
+                                            "r": 0.0,
+                                            "g": 0.0,
+                                            "b": 0.0,
+                                            "a": 0.0
+                                        },
+                                        "ctime0": 0,
+                                        "ctime1": 65535,
+                                        "ctime2": 0,
+                                        "ctime3": 0,
+                                        "ctime4": 0,
+                                        "ctime5": 0,
+                                        "ctime6": 0,
+                                        "ctime7": 0,
+                                        "atime0": 0,
+                                        "atime1": 32382,
+                                        "atime2": 65535,
+                                        "atime3": 0,
+                                        "atime4": 0,
+                                        "atime5": 0,
+                                        "atime6": 0,
+                                        "atime7": 0,
+                                        "m_Mode": 0,
+                                        "m_ColorSpace": -1,
+                                        "m_NumColorKeys": 2,
+                                        "m_NumAlphaKeys": 3
+                                    },
+                                    "fadeType": 4,
+                                    "fadeIntensity": 1.0,
+                                    "fadeSoftness": 1.0,
+                                    "deformType": 0,
+                                    "deformIntensity": 1.0,
+                                    "deformSpeed": 1.0,
+                                    "waveFrequency": 1.0
+                                }
+                            ],
+                            "overrideWidth": false,
+                            "width": 44.0
+                        },
+                        "pointer": {
+                            "show": true,
+                            "textureFill": {
+                                "texture": {
+                                    "instanceID": 0
+                                },
+                                "tiling": {
+                                    "x": 1.0,
+                                    "y": 1.0
+                                },
+                                "offset": {
+                                    "x": 0.0,
+                                    "y": 0.0
+                                },
+                                "color": {
+                                    "r": 0.0,
+                                    "g": 1.0,
+                                    "b": 0.8364410400390625,
+                                    "a": 1.0
+                                },
+                                "adaptiveTiling": false
+                            },
+                            "length": 59.79999923706055,
+                            "width": 10.0
+                        },
+                        "ticks": {
+                            "showMajor": true,
+                            "position": 1,
+                            "majorCount": 11,
+                            "majorLength": 14.199999809265137,
+                            "majorColor": {
+                                "r": 0.3537735939025879,
+                                "g": 0.9749537110328674,
+                                "b": 1.0,
+                                "a": 1.0
+                            },
+                            "showMinor": true,
+                            "minorCount": 4,
+                            "minorLength": 9.600000381469727,
+                            "minorColor": {
+                                "r": 0.0896226167678833,
+                                "g": 1.0,
+                                "b": 0.9732597470283508,
+                                "a": 1.0
+                            },
+                            "tickOffset": 63.400001525878909,
+                            "labelOffset": 15.0
+                        },
+                        "valueDisplay": {
+                            "show": true,
+                            "fontSize": 36,
+                            "color": {
+                                "r": 1.0,
+                                "g": 1.0,
+                                "b": 1.0,
+                                "a": 1.0
+                            },
+                            "offsetY": -60.0,
+                            "decimalPlaces": 0,
+                            "suffix": "",
+                            "background": {
+                                "texture": {
+                                    "fileID": 2800000,
+                                    "guid": "a6ae2ad21f960f548af42ecb38cc2a0b",
+                                    "type": 3
+                                },
+                                "tiling": {
+                                    "x": 1.0,
+                                    "y": 1.0
+                                },
+                                "offset": {
+                                    "x": 0.0,
+                                    "y": 0.0
+                                },
+                                "color": {
+                                    "r": 0.0,
+                                    "g": 0.9348869323730469,
+                                    "b": 1.0,
+                                    "a": 1.0
+                                },
+                                "adaptiveTiling": false
+                            },
+                            "backgroundScale": 10.0
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

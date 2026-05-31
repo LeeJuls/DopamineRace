@@ -12,6 +12,12 @@ namespace EasyChart.Layers
         
         public virtual void ClearHover() { }
         
+        /// <summary>
+        /// Called to clear all scene objects when the renderer is no longer needed.
+        /// Override in derived classes (especially 3D renderers) to clean up specific resources.
+        /// </summary>
+        public virtual void ClearScene() { }
+        
         // Animation
         protected float _animationProgress = 1.0f;
         public float AnimationProgress
@@ -163,111 +169,6 @@ namespace EasyChart.Layers
                 tiling = fill.tiling;
                 offset = fill.offset;
                 color = fill.color;
-
-                bool hasPro = ProPackage.IsInstalled;
-                if (hasPro && fill.animationType != TextureFillAnimationType.None)
-                {
-                    float t = Time.realtimeSinceStartup;
-                    if (fill.animationType == TextureFillAnimationType.TextureUvMove)
-                    {
-                        offset -= fill.uvMoveSpeed * t;
-                    }
-                    else if (fill.animationType == TextureFillAnimationType.TextureScale)
-                    {
-                        var baseTiling = tiling;
-
-                        float u = t * fill.scaleSpeed;
-                        float c01;
-
-                        Vector2 factor;
-                        switch (fill.scaleType)
-                        {
-                            case TextureFillScaleType.ZoomIn:
-                            {
-                                float p = Mathf.Repeat(u, 1f);
-                                var s = Vector2.Lerp(fill.scaleFrom, fill.scaleTo, p);
-                                s.x = Mathf.Max(0.0001f, s.x);
-                                s.y = Mathf.Max(0.0001f, s.y);
-                                factor = new Vector2(1f / s.x, 1f / s.y);
-                                c01 = p;
-                                break;
-                            }
-                            case TextureFillScaleType.ZoomOut:
-                            {
-                                float p = Mathf.Repeat(u, 1f);
-                                var s = Vector2.Lerp(fill.scaleTo, fill.scaleFrom, p);
-                                s.x = Mathf.Max(0.0001f, s.x);
-                                s.y = Mathf.Max(0.0001f, s.y);
-                                factor = new Vector2(1f / s.x, 1f / s.y);
-                                c01 = p;
-                                break;
-                            }
-                            case TextureFillScaleType.PingPong:
-                            {
-                                float p = Mathf.PingPong(u, 1f);
-                                var s = Vector2.Lerp(fill.scaleFrom, fill.scaleTo, p);
-                                s.x = Mathf.Max(0.0001f, s.x);
-                                s.y = Mathf.Max(0.0001f, s.y);
-                                factor = new Vector2(1f / s.x, 1f / s.y);
-                                c01 = p;
-                                break;
-                            }
-                            case TextureFillScaleType.Sin:
-                            default:
-                            {
-                                float s = Mathf.Sin(u);
-                                float p = (s + 1f) * 0.5f;
-                                var sc = Vector2.Lerp(fill.scaleFrom, fill.scaleTo, p);
-                                sc.x = Mathf.Max(0.0001f, sc.x);
-                                sc.y = Mathf.Max(0.0001f, sc.y);
-                                factor = new Vector2(1f / sc.x, 1f / sc.y);
-                                c01 = p;
-                                break;
-                            }
-                        }
-
-                        factor.x = Mathf.Max(0.0001f, factor.x);
-                        factor.y = Mathf.Max(0.0001f, factor.y);
-                        tiling = new Vector2(baseTiling.x * factor.x, baseTiling.y * factor.y);
-                        offset += (baseTiling - tiling) * 0.5f;
-
-                        if (fill.colorFadeGradient != null)
-                            color *= fill.colorFadeGradient.Evaluate(c01);
-                    }
-                    else if (fill.animationType == TextureFillAnimationType.TextureFade)
-                    {
-                        float u = t * fill.colorFadeSpeed;
-                        float c01;
-                        switch (fill.colorFadeWrap)
-                        {
-                            case TextureFillColorOverLifeWrap.Loop:
-                                c01 = Mathf.Repeat(u, 1f);
-                                break;
-                            case TextureFillColorOverLifeWrap.Clamp:
-                                c01 = Mathf.Clamp01(u);
-                                break;
-                            case TextureFillColorOverLifeWrap.PingPong:
-                            default:
-                                c01 = Mathf.PingPong(u, 1f);
-                                break;
-                        }
-
-                        if (fill.colorFadeGradient != null)
-                            color = fill.colorFadeGradient.Evaluate(c01);
-                        else
-                            color = Color.Lerp(fill.colorFadeStart, fill.colorFadeEnd, c01);
-                    }
-                }
-
-                if (texture != null && Application.isPlaying)
-                {
-                    var desiredWrap = (hasPro && fill.animationType == TextureFillAnimationType.TextureScale)
-                        ? TextureWrapMode.Clamp
-                        : TextureWrapMode.Repeat;
-
-                    if (texture.wrapMode != desiredWrap)
-                        texture.wrapMode = desiredWrap;
-                }
             }
             else
             {
@@ -328,62 +229,26 @@ namespace EasyChart.Layers
             return true;
         }
 
-        protected bool DrawTexturedVerticalStrip(MeshGenerationContext context, IList<Vector2> topVertices, float bottomY, Texture texture, Vector2 tiling, Vector2 offset, Color tint, bool doubleSided)
+        protected bool DrawTexturedVerticalStrip(MeshGenerationContext context, IList<Vector2> topVertices, float bottomY, Texture texture, Vector2 tiling, Vector2 offset, Color tint, bool doubleSided, bool usePathLength = false)
         {
             if (texture == null) return false;
             if (topVertices == null || topVertices.Count < 2) return false;
-            MeshUtils.WriteTexturedVerticalStrip(context, topVertices, bottomY, texture, tint, tiling, offset, doubleSided);
+            MeshUtils.WriteTexturedVerticalStrip(context, topVertices, bottomY, texture, tint, tiling, offset, doubleSided, usePathLength);
+            return true;
+        }
+
+        protected bool DrawTexturedVerticalStrip(MeshGenerationContext context, IList<Vector2> topVertices, IList<float> bottomYs, Texture texture, Vector2 tiling, Vector2 offset, Color tint, bool doubleSided, bool usePathLength = false)
+        {
+            if (texture == null) return false;
+            if (topVertices == null || topVertices.Count < 2) return false;
+            if (bottomYs == null || bottomYs.Count != topVertices.Count) return false;
+            MeshUtils.WriteTexturedVerticalStrip(context, topVertices, bottomYs, texture, tint, tiling, offset, doubleSided, usePathLength);
             return true;
         }
 
         protected float EvalTextureScaleSizeMul(TextureFillSettings fill)
         {
-            if (fill == null) return 1f;
-            if (fill.texture == null) return 1f;
-
-            bool hasPro = ProPackage.IsInstalled;
-            if (!hasPro) return 1f;
-            if (fill.animationType != TextureFillAnimationType.TextureScale) return 1f;
-
-            float t = Time.realtimeSinceStartup;
-            float u = t * fill.scaleSpeed;
-
-            float p;
-            switch (fill.scaleType)
-            {
-                case TextureFillScaleType.ZoomIn:
-                    p = Mathf.Repeat(u, 1f);
-                    break;
-                case TextureFillScaleType.ZoomOut:
-                    p = Mathf.Repeat(u, 1f);
-                    break;
-                case TextureFillScaleType.PingPong:
-                    p = Mathf.PingPong(u, 1f);
-                    break;
-                case TextureFillScaleType.Sin:
-                default:
-                    p = (Mathf.Sin(u) + 1f) * 0.5f;
-                    break;
-            }
-
-            Vector2 sc;
-            switch (fill.scaleType)
-            {
-                case TextureFillScaleType.ZoomOut:
-                    sc = Vector2.Lerp(fill.scaleTo, fill.scaleFrom, p);
-                    break;
-                case TextureFillScaleType.ZoomIn:
-                case TextureFillScaleType.PingPong:
-                case TextureFillScaleType.Sin:
-                default:
-                    sc = Vector2.Lerp(fill.scaleFrom, fill.scaleTo, p);
-                    break;
-            }
-
-            sc.x = Mathf.Max(0.0001f, sc.x);
-            sc.y = Mathf.Max(0.0001f, sc.y);
-            float m = Mathf.Max(sc.x, sc.y);
-            return Mathf.Max(1f, m);
+            return 1f;
         }
 
         protected void DrawPointMarker(MeshGenerationContext context, Painter2D painter, Vector2 pos, float radius, TextureFillSettings fill, Color defaultColor)
@@ -392,15 +257,7 @@ namespace EasyChart.Layers
 
             UnpackTextureFill(fill, defaultColor, out var tex, out var tiling, out var offset, out var color);
 
-            bool hasPro = ProPackage.IsInstalled;
-            if (hasPro && fill != null && fill.animationType == TextureFillAnimationType.TextureScale)
-            {
-                tiling = fill.tiling;
-                offset = fill.offset;
-            }
-
             float r = radius;
-            if (tex != null) r *= EvalTextureScaleSizeMul(fill);
 
             if (tex != null)
             {
@@ -430,15 +287,7 @@ namespace EasyChart.Layers
             UnpackTextureFill(fill, Color.clear, out var tex, out var tiling, out var offset, out var tint);
             if (tint.a <= 0f) return;
 
-            bool hasPro = ProPackage.IsInstalled;
-            if (hasPro && fill.animationType == TextureFillAnimationType.TextureScale)
-            {
-                tiling = fill.tiling;
-                offset = fill.offset;
-            }
-
             float r = radius;
-            if (tex != null) r *= EvalTextureScaleSizeMul(fill);
 
             if (tex != null)
             {
@@ -616,7 +465,9 @@ namespace EasyChart.Layers
                 return FormatIntCached(idx);
             }
 
-            if (!string.IsNullOrEmpty(pointId)) return pointId;
+            // Always include fallbackIndex to ensure unique key even if pointId is duplicated
+            if (!string.IsNullOrEmpty(pointId))
+                return $"{pointId}_{fallbackIndex}";
             return fallbackIndex.ToString();
         }
 
@@ -630,7 +481,9 @@ namespace EasyChart.Layers
             Color colorOverride,
             ChartLabelAnchor anchor = ChartLabelAnchor.TopLeft,
             Color backgroundColor = default,
-            Texture2D backgroundTexture = null)
+            Texture2D backgroundTexture = null,
+            float backgroundScale = 1f,
+            bool squareBackground = false)
         {
             return new LabelDescriptor
             {
@@ -649,6 +502,8 @@ namespace EasyChart.Layers
                 rotationDeg = 0f,
                 backgroundColor = backgroundColor,
                 backgroundTexture = backgroundTexture,
+                backgroundScale = backgroundScale,
+                squareBackground = squareBackground,
             };
         }
 

@@ -66,14 +66,16 @@
 
         function loadApp(){
           var sApp = document.createElement('script');
-          sApp.src = './app.js' + q;
+          // Add timestamp to prevent browser caching
+          sApp.src = './app.js?v=' + Date.now();
           sApp.onload = updateGeneratedAt;
           document.body.appendChild(sApp);
         }
 
         function loadOpenRequest(){
           var sOpen = document.createElement('script');
-          sOpen.src = './manual-open.js' + q;
+          // Use independent timestamp to ensure fresh load
+          sOpen.src = './manual-open.js?v=' + Date.now();
           sOpen.onload = loadApp;
           sOpen.onerror = loadApp;
           document.body.appendChild(sOpen);

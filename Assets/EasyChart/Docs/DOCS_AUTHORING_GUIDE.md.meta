@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 1b9bf48452123ff4197edc9225d0dba1
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/docs/DOCS_AUTHORING_GUIDE.md
+  uploadId: 906968

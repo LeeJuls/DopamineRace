@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0028618188c5cf74da823860e0d987cf
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/Library/EasyChart Demo/Bar/BarDemo.asset
+  uploadId: 906968

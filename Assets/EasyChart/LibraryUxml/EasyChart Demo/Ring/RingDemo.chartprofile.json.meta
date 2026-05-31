@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 43f2a4129d679c849a5baca850e9f22d
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/LibraryUxml/EasyChart Demo/Ring/RingDemo.chartprofile.json
+  uploadId: 906968

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 22ea3a5efa3ba044199def667d49ef27
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/LibraryUxml/EasyChart Demo/Bar/BarDemo 8.chartprofile.json
+  uploadId: 906968

@@ -24,8 +24,8 @@ namespace EasyChart.Editor
             row2.style.flexDirection = FlexDirection.Row;
 
             var leftField = new FloatField("Left");
-            var rightField = new FloatField("Right");
             var topField = new FloatField("Top");
+            var rightField = new FloatField("Right");
             var bottomField = new FloatField("Bottom");
 
             void StyleCompact(FloatField f)
@@ -56,8 +56,8 @@ namespace EasyChart.Editor
             bottomField.style.flexGrow = 1;
 
             row1.Add(leftField);
-            row1.Add(rightField);
-            row2.Add(topField);
+            row1.Add(topField);
+            row2.Add(rightField);
             row2.Add(bottomField);
 
             root.Add(row1);
@@ -68,13 +68,17 @@ namespace EasyChart.Editor
                 if (property.propertyType != SerializedPropertyType.Vector4) return;
                 var v = property.vector4Value;
                 leftField.SetValueWithoutNotify(v.x);
-                rightField.SetValueWithoutNotify(v.y);
-                topField.SetValueWithoutNotify(v.z);
+                topField.SetValueWithoutNotify(v.y);
+                rightField.SetValueWithoutNotify(v.z);
                 bottomField.SetValueWithoutNotify(v.w);
             }
 
             RefreshFromProperty();
-            root.TrackPropertyValue(property, _ => RefreshFromProperty());
+            root.TrackPropertyValue(property, _ => 
+            {
+                Debug.Log($"[Padding4] Property changed externally: {property.propertyPath}, v.y={property.vector4Value.y}, v.z={property.vector4Value.z}");
+                RefreshFromProperty();
+            });
 
             leftField.RegisterValueChangedCallback(evt =>
             {
@@ -85,22 +89,26 @@ namespace EasyChart.Editor
                 property.serializedObject.ApplyModifiedProperties();
             });
 
-            rightField.RegisterValueChangedCallback(evt =>
-            {
-                if (property.propertyType != SerializedPropertyType.Vector4) return;
-                var v = property.vector4Value;
-                v.y = evt.newValue;
-                property.vector4Value = v;
-                property.serializedObject.ApplyModifiedProperties();
-            });
-
             topField.RegisterValueChangedCallback(evt =>
             {
                 if (property.propertyType != SerializedPropertyType.Vector4) return;
                 var v = property.vector4Value;
+                Debug.Log($"[Padding4] TopField changed: {evt.newValue}, current v.y={v.y}, v.z={v.z}, propertyPath={property.propertyPath}");
+                v.y = evt.newValue;
+                property.vector4Value = v;
+                property.serializedObject.ApplyModifiedProperties();
+                Debug.Log($"[Padding4] After apply: v.y={property.vector4Value.y}, v.z={property.vector4Value.z}");
+            });
+
+            rightField.RegisterValueChangedCallback(evt =>
+            {
+                if (property.propertyType != SerializedPropertyType.Vector4) return;
+                var v = property.vector4Value;
+                Debug.Log($"[Padding4] RightField changed: {evt.newValue}, current v.y={v.y}, v.z={v.z}, propertyPath={property.propertyPath}");
                 v.z = evt.newValue;
                 property.vector4Value = v;
                 property.serializedObject.ApplyModifiedProperties();
+                Debug.Log($"[Padding4] After apply: v.y={property.vector4Value.y}, v.z={property.vector4Value.z}");
             });
 
             bottomField.RegisterValueChangedCallback(evt =>

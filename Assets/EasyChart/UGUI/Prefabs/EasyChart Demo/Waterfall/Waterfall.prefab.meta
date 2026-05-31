@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: bd980a9b4b5878d4682413965b238251
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/UGUI/Prefabs/EasyChart Demo/Waterfall/Waterfall.prefab
+  uploadId: 906968

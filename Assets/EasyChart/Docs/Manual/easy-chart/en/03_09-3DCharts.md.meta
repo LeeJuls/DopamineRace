@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 0426130008fb8d844bb69d0a03524ddd
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/docs/Manual/easy-chart/en/03_09-3DCharts.md
+  uploadId: 906968

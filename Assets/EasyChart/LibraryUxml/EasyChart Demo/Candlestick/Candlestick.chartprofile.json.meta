@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ae23fc0203df7a742bde3321cfa057b2
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/LibraryUxml/EasyChart Demo/Candlestick/Candlestick.chartprofile.json
+  uploadId: 906968

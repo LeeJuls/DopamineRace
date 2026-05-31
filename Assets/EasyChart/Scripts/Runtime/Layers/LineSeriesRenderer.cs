@@ -18,10 +18,93 @@ namespace EasyChart.Layers
 
         private readonly HashSet<long> _activeHoverKeys = new HashSet<long>();
 
+        // Stacked line support
+        private readonly List<Serie> _stackedSeries = new List<Serie>();
+        private readonly Dictionary<int, float> _stackedValues = new Dictionary<int, float>(); // xIndex -> accumulated value
+
+        private bool _isRegisteredForGlobalUpdate = false;
+
         // Renderer for Line and Scatter charts
         public LineSeriesRenderer()
         {
-            schedule.Execute(OnUpdate).Every(16);
+            RegisterCallback<AttachToPanelEvent>(OnAttachToPanel);
+            RegisterCallback<DetachFromPanelEvent>(OnDetachFromPanel);
+        }
+
+        private void OnAttachToPanel(AttachToPanelEvent evt)
+        {
+            UpdateUpdateLoopState();
+        }
+
+        private void OnDetachFromPanel(DetachFromPanelEvent evt)
+        {
+            StopUpdateLoop();
+        }
+
+        private ChartElement GetChartElement()
+        {
+            var current = this.parent;
+            while (current != null)
+            {
+                if (current is ChartElement chart) return chart;
+                current = current.parent;
+            }
+            return null;
+        }
+
+        private void StartUpdateLoop()
+        {
+            if (_isRegisteredForGlobalUpdate) return;
+            var chart = GetChartElement();
+            if (chart != null)
+            {
+                ChartElement.RegisterGlobalAnimationCallback(chart, OnUpdate);
+                _isRegisteredForGlobalUpdate = true;
+            }
+        }
+
+        private void StopUpdateLoop()
+        {
+            if (!_isRegisteredForGlobalUpdate) return;
+            var chart = GetChartElement();
+            if (chart != null)
+            {
+                ChartElement.UnregisterGlobalAnimationCallback(chart, OnUpdate);
+            }
+            _isRegisteredForGlobalUpdate = false;
+        }
+
+        private void UpdateUpdateLoopState()
+        {
+            if (panel == null) { StopUpdateLoop(); return; }
+            if (HasActiveUpdateWork())
+            {
+                if (!_isRegisteredForGlobalUpdate && GetChartElement() != null)
+                    StartUpdateLoop();
+            }
+            else StopUpdateLoop();
+        }
+
+        private bool HasActiveUpdateWork()
+        {
+            if (_hoverAlpha.Count > 0 || _categoryHover.Count > 0) return true;
+            if (Data == null || Data.Series == null) return false;
+            if (!ProPackage.IsInstalled) return false;
+
+            for (int i = 0; i < Data.Series.Count; i++)
+            {
+                var s = Data.Series[i];
+                if (s == null || !s.visible) continue;
+                if (s.type != SerieType.Line) continue;
+                if (s.settings is not LineSettings settings) continue;
+                EnsureLineSettingsInitialized(settings);
+
+                if (settings.stroke != null && TextureFXBridge.HasAnyAnimation(settings.stroke.textureFXLayers)) return true;
+                if (settings.area != null && TextureFXBridge.HasAnyAnimation(settings.area.textureFXLayers)) return true;
+                if (settings.point != null && TextureFXBridge.HasAnyAnimation(settings.point.textureFXLayers)) return true;
+            }
+
+            return false;
         }
 
         public override void ClearHover()
@@ -51,12 +134,11 @@ namespace EasyChart.Layers
                 changed = true;
             }
 
-            if (changed) MarkDirtyRepaint();
-        }
-
-        private static bool HasTextureFillAnimation(TextureFillSettings fill)
-        {
-            return fill != null && fill.animationType != TextureFillAnimationType.None;
+            if (changed) 
+            {
+                UpdateUpdateLoopState();
+                MarkDirtyRepaint();
+            }
         }
 
         private static void EnsureLineSettingsInitialized(LineSettings settings)
@@ -123,13 +205,6 @@ namespace EasyChart.Layers
 
             UnpackTextureFill(fill, defaultColor, out var tex, out var tiling, out var offset, out var color);
 
-            bool hasPro = ProPackage.IsInstalled;
-            if (hasPro && fill != null && fill.animationType == TextureFillAnimationType.TextureScale)
-            {
-                tiling = fill.tiling;
-                offset = fill.offset;
-            }
-
             offset += uvOffsetAdd;
             color.a *= alpha;
             if (color.a <= 0.001f) return;
@@ -165,6 +240,7 @@ namespace EasyChart.Layers
                 {
                     _categoryHover.Clear();
                     _categoryHoverIndex = int.MinValue;
+                    UpdateUpdateLoopState();
                     MarkDirtyRepaint();
                 }
                 return;
@@ -203,6 +279,7 @@ namespace EasyChart.Layers
             {
                 _categoryHover.Clear();
                 foreach (var k in _categoryHoverTmp) _categoryHover.Add(k);
+                UpdateUpdateLoopState();
                 MarkDirtyRepaint();
             }
         }
@@ -217,7 +294,7 @@ namespace EasyChart.Layers
             return _hoverAlpha.TryGetValue(GetHoverKey(serieIndex, pointIndex), out float a) ? a : 0f;
         }
 
-        private void DrawHoverSegmentOverlay(Painter2D painter, Serie serie, LineSettings settings, float width, float height, int pointIndex, float alpha)
+        private void DrawHoverSegmentOverlay(Painter2D painter, Serie serie, LineSettings settings, float width, float height, int pointIndex, float alpha, Dictionary<int, float> stackBase = null)
         {
             if (painter == null) return;
             if (serie == null || serie.seriesData == null) return;
@@ -308,6 +385,78 @@ namespace EasyChart.Layers
                 painter.Stroke();
             }
 
+            // For Straight and Step, draw as a continuous path to avoid gaps
+            if (lineType == LineType.Straight || lineType == LineType.Step)
+            {
+                List<Vector2> pathPoints = new List<Vector2>();
+                
+                void AddPointsForSegment(int aIdx, int bIdx)
+                {
+                    if (aIdx < 0 || bIdx < 0) return;
+                    if (aIdx >= serie.seriesData.Count || bIdx >= serie.seriesData.Count) return;
+
+                    var aDp = serie.seriesData[aIdx];
+                    var bDp = serie.seriesData[bIdx];
+                    if (aDp == null || bDp == null) return;
+
+                    float aY = settings.stacked ? GetStackedValue(aDp, stackBase) : aDp.value;
+                    float bY = settings.stacked ? GetStackedValue(bDp, stackBase) : bDp.value;
+
+                    Vector2 aPos = GetPixelPos(new Vector2(aDp.x, aY), width, height);
+                    Vector2 bPos = GetPixelPos(new Vector2(bDp.x, bY), width, height);
+
+                    if (pathPoints.Count == 0) pathPoints.Add(aPos);
+
+                    if (lineType == LineType.Step)
+                    {
+                        Vector2 mid = new Vector2(bPos.x, aPos.y);
+                        pathPoints.Add(mid);
+                    }
+                    pathPoints.Add(bPos);
+                }
+
+                AddPointsForSegment(prev, pointIndex);
+                AddPointsForSegment(pointIndex, next);
+
+                if (pathPoints.Count < 2) return;
+
+                // Draw as continuous path with clipping
+                painter.BeginPath();
+                bool started = false;
+                for (int i = 0; i < pathPoints.Count; i++)
+                {
+                    Vector2 p = pathPoints[i];
+                    if (p.x > pixelClipX)
+                    {
+                        if (started && i > 0)
+                        {
+                            Vector2 prevP2 = pathPoints[i - 1];
+                            float denom = p.x - prevP2.x;
+                            if (Mathf.Abs(denom) > 0.00001f)
+                            {
+                                float t = Mathf.Clamp01((pixelClipX - prevP2.x) / denom);
+                                Vector2 clipP = Vector2.Lerp(prevP2, p, t);
+                                painter.LineTo(clipP);
+                            }
+                        }
+                        break;
+                    }
+
+                    if (!started)
+                    {
+                        painter.MoveTo(p);
+                        started = true;
+                    }
+                    else
+                    {
+                        painter.LineTo(p);
+                    }
+                }
+                if (started) painter.Stroke();
+                return;
+            }
+
+            // Smooth type - draw each segment with bezier curves
             void DrawSegment(int aIdx, int bIdx)
             {
                 if (aIdx < 0 || bIdx < 0) return;
@@ -317,25 +466,13 @@ namespace EasyChart.Layers
                 var bDp = serie.seriesData[bIdx];
                 if (aDp == null || bDp == null) return;
 
-                Vector2 aPos = GetPixelPos(new Vector2(aDp.x, aDp.value), width, height);
-                Vector2 bPos = GetPixelPos(new Vector2(bDp.x, bDp.value), width, height);
+                float aY = settings.stacked ? GetStackedValue(aDp, stackBase) : aDp.value;
+                float bY = settings.stacked ? GetStackedValue(bDp, stackBase) : bDp.value;
 
-                if (lineType == LineType.Step)
-                {
-                    // Match Step building logic used in line rendering: prev -> (curr.x, prev.y) -> curr
-                    Vector2 mid = new Vector2(bPos.x, aPos.y);
-                    if (!DrawClippedLine(aPos, mid)) return;
-                    DrawClippedLine(mid, bPos);
-                    return;
-                }
+                Vector2 aPos = GetPixelPos(new Vector2(aDp.x, aY), width, height);
+                Vector2 bPos = GetPixelPos(new Vector2(bDp.x, bY), width, height);
 
-                if (lineType == LineType.Smooth)
-                {
-                    DrawSmoothClipped(aPos, bPos);
-                    return;
-                }
-
-                DrawClippedLine(aPos, bPos);
+                DrawSmoothClipped(aPos, bPos);
             }
 
             DrawSegment(prev, pointIndex);
@@ -560,8 +697,13 @@ namespace EasyChart.Layers
 
         private void OnUpdate()
         {
-            if (panel == null) return;
-            if (Data == null || Data.Series == null) return;
+            if (panel == null) { StopUpdateLoop(); return; }
+
+            if (!HasActiveUpdateWork())
+            {
+                StopUpdateLoop();
+                return;
+            }
 
             bool dirty = false;
 
@@ -575,14 +717,9 @@ namespace EasyChart.Layers
                     if (s.settings is not LineSettings settings) continue;
                     EnsureLineSettingsInitialized(settings);
 
-                    if (HasTextureFillAnimation(settings.stroke != null ? settings.stroke.textureFill : null)) { dirty = true; break; }
-                    if (HasTextureFillAnimation(settings.area != null ? settings.area.textureFill : null)) { dirty = true; break; }
-                    if (settings.point != null && HasTextureFillAnimation(settings.point.textureFill)) { dirty = true; break; }
-                    if (settings.hover != null)
-                    {
-                        if (HasTextureFillAnimation(settings.hover.textureFill)) { dirty = true; break; }
-                        if (settings.hover.point != null && HasTextureFillAnimation(settings.hover.point.textureFill)) { dirty = true; break; }
-                    }
+                    if (settings.stroke != null && TextureFXBridge.HasAnyAnimation(settings.stroke.textureFXLayers)) { dirty = true; break; }
+                    if (settings.area != null && TextureFXBridge.HasAnyAnimation(settings.area.textureFXLayers)) { dirty = true; break; }
+                    if (settings.point != null && TextureFXBridge.HasAnyAnimation(settings.point.textureFXLayers)) { dirty = true; break; }
                 }
             }
 
@@ -591,7 +728,6 @@ namespace EasyChart.Layers
                 float dt = Time.deltaTime;
                 float speed = 12f;
 
-                // Active hover keys come from category hover (cursor line)
                 _activeHoverKeys.Clear();
                 foreach (var k in _categoryHover) _activeHoverKeys.Add(k);
 
@@ -608,9 +744,9 @@ namespace EasyChart.Layers
                         _tmpHoverKeys.Add(k);
                     }
 
-                    for (int i = 0; i < _tmpHoverKeys.Count; i++)
+                    for (int j = 0; j < _tmpHoverKeys.Count; j++)
                     {
-                        long k = _tmpHoverKeys[i];
+                        long k = _tmpHoverKeys[j];
                         float current = _hoverAlpha[k];
                         float target = _activeHoverKeys.Contains(k) ? 1f : 0f;
                         float next = Mathf.MoveTowards(current, target, speed * dt);
@@ -629,10 +765,13 @@ namespace EasyChart.Layers
             }
 
             if (dirty) MarkDirtyRepaint();
+
+            UpdateUpdateLoopState();
         }
 
         protected override void OnGenerateVisualContent(MeshGenerationContext context)
         {
+            UpdateUpdateLoopState();
             if (Data == null || Data.Series == null) return;
 
             var width = contentRect.width;
@@ -641,6 +780,15 @@ namespace EasyChart.Layers
 
             var painter = context.painter2D;
 
+            // Build stack groups for stacked line series
+            BuildStackGroups();
+
+            // Render in 3 passes to ensure correct z-order:
+            // Pass 1: All Areas (bottom layer)
+            // Pass 2: All Lines (middle layer)
+            // Pass 3: All Points (top layer)
+
+            // Pass 1: Draw all Areas
             for (int si = 0; si < Data.Series.Count; si++)
             {
                 var serie = Data.Series[si];
@@ -651,33 +799,94 @@ namespace EasyChart.Layers
                 if (settings == null) continue;
                 EnsureLineSettingsInitialized(settings);
 
-                // Draw Area
+                Dictionary<int, float> stackBase = null;
+                if (settings.stacked)
+                {
+                    stackBase = GetStackBaseForSerie(serie, settings);
+                }
+
                 if (settings.area.show)
                 {
                     if (settings.area.textureFill != null && settings.area.textureFill.texture != null)
                     {
-                        DrawAreaWithTexture(context, serie, settings, width, height);
+                        DrawAreaWithTexture(context, serie, settings, width, height, stackBase);
                     }
                     else
                     {
-                        DrawArea(painter, serie, settings, width, height);
+                        DrawArea(painter, serie, settings, width, height, stackBase);
+                    }
+
+                    // Draw TextureFX layers on top of the area (Pro only)
+                    if (ProPackage.IsInstalled && settings.area.textureFXLayers != null && settings.area.textureFXLayers.Count > 0)
+                    {
+                        var areaTopVertices = BuildAreaTopVertices(serie, settings, width, height, stackBase);
+                        if (areaTopVertices != null && areaTopVertices.Count >= 2)
+                        {
+                            var points = GetOrderedVisiblePoints(serie);
+                            
+                            if (settings.stacked && stackBase != null && points != null && points.Count > 0)
+                            {
+                                // For stacked areas, calculate bottom Y for each vertex using the same line type
+                                var bottomYs = BuildStackedBottomYs(areaTopVertices, points, stackBase, settings.stroke.lineType, width, height);
+                                TextureFXBridge.DrawAreaClippedLayers(context, areaTopVertices, bottomYs, settings.area.textureFXLayers, TextureFXBridge.GetAnimationTime());
+                            }
+                            else
+                            {
+                                // Non-stacked: use fixed bottom Y
+                                TextureFXBridge.DrawAreaClippedLayers(context, areaTopVertices, height, settings.area.textureFXLayers, TextureFXBridge.GetAnimationTime());
+                            }
+                        }
                     }
                 }
 
-                // Draw Line
+                if (settings.stacked)
+                {
+                    UpdateStackValues(serie, settings);
+                }
+            }
+
+            // Reset stack values for Pass 2
+            _stackedValues.Clear();
+
+            // Pass 2: Draw all Lines
+            for (int si = 0; si < Data.Series.Count; si++)
+            {
+                var serie = Data.Series[si];
+                if (serie == null || !serie.visible || serie.seriesData == null || serie.seriesData.Count == 0) continue;
+                if (serie.type != SerieType.Line) continue;
+
+                LineSettings settings = serie.settings as LineSettings;
+                if (settings == null) continue;
+                EnsureLineSettingsInitialized(settings);
+
+                Dictionary<int, float> stackBase = null;
+                if (settings.stacked)
+                {
+                    stackBase = GetStackBaseForSerie(serie, settings);
+                }
+
                 bool useStrokeTexture = settings.stroke != null && settings.stroke.textureFill != null && settings.stroke.textureFill.texture != null;
                 if (useStrokeTexture)
                 {
-                    DrawLineWithTexture(context, serie, settings, width, height);
+                    DrawLineWithTexture(context, serie, settings, width, height, stackBase);
                 }
                 else
                 {
-                    DrawLine(painter, serie, settings, width, height);
+                    DrawLine(painter, serie, settings, width, height, stackBase);
+                }
+
+                // Draw TextureFX layers on top of the stroke (Pro only)
+                if (ProPackage.IsInstalled && settings.stroke != null && settings.stroke.textureFXLayers != null && settings.stroke.textureFXLayers.Count > 0)
+                {
+                    var linePoints = BuildLinePoints(serie, settings, width, height, stackBase);
+                    if (linePoints != null && linePoints.Count >= 2)
+                    {
+                        TextureFXBridge.DrawLineLayers(context, linePoints, settings.stroke.width, settings.stroke.textureFXLayers, TextureFXBridge.GetAnimationTime());
+                    }
                 }
 
                 if (settings.hover != null && settings.hover.enabled)
                 {
-                    // CursorLine category hover: may include multiple series at the same category index
                     if (_categoryHover.Count > 0)
                     {
                         foreach (var k in _categoryHover)
@@ -686,22 +895,125 @@ namespace EasyChart.Layers
                             if (hoveredSerieIndex != si) continue;
                             int hoveredPointIndex = (int)(uint)k;
                             float a = GetHoverAlpha(hoveredSerieIndex, hoveredPointIndex);
-                            DrawHoverSegmentOverlay(painter, serie, settings, width, height, hoveredPointIndex, a);
+                            DrawHoverSegmentOverlay(painter, serie, settings, width, height, hoveredPointIndex, a, stackBase);
                         }
                     }
                 }
 
-                // Draw Points
+                if (settings.stacked)
+                {
+                    UpdateStackValues(serie, settings);
+                }
+            }
+
+            // Reset stack values for Pass 3
+            _stackedValues.Clear();
+
+            // Pass 3: Draw all Points
+            for (int si = 0; si < Data.Series.Count; si++)
+            {
+                var serie = Data.Series[si];
+                if (serie == null || !serie.visible || serie.seriesData == null || serie.seriesData.Count == 0) continue;
+                if (serie.type != SerieType.Line) continue;
+
+                LineSettings settings = serie.settings as LineSettings;
+                if (settings == null) continue;
+                EnsureLineSettingsInitialized(settings);
+
+                Dictionary<int, float> stackBase = null;
+                if (settings.stacked)
+                {
+                    stackBase = GetStackBaseForSerie(serie, settings);
+                }
+
                 bool basePointShow = settings.point != null && settings.point.show;
                 bool hoverPointShow = settings.hover != null && settings.hover.enabled && settings.hover.point != null && settings.hover.point.show;
                 if (basePointShow || hoverPointShow)
                 {
-                    DrawPoints(context, painter, si, serie, settings, width, height);
+                    DrawPoints(context, painter, si, serie, settings, width, height, stackBase);
                 }
+
+                // Draw TextureFX layers on top of points (Pro only)
+                if (ProPackage.IsInstalled && settings.point != null && settings.point.textureFXLayers != null && settings.point.textureFXLayers.Count > 0)
+                {
+                    DrawPointTextureFXLayers(context, serie, settings, width, height, stackBase);
+                }
+
+                if (settings.stacked)
+                {
+                    UpdateStackValues(serie, settings);
+                }
+            }
+
+            // Clear stacked series after rendering
+            _stackedSeries.Clear();
+            _stackedValues.Clear();
+        }
+
+        private void BuildStackGroups()
+        {
+            _stackedSeries.Clear();
+            _stackedValues.Clear();
+
+            if (Data == null || Data.Series == null) return;
+
+            for (int i = 0; i < Data.Series.Count; i++)
+            {
+                var serie = Data.Series[i];
+                if (serie == null || !serie.visible || serie.type != SerieType.Line) continue;
+                if (!(serie.settings is LineSettings settings) || !settings.stacked) continue;
+
+                _stackedSeries.Add(serie);
             }
         }
 
-        private void DrawLineWithTexture(MeshGenerationContext context, Serie serie, LineSettings settings, float width, float height)
+        private Dictionary<int, float> GetStackBaseForSerie(Serie serie, LineSettings settings)
+        {
+            if (!settings.stacked) return null;
+
+            // Find the index of this series in the stacked list
+            int serieIndex = _stackedSeries.IndexOf(serie);
+            if (serieIndex <= 0) return null; // First series in stack has no base
+
+            // Return current accumulated stack values as base
+            return new Dictionary<int, float>(_stackedValues);
+        }
+
+        private void UpdateStackValues(Serie serie, LineSettings settings)
+        {
+            if (serie == null || serie.seriesData == null) return;
+            if (!settings.stacked) return;
+
+            foreach (var point in serie.seriesData)
+            {
+                if (point == null) continue;
+                int xIndex = Mathf.RoundToInt(point.x);
+                float currentValue = _stackedValues.TryGetValue(xIndex, out float v) ? v : 0f;
+                _stackedValues[xIndex] = currentValue + point.value * _animationProgress;
+            }
+        }
+
+        private float GetStackedValue(SeriesData point, Dictionary<int, float> stackBase)
+        {
+            if (point == null) return 0f;
+            float baseValue = 0f;
+            if (stackBase != null)
+            {
+                int xIndex = Mathf.RoundToInt(point.x);
+                stackBase.TryGetValue(xIndex, out baseValue);
+            }
+            return baseValue + point.value * _animationProgress;
+        }
+
+        private float GetStackBaseValue(SeriesData point, Dictionary<int, float> stackBase)
+        {
+            if (stackBase == null || point == null) return 0f;
+            int xIndex = Mathf.RoundToInt(point.x);
+            stackBase.TryGetValue(xIndex, out float baseValue);
+            return baseValue;
+        }
+
+        private void DrawLineWithTexture(MeshGenerationContext context, Serie serie, LineSettings settings, float width, float height, Dictionary<int, float> stackBase = null)
         {
             if (context.Equals(default(MeshGenerationContext))) return;
             if (serie == null || serie.seriesData == null || serie.seriesData.Count < 2) return;
@@ -721,6 +1033,12 @@ namespace EasyChart.Layers
             if (ordered == null || ordered.Count < 2) return;
 
             var points = new List<Vector2>(serie.seriesData.Count * 2);
+
+            // Helper to get stacked Y value
+            float GetYValue(SeriesData dp)
+            {
+                return settings.stacked ? GetStackedValue(dp, stackBase) : dp.value;
+            }
 
             bool AddPoint(Vector2 p)
             {
@@ -761,12 +1079,12 @@ namespace EasyChart.Layers
                     var dp = ordered[i];
                     if (dp == null) continue;
 
-                    Vector2 pos = GetPixelPos(new Vector2(dp.x, dp.value), width, height);
+                    Vector2 pos = GetPixelPos(new Vector2(dp.x, GetYValue(dp)), width, height);
                     if (i > 0)
                     {
                         var prev = ordered[i - 1];
                         if (prev == null) continue;
-                        Vector2 prevPos = GetPixelPos(new Vector2(prev.x, prev.value), width, height);
+                        Vector2 prevPos = GetPixelPos(new Vector2(prev.x, GetYValue(prev)), width, height);
                         if (!AddClipped(new Vector2(pos.x, prevPos.y))) break;
                     }
                     if (!AddClipped(pos)) break;
@@ -776,15 +1094,15 @@ namespace EasyChart.Layers
             {
                 var first = ordered[0];
                 if (first == null) return;
-                if (!AddClipped(GetPixelPos(new Vector2(first.x, first.value), width, height))) return;
+                if (!AddClipped(GetPixelPos(new Vector2(first.x, GetYValue(first)), width, height))) return;
 
                 for (int i = 0; i < ordered.Count - 1; i++)
                 {
                     var dp0 = ordered[i];
                     var dp1 = ordered[i + 1];
                     if (dp0 == null || dp1 == null) continue;
-                    Vector2 p0 = GetPixelPos(new Vector2(dp0.x, dp0.value), width, height);
-                    Vector2 p1 = GetPixelPos(new Vector2(dp1.x, dp1.value), width, height);
+                    Vector2 p0 = GetPixelPos(new Vector2(dp0.x, GetYValue(dp0)), width, height);
+                    Vector2 p1 = GetPixelPos(new Vector2(dp1.x, GetYValue(dp1)), width, height);
 
                     if (p0.x > pixelClipX) break;
 
@@ -809,7 +1127,7 @@ namespace EasyChart.Layers
                 {
                     var dp = ordered[i];
                     if (dp == null) continue;
-                    if (!AddClipped(GetPixelPos(new Vector2(dp.x, dp.value), width, height))) break;
+                    if (!AddClipped(GetPixelPos(new Vector2(dp.x, GetYValue(dp)), width, height))) break;
                 }
             }
 
@@ -828,9 +1146,12 @@ namespace EasyChart.Layers
             var mesh = context.Allocate(vertexCount, indexCount, tex);
 
             var normals = new Vector2[points.Count];
+            var miterLengths = new float[points.Count];
             for (int i = 0; i < points.Count; i++)
             {
                 Vector2 n;
+                float miterLen = 1f;
+                
                 if (i == 0)
                 {
                     Vector2 d = points[1] - points[0];
@@ -843,15 +1164,25 @@ namespace EasyChart.Layers
                 }
                 else
                 {
-                    Vector2 d0 = points[i] - points[i - 1];
-                    Vector2 d1 = points[i + 1] - points[i];
+                    Vector2 d0 = (points[i] - points[i - 1]).normalized;
+                    Vector2 d1 = (points[i + 1] - points[i]).normalized;
                     Vector2 n0 = new Vector2(-d0.y, d0.x);
                     Vector2 n1 = new Vector2(-d1.y, d1.x);
-                    n = n0 + n1;
+                    
+                    // Calculate miter direction and length
+                    n = (n0 + n1).normalized;
+                    float dot = Vector2.Dot(n0, n);
+                    if (dot > 0.001f)
+                    {
+                        miterLen = 1f / dot; // Miter length to maintain line width
+                        // Clamp miter length to avoid extreme values at sharp angles
+                        miterLen = Mathf.Min(miterLen, 2f);
+                    }
                 }
 
                 if (n.sqrMagnitude <= 0.00001f) n = Vector2.up;
                 normals[i] = n.normalized;
+                miterLengths[i] = miterLen;
             }
 
             float accLen = 0f;
@@ -861,7 +1192,7 @@ namespace EasyChart.Layers
                 float u = (accLen / totalLen) * tiling.x + uvOffset.x;
 
                 Vector2 p = points[i];
-                Vector2 n = normals[i] * halfW;
+                Vector2 n = normals[i] * halfW * miterLengths[i];
                 Vector2 a = p + n;
                 Vector2 b = p - n;
 
@@ -995,7 +1326,7 @@ namespace EasyChart.Layers
             return _orderedVisiblePoints;
         }
 
-        private void DrawLine(Painter2D painter, Serie serie, LineSettings settings, float width, float height)
+        private void DrawLine(Painter2D painter, Serie serie, LineSettings settings, float width, float height, Dictionary<int, float> stackBase = null)
         {
             painter.lineWidth = settings.stroke.width;
             var strokeColor = settings.stroke.color;
@@ -1021,7 +1352,9 @@ namespace EasyChart.Layers
             {
                 var dp = points[i];
                 if (dp == null) continue;
-                Vector2 pos = GetPixelPos(new Vector2(dp.x, dp.value), width, height);
+                // Apply stacking offset
+                float yValue = settings.stacked ? GetStackedValue(dp, stackBase) : dp.value;
+                Vector2 pos = GetPixelPos(new Vector2(dp.x, yValue), width, height);
 
                 if (i == 0)
                 {
@@ -1117,7 +1450,7 @@ namespace EasyChart.Layers
             painter.Stroke();
         }
 
-        private void DrawArea(Painter2D painter, Serie serie, LineSettings settings, float width, float height)
+        private void DrawArea(Painter2D painter, Serie serie, LineSettings settings, float width, float height, Dictionary<int, float> stackBase = null)
         {
             UnpackTextureFill(settings.area.textureFill, out var _areaTex, out var _areaTiling, out var _areaOffset, out var _areaColor);
 
@@ -1125,32 +1458,51 @@ namespace EasyChart.Layers
             if (_areaColor.a <= 0.001f) return;
             painter.fillColor = _areaColor;
             var lineType = settings.stroke.lineType;
-            painter.BeginPath();
 
             var points = GetOrderedVisiblePoints(serie);
             if (points == null || points.Count < 2) return;
 
+            float pixelClipX = GetEffectivePixelClipX(width);
+
+            // Special handling for Step + Stacked: draw each segment as independent rectangle
+            if (lineType == LineType.Step && settings.stacked && stackBase != null)
+            {
+                DrawStackedStepArea(painter, points, settings, stackBase, width, height, pixelClipX);
+                return;
+            }
+
+            painter.BeginPath();
+
             var firstDp = points[0];
             if (firstDp == null) return;
 
-            Vector2 firstPos = GetPixelPos(new Vector2(firstDp.x, firstDp.value), width, height);
-            float pixelClipX = GetEffectivePixelClipX(width);
+            // Apply stacking offset
+            float firstYValue = settings.stacked ? GetStackedValue(firstDp, stackBase) : firstDp.value;
+            float firstBaseY = settings.stacked ? GetStackBaseValue(firstDp, stackBase) : 0f;
+            Vector2 firstPos = GetPixelPos(new Vector2(firstDp.x, firstYValue), width, height);
             
             if (firstPos.x > pixelClipX) return;
 
-            float bottomY = height; 
+            // For stacked areas, bottom is the previous series' top; for non-stacked, bottom is the chart bottom
+            float firstBottomY = settings.stacked && stackBase != null 
+                ? GetPixelPos(new Vector2(firstDp.x, firstBaseY), width, height).y 
+                : height;
             
-            painter.MoveTo(new Vector2(firstPos.x, bottomY));
+            painter.MoveTo(new Vector2(firstPos.x, firstBottomY));
             painter.LineTo(firstPos);
 
             Vector2 prevPos = firstPos;
             Vector2 lastDrawnPos = firstPos;
+            SeriesData lastDp = firstDp;
 
             for (int i = 1; i < points.Count; i++)
             {
                 var dp = points[i];
                 if (dp == null) continue;
-                Vector2 pos = GetPixelPos(new Vector2(dp.x, dp.value), width, height);
+                // Apply stacking offset
+                float yValue = settings.stacked ? GetStackedValue(dp, stackBase) : dp.value;
+                Vector2 pos = GetPixelPos(new Vector2(dp.x, yValue), width, height);
+                lastDp = dp;
                 
                 if (pos.x > pixelClipX)
                 {
@@ -1210,18 +1562,133 @@ namespace EasyChart.Layers
                 prevPos = pos;
             }
 
-            painter.LineTo(new Vector2(lastDrawnPos.x, bottomY));
+            // Close the area path - for stacked areas, draw back along the base line
+            if (settings.stacked && stackBase != null)
+            {
+                // Draw back along the base (previous series' top line) in reverse order
+                float lastBaseY = GetStackBaseValue(lastDp, stackBase);
+                Vector2 basePos = GetPixelPos(new Vector2(lastDp.x, lastBaseY), width, height);
+                painter.LineTo(basePos);
+                
+                // Draw base line back to first point using the same lineType as the top line
+                Vector2 prevBasePos = basePos;
+                for (int i = points.Count - 2; i >= 0; i--)
+                {
+                    var dp = points[i];
+                    if (dp == null) continue;
+                    float baseY = GetStackBaseValue(dp, stackBase);
+                    Vector2 currentBasePos = GetPixelPos(new Vector2(dp.x, baseY), width, height);
+                    
+                    if (lineType == LineType.Step)
+                    {
+                        // Step: For stacked areas, use next point's base value to match top line step pattern
+                        var nextDp = points[i + 1];
+                        float nextBaseY = GetStackBaseValue(nextDp, stackBase);
+                        Vector2 nextBasePos = GetPixelPos(new Vector2(nextDp.x, nextBaseY), width, height);
+                        // Mirror top line: horizontal to current x at next's y, then vertical to current y
+                        painter.LineTo(new Vector2(currentBasePos.x, nextBasePos.y));
+                        painter.LineTo(currentBasePos);
+                    }
+                    else if (lineType == LineType.Smooth)
+                    {
+                        // Smooth: use bezier curve, but use straight lines during animation to prevent path crossing
+                        if (_animationProgress < 0.99f)
+                        {
+                            // During animation, use straight lines to avoid bezier curve crossing issues
+                            painter.LineTo(currentBasePos);
+                        }
+                        else
+                        {
+                            float cpDistance = (prevBasePos.x - currentBasePos.x) * 0.5f;
+                            Vector2 cp1 = prevBasePos - new Vector2(cpDistance, 0);
+                            Vector2 cp2 = currentBasePos + new Vector2(cpDistance, 0);
+                            painter.BezierCurveTo(cp1, cp2, currentBasePos);
+                        }
+                    }
+                    else
+                    {
+                        // Straight line
+                        painter.LineTo(currentBasePos);
+                    }
+                    prevBasePos = currentBasePos;
+                }
+            }
+            else
+            {
+                // Non-stacked: close to bottom of chart
+                painter.LineTo(new Vector2(lastDrawnPos.x, height));
+                painter.LineTo(new Vector2(firstPos.x, height));
+            }
+            
             painter.ClosePath();
             painter.Fill();
         }
 
-        private void DrawAreaWithTexture(MeshGenerationContext context, Serie serie, LineSettings settings, float width, float height)
+        private void DrawStackedStepArea(Painter2D painter, List<SeriesData> points, LineSettings settings, Dictionary<int, float> stackBase, float width, float height, float pixelClipX)
+        {
+            // For Step + Stacked, draw each segment as an independent rectangle
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                var dp0 = points[i];
+                var dp1 = points[i + 1];
+                if (dp0 == null || dp1 == null) continue;
+
+                float topY0 = GetStackedValue(dp0, stackBase);
+                float baseY0 = GetStackBaseValue(dp0, stackBase);
+
+                Vector2 topLeft = GetPixelPos(new Vector2(dp0.x, topY0), width, height);
+                Vector2 topRight = GetPixelPos(new Vector2(dp1.x, topY0), width, height);
+                Vector2 baseLeft = GetPixelPos(new Vector2(dp0.x, baseY0), width, height);
+
+                if (topLeft.x > pixelClipX) continue;
+                float rightX = Mathf.Min(topRight.x, pixelClipX);
+
+                painter.BeginPath();
+                painter.MoveTo(new Vector2(topLeft.x, baseLeft.y));
+                painter.LineTo(topLeft);
+                painter.LineTo(new Vector2(rightX, topLeft.y));
+                painter.LineTo(new Vector2(rightX, baseLeft.y));
+                painter.ClosePath();
+                painter.Fill();
+            }
+
+            // Draw last vertical segment
+            if (points.Count >= 2)
+            {
+                var lastDp = points[points.Count - 1];
+                var prevDp = points[points.Count - 2];
+                if (lastDp != null && prevDp != null)
+                {
+                    float topY = GetStackedValue(lastDp, stackBase);
+                    float baseY = GetStackBaseValue(lastDp, stackBase);
+                    float prevTopY = GetStackedValue(prevDp, stackBase);
+
+                    Vector2 topPos = GetPixelPos(new Vector2(lastDp.x, topY), width, height);
+                    Vector2 basePos = GetPixelPos(new Vector2(lastDp.x, baseY), width, height);
+                    Vector2 prevTopPos = GetPixelPos(new Vector2(lastDp.x, prevTopY), width, height);
+                    Vector2 prevBasePos = GetPixelPos(new Vector2(lastDp.x, GetStackBaseValue(prevDp, stackBase)), width, height);
+
+                    if (topPos.x <= pixelClipX && Mathf.Abs(topY - prevTopY) > 0.001f)
+                    {
+                        painter.BeginPath();
+                        painter.MoveTo(new Vector2(topPos.x, prevBasePos.y));
+                        painter.LineTo(prevTopPos);
+                        painter.LineTo(topPos);
+                        painter.LineTo(basePos);
+                        painter.ClosePath();
+                        painter.Fill();
+                    }
+                }
+            }
+        }
+
+        private void DrawAreaWithTexture(MeshGenerationContext context, Serie serie, LineSettings settings, float width, float height, Dictionary<int, float> stackBase = null)
         {
             var areaFill = settings.area.textureFill;
             UnpackTextureFill(areaFill, out var areaTex, out var areaTiling, out var areaOffset, out var areaColor);
             if (areaTex == null)
             {
-                DrawArea(context.painter2D, serie, settings, width, height);
+                DrawArea(context.painter2D, serie, settings, width, height, stackBase);
                 return;
             }
 
@@ -1270,18 +1737,24 @@ namespace EasyChart.Layers
                 }
             }
 
+            // Helper to get Y value (stacked or raw)
+            float GetYValue(SeriesData dp)
+            {
+                return settings.stacked ? GetStackedValue(dp, stackBase) : dp.value;
+            }
+
             if (settings.stroke.lineType == LineType.Step)
             {
                 for (int i = 0; i < points.Count; i++)
                 {
                     var dp = points[i];
                     if (dp == null) continue;
-                    Vector2 pos = GetPixelPos(new Vector2(dp.x, dp.value), width, height);
+                    Vector2 pos = GetPixelPos(new Vector2(dp.x, GetYValue(dp)), width, height);
                     if (i > 0)
                     {
                         var prevDp = points[i - 1];
                         if (prevDp == null) continue;
-                        Vector2 prevPos = GetPixelPos(new Vector2(prevDp.x, prevDp.value), width, height);
+                        Vector2 prevPos = GetPixelPos(new Vector2(prevDp.x, GetYValue(prevDp)), width, height);
                         if (!AddClipped(new Vector2(pos.x, prevPos.y))) break;
                     }
                     if (!AddClipped(pos)) break;
@@ -1293,15 +1766,15 @@ namespace EasyChart.Layers
                 {
                     var first = points[0];
                     if (first == null) return;
-                    if (!AddClipped(GetPixelPos(new Vector2(first.x, first.value), width, height))) return;
+                    if (!AddClipped(GetPixelPos(new Vector2(first.x, GetYValue(first)), width, height))) return;
 
                     for (int i = 0; i < points.Count - 1; i++)
                     {
                         var dp0 = points[i];
                         var dp1 = points[i + 1];
                         if (dp0 == null || dp1 == null) continue;
-                        Vector2 p0 = GetPixelPos(new Vector2(dp0.x, dp0.value), width, height);
-                        Vector2 p1 = GetPixelPos(new Vector2(dp1.x, dp1.value), width, height);
+                        Vector2 p0 = GetPixelPos(new Vector2(dp0.x, GetYValue(dp0)), width, height);
+                        Vector2 p1 = GetPixelPos(new Vector2(dp1.x, GetYValue(dp1)), width, height);
                         
                         if (p0.x > pixelClipX) break;
 
@@ -1323,25 +1796,50 @@ namespace EasyChart.Layers
             }
             else // Straight
             {
-                foreach(var p in points)
+                foreach(var dp in points)
                 {
-                    if (p == null) continue;
-                    if (!AddClipped(GetPixelPos(new Vector2(p.x, p.value), width, height))) break;
+                    if (dp == null) continue;
+                    if (!AddClipped(GetPixelPos(new Vector2(dp.x, GetYValue(dp)), width, height))) break;
                 }
             }
 
             // Mesh Generation (Same as before, just using clipped topVertices)
             if (topVertices.Count < 2) return;
 
-            DrawTexturedVerticalStrip(
-                context,
-                topVertices,
-                height,
-                areaTex,
-                areaTiling,
-                areaOffset,
-                areaColor,
-                true);
+            // Use path length for UV calculation on Step type to avoid texture distortion
+            bool usePathLength = settings.stroke.lineType == LineType.Step;
+
+            // For stacked areas, calculate bottom Y for each vertex
+            if (settings.stacked && stackBase != null)
+            {
+                // Build bottom Y array based on stack base values, matching the line type
+                List<float> bottomYs = BuildStackedBottomYs(topVertices, points, stackBase, settings.stroke.lineType, width, height);
+                
+                DrawTexturedVerticalStrip(
+                    context,
+                    topVertices,
+                    bottomYs,
+                    areaTex,
+                    areaTiling,
+                    areaOffset,
+                    areaColor,
+                    true,
+                    usePathLength);
+            }
+            else
+            {
+                // Non-stacked: use fixed bottom Y (chart baseline)
+                DrawTexturedVerticalStrip(
+                    context,
+                    topVertices,
+                    height,
+                    areaTex,
+                    areaTiling,
+                    areaOffset,
+                    areaColor,
+                    true,
+                    usePathLength);
+            }
         }
 
         private Vector2 CubicBezier(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, float t)
@@ -1360,7 +1858,7 @@ namespace EasyChart.Layers
             return p;
         }
 
-        private void DrawPoints(MeshGenerationContext context, Painter2D painter, int serieIndex, Serie serie, LineSettings settings, float width, float height)
+        private void DrawPoints(MeshGenerationContext context, Painter2D painter, int serieIndex, Serie serie, LineSettings settings, float width, float height, Dictionary<int, float> stackBase = null)
         {
             var point = settings.point;
             float pixelClipX = GetEffectivePixelClipX(width);
@@ -1374,7 +1872,9 @@ namespace EasyChart.Layers
             {
                 var dataPoint = serie.seriesData[pi];
                 if (dataPoint == null) continue;
-                Vector2 pos = GetPixelPos(new Vector2(dataPoint.x, dataPoint.value), width, height);
+                // Apply stacking offset for point positions
+                float yValue = settings.stacked ? GetStackedValue(dataPoint, stackBase) : dataPoint.value;
+                Vector2 pos = GetPixelPos(new Vector2(dataPoint.x, yValue), width, height);
                 if (pos.x > pixelClipX) continue;
 
                 float a = hoverEnabled ? GetHoverAlpha(serieIndex, pi) : 0f;
@@ -1406,6 +1906,352 @@ namespace EasyChart.Layers
                     DrawPointMarkerWithAlpha(context, painter, pos, radius, point.textureFill, Color.white, 1f, Vector2.zero);
                 }
             }
+        }
+
+        private void DrawPointTextureFXLayers(MeshGenerationContext context, Serie serie, LineSettings settings, float width, float height, Dictionary<int, float> stackBase)
+        {
+            if (serie.seriesData == null) return;
+            var point = settings.point;
+            if (point == null || !point.show) return;
+
+            float pixelClipX = GetEffectivePixelClipX(width);
+            float time = TextureFXBridge.GetAnimationTime();
+
+            foreach (var dataPoint in serie.seriesData)
+            {
+                if (dataPoint == null) continue;
+                float yValue = settings.stacked ? GetStackedValue(dataPoint, stackBase) : dataPoint.value;
+                Vector2 pos = GetPixelPos(new Vector2(dataPoint.x, yValue), width, height);
+                if (pos.x > pixelClipX) continue;
+
+                float radius = point.size * 0.5f;
+                var pointRect = new Rect(pos.x - radius, pos.y - radius, radius * 2f, radius * 2f);
+                TextureFXBridge.DrawLayers(context, pointRect, point.textureFXLayers, time);
+            }
+        }
+
+        private List<Vector2> BuildAreaTopVertices(Serie serie, LineSettings settings, float width, float height, Dictionary<int, float> stackBase)
+        {
+            if (serie == null || serie.seriesData == null || serie.seriesData.Count < 2) return null;
+
+            var ordered = GetOrderedVisiblePoints(serie);
+            if (ordered == null || ordered.Count < 2) return null;
+
+            var lineType = settings.stroke.lineType;
+            float pixelClipX = GetEffectivePixelClipX(width);
+            var vertices = new List<Vector2>(serie.seriesData.Count * 2);
+
+            float GetYValue(SeriesData dp)
+            {
+                return settings.stacked ? GetStackedValue(dp, stackBase) : dp.value;
+            }
+
+            if (lineType == LineType.Step)
+            {
+                for (int i = 0; i < ordered.Count; i++)
+                {
+                    var dp = ordered[i];
+                    if (dp == null) continue;
+                    Vector2 pos = GetPixelPos(new Vector2(dp.x, GetYValue(dp)), width, height);
+                    if (i > 0)
+                    {
+                        var prev = ordered[i - 1];
+                        if (prev != null)
+                        {
+                            Vector2 prevPos = GetPixelPos(new Vector2(prev.x, GetYValue(prev)), width, height);
+                            Vector2 stepPos = new Vector2(pos.x, prevPos.y);
+                            if (stepPos.x <= pixelClipX) vertices.Add(stepPos);
+                            else break;
+                        }
+                    }
+                    if (pos.x <= pixelClipX) vertices.Add(pos);
+                    else break;
+                }
+            }
+            else if (lineType == LineType.Smooth)
+            {
+                var first = ordered[0];
+                if (first == null) return vertices;
+                Vector2 firstPos = GetPixelPos(new Vector2(first.x, GetYValue(first)), width, height);
+                if (firstPos.x <= pixelClipX) vertices.Add(firstPos);
+                else return vertices;
+
+                for (int i = 0; i < ordered.Count - 1; i++)
+                {
+                    var dp0 = ordered[i];
+                    var dp1 = ordered[i + 1];
+                    if (dp0 == null || dp1 == null) continue;
+                    Vector2 p0 = GetPixelPos(new Vector2(dp0.x, GetYValue(dp0)), width, height);
+                    Vector2 p1 = GetPixelPos(new Vector2(dp1.x, GetYValue(dp1)), width, height);
+
+                    if (p0.x > pixelClipX) break;
+
+                    float cpDistance = (p1.x - p0.x) * 0.5f;
+                    Vector2 cp1 = p0 + new Vector2(cpDistance, 0);
+                    Vector2 cp2 = p1 - new Vector2(cpDistance, 0);
+
+                    int samples = 10;
+                    for (int t = 1; t <= samples; t++)
+                    {
+                        float u = (float)t / samples;
+                        Vector2 curvePoint = CubicBezier(p0, cp1, cp2, p1, u);
+                        if (curvePoint.x <= pixelClipX) vertices.Add(curvePoint);
+                        else break;
+                    }
+                }
+            }
+            else // Straight
+            {
+                for (int i = 0; i < ordered.Count; i++)
+                {
+                    var dp = ordered[i];
+                    if (dp == null) continue;
+                    Vector2 pos = GetPixelPos(new Vector2(dp.x, GetYValue(dp)), width, height);
+                    if (pos.x <= pixelClipX) vertices.Add(pos);
+                    else break;
+                }
+            }
+
+            return vertices;
+        }
+
+        /// <summary>
+        /// Build bottom Y values for stacked areas, matching the line type (Straight, Smooth, Step)
+        /// </summary>
+        private List<float> BuildStackedBottomYs(List<Vector2> topVertices, List<SeriesData> points, Dictionary<int, float> stackBase, LineType lineType, float width, float height)
+        {
+            var bottomYs = new List<float>(topVertices.Count);
+            if (points == null || points.Count < 2)
+            {
+                for (int i = 0; i < topVertices.Count; i++)
+                    bottomYs.Add(height);
+                return bottomYs;
+            }
+
+            // Build base positions for each data point
+            var basePositions = new List<Vector2>(points.Count);
+            for (int i = 0; i < points.Count; i++)
+            {
+                var dp = points[i];
+                if (dp == null)
+                {
+                    basePositions.Add(new Vector2(0, height));
+                    continue;
+                }
+                float baseY = GetStackBaseValue(dp, stackBase);
+                Vector2 basePos = GetPixelPos(new Vector2(dp.x, baseY), width, height);
+                basePositions.Add(basePos);
+            }
+
+            if (lineType == LineType.Step)
+            {
+                // For Step type, we need to match the top vertex structure:
+                // Top vertices for Step: [dp0], [stepPos(dp1.x, dp0.y)], [dp1], [stepPos(dp2.x, dp1.y)], [dp2], ...
+                // Bottom should follow the same pattern with base Y values
+                
+                // Build expected bottom vertices matching the Step pattern
+                var stepBottomYs = new List<float>();
+                for (int i = 0; i < points.Count; i++)
+                {
+                    if (i > 0)
+                    {
+                        // Add horizontal extension point (uses previous point's base Y)
+                        stepBottomYs.Add(basePositions[i - 1].y);
+                    }
+                    // Add actual data point's base Y
+                    stepBottomYs.Add(basePositions[i].y);
+                }
+                
+                // Now match topVertices to stepBottomYs by index (they should have same count)
+                for (int vi = 0; vi < topVertices.Count; vi++)
+                {
+                    if (vi < stepBottomYs.Count)
+                        bottomYs.Add(stepBottomYs[vi]);
+                    else
+                        bottomYs.Add(height);
+                }
+            }
+            else
+            {
+                // For Smooth and Straight types, interpolate based on X position
+                for (int vi = 0; vi < topVertices.Count; vi++)
+                {
+                    float x = topVertices[vi].x;
+                    float baseYPixel = height; // Default
+
+                    // Find the segment that contains this X position
+                    for (int j = 0; j < basePositions.Count - 1; j++)
+                    {
+                        Vector2 bp0 = basePositions[j];
+                        Vector2 bp1 = basePositions[j + 1];
+
+                        if (x >= bp0.x - 0.001f && x <= bp1.x + 0.001f)
+                        {
+                            float segmentWidth = bp1.x - bp0.x;
+                            float t = segmentWidth > 0.001f ? (x - bp0.x) / segmentWidth : 0f;
+
+                            if (lineType == LineType.Smooth)
+                            {
+                                // Smooth: use cubic bezier interpolation
+                                float cpDistance = segmentWidth * 0.5f;
+                                Vector2 cp1 = bp0 + new Vector2(cpDistance, 0);
+                                Vector2 cp2 = bp1 - new Vector2(cpDistance, 0);
+                                Vector2 curvePoint = CubicBezier(bp0, cp1, cp2, bp1, t);
+                                baseYPixel = curvePoint.y;
+                            }
+                            else // Straight
+                            {
+                                // Linear interpolation
+                                baseYPixel = Mathf.Lerp(bp0.y, bp1.y, t);
+                            }
+                            break;
+                        }
+                    }
+
+                    bottomYs.Add(baseYPixel);
+                }
+            }
+
+            return bottomYs;
+        }
+
+        private Rect BuildAreaRect(Serie serie, LineSettings settings, float width, float height, Dictionary<int, float> stackBase)
+        {
+            if (serie == null || serie.seriesData == null || serie.seriesData.Count == 0)
+                return new Rect(0, 0, 0, 0);
+
+            float minX = float.MaxValue, maxX = float.MinValue;
+            float minY = float.MaxValue, maxY = float.MinValue;
+
+            foreach (var dp in serie.seriesData)
+            {
+                if (dp == null) continue;
+                float yValue = settings.stacked ? GetStackedValue(dp, stackBase) : dp.value;
+                Vector2 pos = GetPixelPos(new Vector2(dp.x, yValue), width, height);
+                minX = Mathf.Min(minX, pos.x);
+                maxX = Mathf.Max(maxX, pos.x);
+                minY = Mathf.Min(minY, pos.y);
+                maxY = Mathf.Max(maxY, pos.y);
+            }
+
+            // Extend to baseline (y=0 or stack base)
+            Vector2 baselinePos = GetPixelPos(new Vector2(0, 0), width, height);
+            maxY = Mathf.Max(maxY, baselinePos.y);
+
+            if (minX >= maxX || minY >= maxY)
+                return new Rect(0, 0, 0, 0);
+
+            return new Rect(minX, minY, maxX - minX, maxY - minY);
+        }
+
+        private List<Vector2> BuildLinePoints(Serie serie, LineSettings settings, float width, float height, Dictionary<int, float> stackBase)
+        {
+            if (serie == null || serie.seriesData == null || serie.seriesData.Count < 2) return null;
+
+            var ordered = GetOrderedVisiblePoints(serie);
+            if (ordered == null || ordered.Count < 2) return null;
+
+            var lineType = settings.stroke.lineType;
+            float pixelClipX = GetEffectivePixelClipX(width);
+            var points = new List<Vector2>(serie.seriesData.Count * 2);
+
+            float GetYValue(SeriesData dp)
+            {
+                return settings.stacked ? GetStackedValue(dp, stackBase) : dp.value;
+            }
+
+            bool AddPoint(Vector2 p)
+            {
+                points.Add(p);
+                return true;
+            }
+
+            bool AddClipped(Vector2 p)
+            {
+                if (points.Count == 0)
+                {
+                    if (p.x > pixelClipX) return false;
+                    return AddPoint(p);
+                }
+
+                var last = points[points.Count - 1];
+                if (p.x <= pixelClipX)
+                {
+                    return AddPoint(p);
+                }
+
+                float denom = (p.x - last.x);
+                if (Mathf.Abs(denom) <= 0.00001f)
+                {
+                    return false;
+                }
+
+                float t = Mathf.Clamp01((pixelClipX - last.x) / denom);
+                Vector2 clipped = Vector2.Lerp(last, p, t);
+                AddPoint(clipped);
+                return false;
+            }
+
+            if (lineType == LineType.Step)
+            {
+                for (int i = 0; i < ordered.Count; i++)
+                {
+                    var dp = ordered[i];
+                    if (dp == null) continue;
+
+                    Vector2 pos = GetPixelPos(new Vector2(dp.x, GetYValue(dp)), width, height);
+                    if (i > 0)
+                    {
+                        var prev = ordered[i - 1];
+                        if (prev == null) continue;
+                        Vector2 prevPos = GetPixelPos(new Vector2(prev.x, GetYValue(prev)), width, height);
+                        if (!AddClipped(new Vector2(pos.x, prevPos.y))) break;
+                    }
+                    if (!AddClipped(pos)) break;
+                }
+            }
+            else if (lineType == LineType.Smooth)
+            {
+                var first = ordered[0];
+                if (first == null) return points;
+                if (!AddClipped(GetPixelPos(new Vector2(first.x, GetYValue(first)), width, height))) return points;
+
+                for (int i = 0; i < ordered.Count - 1; i++)
+                {
+                    var dp0 = ordered[i];
+                    var dp1 = ordered[i + 1];
+                    if (dp0 == null || dp1 == null) continue;
+                    Vector2 p0 = GetPixelPos(new Vector2(dp0.x, GetYValue(dp0)), width, height);
+                    Vector2 p1 = GetPixelPos(new Vector2(dp1.x, GetYValue(dp1)), width, height);
+
+                    if (p0.x > pixelClipX) break;
+
+                    float cpDistance = (p1.x - p0.x) * 0.5f;
+                    Vector2 cp1 = p0 + new Vector2(cpDistance, 0);
+                    Vector2 cp2 = p1 - new Vector2(cpDistance, 0);
+
+                    int samples = 10;
+                    bool finished = false;
+                    for (int t = 1; t <= samples; t++)
+                    {
+                        float u = (float)t / samples;
+                        Vector2 curvePoint = CubicBezier(p0, cp1, cp2, p1, u);
+                        if (!AddClipped(curvePoint)) { finished = true; break; }
+                    }
+                    if (finished) break;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < ordered.Count; i++)
+                {
+                    var dp = ordered[i];
+                    if (dp == null) continue;
+                    if (!AddClipped(GetPixelPos(new Vector2(dp.x, GetYValue(dp)), width, height))) break;
+                }
+            }
+
+            return points;
         }
     }
 }

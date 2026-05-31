@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 3621cfc7a440aeb44a7e8f28095dcc1f
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/UGUI/Prefabs/EasyChart Demo/Gauge/GaugeDemo 12.prefab
+  uploadId: 906968

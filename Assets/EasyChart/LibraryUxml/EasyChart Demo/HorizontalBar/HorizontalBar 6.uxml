@@ -1,0 +1,3 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ec="EasyChart" editor-extension-mode="False">
+    <ec:ChartElement profile-name="HorizontalBar 6" profile-guid="6a16fbf312d09dd4190d2c901689d0f8" style="width: 450px; height: 300px;" />
+</ui:UXML>

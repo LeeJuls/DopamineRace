@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="input-message">
+        <ui:TextField picking-mode="Ignore" label="Text Field" value="filler text" text="filler text" name="input-message" style="justify-content: space-between; align-items: flex-end; align-self: stretch;" />
+        <ui:Hash128Field label="Hash128 Field" value="885eea9fcca73bdadde4ecd6a3af1312" />
+        <ui:Vector2Field label="Vec2 Field" />
+        <ui:LongField label="Long Field" value="42" />
+        <ui:Hash128Field label="Hash128 Field" value="885eea9fcca73bdadde4ecd6a3af1312" />
+        <ui:UnsignedLongField label="Unsigned Long Field" value="42" />
+        <ui:RectIntField label="RectInt" />
+        <ui:BoundsIntField label="BoundsInt" />
+    </ui:VisualElement>
+</ui:UXML>

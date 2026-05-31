@@ -1,0 +1,3 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ec="EasyChart" editor-extension-mode="False">
+    <ec:ChartElement profile-name="BoxPlot 1" profile-guid="f43715b43d08b1e4c82740be53bae5d5" style="width: 450px; height: 300px;" />
+</ui:UXML>

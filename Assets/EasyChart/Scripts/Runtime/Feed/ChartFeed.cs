@@ -35,6 +35,8 @@ namespace EasyChart
         public float x;
         public float y;
         public float z;
+        public float w;  // For BoxPlot Q3
+        public float v;  // For BoxPlot max
         public float value;
         public string name;
 

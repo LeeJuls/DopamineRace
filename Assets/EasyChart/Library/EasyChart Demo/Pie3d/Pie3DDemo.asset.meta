@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 714ed9d2a1c63eb46a4b7705579f4d2e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/Library/EasyChart Demo/Pie3d/Pie3DDemo.asset
+  uploadId: 906968

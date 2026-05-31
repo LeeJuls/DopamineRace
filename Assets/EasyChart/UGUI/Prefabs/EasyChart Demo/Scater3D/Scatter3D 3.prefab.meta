@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: b212bce6fb2ebc142bd7e3fd2804edf8
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/UGUI/Prefabs/EasyChart Demo/Scater3D/Scatter3D 3.prefab
+  uploadId: 906968

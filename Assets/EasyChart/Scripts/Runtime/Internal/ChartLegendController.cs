@@ -57,7 +57,7 @@ namespace EasyChart
                 return;
             }
 
-            PieSettings pieSettings = null;
+            IPieAggregationProvider pieAggProvider = null;
             PieLegendSettings pieLegend = null;
 
             bool hasPieType = false;
@@ -69,15 +69,14 @@ namespace EasyChart
                     var s = data.Series[i];
                     if (s == null) continue;
 
-                    bool isPieType = s.type == SerieType.Pie || s.type == SerieType.RingChart || s.type == SerieType.Pie3D;
+                    bool isPieType = s.type == SerieType.Pie || s.type == SerieType.RingChart || s.type == SerieType.Pie3D || s.type == SerieType.Funnel;
                     if (isPieType)
                     {
                         hasPieType = true;
-                        if (pieSettings == null) pieSettings = s.settings as PieSettings;
+                        if (pieAggProvider == null) pieAggProvider = s.settings as IPieAggregationProvider;
                         if (pieLegend == null)
                         {
-                            if (s.settings is PieSettings ps) pieLegend = ps.legend;
-                            else if (s.settings is RingChartSettings rcs) pieLegend = rcs.legend;
+                            if (s.settings is IPieLegendProvider legendProvider) pieLegend = legendProvider.PieLegend;
                         }
                     }
                     else
@@ -90,7 +89,7 @@ namespace EasyChart
             bool isPurePieChart = hasPieType && !hasNonPieType;
             if (isPurePieChart && pieLegend == null)
             {
-                pieLegend = pieSettings != null ? pieSettings.legend : null;
+                pieLegend = pieAggProvider is IPieLegendProvider lp ? lp.PieLegend : null;
             }
 
             LegendSettings settings = null;
@@ -186,27 +185,8 @@ namespace EasyChart
                     break;
             }
 
-            // Apply offset with position-based defaults to center legend between plot edge and canvas edge
-            Vector2 effectiveOffset = settings.offset;
-            if (effectiveOffset == Vector2.zero)
-            {
-                switch (settings.position)
-                {
-                    case LegendPosition.Top:
-                        effectiveOffset = new Vector2(0, 30);
-                        break;
-                    case LegendPosition.Bottom:
-                        effectiveOffset = new Vector2(0, -30);
-                        break;
-                    case LegendPosition.Right:
-                        effectiveOffset = new Vector2(-30, 0);
-                        break;
-                    case LegendPosition.Left:
-                        effectiveOffset = new Vector2(30, 0);
-                        break;
-                }
-            }
-            _legendContainer.style.translate = new Translate(new Length(effectiveOffset.x), new Length(-effectiveOffset.y), 0);
+            // Apply offset directly - user has full control
+            _legendContainer.style.translate = new Translate(new Length(settings.offset.x), new Length(-settings.offset.y), 0);
 
             bool isPieChart = isPurePieChart && (pieLegend == null || pieLegend.source != PieLegendSource.Series);
             if (isPieChart)
@@ -215,17 +195,12 @@ namespace EasyChart
                 for (int si = 0; si < data.Series.Count; si++)
                 {
                     var s = data.Series[si];
-                    if (s != null && (s.type == SerieType.Pie || s.type == SerieType.RingChart || s.type == SerieType.Pie3D) && s.seriesData != null)
+                    if (s != null && (s.type == SerieType.Pie || s.type == SerieType.RingChart || s.type == SerieType.Pie3D || s.type == SerieType.Funnel) && s.seriesData != null)
                     {
                         pieSerie = s;
-                        if (pieSettings == null)
+                        if (pieAggProvider == null)
                         {
-                            pieSettings = s.settings as PieSettings;
-                            if (pieSettings == null && s.settings is RingChartSettings rcs)
-                            {
-                                // RingChartSettings doesn't have aggregation, create a minimal PieSettings for legend
-                                pieSettings = null;
-                            }
+                            pieAggProvider = s.settings as IPieAggregationProvider;
                         }
                         break;
                     }
@@ -285,9 +260,10 @@ namespace EasyChart
                         candidates.Add((i, dp.value, dp));
                     }
 
-                    bool doAgg = pieSettings != null && pieSettings.aggregation != null && pieSettings.aggregation.enabled;
-                    int keepTopN = doAgg ? Mathf.Max(0, pieSettings.aggregation.keepTopN) : 0;
-                    bool sortByValue = pieSettings != null && pieSettings.sortByValue;
+                    var pieAgg = pieAggProvider?.PieAggregation;
+                    bool doAgg = pieAgg != null && pieAgg.enabled;
+                    int keepTopN = doAgg ? Mathf.Max(0, pieAgg.keepTopN) : 0;
+                    bool sortByValue = pieAggProvider?.SortByValue ?? false;
 
                     if (sortByValue)
                     {
@@ -372,8 +348,8 @@ namespace EasyChart
 
                     if (doAgg && keepTopN > 0 && candidates.Count > keepTopN && othersValue > 0f)
                     {
-                        string name = pieSettings != null && pieSettings.aggregation != null && !string.IsNullOrEmpty(pieSettings.aggregation.othersName)
-                            ? pieSettings.aggregation.othersName
+                        string name = pieAgg != null && !string.IsNullOrEmpty(pieAgg.othersName)
+                            ? pieAgg.othersName
                             : "Others";
 
                         ValueDisplayStyle displayStyle = ValueDisplayStyle.None;
@@ -390,7 +366,7 @@ namespace EasyChart
                         }
 
                         Color color = PieSeriesRenderer.Palette[sliceIndex % PieSeriesRenderer.Palette.Length];
-                        if (pieSettings != null && pieSettings.aggregation != null && pieSettings.aggregation.useOthersColor) color = pieSettings.aggregation.othersColor;
+                        if (pieAgg != null && pieAgg.useOthersColor) color = pieAgg.othersColor;
 
                         string capturedId = PieSeriesRenderer.OthersSliceId;
                         bool isVisible = _state == null || !_state.HiddenPieSliceIds.Contains(capturedId);
@@ -426,53 +402,90 @@ namespace EasyChart
             {
                 foreach (var serie in data.Series)
                 {
+                    // Gauge does not support legend
+                    if (serie.type == SerieType.Gauge) continue;
+
                     Color color = Color.white;
-                    if (serie.type == SerieType.Line && serie.settings is LineSettings ls)
+                    Texture2D legendIcon = settings?.icon; // Use global icon as default
+                    Vector2 iconSize = settings?.iconSize ?? new Vector2(10f, 10f); // Use global size as default
+                    float iconRadius = settings?.iconRadius ?? 0f; // Use global radius as default
+                    
+                    // Check for legend override
+                    var legendOverride = serie.legendOverride;
+                    if (legendOverride != null && legendOverride.enabled)
                     {
-                        if (ls.stroke == null) ls.stroke = new LineStrokeSettings();
-                        color = ls.stroke.color;
+                        if (legendOverride.icon != null)
+                            legendIcon = legendOverride.icon;
+                        if (legendOverride.iconSize.x >= 0f && legendOverride.iconSize.y >= 0f)
+                            iconSize = legendOverride.iconSize;
+                        if (legendOverride.iconRadius >= 0f)
+                            iconRadius = legendOverride.iconRadius;
+                        if (legendOverride.useColor)
+                            color = legendOverride.color;
                     }
-                    else if ((serie.type == SerieType.Bar || serie.type == SerieType.HorizontalBar) && serie.settings is BarSettings bs) color = (bs.textureFill != null ? bs.textureFill.color : Color.white);
-                    else if (serie.type == SerieType.Scatter && serie.settings is ScatterSettings ss) color = (ss.point != null && ss.point.textureFill != null ? ss.point.textureFill.color : Color.white);
-                    else if (serie.type == SerieType.Radar && serie.settings is RadarSettings rs)
+                    
+                    // If no override color, use default detection
+                    if (legendOverride == null || !legendOverride.enabled || !legendOverride.useColor)
                     {
-                        // Prefer area fill color if area is shown, otherwise use stroke color
-                        if (rs.area != null && rs.area.show && rs.area.textureFill != null)
+                        if (serie.type == SerieType.Line && serie.settings is LineSettings ls)
                         {
-                            color = rs.area.textureFill.color;
+                            if (ls.legendColorSource == LineLegendColorSource.Area && ls.area != null && ls.area.textureFill != null)
+                            {
+                                color = ls.area.textureFill.color;
+                            }
+                            else
+                            {
+                                if (ls.stroke == null) ls.stroke = new LineStrokeSettings();
+                                color = ls.stroke.color;
+                            }
                         }
-                        else
+                        else if ((serie.type == SerieType.Bar || serie.type == SerieType.HorizontalBar) && serie.settings is BarSettings bs) color = (bs.textureFill != null ? bs.textureFill.color : Color.white);
+                        else if (serie.type == SerieType.Scatter && serie.settings is ScatterSettings ss) color = (ss.point != null && ss.point.textureFill != null ? ss.point.textureFill.color : Color.white);
+                        else if (serie.type == SerieType.Radar && serie.settings is RadarSettings rs)
                         {
-                            if (rs.stroke == null) rs.stroke = new LineStrokeSettings();
-                            color = rs.stroke.color;
+                            // Prefer area fill color if area is shown, otherwise use stroke color
+                            if (rs.area != null && rs.area.show && rs.area.textureFill != null)
+                            {
+                                color = rs.area.textureFill.color;
+                            }
+                            else
+                            {
+                                if (rs.stroke == null) rs.stroke = new LineStrokeSettings();
+                                color = rs.stroke.color;
+                            }
                         }
-                    }
-                    else if ((serie.type == SerieType.Pie || serie.type == SerieType.RingChart || serie.type == SerieType.Pie3D) && serie.seriesData != null)
-                    {
-                        // Series-level legend for pie: pick a representative color.
-                        Color picked = Color.white;
-                        int pickedIndex = 0;
-                        for (int i = 0; i < serie.seriesData.Count; i++)
+                        else if (serie.type == SerieType.Bar3D)
                         {
-                            var dp = serie.seriesData[i];
-                            if (dp == null) continue;
-                            if (dp.value <= 0f) continue;
-                            pickedIndex = i;
-                            picked = dp.useColor ? dp.color : PieSeriesRenderer.Palette[0];
-                            break;
+                            // Bar3D: use series color from Bar3DSettings via reflection
+                            color = GetBar3DColor(serie.settings);
                         }
-                        if (picked == Color.white)
+                        else if ((serie.type == SerieType.Pie || serie.type == SerieType.RingChart || serie.type == SerieType.Pie3D || serie.type == SerieType.Funnel) && serie.seriesData != null)
                         {
-                            picked = PieSeriesRenderer.Palette[pickedIndex % PieSeriesRenderer.Palette.Length];
+                            // Series-level legend for pie: pick a representative color.
+                            Color picked = Color.white;
+                            int pickedIndex = 0;
+                            for (int i = 0; i < serie.seriesData.Count; i++)
+                            {
+                                var dp = serie.seriesData[i];
+                                if (dp == null) continue;
+                                if (dp.value <= 0f) continue;
+                                pickedIndex = i;
+                                picked = dp.useColor ? dp.color : PieSeriesRenderer.Palette[0];
+                                break;
+                            }
+                            if (picked == Color.white)
+                            {
+                                picked = PieSeriesRenderer.Palette[pickedIndex % PieSeriesRenderer.Palette.Length];
+                            }
+                            color = picked;
                         }
-                        color = picked;
                     }
 
                     CreateLegendItem(settings, serie.name, color, serie.visible, (visible) =>
                     {
                         serie.visible = visible;
                         requestImmediate?.Invoke(ChartDirtyReason.LegendToggleSeriesVisibility);
-                    });
+                    }, legendIcon, iconSize, iconRadius);
                 }
             }
         }
@@ -489,7 +502,25 @@ namespace EasyChart
                 backgroundColor = src.backgroundColor,
                 itemSpacing = src.itemSpacing,
                 offset = src.offset,
+                icon = src.icon,
+                iconSize = src.iconSize,
+                iconRadius = src.iconRadius,
             };
+        }
+
+        private Color GetBar3DColor(BaseSerieSettings settings)
+        {
+            if (settings == null) return PieSeriesRenderer.Palette[0];
+            
+            // Use reflection to get color property from Bar3DSettings
+            var settingsType = settings.GetType();
+            var colorField = settingsType.GetField("color");
+            if (colorField != null && colorField.FieldType == typeof(Color))
+            {
+                return (Color)colorField.GetValue(settings);
+            }
+            
+            return PieSeriesRenderer.Palette[0];
         }
 
         private int ComputeLegendHash(ChartData data)
@@ -512,14 +543,13 @@ namespace EasyChart
                         var s = data.Series[i];
                         if (s == null) continue;
 
-                        bool isPieType = s.type == SerieType.Pie || s.type == SerieType.RingChart || s.type == SerieType.Pie3D;
+                        bool isPieType = s.type == SerieType.Pie || s.type == SerieType.RingChart || s.type == SerieType.Pie3D || s.type == SerieType.Funnel;
                         if (isPieType)
                         {
                             hasPieType = true;
                             if (pieLegend == null)
                             {
-                                if (s.settings is PieSettings ps) pieLegend = ps.legend;
-                                else if (s.settings is RingChartSettings rcs) pieLegend = rcs.legend;
+                                        if (s.settings is IPieLegendProvider legendProvider) pieLegend = legendProvider.PieLegend;
                             }
                         }
                         else
@@ -547,6 +577,9 @@ namespace EasyChart
                 h = h * 31 + settings.offset.GetHashCode();
                 h = h * 31 + settings.backgroundColor.GetHashCode();
                 h = h * 31 + settings.itemSpacing.GetHashCode();
+                h = h * 31 + settings.iconSize.GetHashCode();
+                h = h * 31 + settings.iconRadius.GetHashCode();
+                h = h * 31 + (settings.icon != null ? settings.icon.GetHashCode() : 0);
 
                 bool isPieChart = isPurePieChart && (pieLegend == null || pieLegend.source != PieLegendSource.Series);
                 h = h * 31 + (isPieChart ? 1 : 0);
@@ -561,6 +594,11 @@ namespace EasyChart
                     h = h * 31 + pieLegend.offset.GetHashCode();
                     h = h * 31 + pieLegend.backgroundColor.GetHashCode();
                     h = h * 31 + pieLegend.itemSpacing.GetHashCode();
+                    h = h * 31 + pieLegend.fontSize.GetHashCode();
+                    h = h * 31 + pieLegend.color.GetHashCode();
+                    h = h * 31 + (pieLegend.icon != null ? pieLegend.icon.GetHashCode() : 0);
+                    h = h * 31 + pieLegend.iconSize.GetHashCode();
+                    h = h * 31 + pieLegend.iconRadius.GetHashCode();
                 }
 
                 int hiddenHash = 0;
@@ -579,14 +617,14 @@ namespace EasyChart
                 if (isPieChart)
                 {
                     Serie pieSerie = null;
-                    PieSettings pieSettings = null;
+                    IPieAggregationProvider pieAggProvider = null;
                     for (int si = 0; si < data.Series.Count; si++)
                     {
                         var s = data.Series[si];
-                        if (s != null && s.visible && (s.type == SerieType.Pie || s.type == SerieType.RingChart || s.type == SerieType.Pie3D) && s.seriesData != null)
+                        if (s != null && s.visible && (s.type == SerieType.Pie || s.type == SerieType.RingChart || s.type == SerieType.Pie3D || s.type == SerieType.Funnel) && s.seriesData != null)
                         {
                             pieSerie = s;
-                            pieSettings = s.settings as PieSettings;
+                            pieAggProvider = s.settings as IPieAggregationProvider;
                             break;
                         }
                     }
@@ -605,16 +643,17 @@ namespace EasyChart
                         }
                     }
 
-                    if (pieSettings != null)
+                    if (pieAggProvider != null)
                     {
-                        h = h * 31 + (pieSettings.sortByValue ? 1 : 0);
-                        if (pieSettings.aggregation != null)
+                        h = h * 31 + (pieAggProvider.SortByValue ? 1 : 0);
+                        var agg = pieAggProvider.PieAggregation;
+                        if (agg != null)
                         {
-                            h = h * 31 + (pieSettings.aggregation.enabled ? 1 : 0);
-                            h = h * 31 + pieSettings.aggregation.keepTopN;
-                            h = h * 31 + (pieSettings.aggregation.othersName != null ? pieSettings.aggregation.othersName.GetHashCode() : 0);
-                            h = h * 31 + (pieSettings.aggregation.useOthersColor ? 1 : 0);
-                            h = h * 31 + pieSettings.aggregation.othersColor.GetHashCode();
+                            h = h * 31 + (agg.enabled ? 1 : 0);
+                            h = h * 31 + agg.keepTopN;
+                            h = h * 31 + (agg.othersName != null ? agg.othersName.GetHashCode() : 0);
+                            h = h * 31 + (agg.useOthersColor ? 1 : 0);
+                            h = h * 31 + agg.othersColor.GetHashCode();
                         }
                     }
                 }
@@ -624,6 +663,8 @@ namespace EasyChart
                     {
                         var serie = data.Series[i];
                         if (serie == null) continue;
+                        // Gauge does not support legend
+                        if (serie.type == SerieType.Gauge) continue;
 
                         h = h * 31 + serie.type.GetHashCode();
                         h = h * 31 + (serie.name != null ? serie.name.GetHashCode() : 0);
@@ -632,8 +673,15 @@ namespace EasyChart
                         Color color = Color.white;
                         if (serie.type == SerieType.Line && serie.settings is LineSettings ls)
                         {
-                            if (ls.stroke == null) ls.stroke = new LineStrokeSettings();
-                            color = ls.stroke.color;
+                            if (ls.legendColorSource == LineLegendColorSource.Area && ls.area != null && ls.area.textureFill != null)
+                            {
+                                color = ls.area.textureFill.color;
+                            }
+                            else
+                            {
+                                if (ls.stroke == null) ls.stroke = new LineStrokeSettings();
+                                color = ls.stroke.color;
+                            }
                         }
                         else if (serie.type == SerieType.Bar && serie.settings is BarSettings bs)
                         {
@@ -647,6 +695,10 @@ namespace EasyChart
                         {
                             if (rs.stroke == null) rs.stroke = new LineStrokeSettings();
                             color = rs.stroke.color;
+                        }
+                        else if (serie.type == SerieType.Bar3D)
+                        {
+                            color = GetBar3DColor(serie.settings);
                         }
                         else if ((serie.type == SerieType.Pie || serie.type == SerieType.RingChart) && serie.seriesData != null)
                         {
@@ -669,6 +721,16 @@ namespace EasyChart
                             color = picked;
                         }
                         h = h * 31 + color.GetHashCode();
+                        
+                        // Include legendOverride in hash
+                        if (serie.legendOverride != null && serie.legendOverride.enabled)
+                        {
+                            h = h * 31 + serie.legendOverride.color.GetHashCode();
+                            h = h * 31 + (serie.legendOverride.useColor ? 1 : 0);
+                            h = h * 31 + serie.legendOverride.iconSize.GetHashCode();
+                            h = h * 31 + serie.legendOverride.iconRadius.GetHashCode();
+                            h = h * 31 + (serie.legendOverride.icon != null ? serie.legendOverride.icon.GetHashCode() : 0);
+                        }
                     }
                 }
 
@@ -705,12 +767,24 @@ namespace EasyChart
 
         private void CreateLegendItem(string name, Color color, bool isVisible, System.Action<bool> onToggle)
         {
-            CreateLegendItem(null, name, color, isVisible, onToggle);
+            CreateLegendItem(null, name, color, isVisible, onToggle, null, new Vector2(10f, 10f), 0f);
         }
 
-        private void CreateLegendItem(LegendSettings settings, string name, Color color, bool isVisible, System.Action<bool> onToggle)
+        private void CreateLegendItem(LegendSettings settings, string name, Color color, bool isVisible, System.Action<bool> onToggle, Texture2D customIcon = null, Vector2 iconSize = default, float iconRadius = 0f)
         {
             if (_legendContainer == null) return;
+            
+            // Use settings values as defaults if not explicitly provided
+            if (iconSize == default)
+            {
+                iconSize = settings?.iconSize ?? new Vector2(10f, 10f);
+            }
+            if (iconRadius == 0f && settings != null)
+            {
+                iconRadius = settings.iconRadius;
+            }
+            // Use settings.icon as fallback if customIcon is not provided
+            Texture2D effectiveIcon = customIcon ?? settings?.icon;
 
             var item = new VisualElement();
             ApplyLegendElementBaseStyle(item);
@@ -731,9 +805,29 @@ namespace EasyChart
             // Icon
             var icon = new VisualElement();
             ApplyLegendElementBaseStyle(icon);
-            icon.style.width = 10;
-            icon.style.height = 10;
-            icon.style.backgroundColor = color;
+            icon.style.width = iconSize.x;
+            icon.style.height = iconSize.y;
+            
+            // Apply corner radius
+            if (iconRadius > 0f)
+            {
+                icon.style.borderTopLeftRadius = iconRadius;
+                icon.style.borderTopRightRadius = iconRadius;
+                icon.style.borderBottomLeftRadius = iconRadius;
+                icon.style.borderBottomRightRadius = iconRadius;
+            }
+            
+            if (effectiveIcon != null)
+            {
+                icon.style.backgroundImage = new StyleBackground(effectiveIcon);
+                icon.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+                // Apply color tint via unityBackgroundImageTintColor
+                icon.style.unityBackgroundImageTintColor = color;
+            }
+            else
+            {
+                icon.style.backgroundColor = color;
+            }
             item.Add(icon);
 
             // Label
@@ -770,6 +864,11 @@ namespace EasyChart
         {
             if (_legendContainer == null) return;
 
+            // Get icon settings from LegendSettings
+            Vector2 iconSize = settings?.iconSize ?? new Vector2(10f, 10f);
+            float iconRadius = settings?.iconRadius ?? 0f;
+            Texture2D effectiveIcon = settings?.icon;
+
             var item = new VisualElement();
             ApplyLegendElementBaseStyle(item);
             item.style.flexDirection = FlexDirection.Row;
@@ -789,9 +888,28 @@ namespace EasyChart
             // Icon
             var icon = new VisualElement();
             ApplyLegendElementBaseStyle(icon);
-            icon.style.width = 10;
-            icon.style.height = 10;
-            icon.style.backgroundColor = color;
+            icon.style.width = iconSize.x;
+            icon.style.height = iconSize.y;
+            
+            // Apply corner radius
+            if (iconRadius > 0f)
+            {
+                icon.style.borderTopLeftRadius = iconRadius;
+                icon.style.borderTopRightRadius = iconRadius;
+                icon.style.borderBottomLeftRadius = iconRadius;
+                icon.style.borderBottomRightRadius = iconRadius;
+            }
+            
+            if (effectiveIcon != null)
+            {
+                icon.style.backgroundImage = new StyleBackground(effectiveIcon);
+                icon.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+                icon.style.unityBackgroundImageTintColor = color;
+            }
+            else
+            {
+                icon.style.backgroundColor = color;
+            }
             item.Add(icon);
 
             // Labels container

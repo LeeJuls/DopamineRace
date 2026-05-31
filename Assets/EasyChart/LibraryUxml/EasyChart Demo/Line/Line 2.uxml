@@ -1,0 +1,3 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ec="EasyChart" editor-extension-mode="False">
+    <ec:ChartElement profile-name="Line 2" profile-guid="b9854c4e523d8ad4797cf41be4730b84" style="width: 450px; height: 300px;" />
+</ui:UXML>

@@ -1,0 +1,89 @@
+{
+  "product": {
+    "id": "unity-easy-chart",
+    "name": "Unity Easy Chart",
+    "version": "1.0.0",
+    "description": "Unity 图表可视化工具",
+    "icon": "",
+    "assetStoreUrl": ""
+  },
+  "meta": {
+    "generatedAt": "2026-02-05 16:11:18",
+    "defaultLang": "zh",
+    "supportedLangs": ["zh", "en"]
+  },
+  "navigation": {
+    "groups": [
+      {
+        "key": "workflow",
+        "title": {
+          "zh": "概览",
+          "en": "Overview"
+        },
+        "chapters": [
+          "00_00-Index",
+          "00_01-QuickStart",
+          "00_02-WorkflowAndLibrary",
+          "00_03-UGUIWorkflow",
+          "00_04-RuntimeDataInjectionUIToolKit",
+          "00_05-RuntimeDataInjectionUGUI"
+        ]
+      },
+      {
+        "key": "editor_ui",
+        "title": {
+          "zh": "编辑界面说明",
+          "en": "Editor UI Guide"
+        },
+        "chapters": [
+          "01_01-EditorWorkflow",
+          "01_02-LibraryPanel",
+          "01_03-JsonInjectionPanel",
+          "02_04-PreviewPanel",
+          "02_05-InspectorPanel",
+          "02_06-SeriesPanel",
+          "02_07-SeriesSync",
+          "02_08-ColorPalette",
+          "02_09-TextureFXLayers"
+        ]
+      },
+      {
+        "key": "charts",
+        "title": {
+          "zh": "Series详细配置",
+          "en": "Series Configuration"
+        },
+        "chapters": [
+          "03_01-LineChart",
+          "03_02-BarChart",
+          "03_03-ScatterChart",
+          "03_04-HeatmapChart",
+          "03_05-RadarChart",
+          "03_06-PieChart",
+          "03_07-RingChart"
+        ]
+      },
+      {
+        "key": "reference",
+        "title": {
+          "zh": "配置项参考",
+          "en": "Configuration Reference"
+        },
+        "chapters": [
+          "04_08-CommonRecipes",
+          "04_09-FAQ"
+        ]
+      },
+      {
+        "key": "other",
+        "title": {
+          "zh": "其他",
+          "en": "Other"
+        },
+        "chapters": [
+          "05_01-UpdatePlan"
+        ]
+      }
+    ]
+  }
+}

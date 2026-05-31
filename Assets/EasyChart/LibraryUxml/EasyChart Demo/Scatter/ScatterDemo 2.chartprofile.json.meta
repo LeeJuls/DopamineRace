@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 81346eac6f2e319428052417f73c675b
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/LibraryUxml/EasyChart Demo/Scatter/ScatterDemo 2.chartprofile.json
+  uploadId: 906968

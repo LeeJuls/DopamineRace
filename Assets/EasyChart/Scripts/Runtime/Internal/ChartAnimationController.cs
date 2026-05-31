@@ -42,7 +42,7 @@ namespace EasyChart
                 {
                     _editorAnimHooked = true;
                     _editorAnimLastTime = EditorApplication.timeSinceStartup;
-                    _editorAnimScheduledItem = owner.schedule.Execute(editorTick).Every(16);
+                    _editorAnimScheduledItem = owner.schedule.Execute(editorTick).Every(ChartTiming.UpdateIntervalMs);
                 }
             }
 #endif
@@ -132,7 +132,7 @@ namespace EasyChart
             if (_editorTexAnimHooked) return;
 
             _editorTexAnimHooked = true;
-            _editorTexAnimScheduledItem = owner.schedule.Execute(editorTick).Every(16);
+            _editorTexAnimScheduledItem = owner.schedule.Execute(editorTick).Every(ChartTiming.UpdateIntervalMs);
         }
 
         public void SetHasTextureFillAnimations(bool has, VisualElement owner, System.Action editorTick)
@@ -183,7 +183,7 @@ namespace EasyChart
         }
 #endif
 
-        public void TickRuntime(ChartData data, IList<BaseSeriesRenderer> renderers, VisualElement backgroundLayer)
+        public void TickRuntime(ChartData data, IList<BaseSeriesRenderer> renderers, VisualElement backgroundLayer, float dt)
         {
             if (!IsAnimating && !HasTextureFillAnimations) return;
 
@@ -204,7 +204,7 @@ namespace EasyChart
             float duration = data.animationDuration;
             if (duration <= 0) duration = 0.5f;
 
-            Time += 0.016f;
+            Time += dt;
             Progress = Mathf.Clamp01(Time / duration);
 
             for (int i = 0; i < renderers.Count; i++)

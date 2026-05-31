@@ -1,0 +1,467 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ec="EasyChart">
+    <Style src="EasyChart Demo_Preview.uss" />
+    <ui:VisualElement class="main-container">
+        <ui:VisualElement class="sidebar">
+            <ui:ScrollView class="sidebar-scroll" mode="Vertical">
+                <ui:Button text="Bar" class="sidebar-button" name="btn-Bar" />
+                <ui:Button text="Bar3d" class="sidebar-button" name="btn-Bar3d" />
+                <ui:Button text="BoxPlot" class="sidebar-button" name="btn-BoxPlot" />
+                <ui:Button text="Candlestick" class="sidebar-button" name="btn-Candlestick" />
+                <ui:Button text="Funnel" class="sidebar-button" name="btn-Funnel" />
+                <ui:Button text="Gauge" class="sidebar-button" name="btn-Gauge" />
+                <ui:Button text="HeatMap" class="sidebar-button" name="btn-HeatMap" />
+                <ui:Button text="HorizontalBar" class="sidebar-button" name="btn-HorizontalBar" />
+                <ui:Button text="Line" class="sidebar-button" name="btn-Line" />
+                <ui:Button text="Line3D" class="sidebar-button" name="btn-Line3D" />
+                <ui:Button text="OHLC" class="sidebar-button" name="btn-OHLC" />
+                <ui:Button text="Pie" class="sidebar-button" name="btn-Pie" />
+                <ui:Button text="Pie3d" class="sidebar-button" name="btn-Pie3d" />
+                <ui:Button text="Radar" class="sidebar-button" name="btn-Radar" />
+                <ui:Button text="Ring" class="sidebar-button" name="btn-Ring" />
+                <ui:Button text="Scater3D" class="sidebar-button" name="btn-Scater3D" />
+                <ui:Button text="Scatter" class="sidebar-button" name="btn-Scatter" />
+                <ui:Button text="Waterfall" class="sidebar-button" name="btn-Waterfall" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+        <ui:VisualElement class="content-area">
+            <ui:ScrollView class="content-scroll" mode="Vertical">
+                <ui:VisualElement name="charts-Bar" class="charts-container" style="display: flex;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo" class="chart-title" />
+                        <ec:ChartElement profile-guid="0028618188c5cf74da823860e0d987cf" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo 0" class="chart-title" />
+                        <ec:ChartElement profile-guid="e253c22073bb1b84c86a7b7b5559431e" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="f09e99f4ee1c4a84898e8b19a7010a22" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo 10" class="chart-title" />
+                        <ec:ChartElement profile-guid="10219bf985218fd469479c6cc99059fd" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo 11" class="chart-title" />
+                        <ec:ChartElement profile-guid="c71b9651ea3cd7e4ca41ad77a66499ec" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo 12" class="chart-title" />
+                        <ec:ChartElement profile-guid="22561735309f6534594daca0ca7143cf" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo 2" class="chart-title" />
+                        <ec:ChartElement profile-guid="e5b1befe3797b624c8f57e519d6a50cb" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo 3" class="chart-title" />
+                        <ec:ChartElement profile-guid="04cbfa8c902d53149b6341b4730443ca" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo 4" class="chart-title" />
+                        <ec:ChartElement profile-guid="6eaa6fa42bbb5bc4590b8ac83e2151a9" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo 5" class="chart-title" />
+                        <ec:ChartElement profile-guid="46a0ecb9590f9ed4681f0f934fc01ff4" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo 6" class="chart-title" />
+                        <ec:ChartElement profile-guid="2141fe21dc5af4a488063de06193692e" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo 7" class="chart-title" />
+                        <ec:ChartElement profile-guid="ecf6bb915a145a94c830ffeabdb5f6b1" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo 8" class="chart-title" />
+                        <ec:ChartElement profile-guid="06b4c3c3004bf7340a998a65a60fd356" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BarDemo 9" class="chart-title" />
+                        <ec:ChartElement profile-guid="40d7e141b5b865e468aa04a2f0c55650" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-Bar3d" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Bar3d" class="chart-title" />
+                        <ec:ChartElement profile-guid="902a2c8aaccab664a99fb182a54374aa" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Bar3d 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="745407dca2db7c843a7f06860d2207ca" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-BoxPlot" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BoxPlot 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="f43715b43d08b1e4c82740be53bae5d5" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="BoxPlot 2" class="chart-title" />
+                        <ec:ChartElement profile-guid="8d4ab4018cef98747a2b778bd24100ff" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-Candlestick" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Candlestick" class="chart-title" />
+                        <ec:ChartElement profile-guid="981356c19481ed24bb52e2e67f15e217" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Candlestick 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="354bc35c42c7eee4496005955e680b87" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Candlestick 2" class="chart-title" />
+                        <ec:ChartElement profile-guid="3ec0a7d2e035a9a4f9852e0e70be7765" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Candlestick 3" class="chart-title" />
+                        <ec:ChartElement profile-guid="b185347f494684944ad65d84f76ac871" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-Funnel" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Funnel" class="chart-title" />
+                        <ec:ChartElement profile-guid="7456f54fddc37ce43a463347e89bd567" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Funnel 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="c04cfd436299a7640aded165d09d4e0a" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Funnel 2" class="chart-title" />
+                        <ec:ChartElement profile-guid="743c3a3549ae4924f97433160f5bffbe" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Funnel 3" class="chart-title" />
+                        <ec:ChartElement profile-guid="f75be16144fbf2f4e8be3616a76ed99a" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-Gauge" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="GaugeDemo 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="11764eb177e252b4b879b24b1f016d9a" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="GaugeDemo 10" class="chart-title" />
+                        <ec:ChartElement profile-guid="c99acc9745a71524988d4ee55f43eda8" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="GaugeDemo 11" class="chart-title" />
+                        <ec:ChartElement profile-guid="6d44b2c96069d7c4882833941c314159" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="GaugeDemo 12" class="chart-title" />
+                        <ec:ChartElement profile-guid="216827c1e1f1c6040a8b72f57497a809" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="GaugeDemo 2" class="chart-title" />
+                        <ec:ChartElement profile-guid="efe7360a2f4229e449f890a74e5038df" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="GaugeDemo 3" class="chart-title" />
+                        <ec:ChartElement profile-guid="9047b6e8c1bfdb749840ef2ecac130fc" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="GaugeDemo 4" class="chart-title" />
+                        <ec:ChartElement profile-guid="98fe5ed60828a924bacbb5eac80958fc" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="GaugeDemo 5" class="chart-title" />
+                        <ec:ChartElement profile-guid="59bbd594d06efe94cbdfff64582ad0d8" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="GaugeDemo 6" class="chart-title" />
+                        <ec:ChartElement profile-guid="d740afe8042e4024596b29ea5df1e427" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="GaugeDemo 7" class="chart-title" />
+                        <ec:ChartElement profile-guid="17c5a52be9cff0d4c8e650fff214a20c" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="GaugeDemo 8" class="chart-title" />
+                        <ec:ChartElement profile-guid="3330285968d9b6f498c5244038477c6a" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="GaugeDemo 9" class="chart-title" />
+                        <ec:ChartElement profile-guid="d688e2b8306469d49b5ab80c8a0e7a19" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-HeatMap" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="HeatMap" class="chart-title" />
+                        <ec:ChartElement profile-guid="dd3194f5ca0866549a0b67a1544caa07" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="HeatMap 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="27e98b5aa54a82347b2d79eada079c05" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="HeatMap 2" class="chart-title" />
+                        <ec:ChartElement profile-guid="87601b83d06ec8f4abe09c301ed88d8a" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="HeatMap 3" class="chart-title" />
+                        <ec:ChartElement profile-guid="1d13656567eefea4f8c0cf1155a6adf6" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-HorizontalBar" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="HorizontalBar 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="c2c616d01640e7c4e8a5edbf3d8714d8" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="HorizontalBar 2" class="chart-title" />
+                        <ec:ChartElement profile-guid="3091a662b83798d4ebf8bf8857e4ba24" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="HorizontalBar 3" class="chart-title" />
+                        <ec:ChartElement profile-guid="0565b86252b4157459ab3fdb869cfdb0" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="HorizontalBar 4" class="chart-title" />
+                        <ec:ChartElement profile-guid="13c9a49298e360946933bf8ce4cc862f" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="HorizontalBar 5" class="chart-title" />
+                        <ec:ChartElement profile-guid="e8b6c587232d41b4eb6eed3be0f1c9af" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="HorizontalBar 6" class="chart-title" />
+                        <ec:ChartElement profile-guid="6a16fbf312d09dd4190d2c901689d0f8" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="HorizontalBar 7" class="chart-title" />
+                        <ec:ChartElement profile-guid="a788911dc297333438b8970e774cc035" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="HorizontalBar 8" class="chart-title" />
+                        <ec:ChartElement profile-guid="ded1961928bb7a749864c3ef616450c5" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-Line" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line" class="chart-title" />
+                        <ec:ChartElement profile-guid="50b62009fa20d0e4b81026bb320bce3b" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line 0" class="chart-title" />
+                        <ec:ChartElement profile-guid="ef2a2f4a7ea432d4081440be404f22e4" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="ef2bf20f90a059a41abf96d68298cf55" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line 10" class="chart-title" />
+                        <ec:ChartElement profile-guid="dce57ca4dcfe0684bbcd392f189c9e55" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line 11" class="chart-title" />
+                        <ec:ChartElement profile-guid="e48b3ed673c92b64dabc62c1fa9068a9" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line 12" class="chart-title" />
+                        <ec:ChartElement profile-guid="1d84691a02d4ab44084fdcb681f120c7" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line 2" class="chart-title" />
+                        <ec:ChartElement profile-guid="b9854c4e523d8ad4797cf41be4730b84" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line 3" class="chart-title" />
+                        <ec:ChartElement profile-guid="7a004e4cebbfba948ab93a4e7b902702" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line 4" class="chart-title" />
+                        <ec:ChartElement profile-guid="515e930b2026a894dbc965990cbb1e78" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line 5" class="chart-title" />
+                        <ec:ChartElement profile-guid="281db9010e315f44ba31a3624fc3a741" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line 6" class="chart-title" />
+                        <ec:ChartElement profile-guid="f8fc6e844f75a4a40b8cb2cb97f3d132" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line 7" class="chart-title" />
+                        <ec:ChartElement profile-guid="02f1a03885c7b1a42b206161100c8a45" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line 8" class="chart-title" />
+                        <ec:ChartElement profile-guid="e08181b5206cd484aa151d2cb9625ff3" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line 9" class="chart-title" />
+                        <ec:ChartElement profile-guid="000ddba866eff50468ef05888c1dca13" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-Line3D" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line3D" class="chart-title" />
+                        <ec:ChartElement profile-guid="2e088880afd0bde4797af770367f9ab2" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line3D 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="7b33975c80543d549b9108e5435b5b35" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line3D 2" class="chart-title" />
+                        <ec:ChartElement profile-guid="b88314f83396bbb4fb265097eee31750" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line3D 3" class="chart-title" />
+                        <ec:ChartElement profile-guid="8c517c404db499c4f96fd6749a30e56f" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line3D 4" class="chart-title" />
+                        <ec:ChartElement profile-guid="ecb9a0a57b8c6114eb6a9d84a2c42969" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Line3D 5" class="chart-title" />
+                        <ec:ChartElement profile-guid="a3c1055e40421964b9b0387096e02168" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-OHLC" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="OHLC" class="chart-title" />
+                        <ec:ChartElement profile-guid="c0e2b09a09b0c1d4394ab3ad4c28ceb6" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="OHLC 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="29c75b2213106cb4895cb422641edb17" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-Pie" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="PieDemo" class="chart-title" />
+                        <ec:ChartElement profile-guid="40507490eacb35e4795fa27cfd45138c" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="PieDemo 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="090e1b770a72881459356ea98876ac68" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="PieDemo 2" class="chart-title" />
+                        <ec:ChartElement profile-guid="c69d504eb6c2f914fa3c31bacfcce126" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="PieDemo 3" class="chart-title" />
+                        <ec:ChartElement profile-guid="8c79870cd704ee04bbc17b09454ad3a7" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="PieDemo 4" class="chart-title" />
+                        <ec:ChartElement profile-guid="13560b25b0fad1c4ca7cac939261360d" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="PieDemo 5" class="chart-title" />
+                        <ec:ChartElement profile-guid="5efdfd6ae11609c45b1111ef3369487b" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="PieDemo 6" class="chart-title" />
+                        <ec:ChartElement profile-guid="f55ec6ab7184fc342a41cfc2155dcf94" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="PieDemo 7" class="chart-title" />
+                        <ec:ChartElement profile-guid="ea673735032f5a541bc4c6409fdeabce" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-Pie3d" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Pie3DDemo" class="chart-title" />
+                        <ec:ChartElement profile-guid="714ed9d2a1c63eb46a4b7705579f4d2e" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Pie3DDemo 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="3f50c69e63fd86c44b961dc1a5b81475" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-Radar" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="RadarDemo" class="chart-title" />
+                        <ec:ChartElement profile-guid="ae5069fff5db5d34aace812aaffcfe0a" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="RadarDemo 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="78363ea69197f124696f804779651ab0" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="RadarDemo 2" class="chart-title" />
+                        <ec:ChartElement profile-guid="9460891f4f59bdd4c83a7a8e2df81c33" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="RadarDemo 3" class="chart-title" />
+                        <ec:ChartElement profile-guid="622231ac91850494286f004f6163c902" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="RadarDemo 4" class="chart-title" />
+                        <ec:ChartElement profile-guid="8c1a69da8f722da4885c15619675f6a2" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="RadarDemo 5" class="chart-title" />
+                        <ec:ChartElement profile-guid="5d6fadb231ce95d4db55869fcb333873" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-Ring" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="RingDemo" class="chart-title" />
+                        <ec:ChartElement profile-guid="61aa6782fdf4274439588f5061871e8a" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="RingDemo 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="f8d56212191b1134cb3af50481ee8e40" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-Scater3D" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Scatter3D" class="chart-title" />
+                        <ec:ChartElement profile-guid="5d245431e79cc1649b3d6f74a88cb515" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Scatter3D 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="1ee6939be3c88e04ea761000eb0693c9" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Scatter3D 2" class="chart-title" />
+                        <ec:ChartElement profile-guid="43701336461e26f48b765361462c031d" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Scatter3D 3" class="chart-title" />
+                        <ec:ChartElement profile-guid="df4c0a3b3eb086849a912cb651b0a2ff" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-Scatter" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="ScatterDemo" class="chart-title" />
+                        <ec:ChartElement profile-guid="d2476d1b0a413164e95c1a8b30d343f9" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="ScatterDemo 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="f0d2617ef1b7f474bb5b01016277e8ca" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="ScatterDemo 2" class="chart-title" />
+                        <ec:ChartElement profile-guid="92a32badf33ae07479ebeb794f186663" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="ScatterDemo 3" class="chart-title" />
+                        <ec:ChartElement profile-guid="a0e6126283fe29041b0d533d097d864f" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="charts-Waterfall" class="charts-container" style="display: none;">
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Waterfall" class="chart-title" />
+                        <ec:ChartElement profile-guid="54ef4eca55fbcf3488e92127432c6e9c" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chart-wrapper">
+                        <ui:Label text="Waterfall 1" class="chart-title" />
+                        <ec:ChartElement profile-guid="7c4d9d1e053d5e54ebb843e2630b1bca" ignore-profile-size="true" class="chart-element" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:ScrollView>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

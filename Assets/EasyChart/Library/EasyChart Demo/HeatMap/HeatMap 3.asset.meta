@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1d13656567eefea4f8c0cf1155a6adf6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/Library/EasyChart Demo/HeatMap/HeatMap 3.asset
+  uploadId: 906968

@@ -40,5 +40,7 @@ namespace EasyChart
 
         public Color backgroundColor;
         public Texture2D backgroundTexture;
+        public float backgroundScale;
+        public bool squareBackground;
     }
 }

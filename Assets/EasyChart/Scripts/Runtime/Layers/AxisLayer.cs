@@ -38,6 +38,20 @@ namespace EasyChart
         public AxisConfig XAxisConfig { get; set; }
         public AxisConfig YAxisConfig { get; set; }
 
+        public new bool visible
+        {
+            get => base.visible;
+            set
+            {
+                // Always clear labels when setting visible to false, regardless of previous state
+                if (!value)
+                {
+                    ClearLabels();
+                }
+                base.visible = value;
+            }
+        }
+
         public AxisLayer()
         {
             this.StretchToParentSize();
@@ -181,6 +195,63 @@ namespace EasyChart
             label.style.whiteSpace = WhiteSpace.NoWrap;
         }
 
+        /// <summary>
+        /// Apply rotation to axis label. When rotated, the label's end aligns with the tick mark.
+        /// For X axis (bottom): negative rotation = right edge aligns to tick, positive = left edge aligns to tick
+        /// </summary>
+        /// <param name="label">The label element</param>
+        /// <param name="rotation">Rotation angle in degrees</param>
+        /// <param name="isXAxis">True for X axis (bottom/top), false for Y axis (left/right)</param>
+        /// <param name="isOutside">True if label is positioned outside the plot area</param>
+        private static void ApplyLabelRotation(Label label, float rotation, bool isXAxis, bool isOutside)
+        {
+            if (Mathf.Abs(rotation) < 0.01f) return;
+            
+            // Apply rotation
+            label.style.rotate = new Rotate(rotation);
+            
+            if (isXAxis)
+            {
+                // For X axis labels (typically at bottom):
+                // The label's left position is set to the tick X position.
+                // We need to adjust so the rotation pivot aligns with the tick.
+                if (rotation < 0)
+                {
+                    // Negative rotation (e.g., -45°): text tilts up-left
+                    // Right edge of text should align with tick mark
+                    label.style.unityTextAlign = TextAnchor.MiddleRight;
+                    // Transform origin at right edge, top
+                    label.style.transformOrigin = new TransformOrigin(Length.Percent(100), Length.Percent(0));
+                    // Move label left by 100% of its width so right edge is at tick position
+                    label.style.translate = new Translate(Length.Percent(-100), 0, 0);
+                }
+                else
+                {
+                    // Positive rotation (e.g., +45°): text tilts up-right
+                    // Left edge of text should align with tick mark
+                    label.style.unityTextAlign = TextAnchor.MiddleLeft;
+                    // Transform origin at left edge, top
+                    label.style.transformOrigin = new TransformOrigin(Length.Percent(0), Length.Percent(0));
+                    // Left edge is already at tick position (left = xPos)
+                    label.style.translate = new Translate(0, 0, 0);
+                }
+            }
+            else
+            {
+                // For Y axis labels: rotation is less common but supported
+                if (rotation < 0)
+                {
+                    label.style.unityTextAlign = TextAnchor.MiddleRight;
+                    label.style.transformOrigin = new TransformOrigin(Length.Percent(100), Length.Percent(50));
+                }
+                else
+                {
+                    label.style.unityTextAlign = TextAnchor.MiddleLeft;
+                    label.style.transformOrigin = new TransformOrigin(Length.Percent(0), Length.Percent(50));
+                }
+            }
+        }
+
         private static string FormatNumericTick(float val, string labelFormat)
         {
             if (!string.IsNullOrEmpty(labelFormat)) return val.ToString(labelFormat);
@@ -193,6 +264,59 @@ namespace EasyChart
             }
 
             return v.ToString("0.###");
+        }
+        
+        private static string FormatNumericTickWithStep(float val, float step, string labelFormat)
+        {
+            if (!string.IsNullOrEmpty(labelFormat)) return val.ToString(labelFormat);
+
+            // Calculate required decimal places based on step size
+            int decimalPlaces = 0;
+            if (step > 0 && step < 1)
+            {
+                // Count decimal places needed for the step
+                float s = step;
+                while (s < 1 && decimalPlaces < 6)
+                {
+                    s *= 10;
+                    decimalPlaces++;
+                }
+            }
+            else if (step >= 1)
+            {
+                // For integer steps, check if value is close to integer
+                float r = Mathf.Round(val);
+                if (Mathf.Abs(val - r) < 0.0001f)
+                {
+                    return ((int)r).ToString();
+                }
+                decimalPlaces = 2; // fallback
+            }
+
+            if (decimalPlaces == 0)
+            {
+                float r = Mathf.Round(val);
+                if (Mathf.Abs(val - r) < 0.0001f)
+                {
+                    return ((int)r).ToString();
+                }
+                return val.ToString("0.##");
+            }
+
+            string format = "0." + new string('#', decimalPlaces);
+            return val.ToString(format);
+        }
+
+        public void ClearLabels()
+        {
+            if (_xAxisContainer != null && _xAxisContainer.childCount > 0)
+            {
+                _xAxisContainer.Clear();
+            }
+            if (_yAxisContainer != null && _yAxisContainer.childCount > 0)
+            {
+                _yAxisContainer.Clear();
+            }
         }
 
         public void RefreshLabels()
@@ -305,6 +429,13 @@ namespace EasyChart
                             label.style.marginTop = xOffset.y;
                         }
                         
+                        // Apply rotation if configured (from LabelStyleSettings)
+                        float xRotation = xLabelStyle != null ? xLabelStyle.rotation : 0f;
+                        if (Mathf.Abs(xRotation) > 0.01f)
+                        {
+                            ApplyLabelRotation(label, xRotation, isXAxis: true, isOutside: xPosMode == LabelPosition.Outside);
+                        }
+                        
                         _xAxisContainer.Add(label);
                     }
                 }
@@ -312,6 +443,7 @@ namespace EasyChart
                 {
                     // Numeric X axis labels (used by HorizontalBar)
                     int split = Mathf.Max(1, XSplitCount);
+                    float step = (XMax - XMin) / split;
 
                     bool cellCenter = XAxisConfig != null && XAxisConfig.labelPlacement == CategoryLabelPlacement.CellCenter;
                     int labelCount = cellCenter ? split : (split + 1);
@@ -319,7 +451,7 @@ namespace EasyChart
                     {
                         float t = cellCenter ? ((i + 0.5f) / split) : ((float)i / split);
                         float val = Mathf.Lerp(XMin, XMax, t);
-                        string text = FormatNumericTick(val, XAxisConfig.labelFormat);
+                        string text = FormatNumericTickWithStep(val, step, XAxisConfig.labelFormat);
 
                         var label = new Label(text);
                         ApplyAxisLabelBaseStyle(label);
@@ -361,6 +493,13 @@ namespace EasyChart
                         {
                             label.style.marginLeft = xOffset.x;
                             label.style.marginTop = xOffset.y;
+                        }
+
+                        // Apply rotation if configured (from LabelStyleSettings)
+                        float xRotation = xLabelStyle != null ? xLabelStyle.rotation : 0f;
+                        if (Mathf.Abs(xRotation) > 0.01f)
+                        {
+                            ApplyLabelRotation(label, xRotation, isXAxis: true, isOutside: xPosMode == LabelPosition.Outside);
                         }
 
                         _xAxisContainer.Add(label);
@@ -490,6 +629,13 @@ namespace EasyChart
                             label.style.marginTop = yOffset.y;
                         }
 
+                        // Apply rotation if configured (from LabelStyleSettings)
+                        float yRotation = yLabelStyle != null ? yLabelStyle.rotation : 0f;
+                        if (Mathf.Abs(yRotation) > 0.01f)
+                        {
+                            ApplyLabelRotation(label, yRotation, isXAxis: false, isOutside: true);
+                        }
+
                         _yAxisContainer.Add(label);
                     }
 
@@ -499,12 +645,13 @@ namespace EasyChart
 
                 bool cellCenter = YAxisConfig != null && YAxisConfig.labelPlacement == CategoryLabelPlacement.CellCenter;
                 int labelCount = cellCenter ? Mathf.Max(1, YSplitCount) : (Mathf.Max(1, YSplitCount) + 1);
+                float split = Mathf.Max(1, YSplitCount);
+                float step = (YMax - YMin) / split;
                 for (int i = 0; i < labelCount; i++)
                 {
-                    float split = Mathf.Max(1, YSplitCount);
                     float t = cellCenter ? ((i + 0.5f) / split) : ((float)i / split);
                     float val = Mathf.Lerp(YMin, YMax, t);
-                    string text = FormatNumericTick(val, YAxisConfig.labelFormat);
+                    string text = FormatNumericTickWithStep(val, step, YAxisConfig.labelFormat);
                     
                     var label = new Label(text);
                     ApplyAxisLabelBaseStyle(label);
@@ -550,6 +697,13 @@ namespace EasyChart
                     {
                         label.style.marginLeft = yOffset.x;
                         label.style.marginTop = yOffset.y;
+                    }
+
+                    // Apply rotation if configured (from LabelStyleSettings)
+                    float yRotation = yLabelStyle != null ? yLabelStyle.rotation : 0f;
+                    if (Mathf.Abs(yRotation) > 0.01f)
+                    {
+                        ApplyLabelRotation(label, yRotation, isXAxis: false, isOutside: yPosMode == LabelPosition.Outside);
                     }
 
                     _yAxisContainer.Add(label);

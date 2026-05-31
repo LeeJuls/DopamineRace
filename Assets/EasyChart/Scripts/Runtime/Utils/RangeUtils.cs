@@ -133,7 +133,8 @@ namespace EasyChart
             out float min,
             out float max)
         {
-            ResolveAutoRange(items, selector, autoRange, manualMin, manualMax, out min, out max);
+            // Note: The generic method has selector before autoRange, so we need to reorder
+            ResolveAutoRange<SeriesData>(items, selector, autoRange, manualMin, manualMax, out min, out max);
         }
     }
 }

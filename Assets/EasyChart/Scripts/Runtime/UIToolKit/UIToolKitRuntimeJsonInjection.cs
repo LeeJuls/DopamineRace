@@ -12,16 +12,13 @@ namespace EasyChart.UIToolKit
         [SerializeField] private string _chartElementName = "";
 
         [Header("JSON Generation Settings")]
-        [Tooltip("The format mode for generating example JSON")]
-        [SerializeField] private ChartJsonExampleMode _exampleMode = ChartJsonExampleMode.Standard;
-
-        [Tooltip("The data format mode for series data")]
-        [SerializeField] private ChartJsonDatasMode _datasMode = ChartJsonDatasMode.Standard;
+        [Tooltip("The format mode for generating JSON\n• Compact: Data values only\n• Standard: Names + structured data\n• Full: All metadata including axes, types")]
+        [SerializeField] private ChartJsonMode _jsonMode = ChartJsonMode.Standard;
 
         [Tooltip("Wrap JSON in API response envelope")]
         [SerializeField] private bool _useApiEnvelope = false;
 
-        [Tooltip("Automatically regenerate JSON when ExampleMode or DatasMode changes")]
+        [Tooltip("Automatically regenerate JSON when JSON Mode or API Envelope changes")]
         [SerializeField] private bool _autoGenerateJson = false;
 
         [Header("JSON Content")]
@@ -31,7 +28,6 @@ namespace EasyChart.UIToolKit
 
         private UIDocument _uiDocument;
         private ChartProfile _runtimeProfile;
-        private bool _profileCloned;
 
         public string ChartElementName
         {
@@ -45,23 +41,38 @@ namespace EasyChart.UIToolKit
             set => _jsonContent = value;
         }
 
-        public ChartJsonExampleMode ExampleMode
+        /// <summary>
+        /// The JSON generation mode (Compact, Standard, or Full).
+        /// Automatically regenerates JSON if AutoGenerateJson is enabled.
+        /// </summary>
+        public ChartJsonMode JsonMode
         {
-            get => _exampleMode;
-            set => _exampleMode = value;
+            get => _jsonMode;
+            set
+            {
+                _jsonMode = value;
+                if (_autoGenerateJson) GenerateExampleJson();
+            }
         }
 
-        public ChartJsonDatasMode DatasMode
-        {
-            get => _datasMode;
-            set => _datasMode = value;
-        }
-
+        /// <summary>
+        /// Whether to wrap JSON in API response envelope.
+        /// Automatically regenerates JSON if AutoGenerateJson is enabled.
+        /// </summary>
         public bool UseApiEnvelope
         {
             get => _useApiEnvelope;
-            set => _useApiEnvelope = value;
+            set
+            {
+                _useApiEnvelope = value;
+                if (_autoGenerateJson) GenerateExampleJson();
+            }
         }
+
+        /// <summary>
+        /// Event fired when JSON is applied to the chart. Parameter indicates success.
+        /// </summary>
+        public event System.Action<bool, string> OnJsonApplied;
 
         public bool AutoGenerateJson
         {
@@ -98,7 +109,18 @@ namespace EasyChart.UIToolKit
 
             if (!string.IsNullOrEmpty(_chartElementName))
             {
+                // First try: direct ChartElement by name
                 chartElement = root.Q<EasyChart.ChartElement>(_chartElementName);
+                
+                // Second try: TemplateContainer by name, then get ChartElement inside
+                if (chartElement == null)
+                {
+                    var container = root.Q<VisualElement>(_chartElementName);
+                    if (container != null)
+                    {
+                        chartElement = container.Q<EasyChart.ChartElement>();
+                    }
+                }
             }
 
             if (chartElement == null)
@@ -129,25 +151,58 @@ namespace EasyChart.UIToolKit
                 return;
             }
 
-            string json = _jsonContent;
-
-            if (ChartJsonUtils.TryExtractWrappedDataJson(json, out var dataJson) && !string.IsNullOrEmpty(dataJson))
+            // Use validation method for detailed error reporting
+            var validationResult = ChartJsonUtils.ValidateAndParseFeed(_jsonContent);
+            
+            // Log warnings if any
+            if (validationResult.Warnings.Count > 0)
             {
-                json = dataJson;
+                Debug.LogWarning($"[UIToolKitRuntimeJsonInjection] {validationResult.GetWarningSummary()}");
             }
-
-            if (!ChartJsonUtils.TryDeserializeFeed(json, out var feed))
+            
+            // Check for errors
+            if (!validationResult.IsValid)
             {
-                Debug.LogError("[UIToolKitRuntimeJsonInjection] Failed to parse JSON.");
+                var error = $"[UIToolKitRuntimeJsonInjection] {validationResult.GetErrorSummary()}";
+                Debug.LogError(error);
+                OnJsonApplied?.Invoke(false, error);
                 return;
             }
 
             // Clone profile on first injection to avoid modifying the original asset
             EnsureRuntimeProfile(chartElement);
 
+            ChartJsonUtils.ApplyFeedToProfile(_runtimeProfile, validationResult.Feed);
+            chartElement.ForceRefreshProfile();
+            var message = "[UIToolKitRuntimeJsonInjection] JSON applied to chart.";
+            Debug.Log(message);
+            OnJsonApplied?.Invoke(true, message);
+        }
+
+        /// <summary>
+        /// Directly apply a parsed feed to the chart. More efficient for periodic updates
+        /// when you already have the feed object (avoids re-parsing JSON each time).
+        /// </summary>
+        /// <param name="feed">The parsed ChartFeed to apply</param>
+        /// <returns>True if successful, false otherwise</returns>
+        public bool ApplyFeed(ChartFeed feed)
+        {
+            if (feed == null)
+            {
+                Debug.LogWarning("[UIToolKitRuntimeJsonInjection] Feed is null.");
+                return false;
+            }
+
+            if (!TryGetChartElement(out var chartElement) || chartElement.Profile == null)
+            {
+                Debug.LogWarning("[UIToolKitRuntimeJsonInjection] No ChartElement or ChartProfile found.");
+                return false;
+            }
+
+            EnsureRuntimeProfile(chartElement);
             ChartJsonUtils.ApplyFeedToProfile(_runtimeProfile, feed);
             chartElement.ForceRefreshProfile();
-            Debug.Log("[UIToolKitRuntimeJsonInjection] JSON applied to chart.");
+            return true;
         }
 
         /// <summary>
@@ -155,10 +210,17 @@ namespace EasyChart.UIToolKit
         /// </summary>
         private void EnsureRuntimeProfile(ChartElement chartElement)
         {
-            if (_profileCloned) return;
-
             var originalProfile = chartElement.Profile;
             if (originalProfile == null) return;
+
+            // Check if this specific chart element already has a runtime copy
+            // We detect this by checking if the profile has DontSave hideFlags
+            if ((originalProfile.hideFlags & HideFlags.DontSave) != 0)
+            {
+                // Already a runtime copy, just update our reference
+                _runtimeProfile = originalProfile;
+                return;
+            }
 
             // Create a runtime copy
             _runtimeProfile = Object.Instantiate(originalProfile);
@@ -167,24 +229,24 @@ namespace EasyChart.UIToolKit
 
             // Assign the cloned profile to the chart element
             chartElement.Profile = _runtimeProfile;
-            _profileCloned = true;
 
             Debug.Log($"[UIToolKitRuntimeJsonInjection] Created runtime copy of profile: {_runtimeProfile.name}");
         }
 
-        public void GenerateExampleJson()
+        public string GenerateExampleJson()
         {
             if (!TryGetChartElement(out var chartElement) || chartElement.Profile == null)
             {
                 Debug.LogWarning("[UIToolKitRuntimeJsonInjection] No ChartElement or ChartProfile found.");
-                return;
+                return null;
             }
 
             var profile = chartElement.Profile;
             profile.EnsureRuntimeData();
 
-            string json = ChartJsonUtils.BuildInjectionJson(profile, profile.chartId, _exampleMode, _datasMode);
+            string json = ChartJsonUtils.BuildJson(profile, _jsonMode, profile.chartId);
             _jsonContent = _useApiEnvelope ? ChartJsonUtils.WrapAsApiResponse(json) : json;
+            return _jsonContent;
         }
     }
 }

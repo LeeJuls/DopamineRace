@@ -69,11 +69,128 @@ namespace EasyChart
                 if (serie == null || !serie.visible) continue;
                 if (serie.type == SerieType.Pie || serie.type == SerieType.RingChart || serie.type == SerieType.Pie3D) continue;
                 if (serie.type == SerieType.Radar) continue;
+                if (serie.type == SerieType.Funnel) continue;
+
+                // BoxPlot chart uses y=Min, z=Q1, value=Median, w=Q3, v=Max
+                if (serie.type == SerieType.BoxPlot)
+                {
+                    if (serie.seriesData != null && serie.seriesData.Count > 0)
+                    {
+                        hasData = true;
+                        for (int i = 0; i < serie.seriesData.Count; i++)
+                        {
+                            var p = serie.seriesData[i];
+                            if (p == null) continue;
+
+                            // BoxPlot: y=Min, v=Max
+                            float min = p.y;
+                            float max = p.v;
+
+                            if (min < yMin) yMin = min;
+                            if (max > yMax) yMax = max;
+
+                            // X range for category axis
+                            if (!xIsCategory)
+                            {
+                                if (i < xMin) xMin = i;
+                                if (i > xMax) xMax = i;
+                            }
+                        }
+                    }
+                    continue;
+                }
+
+                // Candlestick/OHLC chart uses x=Open, y=High, z=Low, value=Close
+                if (serie.type == SerieType.Candlestick || serie.type == SerieType.OHLC)
+                {
+                    if (serie.seriesData != null && serie.seriesData.Count > 0)
+                    {
+                        hasData = true;
+                        for (int i = 0; i < serie.seriesData.Count; i++)
+                        {
+                            var p = serie.seriesData[i];
+                            if (p == null) continue;
+
+                            // OHLC: x=Open, y=High, z=Low, value=Close
+                            float high = p.y;
+                            float low = p.z;
+
+                            if (low < yMin) yMin = low;
+                            if (high > yMax) yMax = high;
+
+                            // X range for category axis
+                            if (!xIsCategory)
+                            {
+                                if (i < xMin) xMin = i;
+                                if (i > xMax) xMax = i;
+                            }
+                        }
+                    }
+                    continue;
+                }
+
+                // Waterfall chart needs cumulative Y range calculation
+                if (serie.type == SerieType.Waterfall)
+                {
+                    if (serie.seriesData != null && serie.seriesData.Count > 0)
+                    {
+                        hasData = true;
+                        float runningTotal = 0f;
+                        float waterfallYMin = 0f;
+                        float waterfallYMax = 0f;
+
+                        for (int i = 0; i < serie.seriesData.Count; i++)
+                        {
+                            var p = serie.seriesData[i];
+                            if (p == null) continue;
+
+                            // Check if this is a total bar (z > 0.5 or name contains "total")
+                            bool isTotal = p.z > 0.5f || (!string.IsNullOrEmpty(p.name) && p.name.ToLower().Contains("total"));
+
+                            float startY, endY;
+                            if (isTotal)
+                            {
+                                startY = 0f;
+                                endY = p.value;
+                                runningTotal = p.value;
+                            }
+                            else
+                            {
+                                if (p.value >= 0)
+                                {
+                                    startY = runningTotal;
+                                    endY = runningTotal + p.value;
+                                }
+                                else
+                                {
+                                    startY = runningTotal + p.value;
+                                    endY = runningTotal;
+                                }
+                                runningTotal += p.value;
+                            }
+
+                            waterfallYMin = Mathf.Min(waterfallYMin, Mathf.Min(startY, endY));
+                            waterfallYMax = Mathf.Max(waterfallYMax, Mathf.Max(startY, endY));
+
+                            // X range for category axis
+                            if (!xIsCategory)
+                            {
+                                if (i < xMin) xMin = i;
+                                if (i > xMax) xMax = i;
+                            }
+                        }
+
+                        if (waterfallYMin < yMin) yMin = waterfallYMin;
+                        if (waterfallYMax > yMax) yMax = waterfallYMax;
+                    }
+                    continue;
+                }
 
                 // HeatMap uses x/y as coordinates, not category index
                 bool isHeatmap = serie.type == SerieType.Heatmap;
 
                 bool isStackedBar = false;
+                bool isStackedLine = false;
                 string stackKey = null;
                 if (serie.type == SerieType.Bar && serie.settings is BarSettings barSettings)
                 {
@@ -81,6 +198,14 @@ namespace EasyChart
                     if (isStackedBar)
                     {
                         stackKey = string.IsNullOrEmpty(barSettings.stackGroup) ? "__default__" : barSettings.stackGroup;
+                    }
+                }
+                else if (serie.type == SerieType.Line && serie.settings is LineSettings lineSettings)
+                {
+                    isStackedLine = lineSettings.stacked;
+                    if (isStackedLine)
+                    {
+                        stackKey = "__default_line__";
                     }
                 }
 
@@ -128,7 +253,7 @@ namespace EasyChart
                         if (px > xMax) xMax = px;
                     }
 
-                    if (isStackedBar)
+                    if (isStackedBar || isStackedLine)
                     {
                         int stackIndex = Mathf.RoundToInt(p.x);
                         float stackValue = p.value;
@@ -284,23 +409,28 @@ namespace EasyChart
             if (yManualMin) yMin = yAxisCfg.minValue;
             if (yManualMax) yMax = yAxisCfg.maxValue;
 
-            bool hasStackedBar = false;
+            bool hasStackedBarOrLine = false;
             if (data.Series != null)
             {
                 for (int i = 0; i < data.Series.Count; i++)
                 {
                     var s = data.Series[i];
-                    if (s == null || !s.visible || s.type != SerieType.Bar) continue;
-                    if (s.settings is BarSettings bs && bs.stacked)
+                    if (s == null || !s.visible) continue;
+                    if (s.type == SerieType.Bar && s.settings is BarSettings bs && bs.stacked)
                     {
-                        hasStackedBar = true;
+                        hasStackedBarOrLine = true;
+                        break;
+                    }
+                    if (s.type == SerieType.Line && s.settings is LineSettings ls && ls.stacked)
+                    {
+                        hasStackedBarOrLine = true;
                         break;
                     }
                 }
             }
 
-            bool preferZeroMinX = xIsValue && transposed && hasStackedBar;
-            bool preferZeroMinY = yIsValue && !transposed && hasStackedBar;
+            bool preferZeroMinX = xIsValue && transposed && hasStackedBarOrLine;
+            bool preferZeroMinY = yIsValue && !transposed && hasStackedBarOrLine;
 
             if (xIsValue) ExpandAutoRange(ref xMin, ref xMax, xAutoMin, xAutoMax, preferZeroMinX);
             if (yIsValue) ExpandAutoRange(ref yMin, ref yMax, yAutoMin, yAutoMax, preferZeroMinY);
@@ -351,6 +481,9 @@ namespace EasyChart
                 case AutoRangeRoundingMode.Tens: unit = 10f; break;
                 case AutoRangeRoundingMode.Hundreds: unit = 100f; break;
                 case AutoRangeRoundingMode.Custom: unit = axis.autoRangeUnit; break;
+                case AutoRangeRoundingMode.NiceNumbers:
+                    ApplyNiceNumberRounding(ref minV, ref maxV, axis.splitCount, autoMin, autoMax);
+                    return;
                 default: return;
             }
 
@@ -364,6 +497,64 @@ namespace EasyChart
                 if (autoMax) maxV += unit;
                 else if (autoMin) minV -= unit;
             }
+        }
+
+        private static void ApplyNiceNumberRounding(ref float minV, ref float maxV, int splitCount, bool autoMin, bool autoMax)
+        {
+            if (splitCount < 1) splitCount = 5;
+            
+            float range = maxV - minV;
+            if (range <= 0) return;
+
+            // Calculate raw step
+            float rawStep = range / splitCount;
+            
+            // Find nice step (1, 2, 5 or their powers of 10)
+            float niceStep = CalculateNiceStep(rawStep);
+            
+            // Adjust min and max to be multiples of niceStep
+            if (autoMin)
+            {
+                minV = Mathf.Floor(minV / niceStep) * niceStep;
+            }
+            if (autoMax)
+            {
+                maxV = Mathf.Ceil(maxV / niceStep) * niceStep;
+            }
+            
+            // Ensure we have at least the requested number of splits
+            float newRange = maxV - minV;
+            int actualSplits = Mathf.RoundToInt(newRange / niceStep);
+            if (actualSplits < splitCount && autoMax)
+            {
+                maxV = minV + niceStep * splitCount;
+            }
+            
+            if (Mathf.Approximately(minV, maxV))
+            {
+                if (autoMax) maxV += niceStep;
+                else if (autoMin) minV -= niceStep;
+            }
+        }
+
+        private static float CalculateNiceStep(float rawStep)
+        {
+            if (rawStep <= 0) return 1f;
+            
+            // Find the magnitude (power of 10)
+            float magnitude = Mathf.Pow(10f, Mathf.Floor(Mathf.Log10(rawStep)));
+            
+            // Normalize to 1-10 range
+            float normalized = rawStep / magnitude;
+            
+            // Round to nice number (1, 2, 5, 10)
+            float niceNormalized;
+            if (normalized <= 1f) niceNormalized = 1f;
+            else if (normalized <= 2f) niceNormalized = 2f;
+            else if (normalized <= 5f) niceNormalized = 5f;
+            else niceNormalized = 10f;
+            
+            return niceNormalized * magnitude;
         }
     }
 }

@@ -1,11 +1,12 @@
 {
   "dependencies": {
+    "com.anklebreaker.unity-mcp": "https://github.com/AnkleBreaker-Studio/unity-mcp-plugin.git",
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.monitor1394.xcharts": "https://github.com/XCharts-Team/XCharts.git",
     "com.signal-loop.unitycodemcpserver": "https://github.com/Signal-Loop/UnityCodeMCPServer.git?path=Assets/Plugins/UnityCodeMcpServer",
-    "com.anklebreaker.unity-mcp": "https://github.com/AnkleBreaker-Studio/unity-mcp-plugin.git",
     "com.unity.2d.animation": "13.0.4",
     "com.unity.2d.aseprite": "3.0.1",
+    "com.unity.2d.pixel-perfect": "5.1.1",
     "com.unity.2d.psdimporter": "12.0.1",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.spriteshape": "13.0.0",

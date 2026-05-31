@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f2240e67cf39aa0459c5f8ac07ebeda9
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/LibraryUxml/EasyChart Demo/Line/Line 3.chartprofile.json
+  uploadId: 906968

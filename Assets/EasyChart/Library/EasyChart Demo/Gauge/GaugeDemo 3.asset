@@ -1,0 +1,983 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae49c3ed628aba644bf39a8d33a833ab, type: 3}
+  m_Name: GaugeDemo 3
+  m_EditorClassIdentifier: 
+  chartName: GaugeDemo
+  chartId: 374ae497c6a0471a81d0f430d0b3a157
+  coordinateSystem: 3
+  cartesian:
+    xAxisId: 0
+    yAxisId: 2
+  cartesian3D:
+    xAxisId: 0
+    yAxisId: 2
+    zAxisId: 4
+  axes:
+  - id: 0
+    axisType: 0
+    labels:
+    - A
+    - B
+    - C
+    - D
+    - E
+    visible: 1
+    color: {r: 1, g: 1, b: 1, a: 1}
+    width: 2
+    labelStyle:
+      enabled: 1
+      fontSize: 10
+      color: {r: 1, g: 1, b: 1, a: 1}
+      position: 0
+      offset: {x: 0, y: 0}
+      rotation: 0
+    showLabels: 1
+    fontSize: 10
+    labelColor: {r: 1, g: 1, b: 1, a: 1}
+    labelPosition: 0
+    labelPlacement: 0
+    labelOffset: {x: 0, y: 0}
+    autoRangeMin: 1
+    autoRangeMax: 1
+    autoRangeRounding: 2
+    autoRangeUnit: 1
+    minValue: 0
+    maxValue: 1
+    autoTicks: 1
+    splitCount: 5
+    labelFormat: 
+    categoryAutoScroll: 0
+    categorySmoothScroll: 1
+    categoryScrollInterval: 1
+    categoryScrollStep: 1
+    showUnit: 0
+    unitText: 
+    unitLabelStyle:
+      enabled: 1
+      fontSize: 10
+      color: {r: 1, g: 1, b: 1, a: 1}
+      position: 0
+      offset: {x: 0, y: 0}
+      rotation: 0
+  - id: 2
+    axisType: 1
+    labels: []
+    visible: 1
+    color: {r: 1, g: 1, b: 1, a: 1}
+    width: 2
+    labelStyle:
+      enabled: 1
+      fontSize: 10
+      color: {r: 1, g: 1, b: 1, a: 1}
+      position: 0
+      offset: {x: 0, y: 0}
+      rotation: 0
+    showLabels: 1
+    fontSize: 10
+    labelColor: {r: 1, g: 1, b: 1, a: 1}
+    labelPosition: 0
+    labelPlacement: 0
+    labelOffset: {x: 0, y: 0}
+    autoRangeMin: 1
+    autoRangeMax: 1
+    autoRangeRounding: 2
+    autoRangeUnit: 1
+    minValue: 0
+    maxValue: 1
+    autoTicks: 1
+    splitCount: 5
+    labelFormat: 
+    categoryAutoScroll: 0
+    categorySmoothScroll: 1
+    categoryScrollInterval: 1
+    categoryScrollStep: 1
+    showUnit: 0
+    unitText: 
+    unitLabelStyle:
+      enabled: 1
+      fontSize: 10
+      color: {r: 1, g: 1, b: 1, a: 1}
+      position: 0
+      offset: {x: 0, y: 0}
+      rotation: 0
+  - id: 4
+    axisType: 1
+    labels: []
+    visible: 1
+    color: {r: 1, g: 1, b: 1, a: 1}
+    width: 2
+    labelStyle:
+      enabled: 1
+      fontSize: 10
+      color: {r: 1, g: 1, b: 1, a: 1}
+      position: 0
+      offset: {x: 0, y: 0}
+      rotation: 0
+    showLabels: 1
+    fontSize: 10
+    labelColor: {r: 1, g: 1, b: 1, a: 1}
+    labelPosition: 0
+    labelPlacement: 0
+    labelOffset: {x: 0, y: 0}
+    autoRangeMin: 1
+    autoRangeMax: 1
+    autoRangeRounding: 2
+    autoRangeUnit: 1
+    minValue: 0
+    maxValue: 1
+    autoTicks: 1
+    splitCount: 5
+    labelFormat: 
+    categoryAutoScroll: 0
+    categorySmoothScroll: 1
+    categoryScrollInterval: 1
+    categoryScrollStep: 1
+    showUnit: 0
+    unitText: 
+    unitLabelStyle:
+      enabled: 1
+      fontSize: 10
+      color: {r: 1, g: 1, b: 1, a: 1}
+      position: 0
+      offset: {x: 0, y: 0}
+      rotation: 0
+  xAxisId: 0
+  yAxisId: 2
+  axisSelectionInitialized: 1
+  axisTypeSelectionInitialized: 1
+  animationDuration: 1
+  background:
+    show: 1
+    textureFill:
+      texture: {fileID: 2800000, guid: bdde8ca846f9dac408680bcf16c76c34, type: 3}
+      tiling: {x: 1, y: 1}
+      offset: {x: 0, y: 0}
+      color: {r: 1, g: 1, b: 1, a: 1}
+      adaptiveTiling: 0
+  backgroundFX:
+    enabled: 1
+    padding: {x: 8, y: 8, z: 8, w: 8}
+    backgroundColor: {r: 0, g: 0, b: 0, a: 0}
+    layers:
+    - fill:
+        texture: {fileID: 2800000, guid: b978e59a993410a468a03224cf325eca, type: 3}
+        tiling: {x: 0.5, y: 0.3}
+        offset: {x: 0, y: 0}
+        color: {r: 0.41037738, g: 0.6413636, b: 1, a: 0.3529412}
+        adaptiveTiling: 0
+      animationType: 1
+      uvMoveSpeed: {x: 1, y: 0.8}
+      scaleType: 2
+      scaleSpeed: 1
+      scaleFrom: {x: 1, y: 1}
+      scaleTo: {x: 1.2, y: 1.2}
+      rotateSpeed: 30
+      layerCount: 3
+      colorOverLife:
+        serializedVersion: 2
+        key0: {r: 1, g: 1, b: 1, a: 1}
+        key1: {r: 1, g: 1, b: 1, a: 1}
+        key2: {r: 0, g: 0, b: 0, a: 0}
+        key3: {r: 0, g: 0, b: 0, a: 0}
+        key4: {r: 0, g: 0, b: 0, a: 0}
+        key5: {r: 0, g: 0, b: 0, a: 0}
+        key6: {r: 0, g: 0, b: 0, a: 0}
+        key7: {r: 0, g: 0, b: 0, a: 0}
+        ctime0: 0
+        ctime1: 65535
+        ctime2: 0
+        ctime3: 0
+        ctime4: 0
+        ctime5: 0
+        ctime6: 0
+        ctime7: 0
+        atime0: 0
+        atime1: 65535
+        atime2: 0
+        atime3: 0
+        atime4: 0
+        atime5: 0
+        atime6: 0
+        atime7: 0
+        m_Mode: 0
+        m_ColorSpace: -1
+        m_NumColorKeys: 2
+        m_NumAlphaKeys: 2
+      colorAnimationType: 2
+      colorAnimationSpeed: 1
+      colorAnimationGradient:
+        serializedVersion: 2
+        key0: {r: 0.2216981, g: 0.5809696, b: 1, a: 1}
+        key1: {r: 0.2688679, g: 0.33676517, b: 1, a: 0.84705883}
+        key2: {r: 0, g: 0, b: 0, a: 0}
+        key3: {r: 0, g: 0, b: 0, a: 0}
+        key4: {r: 0, g: 0, b: 0, a: 0}
+        key5: {r: 0, g: 0, b: 0, a: 0}
+        key6: {r: 0, g: 0, b: 0, a: 0}
+        key7: {r: 0, g: 0, b: 0, a: 0}
+        ctime0: 0
+        ctime1: 65535
+        ctime2: 0
+        ctime3: 0
+        ctime4: 0
+        ctime5: 0
+        ctime6: 0
+        ctime7: 0
+        atime0: 0
+        atime1: 65535
+        atime2: 0
+        atime3: 0
+        atime4: 0
+        atime5: 0
+        atime6: 0
+        atime7: 0
+        m_Mode: 0
+        m_ColorSpace: -1
+        m_NumColorKeys: 2
+        m_NumAlphaKeys: 2
+      fadeType: 5
+      fadeIntensity: 1
+      fadeSoftness: 0.383
+      deformType: 0
+      deformIntensity: 0.1
+      deformSpeed: 1
+      waveFrequency: 4
+    - fill:
+        texture: {fileID: 2800000, guid: 51ef95436b84ca548bb7ee2a9eb6a11c, type: 3}
+        tiling: {x: 0.2, y: 0.3}
+        offset: {x: 0, y: 0.15}
+        color: {r: 0.5424528, g: 0.74772847, b: 1, a: 1}
+        adaptiveTiling: 0
+      animationType: 1
+      uvMoveSpeed: {x: 0.2, y: 0.1}
+      scaleType: 2
+      scaleSpeed: 1
+      scaleFrom: {x: 1, y: 1}
+      scaleTo: {x: 1.2, y: 1.2}
+      rotateSpeed: 30
+      layerCount: 3
+      colorOverLife:
+        serializedVersion: 2
+        key0: {r: 1, g: 1, b: 1, a: 1}
+        key1: {r: 1, g: 1, b: 1, a: 1}
+        key2: {r: 0, g: 0, b: 0, a: 0}
+        key3: {r: 0, g: 0, b: 0, a: 0}
+        key4: {r: 0, g: 0, b: 0, a: 0}
+        key5: {r: 0, g: 0, b: 0, a: 0}
+        key6: {r: 0, g: 0, b: 0, a: 0}
+        key7: {r: 0, g: 0, b: 0, a: 0}
+        ctime0: 0
+        ctime1: 65535
+        ctime2: 0
+        ctime3: 0
+        ctime4: 0
+        ctime5: 0
+        ctime6: 0
+        ctime7: 0
+        atime0: 0
+        atime1: 65535
+        atime2: 0
+        atime3: 0
+        atime4: 0
+        atime5: 0
+        atime6: 0
+        atime7: 0
+        m_Mode: 0
+        m_ColorSpace: -1
+        m_NumColorKeys: 2
+        m_NumAlphaKeys: 2
+      colorAnimationType: 0
+      colorAnimationSpeed: 1
+      colorAnimationGradient:
+        serializedVersion: 2
+        key0: {r: 1, g: 1, b: 1, a: 1}
+        key1: {r: 1, g: 1, b: 1, a: 0}
+        key2: {r: 0, g: 0, b: 0, a: 0}
+        key3: {r: 0, g: 0, b: 0, a: 0}
+        key4: {r: 0, g: 0, b: 0, a: 0}
+        key5: {r: 0, g: 0, b: 0, a: 0}
+        key6: {r: 0, g: 0, b: 0, a: 0}
+        key7: {r: 0, g: 0, b: 0, a: 0}
+        ctime0: 0
+        ctime1: 65535
+        ctime2: 0
+        ctime3: 0
+        ctime4: 0
+        ctime5: 0
+        ctime6: 0
+        ctime7: 0
+        atime0: 0
+        atime1: 65535
+        atime2: 0
+        atime3: 0
+        atime4: 0
+        atime5: 0
+        atime6: 0
+        atime7: 0
+        m_Mode: 0
+        m_ColorSpace: -1
+        m_NumColorKeys: 2
+        m_NumAlphaKeys: 2
+      fadeType: 0
+      fadeIntensity: 0.5
+      fadeSoftness: 0.5
+      deformType: 0
+      deformIntensity: 0.1
+      deformSpeed: 1
+      waveFrequency: 4
+  chartWidth: 450
+  chartHeight: 300
+  padding: {x: 10, y: 10, z: 10, w: 10}
+  paddingInitialized: 1
+  xGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.2}
+  xGridLineWidth: 1
+  yGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.2}
+  yGridLineWidth: 1
+  cartesianGrid:
+    xGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.2}
+    xGridLineWidth: 1
+    xGridDashed: 0
+    xGridDashLength: 4
+    xGridDashGap: 2
+    xGridDashOffset: 0
+    yGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.2}
+    yGridLineWidth: 1
+    yGridDashed: 0
+    yGridDashLength: 4
+    yGridDashGap: 2
+    yGridDashOffset: 0
+  cartesian3DGrid:
+    show: 1
+    gridColor: {r: 0.4, g: 0.4, b: 0.4, a: 0.5}
+    gridLineWidth: 1
+    showXYPlane: 1
+    showXZPlane: 1
+    showYZPlane: 1
+    useAxisColors: 0
+    xGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.3}
+    yGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.3}
+    zGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.3}
+    gridWidth: 4
+    gridHeight: 2
+    gridDepth: 2
+    showLabels: 1
+    labelColor: {r: 1, g: 1, b: 1, a: 1}
+    labelFontSize: 12
+  hover:
+    cursorLineDashed: 0
+    cursorLineWidth: 1
+    cursorLineColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+    cursorLineDashLength: 4
+    cursorLineDashGap: 2
+    cursorLineDashOffset: 0
+  polarAxes:
+    angleAxis:
+      labels:
+      - A
+      - B
+      - C
+      - D
+      - E
+      visible: 1
+      color: {r: 1, g: 1, b: 1, a: 1}
+      edgeColor: {r: 1, g: 1, b: 1, a: 1}
+      width: 2
+      labelStyle:
+        enabled: 1
+        fontSize: 10
+        color: {r: 1, g: 1, b: 1, a: 1}
+        position: 0
+        offset: {x: 0, y: 0}
+        rotation: 0
+      showLabels: 1
+      fontSize: 10
+      labelColor: {r: 1, g: 1, b: 1, a: 1}
+      labelPosition: 0
+      labelOffset: {x: 0, y: 0}
+      autoRangeMin: 1
+      autoRangeMax: 1
+      autoRangeRounding: 2
+      autoRangeUnit: 1
+      minValue: 0
+      maxValue: 1
+      autoTicks: 1
+      splitCount: 5
+      labelFormat: 
+    radiusAxis:
+      labels: []
+      visible: 1
+      color: {r: 1, g: 1, b: 1, a: 1}
+      edgeColor: {r: 1, g: 1, b: 1, a: 1}
+      width: 2
+      labelStyle:
+        enabled: 1
+        fontSize: 10
+        color: {r: 1, g: 1, b: 1, a: 1}
+        position: 0
+        offset: {x: 0, y: 0}
+        rotation: 0
+      showLabels: 1
+      fontSize: 10
+      labelColor: {r: 1, g: 1, b: 1, a: 1}
+      labelPosition: 0
+      labelOffset: {x: 0, y: 0}
+      autoRangeMin: 1
+      autoRangeMax: 1
+      autoRangeRounding: 2
+      autoRangeUnit: 1
+      minValue: 0
+      maxValue: 1
+      autoTicks: 1
+      splitCount: 5
+      labelFormat: 
+  gridSettingsInitialized: 1
+  grid3DSettingsInitialized: 0
+  hoverSettingsInitialized: 1
+  legendSettings:
+    enabled: 1
+    position: 1
+    fontSize: 12
+    color: {r: 1, g: 1, b: 1, a: 1}
+    backgroundColor: {r: 0, g: 0, b: 0, a: 0}
+    itemSpacing: 10
+    offset: {x: 0, y: -30}
+    icon: {fileID: 0}
+    iconSize: {x: 10, y: 10}
+    iconRadius: 2
+  plotSettings:
+    overrideTheme: 1
+    backgroundColor: {r: 0, g: 0, b: 0, a: 0}
+    borderColor: {r: 0, g: 0, b: 0, a: 0}
+    borderWidth: 0
+    labelEdgeFadePx: 20
+  series:
+  - name: Series 1
+    id: b13606dffc0345528036ddd7987fae2a
+    type: 8
+    visible: 1
+    settings:
+      rid: 6289704794077790210
+    _cachedLineSettings:
+      rid: 6289704794077790208
+    _cachedBarSettings:
+      rid: -2
+    _cachedPieSettings:
+      rid: -2
+    _cachedRingChartSettings:
+      rid: -2
+    _cachedScatterSettings:
+      rid: -2
+    _cachedRadarSettings:
+      rid: -2
+    _cachedHeatmapSettings:
+      rid: -2
+    labelSettings:
+      enabled: 1
+      color: {r: 1, g: 1, b: 1, a: 1}
+      fontSize: 10
+      decimalPlaces: 0
+      showName: 0
+      offset: {x: 50, y: 50}
+      position: 1
+      background:
+        texture: {fileID: 2800000, guid: 579899521d0e9b94186142999d8d941d, type: 3}
+        tiling: {x: 1, y: 1}
+        offset: {x: 0, y: 0}
+        color: {r: 0.10849059, g: 0.49941656, b: 1, a: 1}
+        adaptiveTiling: 1
+    legendOverride:
+      enabled: 0
+      icon: {fileID: 0}
+      iconSize: {x: -1, y: -1}
+      iconRadius: -1
+      useColor: 0
+      color: {r: 1, g: 1, b: 1, a: 1}
+    seriesData:
+    - id: b6605114af6e46e59298d1ee4ac884c5
+      x: 0
+      value: 60
+      y: 0
+      z: 0
+      w: 0
+      v: 0
+      name: 
+      useColor: 0
+      color: {r: 1, g: 0.6556604, b: 0.6556604, a: 1}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 6289704794077790208
+      type: {class: LineSettings, ns: EasyChart, asm: EasyChart.Runtime}
+      data:
+        stroke:
+          lineType: 0
+          width: 2
+          color: {r: 0, g: 1, b: 1, a: 1}
+          textureFill:
+            texture: {fileID: 0}
+            tiling: {x: 1, y: 1}
+            offset: {x: 0, y: 0}
+            color: {r: 1, g: 1, b: 1, a: 1}
+            adaptiveTiling: 0
+          textureFXLayers: []
+        point:
+          show: 1
+          size: 4
+          textureFill:
+            texture: {fileID: 0}
+            tiling: {x: 1, y: 1}
+            offset: {x: 0, y: 0}
+            color: {r: 1, g: 1, b: 1, a: 1}
+            adaptiveTiling: 0
+          textureFXLayers: []
+        hover:
+          enabled: 0
+          _scale: 1.5
+          _textureFill:
+            texture: {fileID: 0}
+            tiling: {x: 1, y: 1}
+            offset: {x: 0, y: 0}
+            color: {r: 1, g: 1, b: 1, a: 0.35}
+            adaptiveTiling: 0
+          pickRadius: 8
+          point:
+            show: 1
+            size: 4
+            textureFill:
+              texture: {fileID: 0}
+              tiling: {x: 1, y: 1}
+              offset: {x: 0, y: 0}
+              color: {r: 1, g: 1, b: 1, a: 1}
+              adaptiveTiling: 0
+            textureFXLayers: []
+          lineColor: {r: 1, g: 1, b: 1, a: 0.35}
+        area:
+          show: 0
+          textureFill:
+            texture: {fileID: 0}
+            tiling: {x: 1, y: 1}
+            offset: {x: 0, y: 0}
+            color: {r: 1, g: 1, b: 1, a: 0.2}
+            adaptiveTiling: 0
+          textureFXLayers: []
+        stacked: 0
+        legendColorSource: 0
+    - rid: 6289704794077790210
+      type: {class: GaugeSettings, ns: EasyChart.Pro, asm: EasyChart.Pro.Runtime}
+      data:
+        layout:
+          startAngleDeg: 45
+          endAngleDeg: 315
+          clockwise: 1
+          outerRadius: 120
+          textureFill:
+            texture: {fileID: 0}
+            tiling: {x: 1, y: 1}
+            offset: {x: 0, y: 0}
+            color: {r: 1, g: 1, b: 1, a: 1}
+            adaptiveTiling: 0
+          textureFXLayers:
+          - fill:
+              texture: {fileID: 2800000, guid: 2d79ab812d4416c4494e84f5f85aea10, type: 3}
+              tiling: {x: 1, y: 1}
+              offset: {x: 0, y: 0}
+              color: {r: 1, g: 1, b: 1, a: 1}
+              adaptiveTiling: 0
+            animationType: 3
+            uvMoveSpeed: {x: 0.2, y: 0}
+            scaleType: 0
+            scaleSpeed: 0.1
+            scaleFrom: {x: 1.3, y: 1.3}
+            scaleTo: {x: 0.3, y: 0.3}
+            rotateSpeed: -30
+            layerCount: 8
+            colorOverLife:
+              serializedVersion: 2
+              key0: {r: 0.19339621, g: 0.55169654, b: 1, a: 0.049780942}
+              key1: {r: 0.36320752, g: 0.57547176, b: 1, a: 0.05325403}
+              key2: {r: 0.3160377, g: 0.74766946, b: 1, a: 0.39607844}
+              key3: {r: 0, g: 0, b: 0, a: 0}
+              key4: {r: 0, g: 0, b: 0, a: 0}
+              key5: {r: 0, g: 0, b: 0, a: 0}
+              key6: {r: 0, g: 0, b: 0, a: 0}
+              key7: {r: 0, g: 0, b: 0, a: 0}
+              ctime0: 0
+              ctime1: 33731
+              ctime2: 65535
+              ctime3: 0
+              ctime4: 0
+              ctime5: 0
+              ctime6: 0
+              ctime7: 0
+              atime0: 0
+              atime1: 11180
+              atime2: 33539
+              atime3: 57054
+              atime4: 65535
+              atime5: 0
+              atime6: 0
+              atime7: 0
+              m_Mode: 0
+              m_ColorSpace: -1
+              m_NumColorKeys: 3
+              m_NumAlphaKeys: 5
+            colorAnimationType: 0
+            colorAnimationSpeed: 1
+            colorAnimationGradient:
+              serializedVersion: 2
+              key0: {r: 1, g: 1, b: 1, a: 0}
+              key1: {r: 1, g: 1, b: 1, a: 0.79691124}
+              key2: {r: 0, g: 0, b: 0, a: 0}
+              key3: {r: 0, g: 0, b: 0, a: 0}
+              key4: {r: 0, g: 0, b: 0, a: 0}
+              key5: {r: 0, g: 0, b: 0, a: 0}
+              key6: {r: 0, g: 0, b: 0, a: 0}
+              key7: {r: 0, g: 0, b: 0, a: 0}
+              ctime0: 0
+              ctime1: 65535
+              ctime2: 0
+              ctime3: 0
+              ctime4: 0
+              ctime5: 0
+              ctime6: 0
+              ctime7: 0
+              atime0: 0
+              atime1: 32382
+              atime2: 65535
+              atime3: 0
+              atime4: 0
+              atime5: 0
+              atime6: 0
+              atime7: 0
+              m_Mode: 0
+              m_ColorSpace: -1
+              m_NumColorKeys: 2
+              m_NumAlphaKeys: 3
+            fadeType: 0
+            fadeIntensity: 0
+            fadeSoftness: 0.5
+            deformType: 0
+            deformIntensity: 1
+            deformSpeed: 1
+            waveFrequency: 1
+          - fill:
+              texture: {fileID: 2800000, guid: 1658e50ea966d5346a87b8662f52e7e1, type: 3}
+              tiling: {x: 1, y: 1}
+              offset: {x: 0, y: 0}
+              color: {r: 0.41037738, g: 0.6413636, b: 1, a: 0.3529412}
+              adaptiveTiling: 0
+            animationType: 0
+            uvMoveSpeed: {x: 0, y: -0.33}
+            scaleType: 2
+            scaleSpeed: 1
+            scaleFrom: {x: 1, y: 1}
+            scaleTo: {x: 1.2, y: 1.2}
+            rotateSpeed: 45
+            layerCount: 1
+            colorOverLife:
+              serializedVersion: 2
+              key0: {r: 1, g: 1, b: 1, a: 1}
+              key1: {r: 1, g: 1, b: 1, a: 1}
+              key2: {r: 0, g: 0, b: 0, a: 0}
+              key3: {r: 0, g: 0, b: 0, a: 0}
+              key4: {r: 0, g: 0, b: 0, a: 0}
+              key5: {r: 0, g: 0, b: 0, a: 0}
+              key6: {r: 0, g: 0, b: 0, a: 0}
+              key7: {r: 0, g: 0, b: 0, a: 0}
+              ctime0: 0
+              ctime1: 65535
+              ctime2: 0
+              ctime3: 0
+              ctime4: 0
+              ctime5: 0
+              ctime6: 0
+              ctime7: 0
+              atime0: 0
+              atime1: 65535
+              atime2: 0
+              atime3: 0
+              atime4: 0
+              atime5: 0
+              atime6: 0
+              atime7: 0
+              m_Mode: 0
+              m_ColorSpace: -1
+              m_NumColorKeys: 2
+              m_NumAlphaKeys: 2
+            colorAnimationType: 2
+            colorAnimationSpeed: 1
+            colorAnimationGradient:
+              serializedVersion: 2
+              key0: {r: 0.2216981, g: 0.5809696, b: 1, a: 0.29411766}
+              key1: {r: 0.27058828, g: 0.99278116, b: 1, a: 0.1882353}
+              key2: {r: 0, g: 0, b: 0, a: 0}
+              key3: {r: 0, g: 0, b: 0, a: 0}
+              key4: {r: 0, g: 0, b: 0, a: 0}
+              key5: {r: 0, g: 0, b: 0, a: 0}
+              key6: {r: 0, g: 0, b: 0, a: 0}
+              key7: {r: 0, g: 0, b: 0, a: 0}
+              ctime0: 0
+              ctime1: 65535
+              ctime2: 0
+              ctime3: 0
+              ctime4: 0
+              ctime5: 0
+              ctime6: 0
+              ctime7: 0
+              atime0: 0
+              atime1: 65535
+              atime2: 0
+              atime3: 0
+              atime4: 0
+              atime5: 0
+              atime6: 0
+              atime7: 0
+              m_Mode: 0
+              m_ColorSpace: -1
+              m_NumColorKeys: 2
+              m_NumAlphaKeys: 2
+            fadeType: 3
+            fadeIntensity: 1
+            fadeSoftness: 1
+            deformType: 0
+            deformIntensity: 0.1
+            deformSpeed: 1
+            waveFrequency: 4
+          backgroundSize: {x: 260, y: 260}
+          minValue: 0
+          maxValue: 100
+        axis:
+          show: 1
+          textureFill:
+            texture: {fileID: 2800000, guid: 6dfd88e7326a1944590427dbab2e2059, type: 3}
+            tiling: {x: 1, y: 1}
+            offset: {x: 0, y: 0}
+            color: {r: 0.4481132, g: 0.5917518, b: 1, a: 1}
+            adaptiveTiling: 0
+          textureFXLayers:
+          - fill:
+              texture: {fileID: 2800000, guid: 198e2891f237328498e0d440a2881758, type: 3}
+              tiling: {x: 1, y: 1}
+              offset: {x: 0, y: 0}
+              color: {r: 1, g: 1, b: 1, a: 0.4392157}
+              adaptiveTiling: 0
+            animationType: 1
+            uvMoveSpeed: {x: 0.1, y: 0}
+            scaleType: 0
+            scaleSpeed: 0
+            scaleFrom: {x: 0, y: 0}
+            scaleTo: {x: 0, y: 0}
+            rotateSpeed: 0
+            layerCount: 0
+            colorOverLife:
+              serializedVersion: 2
+              key0: {r: 0, g: 0, b: 0, a: 0}
+              key1: {r: 0, g: 0, b: 0, a: 0}
+              key2: {r: 0, g: 0, b: 0, a: 0}
+              key3: {r: 0, g: 0, b: 0, a: 0}
+              key4: {r: 0, g: 0, b: 0, a: 0}
+              key5: {r: 0, g: 0, b: 0, a: 0}
+              key6: {r: 0, g: 0, b: 0, a: 0}
+              key7: {r: 0, g: 0, b: 0, a: 0}
+              ctime0: 0
+              ctime1: 65535
+              ctime2: 0
+              ctime3: 0
+              ctime4: 0
+              ctime5: 0
+              ctime6: 0
+              ctime7: 0
+              atime0: 0
+              atime1: 65535
+              atime2: 0
+              atime3: 0
+              atime4: 0
+              atime5: 0
+              atime6: 0
+              atime7: 0
+              m_Mode: 0
+              m_ColorSpace: 0
+              m_NumColorKeys: 2
+              m_NumAlphaKeys: 2
+            colorAnimationType: 0
+            colorAnimationSpeed: 0
+            colorAnimationGradient:
+              serializedVersion: 2
+              key0: {r: 0, g: 0, b: 0, a: 0}
+              key1: {r: 0, g: 0, b: 0, a: 0}
+              key2: {r: 0, g: 0, b: 0, a: 0}
+              key3: {r: 0, g: 0, b: 0, a: 0}
+              key4: {r: 0, g: 0, b: 0, a: 0}
+              key5: {r: 0, g: 0, b: 0, a: 0}
+              key6: {r: 0, g: 0, b: 0, a: 0}
+              key7: {r: 0, g: 0, b: 0, a: 0}
+              ctime0: 0
+              ctime1: 65535
+              ctime2: 0
+              ctime3: 0
+              ctime4: 0
+              ctime5: 0
+              ctime6: 0
+              ctime7: 0
+              atime0: 0
+              atime1: 65535
+              atime2: 0
+              atime3: 0
+              atime4: 0
+              atime5: 0
+              atime6: 0
+              atime7: 0
+              m_Mode: 0
+              m_ColorSpace: 0
+              m_NumColorKeys: 2
+              m_NumAlphaKeys: 2
+            fadeType: 0
+            fadeIntensity: 0
+            fadeSoftness: 0
+            deformType: 0
+            deformIntensity: 0
+            deformSpeed: 0
+            waveFrequency: 0
+          width: 50
+        progress:
+          show: 1
+          textureFill:
+            texture: {fileID: 0}
+            tiling: {x: 1, y: 1}
+            offset: {x: 0, y: 0}
+            color: {r: 1, g: 1, b: 1, a: 0}
+            adaptiveTiling: 0
+          textureFXLayers:
+          - fill:
+              texture: {fileID: 2800000, guid: 6ec35f4866f96f7488e860ed5f997e73, type: 3}
+              tiling: {x: 1, y: 1}
+              offset: {x: 0, y: 0}
+              color: {r: 1, g: 1, b: 1, a: 1}
+              adaptiveTiling: 0
+            animationType: 1
+            uvMoveSpeed: {x: 0.2, y: 0}
+            scaleType: 3
+            scaleSpeed: 1
+            scaleFrom: {x: 1.5, y: 1.5}
+            scaleTo: {x: 0.5, y: 0.5}
+            rotateSpeed: 30
+            layerCount: 2
+            colorOverLife:
+              serializedVersion: 2
+              key0: {r: 0, g: 0.87835574, b: 1, a: 0}
+              key1: {r: 0, g: 0.87835574, b: 1, a: 1}
+              key2: {r: 0, g: 0, b: 0, a: 0}
+              key3: {r: 0, g: 0, b: 0, a: 0}
+              key4: {r: 0, g: 0, b: 0, a: 0}
+              key5: {r: 0, g: 0, b: 0, a: 0}
+              key6: {r: 0, g: 0, b: 0, a: 0}
+              key7: {r: 0, g: 0, b: 0, a: 0}
+              ctime0: 0
+              ctime1: 65535
+              ctime2: 0
+              ctime3: 0
+              ctime4: 0
+              ctime5: 0
+              ctime6: 0
+              ctime7: 0
+              atime0: 3855
+              atime1: 32575
+              atime2: 65535
+              atime3: 0
+              atime4: 0
+              atime5: 0
+              atime6: 0
+              atime7: 0
+              m_Mode: 0
+              m_ColorSpace: -1
+              m_NumColorKeys: 2
+              m_NumAlphaKeys: 3
+            colorAnimationType: 0
+            colorAnimationSpeed: 1
+            colorAnimationGradient:
+              serializedVersion: 2
+              key0: {r: 1, g: 1, b: 1, a: 0}
+              key1: {r: 1, g: 1, b: 1, a: 0.79691124}
+              key2: {r: 0, g: 0, b: 0, a: 0}
+              key3: {r: 0, g: 0, b: 0, a: 0}
+              key4: {r: 0, g: 0, b: 0, a: 0}
+              key5: {r: 0, g: 0, b: 0, a: 0}
+              key6: {r: 0, g: 0, b: 0, a: 0}
+              key7: {r: 0, g: 0, b: 0, a: 0}
+              ctime0: 0
+              ctime1: 65535
+              ctime2: 0
+              ctime3: 0
+              ctime4: 0
+              ctime5: 0
+              ctime6: 0
+              ctime7: 0
+              atime0: 0
+              atime1: 32382
+              atime2: 65535
+              atime3: 0
+              atime4: 0
+              atime5: 0
+              atime6: 0
+              atime7: 0
+              m_Mode: 0
+              m_ColorSpace: -1
+              m_NumColorKeys: 2
+              m_NumAlphaKeys: 3
+            fadeType: 4
+            fadeIntensity: 1
+            fadeSoftness: 1
+            deformType: 0
+            deformIntensity: 1
+            deformSpeed: 1
+            waveFrequency: 1
+          overrideWidth: 1
+          width: 44
+        pointer:
+          show: 1
+          textureFill:
+            texture: {fileID: 2800000, guid: aa03dc3b65969ae4580b126f17a24587, type: 3}
+            tiling: {x: 1, y: 1}
+            offset: {x: 0, y: 0}
+            color: {r: 0.3254717, g: 0.92456704, b: 1, a: 1}
+            adaptiveTiling: 0
+          length: 82.5
+          width: 20
+        ticks:
+          showMajor: 1
+          position: 2
+          majorCount: 11
+          majorLength: 10
+          majorColor: {r: 1, g: 1, b: 1, a: 1}
+          showMinor: 1
+          minorCount: 4
+          minorLength: 5
+          minorColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+          tickOffset: 0
+          labelOffset: 15
+        valueDisplay:
+          show: 1
+          fontSize: 36
+          color: {r: 1, g: 1, b: 1, a: 1}
+          offsetY: 0
+          decimalPlaces: 0
+          suffix: 
+          background:
+            texture: {fileID: 2800000, guid: 7f5d854cff7ad41418f43088da105070, type: 3}
+            tiling: {x: 1, y: 1}
+            offset: {x: 0, y: 0}
+            color: {r: 0, g: 0, b: 0, a: 1}
+            adaptiveTiling: 0
+          backgroundScale: 10

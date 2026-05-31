@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 75cd84f5c1797ae46afd5e9ba18a0b23
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/docs/Manual/easy-chart/en/03_12-CandlestickChart.md
+  uploadId: 906968

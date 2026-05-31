@@ -20,6 +20,11 @@ namespace EasyChart
         private readonly StringBuilder _sb = new StringBuilder(256);
         private readonly TooltipContext _context = new TooltipContext();
 
+        private const float k_PointerMoveThrottleInterval = 1f / 30f;
+        private float _lastPointerMoveRealtime;
+        private Vector2 _lastPointerMoveLocal;
+        private bool _hasLastPointerMove;
+
         public IChartTooltipPolicy TooltipPolicy { get; set; }
 
         public IChartHitTestPolicy HitTestPolicy { get; set; }
@@ -141,6 +146,19 @@ namespace EasyChart
             if (chartArea == null) return;
 
             Vector2 localPos = host.WorldToLocal(pointerWorldPos);
+
+            float now = Time.realtimeSinceStartup;
+            if (_hasLastPointerMove)
+            {
+                if ((now - _lastPointerMoveRealtime) < k_PointerMoveThrottleInterval)
+                {
+                    if ((localPos - _lastPointerMoveLocal).sqrMagnitude < 1f) return;
+                }
+            }
+            _hasLastPointerMove = true;
+            _lastPointerMoveRealtime = now;
+            _lastPointerMoveLocal = localPos;
+
             float areaX = localPos.x - padding.x;
 
             float width = chartArea.contentRect.width;
@@ -241,7 +259,8 @@ namespace EasyChart
 
             if (_sb.Length > 0 && _sb[_sb.Length - 1] == '\n') _sb.Length -= 1;
 
-            tooltip.text = _sb.ToString();
+            string nextText = _sb.ToString();
+            if (!string.Equals(tooltip.text, nextText)) tooltip.text = nextText;
             tooltip.visible = true;
             }
 

@@ -22,12 +22,16 @@ namespace EasyChart
         {
             UxmlStringAttributeDescription m_ProfileName = new UxmlStringAttributeDescription { name = "profile-name", defaultValue = "" };
             UxmlStringAttributeDescription m_ProfileGuid = new UxmlStringAttributeDescription { name = "profile-guid", defaultValue = "" };
+            UxmlBoolAttributeDescription m_IgnoreProfileSize = new UxmlBoolAttributeDescription { name = "ignore-profile-size", defaultValue = false };
 
             public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc)
             {
                 base.Init(ve, bag, cc);
                 var chart = ve as ChartElement;
-                
+
+                // Set IgnoreProfileSize before loading profile
+                chart.IgnoreProfileSize = m_IgnoreProfileSize.GetValueFromBag(bag, cc);
+
                 string profileGuid = m_ProfileGuid.GetValueFromBag(bag, cc);
 #if UNITY_EDITOR
                 if (!string.IsNullOrEmpty(profileGuid))
@@ -67,6 +71,7 @@ namespace EasyChart
         private VisualElement _plotViewport;
         private VisualElement _plotContentRoot;
         private VisualElement _backgroundLayer;
+        private TextureFXRenderer _textureFXRenderer;
         private VisualElement _labelOverlay;
         
         // Dynamic Series Renderers
@@ -187,7 +192,7 @@ namespace EasyChart
             bool IsDeferredCoordSwitchApplying { get; }
             bool IsCoordSwitchBusy { get; }
 
-            float GetCategoryScrollDeltaTime(float runtimeDeltaTime);
+            float GetCategoryScrollDeltaTime(double lastRealTime);
 
             void OnPlayAnimationStart();
             System.Action GetEditorAnimationUpdateCallback();
@@ -252,7 +257,12 @@ namespace EasyChart
                 _owner = owner;
             }
 
-            public float GetCategoryScrollDeltaTime(float runtimeDeltaTime) => runtimeDeltaTime;
+            public float GetCategoryScrollDeltaTime(double lastRealTime)
+            {
+                double now = UnityEngine.Time.realtimeSinceStartupAsDouble;
+                if (lastRealTime <= 0) return ChartTiming.FallbackDeltaTime;
+                return (float)(now - lastRealTime);
+            }
 
             public void OnPlayAnimationStart() { }
 
@@ -271,7 +281,7 @@ namespace EasyChart
             public void ScheduleRuntimeAnimationLoop(System.Action onAnimationUpdate)
             {
                 if (_owner == null) return;
-                _owner.schedule.Execute(onAnimationUpdate).Every(16);
+                _owner.BindRuntimeAnimationLoop(onAnimationUpdate);
             }
 
             public void OnTextureFillAnimationFlagsUpdated(bool has) { }
@@ -337,6 +347,18 @@ namespace EasyChart
         }
 
         private readonly IEditorExecutionPolicy _editor;
+
+        // Staggered per-chart animation loops: each ChartElement gets its own scheduler with a frame offset
+        // to spread CPU load across different frames instead of spiking on the same frame.
+        private IVisualElementScheduledItem _ownAnimItem;
+        private static int _registeredChartCount = 0;
+        private double _categoryScrollLastRealTime = -1d;
+        private double _animationLastRealTime = -1d;
+        // Each ChartElement can have multiple callbacks (ChartElement's own + SeriesRenderers')
+        private static readonly System.Collections.Generic.Dictionary<ChartElement, System.Collections.Generic.List<System.Action>> _globalAnimCallbacks = new();
+
+        // Per-instance animation registration
+        private System.Action _runtimeAnimCallback;
 
         private const string EditorDiagnosticsPrefsKey = "EasyChart.ChartElement.EditorDiagnosticsEnabled";
 
@@ -451,14 +473,19 @@ namespace EasyChart
                 _owner = owner;
             }
 
-            public float GetCategoryScrollDeltaTime(float runtimeDeltaTime)
+            public float GetCategoryScrollDeltaTime(double lastRealTime)
             {
-                if (Application.isPlaying) return runtimeDeltaTime;
+                if (Application.isPlaying)
+                {
+                    double now = UnityEngine.Time.realtimeSinceStartupAsDouble;
+                    if (lastRealTime <= 0) return ChartTiming.FallbackDeltaTime;
+                    return (float)(now - lastRealTime);
+                }
 
-                double now = EditorApplication.timeSinceStartup;
-                if (_categoryScrollLastTime <= 0) _categoryScrollLastTime = now;
-                float dt = (float)(now - _categoryScrollLastTime);
-                _categoryScrollLastTime = now;
+                double editorNow = EditorApplication.timeSinceStartup;
+                if (_categoryScrollLastTime <= 0) _categoryScrollLastTime = editorNow;
+                float dt = (float)(editorNow - _categoryScrollLastTime);
+                _categoryScrollLastTime = editorNow;
                 return dt;
             }
 
@@ -486,6 +513,14 @@ namespace EasyChart
             private void OnEditorTextureFillAnimationUpdate()
             {
                 _owner._animation.TickEditorTextureFillAnimation(_owner, _owner._renderers, _owner._backgroundLayer);
+                
+                // Tick TextureFX animation in editor
+                var fxSettings = _owner._chartProfile?.backgroundFX ?? _owner.Data?.backgroundFX;
+                if (_owner._textureFXRenderer != null && fxSettings != null && fxSettings.enabled)
+                {
+                    _owner._textureFXRenderer.SetSettings(fxSettings);
+                    _owner._textureFXRenderer.Tick(ChartTiming.FallbackDeltaTime);
+                }
             }
 
             public System.Action GetEditorAnimationUpdateCallback()
@@ -606,7 +641,7 @@ namespace EasyChart
             {
                 if (Application.isPlaying)
                 {
-                    _owner.schedule.Execute(onAnimationUpdate).Every(16);
+                    _owner.BindRuntimeAnimationLoop(onAnimationUpdate);
                 }
             }
 
@@ -907,22 +942,27 @@ namespace EasyChart
                 if (_chartProfile.chartWidth > 0) style.width = _chartProfile.chartWidth;
                 if (_chartProfile.chartHeight > 0) style.height = _chartProfile.chartHeight;
             }
+            else
+            {
+                // When ignoring profile size, use 100% of parent container
+                style.width = new StyleLength(new Length(100, LengthUnit.Percent));
+                style.height = new StyleLength(new Length(100, LengthUnit.Percent));
+            }
 
             if (_chartProfile.background == null) _chartProfile.background = new BackgroundSettings { show = true };
-            style.backgroundColor = new StyleColor(theme != null ? theme.backgroundColor : Color.clear);
+            style.backgroundColor = StyleKeyword.Null;
             style.backgroundImage = StyleKeyword.Null;
 
             if (_plotViewport != null)
             {
-                // Plot settings: profile override takes precedence over theme
                 var plotSettings = _chartProfile.plotSettings;
                 bool useOverride = plotSettings != null && plotSettings.overrideTheme;
 
-                var plotBg = useOverride ? plotSettings.backgroundColor : (theme != null ? theme.plotBackgroundColor : Color.clear);
+                var plotBg = useOverride ? plotSettings.backgroundColor : Color.clear;
                 _plotViewport.style.backgroundColor = new StyleColor(plotBg);
 
-                float bw = useOverride ? Mathf.Max(0f, plotSettings.borderWidth) : (theme != null ? Mathf.Max(0f, theme.plotBorderWidth) : 0f);
-                var bc = useOverride ? plotSettings.borderColor : (theme != null ? theme.plotBorderColor : Color.clear);
+                float bw = useOverride ? Mathf.Max(0f, plotSettings.borderWidth) : 0f;
+                var bc = useOverride ? plotSettings.borderColor : Color.clear;
 
                 _plotViewport.style.borderLeftWidth = bw;
                 _plotViewport.style.borderRightWidth = bw;
@@ -942,67 +982,12 @@ namespace EasyChart
             _padding = _chartProfile.padding;
             if (_chartArea != null)
             {
-                _chartArea.style.left = _padding.x;
-                _chartArea.style.right = _padding.y;
-                _chartArea.style.top = _padding.z;
-                _chartArea.style.bottom = _padding.w;
+                _chartArea.style.left   = _padding.x;  // Left
+                _chartArea.style.top    = _padding.y;  // Top
+                _chartArea.style.right  = _padding.z;  // Right
+                _chartArea.style.bottom = _padding.w;  // Bottom
 
                 ScheduleLayoutRefresh();
-            }
-
-            if (theme != null && theme.seriesColors != null && theme.seriesColors.Count > 0 && _chartProfile.series != null)
-            {
-                int paletteCount = theme.seriesColors.Count;
-                int nextPaletteIndex = 0;
-
-                for (int i = 0; i < _chartProfile.series.Count; i++)
-                {
-                    var serie = _chartProfile.series[i];
-                    if (serie == null) continue;
-
-                    Color paletteColor = theme.seriesColors[(nextPaletteIndex + theme.paletteSeed) % paletteCount];
-                    bool used = false;
-
-                    if (serie.type == SerieType.Line && serie.settings is LineSettings ls)
-                    {
-                        if (ls.stroke == null) ls.stroke = new LineStrokeSettings();
-                        if (ls.stroke.color == Color.white)
-                        {
-                            ls.stroke.color = paletteColor;
-                            used = true;
-                        }
-                    }
-                    else if (serie.type == SerieType.Radar && serie.settings is RadarSettings rs)
-                    {
-                        if (rs.stroke == null) rs.stroke = new LineStrokeSettings();
-                        if (rs.stroke.color == Color.white)
-                        {
-                            rs.stroke.color = paletteColor;
-                            used = true;
-                        }
-                    }
-                    else if ((serie.type == SerieType.Bar || serie.type == SerieType.HorizontalBar) && serie.settings is BarSettings bs)
-                    {
-                        if (bs.textureFill == null) bs.textureFill = new TextureFillSettings();
-                        if (bs.textureFill.color == Color.white)
-                        {
-                            bs.textureFill.color = paletteColor;
-                            used = true;
-                        }
-                    }
-                    else if (serie.type == SerieType.Scatter && serie.settings is ScatterSettings ss)
-                    {
-                        if (ss.point == null) ss.point = new PointSettings();
-                        if (ss.point.textureFill == null) ss.point.textureFill = new TextureFillSettings();
-                        if (ss.point.textureFill.color == Color.white)
-                        {
-                            ss.point.textureFill.color = paletteColor;
-                            used = true;
-                        }
-                    }
-
-                    if (used) nextPaletteIndex++;
-                }
             }
 
             var data = _chartProfile.ToChartData();
@@ -1316,6 +1301,10 @@ namespace EasyChart
             _backgroundLayer.StretchToParentSize();
             Add(_backgroundLayer);
 
+            _textureFXRenderer = new TextureFXRenderer();
+            _textureFXRenderer.StretchToParentSize();
+            Add(_textureFXRenderer);
+
             _gridLayer = new GridLayer();
             _axisLayer = new AxisLayer();
             _axisLayer.userData = this;
@@ -1426,11 +1415,13 @@ namespace EasyChart
             {
                 _editor.OnAttachToPanel(evt);
                 _kernel.OnAttachToPanel();
+                UpdateRuntimeAnimationLoopState();
             });
             RegisterCallback<DetachFromPanelEvent>((evt) =>
             {
                 _kernel.OnDetachFromPanel();
                 _editor.OnDetachFromPanel(evt);
+                StopRuntimeAnimationLoop();
             });
 
             // Animation Loop
@@ -1444,6 +1435,7 @@ namespace EasyChart
             _editor.OnPlayAnimationStart();
 
             _animation.Play(this, Application.isPlaying, _renderers, _editor.GetEditorAnimationUpdateCallback());
+            UpdateRuntimeAnimationLoopState();
         }
 
         internal void PlayAnimationAutoInternal()
@@ -1460,7 +1452,148 @@ namespace EasyChart
             }
             if (Data == null) return;
 
-            _animation.TickRuntime(Data, _renderers, _backgroundLayer);
+            double now = UnityEngine.Time.realtimeSinceStartupAsDouble;
+            float dt = _animationLastRealTime <= 0 ? ChartTiming.FallbackDeltaTime : (float)(now - _animationLastRealTime);
+            _animationLastRealTime = now;
+            if (dt <= 0f || dt > 1f) dt = ChartTiming.FallbackDeltaTime;
+
+            _animation.TickRuntime(Data, _renderers, _backgroundLayer, dt);
+
+            // Tick TextureFX animation (ChartProfile takes precedence over Data)
+            var bgFX = _chartProfile?.backgroundFX ?? Data?.backgroundFX;
+            if (_textureFXRenderer != null && bgFX != null && bgFX.enabled)
+            {
+                _textureFXRenderer.Tick(dt);
+            }
+
+            UpdateRuntimeAnimationLoopState();
+        }
+
+        private void BindRuntimeAnimationLoop(System.Action onAnimationUpdate)
+        {
+            _runtimeAnimCallback = onAnimationUpdate;
+            UpdateRuntimeAnimationLoopState();
+        }
+
+        private bool ShouldRunRuntimeAnimationLoop()
+        {
+            if (!Application.isPlaying) return false;
+            if (panel == null) return false;
+            if (_runtimeAnimCallback == null) return false;
+            return _animation.IsAnimating || _animation.HasTextureFillAnimations;
+        }
+
+        private void UpdateRuntimeAnimationLoopState()
+        {
+            bool shouldRun = ShouldRunRuntimeAnimationLoop();
+            bool isRegistered = _globalAnimCallbacks.ContainsKey(this) &&
+                                _globalAnimCallbacks[this].Contains(_runtimeAnimCallback);
+
+            if (shouldRun && !isRegistered)
+            {
+                if (!_globalAnimCallbacks.TryGetValue(this, out var callbacks))
+                {
+                    callbacks = new System.Collections.Generic.List<System.Action>();
+                    _globalAnimCallbacks[this] = callbacks;
+                }
+                if (!callbacks.Contains(_runtimeAnimCallback))
+                {
+                    callbacks.Add(_runtimeAnimCallback);
+                }
+                EnsureOwnAnimationLoop();
+            }
+            else if (!shouldRun && isRegistered)
+            {
+                if (_globalAnimCallbacks.TryGetValue(this, out var callbacks))
+                {
+                    callbacks.Remove(_runtimeAnimCallback);
+                    if (callbacks.Count == 0)
+                    {
+                        _globalAnimCallbacks.Remove(this);
+                    }
+                }
+                TryStopOwnAnimationLoop();
+            }
+        }
+
+        private void EnsureOwnAnimationLoop()
+        {
+            if (_ownAnimItem != null) return;
+            // Golden ratio distribution: ensures uniform spread for any number of charts
+            // φ ≈ 0.618, so each new chart's offset is ~61.8% of the interval away from the previous
+            const double phi = 0.6180339887498949;
+            long offset = (long)((_registeredChartCount * phi % 1.0) * ChartTiming.UpdateIntervalMs);
+            _registeredChartCount++;
+            _ownAnimItem = schedule.Execute(OnOwnAnimationUpdate).StartingIn(offset).Every(ChartTiming.UpdateIntervalMs);
+        }
+
+        private void TryStopOwnAnimationLoop()
+        {
+            bool hasCallbacks = _globalAnimCallbacks.ContainsKey(this) && _globalAnimCallbacks[this].Count > 0;
+            if (!hasCallbacks)
+            {
+                if (_ownAnimItem != null)
+                {
+                    _ownAnimItem.Pause();
+                    _ownAnimItem = null;
+                    _registeredChartCount = System.Math.Max(0, _registeredChartCount - 1);
+                }
+            }
+        }
+
+        private void OnOwnAnimationUpdate()
+        {
+            if (!_globalAnimCallbacks.TryGetValue(this, out var callbacks) || callbacks.Count == 0)
+            {
+                TryStopOwnAnimationLoop();
+                return;
+            }
+            var snapshot = new System.Collections.Generic.List<System.Action>(callbacks);
+            foreach (var cb in snapshot)
+                cb?.Invoke();
+        }
+
+        // Public API for SeriesRenderers to register/unregister from per-chart animation loop
+        public static void RegisterGlobalAnimationCallback(ChartElement owner, System.Action callback)
+        {
+            if (owner == null || callback == null) return;
+            if (!_globalAnimCallbacks.TryGetValue(owner, out var callbacks))
+            {
+                callbacks = new System.Collections.Generic.List<System.Action>();
+                _globalAnimCallbacks[owner] = callbacks;
+            }
+            if (!callbacks.Contains(callback))
+            {
+                callbacks.Add(callback);
+            }
+            owner.EnsureOwnAnimationLoop();
+        }
+
+        public static void UnregisterGlobalAnimationCallback(ChartElement owner, System.Action callback)
+        {
+            if (owner == null || callback == null) return;
+            if (_globalAnimCallbacks.TryGetValue(owner, out var callbacks))
+            {
+                callbacks.Remove(callback);
+                if (callbacks.Count == 0)
+                {
+                    _globalAnimCallbacks.Remove(owner);
+                }
+            }
+            owner.TryStopOwnAnimationLoop();
+        }
+
+        // Legacy per-instance animation loop (kept for compatibility, but unused when global loop is active)
+        private void StartRuntimeAnimationLoop()
+        {
+            // Per-instance loop is now disabled in favor of global loop
+            // This method is kept for API compatibility
+        }
+
+        private void StopRuntimeAnimationLoop()
+        {
+            // Per-instance loop is now disabled in favor of global loop
+            // This method is kept for API compatibility
         }
 
         public void LoadProfileByName(string name)
@@ -1503,7 +1636,16 @@ namespace EasyChart
             _editor.OnSetDataStart(Data, data, out bool coordChanged);
             Data = data;
 
+            // Update TextureFX settings (ChartProfile takes precedence over Data)
+            if (_textureFXRenderer != null)
+            {
+                var bgFX = _chartProfile?.backgroundFX ?? data?.backgroundFX;
+                _textureFXRenderer.SetSettings(bgFX);
+            }
+
             UpdateTextureFillAnimationFlags();
+
+            UpdateRuntimeAnimationLoopState();
 
             if (_editor.TryDeferCoordSwitchApply(coordChanged)) return;
 
@@ -1514,7 +1656,22 @@ namespace EasyChart
 
         private static bool HasTextureFillAnimation(TextureFillSettings fill)
         {
-            return fill != null && fill.animationType != TextureFillAnimationType.None;
+            return false;
+        }
+
+        private static bool HasTextureFXLayerAnimation(TextureFXLayer layer)
+        {
+            return layer != null && layer.animationType != TextureFillAnimationType.None;
+        }
+
+        private static bool HasTextureFXLayersAnimation(List<TextureFXLayer> layers)
+        {
+            if (layers == null || layers.Count == 0) return false;
+            foreach (var layer in layers)
+            {
+                if (HasTextureFXLayerAnimation(layer)) return true;
+            }
+            return false;
         }
 
         private void UpdateTextureFillAnimationFlags()
@@ -1532,6 +1689,38 @@ namespace EasyChart
             {
                 var bg = _chartProfile.background;
                 if (bg != null && bg.show && HasTextureFillAnimation(bg.textureFill)) has = true;
+                
+                // Check ChartProfile TextureFX
+                if (!has && _chartProfile.backgroundFX != null && _chartProfile.backgroundFX.enabled)
+                {
+                    if (_chartProfile.backgroundFX.layers != null)
+                    {
+                        foreach (var layer in _chartProfile.backgroundFX.layers)
+                        {
+                            if (HasTextureFXLayerAnimation(layer))
+                            {
+                                has = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Check TextureFX background animations
+            if (!has && Data != null && Data.backgroundFX != null && Data.backgroundFX.enabled)
+            {
+                if (Data.backgroundFX.layers != null)
+                {
+                    foreach (var layer in Data.backgroundFX.layers)
+                    {
+                        if (HasTextureFXLayerAnimation(layer))
+                        {
+                            has = true;
+                            break;
+                        }
+                    }
+                }
             }
 
             if (!has && Data != null && Data.Series != null)
@@ -1543,26 +1732,24 @@ namespace EasyChart
 
                     if (s.settings is LineSettings ls)
                     {
-                        if (HasTextureFillAnimation(ls.stroke != null ? ls.stroke.textureFill : null)) { has = true; break; }
-                        if (HasTextureFillAnimation(ls.area != null ? ls.area.textureFill : null)) { has = true; break; }
-                        if (ls.point != null && HasTextureFillAnimation(ls.point.textureFill)) { has = true; break; }
+                        if (ls.stroke != null && HasTextureFXLayersAnimation(ls.stroke.textureFXLayers)) { has = true; break; }
+                        if (ls.area != null && HasTextureFXLayersAnimation(ls.area.textureFXLayers)) { has = true; break; }
+                        if (ls.point != null && HasTextureFXLayersAnimation(ls.point.textureFXLayers)) { has = true; break; }
                     }
                     else if (s.settings is ScatterSettings ss)
                     {
-                        if (ss.point != null && HasTextureFillAnimation(ss.point.textureFill)) { has = true; break; }
-                        if (ss.hover != null && HasTextureFillAnimation(ss.hover.textureFill)) { has = true; break; }
+                        if (ss.point != null && HasTextureFXLayersAnimation(ss.point.textureFXLayers)) { has = true; break; }
                     }
                     else if (s.settings is BarSettings bs)
                     {
-                        if (HasTextureFillAnimation(bs.textureFill)) { has = true; break; }
-                        if (bs.background != null && HasTextureFillAnimation(bs.background.textureFill)) { has = true; break; }
-                        if (bs.hover != null && HasTextureFillAnimation(bs.hover.textureFill)) { has = true; break; }
+                        if (HasTextureFXLayersAnimation(bs.textureFXLayers)) { has = true; break; }
                     }
                     else if (s.settings is RadarSettings rs)
                     {
-                        if (HasTextureFillAnimation(rs.stroke != null ? rs.stroke.textureFill : null)) { has = true; break; }
-                        if (HasTextureFillAnimation(rs.area != null ? rs.area.textureFill : null)) { has = true; break; }
-                        if (rs.point != null && HasTextureFillAnimation(rs.point.textureFill)) { has = true; break; }
+                        if (rs.radar != null && HasTextureFXLayersAnimation(rs.radar.textureFXLayers)) { has = true; break; }
+                        if (rs.stroke != null && HasTextureFXLayersAnimation(rs.stroke.textureFXLayers)) { has = true; break; }
+                        if (rs.area != null && HasTextureFXLayersAnimation(rs.area.textureFXLayers)) { has = true; break; }
+                        if (rs.point != null && HasTextureFXLayersAnimation(rs.point.textureFXLayers)) { has = true; break; }
                     }
                 }
             }
@@ -1666,9 +1853,10 @@ namespace EasyChart
                 return;
             }
 
-            float dt = _editor.GetCategoryScrollDeltaTime(Time.unscaledDeltaTime);
+            float dt = _editor.GetCategoryScrollDeltaTime(_categoryScrollLastRealTime);
+            _categoryScrollLastRealTime = UnityEngine.Time.realtimeSinceStartupAsDouble;
 
-            if (dt <= 0f || dt > 1f) dt = 0.016f;
+            if (dt <= 0f || dt > 1f) dt = ChartTiming.FallbackDeltaTime;
 
             var xAxisId = GetMappedXAxisId();
             var yAxisId = GetMappedYAxisId();

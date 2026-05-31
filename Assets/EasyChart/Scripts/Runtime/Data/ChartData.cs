@@ -8,6 +8,7 @@ namespace EasyChart
     {
         Cartesian2D,
         Polar2D,
+        Cartesian3D,
         None
     }
 
@@ -16,7 +17,9 @@ namespace EasyChart
         XBottom,
         XTop,
         YLeft,
-        YRight
+        YRight,
+        ZFront,
+        ZBack
     }
 
     public enum AxisType
@@ -39,6 +42,14 @@ namespace EasyChart
     }
 
     [System.Serializable]
+    public class Cartesian3DMapping
+    {
+        public AxisId xAxisId = AxisId.XBottom;
+        public AxisId yAxisId = AxisId.YLeft;
+        public AxisId zAxisId = AxisId.ZFront;
+    }
+
+    [System.Serializable]
     public class PlotLayoutSettings
     {
         public Vector2 centerOffset = Vector2.zero;
@@ -53,6 +64,9 @@ namespace EasyChart
         public Color color = Color.white;
         public LabelPosition position = LabelPosition.Outside;
         public Vector2 offset = Vector2.zero;
+        [Tooltip("Rotation angle for labels in degrees. Positive values rotate counter-clockwise.")]
+        [Range(-90f, 90f)]
+        public float rotation = 0f;
     }
 
     [System.Serializable]
@@ -78,7 +92,7 @@ namespace EasyChart
         public Vector2 labelOffset = Vector2.zero;
         public bool autoRangeMin = true;
         public bool autoRangeMax = true;
-        public AutoRangeRoundingMode autoRangeRounding = AutoRangeRoundingMode.Tens;
+        public AutoRangeRoundingMode autoRangeRounding = AutoRangeRoundingMode.NiceNumbers;
         public float autoRangeUnit = 1f;
         public float minValue = 0f;
         public float maxValue = 1f;
@@ -103,7 +117,8 @@ namespace EasyChart
         Integer,
         Tens,
         Hundreds,
-        Custom
+        Custom,
+        NiceNumbers
     }
 
     public enum SerieType
@@ -132,8 +147,6 @@ namespace EasyChart
         OHLC = 22,
         // 箱线图：展示分布统计（四分位数、中位数、异常值）。常用度：★★☆☆☆ 难度：★★★★★
         BoxPlot = 23,
-        // 直方图：展示单变量分布（分箱计数）。常用度：★★★☆☆ 难度：★★★☆☆
-        Histogram = 24,
         // 瀑布图：展示从起点到终点的增减构成（正负贡献）。常用度：★★☆☆☆ 难度：★★★★☆
         Waterfall = 25,
         // 漏斗图：展示流程转化/阶段漏损（例如注册→下单→支付）。常用度：★★☆☆☆ 难度：★★★☆☆
@@ -171,14 +184,18 @@ namespace EasyChart
         [InspectorName("Texture")]
         public TextureFillSettings textureFill = new TextureFillSettings();
 
+        public List<TextureFXLayer> textureFXLayers = new List<TextureFXLayer>();
+
         public void OnBeforeSerialize()
         {
             if (textureFill == null) textureFill = new TextureFillSettings();
+            if (textureFXLayers == null) textureFXLayers = new List<TextureFXLayer>();
         }
 
         public void OnAfterDeserialize()
         {
             if (textureFill == null) textureFill = new TextureFillSettings();
+            if (textureFXLayers == null) textureFXLayers = new List<TextureFXLayer>();
         }
     }
 
@@ -195,7 +212,7 @@ namespace EasyChart
         None = 0,
         TextureUvMove = 1,
         TextureScale = 2,
-        TextureFade = 3
+        RotateAndScale = 3
     }
 
     public enum TextureFillScaleType
@@ -206,36 +223,101 @@ namespace EasyChart
         PingPong = 3
     }
 
-    public enum TextureFillColorOverLifeWrap
+    public enum TextureFillColorAnimationType
     {
-        Loop = 0,
-        PingPong = 1,
-        Clamp = 2
+        None = 0,
+        Loop = 1,
+        PingPong = 2,
+        Clamp = 3
+    }
+
+    public enum TextureFillFadeType
+    {
+        None = 0,
+        Edge = 1,
+        Center = 2,
+        Radial = 3,
+        DirectionHorizontal = 4,
+        DirectionVertical = 5,
+        FadeTextureEdge = 6
+    }
+
+    public enum TextureFillDeformType
+    {
+        None = 0,
+        Wave = 1,
+        Rotate = 2,
+        Pulse = 3
     }
 
     [System.Serializable]
-    public class TextureFillSettings : ISerializationCallbackReceiver
+    public class TextureFillSettings
     {
         public Texture2D texture;
         public Vector2 tiling = Vector2.one;
         public Vector2 offset = Vector2.zero;
         public Color color = Color.white;
+        
+        [Tooltip("Automatically adjust texture tiling based on shape dimensions to maintain consistent texture appearance")]
+        public bool adaptiveTiling = false;
+    }
 
+    [System.Serializable]
+    public class TextureFXLayer : ISerializationCallbackReceiver
+    {
+        [Tooltip("Base texture settings")]
+        public TextureFillSettings fill = new TextureFillSettings();
+
+        [Tooltip("Animation type")]
         public TextureFillAnimationType animationType = TextureFillAnimationType.None;
 
+        [Tooltip("UV move speed")]
         public Vector2 uvMoveSpeed = Vector2.zero;
 
+        [Tooltip("Scale animation type")]
         public TextureFillScaleType scaleType = TextureFillScaleType.Sin;
+        [Tooltip("Scale animation speed")]
         public float scaleSpeed = 1f;
 
-        public Vector2 scaleFrom = Vector2.one;
-        public Vector2 scaleTo = new Vector2(1.2f, 1.2f);
-        public Color colorFadeStart = Color.white;
-        public Color colorFadeEnd = new Color(1f, 1f, 1f, 0f);
-        public float colorFadeSpeed = 1f;
+        [Tooltip("Scale from (start size). For RotateAndScale, typically starts small.")]
+        public Vector2 scaleFrom = new Vector2(0.2f, 0.2f);
+        [Tooltip("Scale to (end size). For RotateAndScale, typically ends at full size.")]
+        public Vector2 scaleTo = Vector2.one;
 
-        public TextureFillColorOverLifeWrap colorFadeWrap = TextureFillColorOverLifeWrap.PingPong;
-        public Gradient colorFadeGradient;
+        [Tooltip("Rotation speed in degrees per second (used by RotateAndScale)")]
+        public float rotateSpeed = 30f;
+
+        [Tooltip("Number of layered copies with evenly distributed rotation angles (RotateAndScale only). E.g. 3 layers = 120° apart.")]
+        [Range(1, 8)]
+        public int layerCount = 3;
+
+        [Tooltip("Color gradient over each copy's scale lifecycle (0=start, 1=end). Used by RotateAndScale when layerCount > 0.")]
+        public Gradient colorOverLife;
+
+        [Tooltip("Color animation type (can be combined with UV/Scale animation)")]
+        public TextureFillColorAnimationType colorAnimationType = TextureFillColorAnimationType.None;
+        [Tooltip("Color animation speed")]
+        public float colorAnimationSpeed = 1f;
+        [Tooltip("Color animation gradient")]
+        public Gradient colorAnimationGradient;
+
+        [Tooltip("Fade type for transparency effect")]
+        public TextureFillFadeType fadeType = TextureFillFadeType.None;
+        [Tooltip("Fade intensity (0-1)")]
+        [Range(0f, 1f)]
+        public float fadeIntensity = 0.5f;
+        [Tooltip("Fade softness (0-1)")]
+        [Range(0f, 1f)]
+        public float fadeSoftness = 0.5f;
+
+        [Tooltip("Deform type for UV distortion")]
+        public TextureFillDeformType deformType = TextureFillDeformType.None;
+        [Tooltip("Deform intensity")]
+        public float deformIntensity = 0.1f;
+        [Tooltip("Deform speed")]
+        public float deformSpeed = 1f;
+        [Tooltip("Wave frequency (for Wave deform)")]
+        public float waveFrequency = 4f;
 
         public void OnBeforeSerialize()
         {
@@ -243,23 +325,57 @@ namespace EasyChart
 
         public void OnAfterDeserialize()
         {
-            if (colorFadeGradient == null)
+            // Ensure fill has correct default values
+            if (fill == null)
             {
-                colorFadeGradient = new Gradient();
-                colorFadeGradient.SetKeys(
-                    new[]
-                    {
-                        new GradientColorKey(colorFadeStart, 0f),
-                        new GradientColorKey(colorFadeEnd, 1f)
-                    },
-                    new[]
-                    {
-                        new GradientAlphaKey(colorFadeStart.a, 0f),
-                        new GradientAlphaKey(colorFadeEnd.a, 1f)
-                    }
+                fill = new TextureFillSettings();
+            }
+            // Set default color to white (opaque) if it's transparent black (default uninitialized)
+            if (fill.color.a == 0f && fill.color.r == 0f && fill.color.g == 0f && fill.color.b == 0f)
+            {
+                fill.color = Color.white;
+            }
+            // Set default tiling to (1,1) if it's zero
+            if (fill.tiling == Vector2.zero)
+            {
+                fill.tiling = Vector2.one;
+            }
+
+            if (colorOverLife == null)
+            {
+                colorOverLife = new Gradient();
+                colorOverLife.SetKeys(
+                    new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                    new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) }
+                );
+            }
+
+            if (colorAnimationGradient == null)
+            {
+                colorAnimationGradient = new Gradient();
+                colorAnimationGradient.SetKeys(
+                    new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                    new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) }
                 );
             }
         }
+    }
+
+    [System.Serializable]
+    public class TextureFXSettings
+    {
+        [Tooltip("Enable TextureFX")]
+        public bool enabled = false;
+        
+        [Tooltip("Padding from edges (left, right, top, bottom)")]
+        [Padding4]
+        public Vector4 padding = Vector4.zero;
+        
+        [Tooltip("Background color (rendered first)")]
+        public Color backgroundColor = new Color(0, 0, 0, 0);
+        
+        [Tooltip("Reusable texture animation layers")]
+        public List<TextureFXLayer> layers = new List<TextureFXLayer>();
     }
 
     [System.Serializable]
@@ -270,6 +386,8 @@ namespace EasyChart
         public float value;
         public float y;
         public float z;
+        public float w;
+        public float v;
         public string name;
         public bool useColor = false;
         public Color color = Color.white;
@@ -348,7 +466,7 @@ namespace EasyChart
     }
 
     [System.Serializable]
-    public class LineStrokeSettings
+    public class LineStrokeSettings : ISerializationCallbackReceiver
     {
         public LineType lineType = LineType.Straight;
         public float width = 2.0f;
@@ -356,6 +474,20 @@ namespace EasyChart
 
         [InspectorName("Texture")]
         public TextureFillSettings textureFill = new TextureFillSettings();
+
+        public List<TextureFXLayer> textureFXLayers = new List<TextureFXLayer>();
+
+        public void OnBeforeSerialize()
+        {
+            if (textureFill == null) textureFill = new TextureFillSettings();
+            if (textureFXLayers == null) textureFXLayers = new List<TextureFXLayer>();
+        }
+
+        public void OnAfterDeserialize()
+        {
+            if (textureFill == null) textureFill = new TextureFillSettings();
+            if (textureFXLayers == null) textureFXLayers = new List<TextureFXLayer>();
+        }
     }
 
     [System.Serializable]
@@ -366,14 +498,18 @@ namespace EasyChart
         [InspectorName("Texture")]
         public TextureFillSettings textureFill = new TextureFillSettings { color = new Color(1, 1, 1, 0.2f) };
 
+        public List<TextureFXLayer> textureFXLayers = new List<TextureFXLayer>();
+
         public void OnBeforeSerialize()
         {
             if (textureFill == null) textureFill = new TextureFillSettings { color = new Color(1, 1, 1, 0.2f) };
+            if (textureFXLayers == null) textureFXLayers = new List<TextureFXLayer>();
         }
 
         public void OnAfterDeserialize()
         {
             if (textureFill == null) textureFill = new TextureFillSettings { color = new Color(1, 1, 1, 0.2f) };
+            if (textureFXLayers == null) textureFXLayers = new List<TextureFXLayer>();
         }
     }
 
@@ -403,6 +539,14 @@ namespace EasyChart
         }
     }
 
+    public enum LineLegendColorSource
+    {
+        [Tooltip("Use line stroke color for legend")]
+        Line,
+        [Tooltip("Use area fill color for legend")]
+        Area
+    }
+
     [System.Serializable]
     public class LineSettings : BaseSerieSettings
     {
@@ -418,6 +562,12 @@ namespace EasyChart
         
         [Header("Area")]
         public AreaFillSettings area = new AreaFillSettings();
+
+        [Tooltip("Enable stacked line chart - values are accumulated on top of previous series")]
+        public bool stacked = false;
+
+        [Tooltip("Color source for legend icon")]
+        public LineLegendColorSource legendColorSource = LineLegendColorSource.Line;
     }
 
     [System.Serializable]
@@ -546,7 +696,7 @@ namespace EasyChart
     public class RadarSettings : BaseSerieSettings
     {
         [System.Serializable]
-        public class RadarLayoutSettings
+        public class RadarLayoutSettings : ISerializationCallbackReceiver
         {
             public float startAngleDeg = -90f;
             public bool clockwise = true;
@@ -556,7 +706,23 @@ namespace EasyChart
 
             public PlotLayoutSettings plot = new PlotLayoutSettings();
 
-            public TextureFillSettings background = new TextureFillSettings { color = new Color(0.2f, 0.2f, 0.2f, 0.3f) };
+            [InspectorName("Texture")]
+            public TextureFillSettings textureFill = new TextureFillSettings { color = new Color(0.2f, 0.2f, 0.2f, 0.3f) };
+
+            [TextureFXLayers("Texture FX Layers")]
+            public List<TextureFXLayer> textureFXLayers = new List<TextureFXLayer>();
+
+            public void OnBeforeSerialize()
+            {
+                if (textureFill == null) textureFill = new TextureFillSettings { color = new Color(0.2f, 0.2f, 0.2f, 0.3f) };
+                if (textureFXLayers == null) textureFXLayers = new List<TextureFXLayer>();
+            }
+
+            public void OnAfterDeserialize()
+            {
+                if (textureFill == null) textureFill = new TextureFillSettings { color = new Color(0.2f, 0.2f, 0.2f, 0.3f) };
+                if (textureFXLayers == null) textureFXLayers = new List<TextureFXLayer>();
+            }
         }
 
         [Header("Radar")]
@@ -581,6 +747,8 @@ namespace EasyChart
         [InspectorName("Texture")]
         public TextureFillSettings textureFill = new TextureFillSettings();
 
+        public List<TextureFXLayer> textureFXLayers = new List<TextureFXLayer>();
+
         public bool stacked = false;
 
         public float cornerRadius = 0f;
@@ -599,11 +767,13 @@ namespace EasyChart
         public void OnBeforeSerialize()
         {
             if (textureFill == null) textureFill = new TextureFillSettings();
+            if (textureFXLayers == null) textureFXLayers = new List<TextureFXLayer>();
         }
 
         public void OnAfterDeserialize()
         {
             if (textureFill == null) textureFill = new TextureFillSettings();
+            if (textureFXLayers == null) textureFXLayers = new List<TextureFXLayer>();
 
             if (hover == null) hover = new BarHoverSettings();
             hover.OnAfterDeserialize();
@@ -673,10 +843,21 @@ namespace EasyChart
         public Color backgroundColor = new Color(0, 0, 0, 0);
         public float itemSpacing = 10f;
         public Vector2 offset = Vector2.zero;
+
+        [Header("Icon")]
+        [Tooltip("Default icon for all legend items (optional)")]
+        public Texture2D icon;
+        
+        [Tooltip("Icon size in pixels")]
+        public Vector2 iconSize = new Vector2(10f, 10f);
+        
+        [Tooltip("Icon corner radius (0 = square, higher = more rounded)")]
+        [Range(0f, 10f)]
+        public float iconRadius = 0f;
     }
 
     [System.Serializable]
-    public class PieSettings : BaseSerieSettings
+    public class PieSettings : BaseSerieSettings, IPieLegendProvider, IPieAggregationProvider
     {
         public bool sortByValue = false;
         public PieLayoutSettings layout = new PieLayoutSettings();
@@ -684,6 +865,13 @@ namespace EasyChart
         public PieAggregationSettings aggregation = new PieAggregationSettings();
         public RingSettings ring = new RingSettings();
         public PieLegendSettings legend = new PieLegendSettings();
+
+        // IPieLegendProvider
+        PieLegendSettings IPieLegendProvider.PieLegend => legend;
+
+        // IPieAggregationProvider
+        bool IPieAggregationProvider.SortByValue => sortByValue;
+        PieAggregationSettings IPieAggregationProvider.PieAggregation => aggregation;
     }
 
     [System.Serializable]
@@ -713,7 +901,7 @@ namespace EasyChart
     }
 
     [System.Serializable]
-    public class RingChartSettings : BaseSerieSettings
+    public class RingChartSettings : BaseSerieSettings, IPieLegendProvider
     {
         public RingChartLayoutSettings layout = new RingChartLayoutSettings();
         public RingValueMappingSettings valueMapping = new RingValueMappingSettings();
@@ -725,6 +913,9 @@ namespace EasyChart
         public Color backgroundColor = new Color(0, 0, 0, 0);
         public float cornerRadius = 0f;
         public float ringGapPx = 0f;
+
+        // IPieLegendProvider
+        PieLegendSettings IPieLegendProvider.PieLegend => legend;
     }
 
     public enum PieExplodeType
@@ -751,6 +942,29 @@ namespace EasyChart
         public string othersName = "Others";
         public bool useOthersColor = false;
         public Color othersColor = new Color(0.6f, 0.6f, 0.6f, 1f);
+    }
+
+    [System.Serializable]
+    public class LegendOverrideSettings
+    {
+        [Tooltip("Enable legend override for this series")]
+        public bool enabled = false;
+        
+        [Tooltip("Custom icon for legend (optional)")]
+        public Texture2D icon;
+        
+        [Tooltip("Override icon size (-1 = use global setting)")]
+        public Vector2 iconSize = new Vector2(-1f, -1f);
+        
+        [Tooltip("Override icon corner radius (-1 = use global setting)")]
+        [Range(-1f, 10f)]
+        public float iconRadius = -1f;
+        
+        [Tooltip("Use custom color instead of auto-detected color")]
+        public bool useColor = false;
+        
+        [Tooltip("Custom color for legend")]
+        public Color color = Color.white;
     }
 
     [System.Serializable]
@@ -783,8 +997,19 @@ namespace EasyChart
         public Color color = Color.white;
         public Color backgroundColor = new Color(0, 0, 0, 0);
         public float itemSpacing = 10f;
-        [Tooltip("Offset from edge. Auto-set based on position when zero.")]
-        public Vector2 offset = new Vector2(0, -30);
+        [Tooltip("Offset from edge. When zero, a default offset is applied at render time based on position.")]
+        public Vector2 offset = Vector2.zero;
+        
+        [Header("Icon")]
+        [Tooltip("Default icon for all legend items (optional)")]
+        public Texture2D icon;
+        
+        [Tooltip("Icon size in pixels")]
+        public Vector2 iconSize = new Vector2(10f, 10f);
+        
+        [Tooltip("Icon corner radius (0 = square, higher = more rounded)")]
+        [Range(0f, 10f)]
+        public float iconRadius = 2f;
 
         [System.NonSerialized] private LegendPosition _lastPosition = LegendPosition.Bottom;
         [System.NonSerialized] private bool _initialized;
@@ -852,6 +1077,35 @@ namespace EasyChart
     }
 
     [System.Serializable]
+    public class Cartesian3DGridSettings
+    {
+        public bool show = true;
+        public Color gridColor = new Color(0.4f, 0.4f, 0.4f, 0.5f);
+        public float gridLineWidth = 1.0f;
+        
+        // Per-plane visibility
+        public bool showXYPlane = true;  // Back plane
+        public bool showXZPlane = true;  // Bottom plane
+        public bool showYZPlane = true;  // Left plane
+        
+        // Per-axis grid line colors (optional override)
+        public bool useAxisColors = false;
+        public Color xGridColor = new Color(0.5f, 0.5f, 0.5f, 0.3f);
+        public Color yGridColor = new Color(0.5f, 0.5f, 0.5f, 0.3f);
+        public Color zGridColor = new Color(0.5f, 0.5f, 0.5f, 0.3f);
+        
+        // Grid dimensions
+        public float gridWidth = 4f;
+        public float gridHeight = 2f;
+        public float gridDepth = 2f;
+        
+        // Labels
+        public bool showLabels = true;
+        public Color labelColor = Color.white;
+        public int labelFontSize = 12;
+    }
+
+    [System.Serializable]
     public class HoverSettings
     {
         public bool cursorLineDashed = false;
@@ -881,7 +1135,7 @@ namespace EasyChart
         public Vector2 labelOffset = Vector2.zero;
         public bool autoRangeMin = true;
         public bool autoRangeMax = true;
-        public AutoRangeRoundingMode autoRangeRounding = AutoRangeRoundingMode.Tens;
+        public AutoRangeRoundingMode autoRangeRounding = AutoRangeRoundingMode.NiceNumbers;
         public float autoRangeUnit = 1f;
         public float minValue = 0f;
         public float maxValue = 1f;
@@ -903,19 +1157,25 @@ namespace EasyChart
     {
         public CoordinateSystemType CoordinateSystem = CoordinateSystemType.Cartesian2D;
         public CartesianMapping Cartesian = new CartesianMapping();
+        public Cartesian3DMapping Cartesian3D = new Cartesian3DMapping();
         public List<AxisConfig> Axes = new List<AxisConfig>();
 
         // New axis fields (X/Y based)
         public AxisId XAxisId = AxisId.XBottom;
         public AxisId YAxisId = AxisId.YLeft;
+        public AxisId ZAxisId = AxisId.ZFront;
 
         public CartesianGridSettings CartesianGrid = new CartesianGridSettings();
+        public Cartesian3DGridSettings Cartesian3DGrid = new Cartesian3DGridSettings();
         public HoverSettings Hover = new HoverSettings();
         public PolarAxesSettings PolarAxes = new PolarAxesSettings();
         public PlotSettings Plot = new PlotSettings();
 
         public List<Serie> Series = new List<Serie>();
         public LegendSettings legend = new LegendSettings();
+        
+        [Header("Background")]
+        public TextureFXSettings backgroundFX = new TextureFXSettings();
         
         public float animationDuration = 1.0f;
     }
@@ -961,6 +1221,9 @@ namespace EasyChart
         private BaseSerieSettings _cachedHeatmapSettings;
         
         public SerieLabelSettings labelSettings = new SerieLabelSettings();
+        
+        [Header("Legend Override")]
+        public LegendOverrideSettings legendOverride = new LegendOverrideSettings();
 
         // Actual Data
         public List<SeriesData> seriesData = new List<SeriesData>();
@@ -1116,17 +1379,8 @@ namespace EasyChart
             {
                 if (SerieSettingsRegistry.TryCreate(newType, out var created))
                 {
-                    if (settings is PieSettings oldPs && created is PieSettings newPs && created.GetType() != settings.GetType())
-                    {
-                        if (oldPs.layout != null) newPs.layout = oldPs.layout;
-                        if (oldPs.hover != null) newPs.hover = oldPs.hover;
-                        if (oldPs.aggregation != null) newPs.aggregation = oldPs.aggregation;
-                        if (oldPs.ring != null) newPs.ring = oldPs.ring;
-                        if (oldPs.legend != null) newPs.legend = oldPs.legend;
-                        settings = newPs;
-                        changed = true;
-                    }
-                    else if (!(settings is PieSettings))
+                    // Pie3DSettings is now independent, check if we need to create new settings
+                    if (created != null && (settings == null || settings.GetType() != created.GetType()))
                     {
                         settings = created;
                         changed = true;
@@ -1331,13 +1585,9 @@ namespace EasyChart
                     case SerieType.Pie3D:
                         if (SerieSettingsRegistry.HasFactory(SerieType.Pie3D))
                         {
-                            if (!(settings is PieSettings))
+                            if (SerieSettingsRegistry.TryCreate(SerieType.Pie3D, out var created3D))
                             {
-                                needCreate = true;
-                            }
-                            else if (SerieSettingsRegistry.TryCreate(SerieType.Pie3D, out var created3D))
-                            {
-                                needCreate = created3D != null && created3D.GetType() != settings.GetType();
+                                needCreate = created3D != null && (settings == null || created3D.GetType() != settings.GetType());
                             }
                             else
                             {
@@ -1408,13 +1658,6 @@ namespace EasyChart
                     case SerieType.Pie3D:
                         if (SerieSettingsRegistry.TryCreate(type, out var created3D))
                         {
-                            if (created3D is PieSettings createdPie && _cachedPieSettings is PieSettings cachedPieFor3D)
-                            {
-                                if (cachedPieFor3D.layout != null) createdPie.layout = cachedPieFor3D.layout;
-                                if (cachedPieFor3D.hover != null) createdPie.hover = cachedPieFor3D.hover;
-                                if (cachedPieFor3D.aggregation != null) createdPie.aggregation = cachedPieFor3D.aggregation;
-                                if (cachedPieFor3D.ring != null) createdPie.ring = cachedPieFor3D.ring;
-                            }
                             settings = created3D;
                         }
                         else settings = null;
@@ -1473,13 +1716,7 @@ namespace EasyChart
                 if (rcs.legend == null) rcs.legend = new PieLegendSettings();
             }
 
-            if (type == SerieType.Pie3D && settings is PieSettings ps3d)
-            {
-                if (ps3d.layout == null) ps3d.layout = new PieLayoutSettings();
-                if (ps3d.hover == null) ps3d.hover = new PieHoverSettings();
-                if (ps3d.aggregation == null) ps3d.aggregation = new PieAggregationSettings();
-                if (ps3d.ring == null) ps3d.ring = new RingSettings();
-            }
+            // Pie3DSettings integrity is handled by SerieSettingsRegistry factory
 
             if (type == SerieType.Radar && settings is RadarSettings rs)
             {

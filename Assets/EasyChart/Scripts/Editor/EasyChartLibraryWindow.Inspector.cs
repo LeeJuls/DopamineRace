@@ -25,7 +25,7 @@ namespace EasyChart.Editor
                 {
                     var s = _selectedProfile.series[i];
                     if (s == null) continue;
-                    if (s.type == SerieType.Pie || s.type == SerieType.RingChart || s.type == SerieType.Pie3D)
+                    if (s.type == SerieType.Pie || s.type == SerieType.RingChart || s.type == SerieType.Pie3D || s.type == SerieType.Funnel)
                     {
                         hasPie = true;
                     }
@@ -88,6 +88,10 @@ namespace EasyChart.Editor
             {
                 _jsonExampleDirtyByUser = false;
                 UpdateInjectionJsonExample(forceOverwrite: true);
+
+                // Start cooldown so bind-init events from the new UI don't trigger sync
+                _seriesBindInitEventCount = 0;
+                _seriesUIRebuildEndTime = EditorApplication.timeSinceStartup;
             }
 
             if (_inspectorContainer != null)
@@ -118,35 +122,86 @@ namespace EasyChart.Editor
                 }
             }
 
-            Foldout CreateFoldout(string title, string prefsKey, bool defaultValue)
+            (VisualElement container, Foldout foldout) CreateStyledFoldout(string title, string prefsKey, bool defaultValue)
             {
+                var container = new VisualElement();
                 var foldout = new Foldout { text = title };
-                foldout.value = EditorPrefs.GetBool(prefsKey, defaultValue);
-                foldout.RegisterValueChangedCallback(evt => EditorPrefs.SetBool(prefsKey, evt.newValue));
-                return foldout;
+                
+                // IMPORTANT: Clear binding path to prevent SerializedObjectBinding from affecting the foldout
+                foldout.bindingPath = string.Empty;
+                
+                // Read from EditorPrefs to persist user's expand preference
+                bool initialValue = EditorPrefs.GetBool(prefsKey, defaultValue);
+                
+                // Initial state uses default (unfocused) color
+                EditorStyleHelper.ApplyExpandedStyle(container, initialValue, false);
+                
+                // Set value BEFORE registering callback to avoid triggering it
+                foldout.SetValueWithoutNotify(initialValue);
+                
+                // Capture prefsKey in local variable to ensure correct closure
+                string capturedKey = prefsKey;
+                
+                // Track the expected value to handle system-triggered changes
+                bool expectedValue = initialValue;
+                bool userInitiated = false;
+                
+                foldout.RegisterCallback<PointerDownEvent>(evt => userInitiated = true, TrickleDown.TrickleDown);
+                
+                foldout.RegisterValueChangedCallback(evt =>
+                {
+                    evt.StopPropagation();
+                    
+                    // Only process if user initiated the change
+                    if (!userInitiated) 
+                    {
+                        // Revert to expected value (not evt.previousValue which may be wrong)
+                        if (evt.newValue != expectedValue)
+                        {
+                            foldout.SetValueWithoutNotify(expectedValue);
+                            EditorStyleHelper.ApplyExpandedStyle(container, expectedValue, false);
+                        }
+                        return;
+                    }
+                    userInitiated = false;
+                    
+                    // Update expected value
+                    expectedValue = evt.newValue;
+                    
+                    // Save user's preference
+                    EditorPrefs.SetBool(capturedKey, evt.newValue);
+                    // When user manually expands, use focused (cyan) color
+                    EditorStyleHelper.ApplyExpandedStyle(container, evt.newValue, evt.newValue);
+                });
+                
+                // Register focus callbacks for highlight effect
+                EditorStyleHelper.RegisterFocusCallbacks(container, foldout);
+                
+                container.Add(foldout);
+                return (container, foldout);
             }
 
             const string foldoutKeyPrefix = "EasyChart.EasyChartLibraryWindow.GeneralProperties.";
-            var chartSettingsFoldout = CreateFoldout("Chart Settings", foldoutKeyPrefix + "ChartSettings", true);
-            var coordinateSystemFoldout = CreateFoldout("Coordinate System", foldoutKeyPrefix + "CoordinateSystem", true);
-            var axesFoldout = CreateFoldout("Axis Settings", foldoutKeyPrefix + "Axes", true);
-            var gridSettingsFoldout = CreateFoldout("Grid Settings", foldoutKeyPrefix + "GridSettings", true);
-            var hoverSettingsFoldout = CreateFoldout("Hover Settings", foldoutKeyPrefix + "HoverSettings", true);
-            var legendSettingsFoldout = CreateFoldout("Legend Settings", foldoutKeyPrefix + "LegendSettings", true);
+            var (chartSettingsContainer, chartSettingsFoldout) = CreateStyledFoldout("Chart Settings", foldoutKeyPrefix + "ChartSettings", true);
+            var (coordinateSystemContainer, coordinateSystemFoldout) = CreateStyledFoldout("Coordinate System", foldoutKeyPrefix + "CoordinateSystem", true);
+            var (axesContainer, axesFoldout) = CreateStyledFoldout("Axis Settings", foldoutKeyPrefix + "Axes", true);
+            var (gridSettingsContainer, gridSettingsFoldout) = CreateStyledFoldout("Grid Settings", foldoutKeyPrefix + "GridSettings", true);
+            var (hoverSettingsContainer, hoverSettingsFoldout) = CreateStyledFoldout("Hover Settings", foldoutKeyPrefix + "HoverSettings", true);
+            var (legendSettingsContainer, legendSettingsFoldout) = CreateStyledFoldout("Legend Settings", foldoutKeyPrefix + "LegendSettings", true);
 
-            VisualElement WrapFoldout(Foldout foldout)
+            VisualElement WrapFoldout(VisualElement container)
             {
                 var box = CreateGroupBox();
-                box.Add(foldout);
+                box.Add(container);
                 return box;
             }
 
-            var chartSettingsBox = WrapFoldout(chartSettingsFoldout);
-            var coordinateSystemBox = WrapFoldout(coordinateSystemFoldout);
-            var axesBox = WrapFoldout(axesFoldout);
-            var gridSettingsBox = WrapFoldout(gridSettingsFoldout);
-            var hoverSettingsBox = WrapFoldout(hoverSettingsFoldout);
-            var legendSettingsBox = WrapFoldout(legendSettingsFoldout);
+            var chartSettingsBox = WrapFoldout(chartSettingsContainer);
+            var coordinateSystemBox = WrapFoldout(coordinateSystemContainer);
+            var axesBox = WrapFoldout(axesContainer);
+            var gridSettingsBox = WrapFoldout(gridSettingsContainer);
+            var hoverSettingsBox = WrapFoldout(hoverSettingsContainer);
+            var legendSettingsBox = WrapFoldout(legendSettingsContainer);
             _legendSettingsBox = legendSettingsBox;
 
             _inspectorContainer.Add(chartSettingsBox);
@@ -171,27 +226,6 @@ namespace EasyChart.Editor
             if (chartHeightProp != null) _profilePropertyTracker.TrackPropertyValue(chartHeightProp, OnTrackedProfilePropertyChanged);
             var coordinateSystemTrackProp = _serializedProfile.FindProperty("coordinateSystem");
             if (coordinateSystemTrackProp != null) _profilePropertyTracker.TrackPropertyValue(coordinateSystemTrackProp, OnTrackedProfilePropertyChanged);
-
-            var chartBackgroundProp = _serializedProfile.FindProperty("background");
-            if (chartBackgroundProp != null)
-            {
-                var bgFoldout = CreateFoldout("Background", foldoutKeyPrefix + "Background", true);
-                var bgDepth = chartBackgroundProp.depth;
-                var bgChild = chartBackgroundProp.Copy();
-                if (bgChild.NextVisible(true))
-                {
-                    while (bgChild.depth > bgDepth)
-                    {
-                        AddBoundPropertyField(bgFoldout, bgChild.Copy());
-
-                        if (!bgChild.NextVisible(false)) break;
-                    }
-                }
-
-                var bgBox = CreateGroupBox();
-                bgBox.Add(bgFoldout);
-                chartSettingsFoldout.Add(bgBox);
-            }
 
             var chartNameProp = _serializedProfile.FindProperty("chartName");
             if (chartNameProp != null)
@@ -339,6 +373,7 @@ namespace EasyChart.Editor
             var axesProp = _serializedProfile.FindProperty("axes");
 
             var cartesianGridProp = _serializedProfile.FindProperty("cartesianGrid");
+            var cartesian3DGridProp = _serializedProfile.FindProperty("cartesian3DGrid");
             var hoverProp = _serializedProfile.FindProperty("hover");
             var polarAxesProp = _serializedProfile.FindProperty("polarAxes");
 
@@ -352,12 +387,16 @@ namespace EasyChart.Editor
 
             var categoryAxisFoldout = new Foldout { text = "X Axis Setting", value = true };
             var valueAxisFoldout = new Foldout { text = "Y Axis Setting", value = true };
+            var zAxisFoldout = new Foldout { text = "Z Axis Setting", value = true };
             var categoryAxisFields = new VisualElement();
             var valueAxisFields = new VisualElement();
+            var zAxisFields = new VisualElement();
             categoryAxisFields.style.marginLeft = 8;
             valueAxisFields.style.marginLeft = 8;
+            zAxisFields.style.marginLeft = 8;
             categoryAxisFoldout.Add(categoryAxisFields);
             valueAxisFoldout.Add(valueAxisFields);
+            zAxisFoldout.Add(zAxisFields);
 
             var categoryAxisBox = CreateGroupBox();
             categoryAxisBox.Add(categoryAxisFoldout);
@@ -366,6 +405,11 @@ namespace EasyChart.Editor
             var valueAxisBox = CreateGroupBox();
             valueAxisBox.Add(valueAxisFoldout);
             cartesianAxesContainer.Add(valueAxisBox);
+
+            // Z Axis box (only for Cartesian3D)
+            var zAxisBox = CreateGroupBox();
+            zAxisBox.Add(zAxisFoldout);
+            cartesianAxesContainer.Add(zAxisBox);
 
             var angleAxisFoldout = new Foldout { text = "Angle Axis Setting", value = true };
             var radiusAxisFoldout = new Foldout { text = "Radius Axis Setting", value = true };
@@ -400,19 +444,49 @@ namespace EasyChart.Editor
 
             var xAxisChoices = new List<AxisId> { AxisId.XBottom, AxisId.XTop };
             var yAxisChoices = new List<AxisId> { AxisId.YLeft, AxisId.YRight };
+            var zAxisChoices = new List<AxisId> { AxisId.ZFront, AxisId.ZBack };
+
+            AxisId GetZAxisIdFromProfile()
+            {
+                var cartesian3DProp = _serializedProfile?.FindProperty("cartesian3D");
+                if (cartesian3DProp == null) return AxisId.ZFront;
+                var zIdProp = cartesian3DProp.FindPropertyRelative("zAxisId");
+                if (zIdProp == null) return AxisId.ZFront;
+                return (AxisId)zIdProp.enumValueIndex;
+            }
 
             var xAxisPopup = new PopupField<AxisId>("X Axis", xAxisChoices, GetXAxisId());
             var yAxisPopup = new PopupField<AxisId>("Y Axis", yAxisChoices, GetYAxisId());
+            var zAxisPopup = new PopupField<AxisId>("Z Axis", zAxisChoices, GetZAxisIdFromProfile());
 
             cartesianAxisSelectionContainer.Add(xAxisPopup);
             cartesianAxisSelectionContainer.Add(yAxisPopup);
 
-            void ApplyAxisSelection(AxisId newX, AxisId newY)
+            // Z axis container (only visible for Cartesian3D)
+            var zAxisContainer = new VisualElement();
+            zAxisContainer.Add(zAxisPopup);
+            cartesianAxisSelectionContainer.Add(zAxisContainer);
+
+            void ApplyAxisSelection(AxisId newX, AxisId newY, AxisId newZ)
             {
                 if (_serializedProfile == null) return;
                 if (cartesianAxisSelectionContainer.panel == null) return;
                 if (xAxisIdProp != null) xAxisIdProp.enumValueIndex = (int)newX;
                 if (yAxisIdProp != null) yAxisIdProp.enumValueIndex = (int)newY;
+
+                // Update Z axis in cartesian3D
+                var cartesian3DProp = _serializedProfile.FindProperty("cartesian3D");
+                if (cartesian3DProp != null)
+                {
+                    var zIdProp = cartesian3DProp.FindPropertyRelative("zAxisId");
+                    if (zIdProp != null) zIdProp.enumValueIndex = (int)newZ;
+                    
+                    // Also update X and Y in cartesian3D for consistency
+                    var xIdProp = cartesian3DProp.FindPropertyRelative("xAxisId");
+                    var yIdProp = cartesian3DProp.FindPropertyRelative("yAxisId");
+                    if (xIdProp != null) xIdProp.enumValueIndex = (int)newX;
+                    if (yIdProp != null) yIdProp.enumValueIndex = (int)newY;
+                }
 
                 if (_serializedProfile != null && _serializedProfile.hasModifiedProperties)
                     _serializedProfile.ApplyModifiedProperties();
@@ -434,14 +508,21 @@ namespace EasyChart.Editor
             {
                 if (_serializedProfile == null) return;
                 if (cartesianAxisSelectionContainer.panel == null) return;
-                ApplyAxisSelection(evt.newValue, yAxisPopup.value);
+                ApplyAxisSelection(evt.newValue, yAxisPopup.value, zAxisPopup.value);
             });
 
             yAxisPopup.RegisterValueChangedCallback(evt =>
             {
                 if (_serializedProfile == null) return;
                 if (cartesianAxisSelectionContainer.panel == null) return;
-                ApplyAxisSelection(xAxisPopup.value, evt.newValue);
+                ApplyAxisSelection(xAxisPopup.value, evt.newValue, zAxisPopup.value);
+            });
+
+            zAxisPopup.RegisterValueChangedCallback(evt =>
+            {
+                if (_serializedProfile == null) return;
+                if (cartesianAxisSelectionContainer.panel == null) return;
+                ApplyAxisSelection(xAxisPopup.value, yAxisPopup.value, evt.newValue);
             });
 
             SerializedProperty FindAxisElement(SerializedProperty listProp, AxisId id)
@@ -456,16 +537,28 @@ namespace EasyChart.Editor
                 return null;
             }
 
+            AxisId GetZAxisId()
+            {
+                var cartesian3DProp = _serializedProfile?.FindProperty("cartesian3D");
+                if (cartesian3DProp == null) return AxisId.ZFront;
+                var zAxisIdProp = cartesian3DProp.FindPropertyRelative("zAxisId");
+                if (zAxisIdProp == null) return AxisId.ZFront;
+                return (AxisId)zAxisIdProp.enumValueIndex;
+            }
+
             void RefreshActiveAxesUI()
             {
                 categoryAxisFields.Unbind();
                 valueAxisFields.Unbind();
+                zAxisFields.Unbind();
                 categoryAxisFields.Clear();
                 valueAxisFields.Clear();
+                zAxisFields.Clear();
                 if (axesProp == null) return;
 
                 SerializedProperty catEl = FindAxisElement(axesProp, GetXAxisId());
                 SerializedProperty valEl = FindAxisElement(axesProp, GetYAxisId());
+                SerializedProperty zEl = FindAxisElement(axesProp, GetZAxisId());
 
                 if ((catEl == null || valEl == null) && _selectedProfile != null)
                 {
@@ -480,6 +573,7 @@ namespace EasyChart.Editor
                     _serializedProfile.Update();
                     catEl = FindAxisElement(axesProp, GetXAxisId());
                     valEl = FindAxisElement(axesProp, GetYAxisId());
+                    zEl = FindAxisElement(axesProp, GetZAxisId());
                 }
 
                 SerializedProperty EnsureAxisElement(SerializedProperty listProp, AxisId id, AxisType axisType)
@@ -509,6 +603,14 @@ namespace EasyChart.Editor
                 if (valEl == null)
                 {
                     valEl = EnsureAxisElement(axesProp, GetYAxisId(), AxisType.Value);
+                    if (_serializedProfile != null && _serializedProfile.hasModifiedProperties) _serializedProfile.ApplyModifiedProperties();
+                }
+
+                // Ensure Z axis for Cartesian3D
+                bool isCartesian3D = coordinateSystemProp != null && coordinateSystemProp.enumValueIndex == 2;
+                if (isCartesian3D && zEl == null)
+                {
+                    zEl = EnsureAxisElement(axesProp, GetZAxisId(), AxisType.Value);
                     if (_serializedProfile != null && _serializedProfile.hasModifiedProperties) _serializedProfile.ApplyModifiedProperties();
                 }
 
@@ -755,6 +857,15 @@ namespace EasyChart.Editor
                 {
                     BuildAxisConfigUI(valueAxisFields, valEl);
                 }
+
+                // Build Z axis UI for Cartesian3D
+                if (isCartesian3D && zEl != null)
+                {
+                    BuildAxisConfigUI(zAxisFields, zEl);
+                }
+
+                // Update Z axis box visibility
+                zAxisBox.style.display = isCartesian3D ? DisplayStyle.Flex : DisplayStyle.None;
             }
 
             void RefreshPolarAxesUI()
@@ -925,6 +1036,77 @@ namespace EasyChart.Editor
                 if (yDashOff != null) AddBoundPropertyField(yDashBox, yDashOff);
             }
 
+            // 3D Grid Settings
+            var cartesian3DGridContainer = new VisualElement();
+            gridSettingsFoldout.Add(cartesian3DGridContainer);
+
+            if (cartesian3DGridProp != null)
+            {
+                SerializedProperty Rel3D(string name) => cartesian3DGridProp.FindPropertyRelative(name);
+
+                var showProp = Rel3D("show");
+                var gridColorProp = Rel3D("gridColor");
+                var gridLineWidthProp = Rel3D("gridLineWidth");
+                
+                if (showProp != null) AddBoundPropertyField(cartesian3DGridContainer, showProp);
+                if (gridColorProp != null) AddBoundPropertyField(cartesian3DGridContainer, gridColorProp);
+                if (gridLineWidthProp != null) AddBoundPropertyField(cartesian3DGridContainer, gridLineWidthProp);
+
+                var planesBox = new Box();
+                planesBox.style.marginTop = 4;
+                cartesian3DGridContainer.Add(planesBox);
+                planesBox.Add(new Label("Plane Visibility"));
+
+                var showXYPlane = Rel3D("showXYPlane");
+                var showXZPlane = Rel3D("showXZPlane");
+                var showYZPlane = Rel3D("showYZPlane");
+
+                if (showXYPlane != null) AddBoundPropertyField(planesBox, showXYPlane);
+                if (showXZPlane != null) AddBoundPropertyField(planesBox, showXZPlane);
+                if (showYZPlane != null) AddBoundPropertyField(planesBox, showYZPlane);
+
+                var colorsBox = new Box();
+                colorsBox.style.marginTop = 4;
+                cartesian3DGridContainer.Add(colorsBox);
+                colorsBox.Add(new Label("Axis Colors"));
+
+                var useAxisColors = Rel3D("useAxisColors");
+                var xGridColor = Rel3D("xGridColor");
+                var yGridColor = Rel3D("yGridColor");
+                var zGridColor = Rel3D("zGridColor");
+
+                if (useAxisColors != null) AddBoundPropertyField(colorsBox, useAxisColors);
+                if (xGridColor != null) AddBoundPropertyField(colorsBox, xGridColor);
+                if (yGridColor != null) AddBoundPropertyField(colorsBox, yGridColor);
+                if (zGridColor != null) AddBoundPropertyField(colorsBox, zGridColor);
+
+                var dimensionsBox = new Box();
+                dimensionsBox.style.marginTop = 4;
+                cartesian3DGridContainer.Add(dimensionsBox);
+                dimensionsBox.Add(new Label("Grid Dimensions"));
+
+                var gridWidth = Rel3D("gridWidth");
+                var gridHeight = Rel3D("gridHeight");
+                var gridDepth = Rel3D("gridDepth");
+
+                if (gridWidth != null) AddBoundPropertyField(dimensionsBox, gridWidth);
+                if (gridHeight != null) AddBoundPropertyField(dimensionsBox, gridHeight);
+                if (gridDepth != null) AddBoundPropertyField(dimensionsBox, gridDepth);
+
+                var labelsBox = new Box();
+                labelsBox.style.marginTop = 4;
+                cartesian3DGridContainer.Add(labelsBox);
+                labelsBox.Add(new Label("Labels"));
+
+                var showLabels = Rel3D("showLabels");
+                var labelColor = Rel3D("labelColor");
+                var labelFontSize = Rel3D("labelFontSize");
+
+                if (showLabels != null) AddBoundPropertyField(labelsBox, showLabels);
+                if (labelColor != null) AddBoundPropertyField(labelsBox, labelColor);
+                if (labelFontSize != null) AddBoundPropertyField(labelsBox, labelFontSize);
+            }
+
             var hoverContainer = new VisualElement();
             hoverSettingsFoldout.Add(hoverContainer);
             if (hoverProp != null)
@@ -953,15 +1135,20 @@ namespace EasyChart.Editor
             void UpdateCoordinateSpecificVisibility()
             {
                 if (coordinateSystemProp == null) return;
-                // 0 = Cartesian2D, 1 = Polar2D, 2 = None
-                bool isCartesian = coordinateSystemProp.enumValueIndex == 0;
+                // 0 = Cartesian2D, 1 = Polar2D, 2 = Cartesian3D, 3 = None
+                bool isCartesian2D = coordinateSystemProp.enumValueIndex == 0;
                 bool isPolar = coordinateSystemProp.enumValueIndex == 1;
-                bool isNone = coordinateSystemProp.enumValueIndex == 2;
+                bool isCartesian3D = coordinateSystemProp.enumValueIndex == 2;
+                bool isNone = coordinateSystemProp.enumValueIndex == 3;
+                bool isCartesian = isCartesian2D || isCartesian3D;
 
-                // Cartesian axis selection only for Cartesian2D
+                // Cartesian axis selection for Cartesian2D and Cartesian3D
                 cartesianAxisSelectionContainer.style.display = isCartesian ? DisplayStyle.Flex : DisplayStyle.None;
 
-                // Cartesian axes only for Cartesian2D
+                // Z axis only for Cartesian3D
+                zAxisContainer.style.display = isCartesian3D ? DisplayStyle.Flex : DisplayStyle.None;
+
+                // Cartesian axes for Cartesian2D and Cartesian3D
                 cartesianAxesContainer.style.display = isCartesian ? DisplayStyle.Flex : DisplayStyle.None;
                 // Polar axes only for Polar2D
                 polarAxesContainer.style.display = isPolar ? DisplayStyle.Flex : DisplayStyle.None;
@@ -969,12 +1156,13 @@ namespace EasyChart.Editor
                 // Axis Settings box: hide for None coordinate system (no axes needed)
                 axesBox.style.display = isNone ? DisplayStyle.None : DisplayStyle.Flex;
 
-                // Grid settings only for Cartesian2D
-                cartesianGridContainer.style.display = isCartesian ? DisplayStyle.Flex : DisplayStyle.None;
+                // Grid settings - show 2D grid for Cartesian2D, 3D grid for Cartesian3D
+                cartesianGridContainer.style.display = isCartesian2D ? DisplayStyle.Flex : DisplayStyle.None;
+                cartesian3DGridContainer.style.display = isCartesian3D ? DisplayStyle.Flex : DisplayStyle.None;
                 gridSettingsBox.style.display = isCartesian ? DisplayStyle.Flex : DisplayStyle.None;
 
-                // Hover settings (cursor line) only for Cartesian2D
-                hoverSettingsBox.style.display = isCartesian ? DisplayStyle.Flex : DisplayStyle.None;
+                // Hover settings (cursor line) for Cartesian2D only
+                hoverSettingsBox.style.display = isCartesian2D ? DisplayStyle.Flex : DisplayStyle.None;
             }
 
             UpdateCoordinateSpecificVisibility();
@@ -985,6 +1173,7 @@ namespace EasyChart.Editor
                     if (_serializedProfile == null) return;
                     if (coordinateSystemField.panel == null) return;
                     UpdateCoordinateSpecificVisibility();
+                    RefreshActiveAxesUI();
                     ScheduleRefreshSeriesList();
                 });
             }
@@ -1002,10 +1191,11 @@ namespace EasyChart.Editor
                 }
 
                 if (iterator.name == "chartName" || iterator.name == "chartId" ||
-                    iterator.name == "coordinateSystem" || iterator.name == "cartesian" || iterator.name == "axes" || iterator.name == "axisSelectionInitialized" ||
+                    iterator.name == "coordinateSystem" || iterator.name == "cartesian" || iterator.name == "cartesian3D" || iterator.name == "axes" || iterator.name == "axisSelectionInitialized" ||
                     iterator.name == "xAxisId" || iterator.name == "yAxisId" ||
                     iterator.name == "xGridColor" || iterator.name == "xGridLineWidth" || iterator.name == "yGridColor" || iterator.name == "yGridLineWidth" ||
-                    iterator.name == "cartesianGrid" || iterator.name == "hover" || iterator.name == "polarAxes" || iterator.name == "gridSettingsInitialized" || iterator.name == "hoverSettingsInitialized")
+                    iterator.name == "cartesianGrid" || iterator.name == "cartesian3DGrid" || iterator.name == "hover" || iterator.name == "polarAxes" || 
+                    iterator.name == "gridSettingsInitialized" || iterator.name == "grid3DSettingsInitialized" || iterator.name == "hoverSettingsInitialized")
                 {
                     enterChildren = false;
                     continue;
@@ -1039,6 +1229,9 @@ namespace EasyChart.Editor
                     case "legendSettings":
                         parent = legendSettingsFoldout;
                         break;
+                    case "backgroundFX":
+                        // Skip - handled separately with custom UI
+                        continue;
                     default:
                         parent = chartSettingsFoldout;
                         break;
@@ -1049,8 +1242,59 @@ namespace EasyChart.Editor
                 enterChildren = false;
             }
 
+            // Background Settings (at bottom)
+            var chartBackgroundProp = _serializedProfile.FindProperty("background");
+            if (chartBackgroundProp != null)
+            {
+                var (bgContainer, bgFoldout) = CreateStyledFoldout("Background", foldoutKeyPrefix + "Background", true);
+                var bgDepth = chartBackgroundProp.depth;
+                var bgChild = chartBackgroundProp.Copy();
+                if (bgChild.NextVisible(true))
+                {
+                    while (bgChild.depth > bgDepth)
+                    {
+                        AddBoundPropertyField(bgFoldout, bgChild.Copy());
+                        if (!bgChild.NextVisible(false)) break;
+                    }
+                }
+                var bgBox = CreateGroupBox();
+                bgBox.Add(bgContainer);
+                chartSettingsFoldout.Add(bgBox);
+            }
+
+            // Background FX Settings (at bottom)
+            var backgroundFXProp = _serializedProfile.FindProperty("backgroundFX");
+            if (backgroundFXProp != null)
+            {
+                var (fxContainer, fxFoldout) = CreateStyledFoldout("Background FX", foldoutKeyPrefix + "BackgroundFX", false);
+                
+                var enabledProp = backgroundFXProp.FindPropertyRelative("enabled");
+                var paddingProp = backgroundFXProp.FindPropertyRelative("padding");
+                var bgColorProp = backgroundFXProp.FindPropertyRelative("backgroundColor");
+                var layersProp = backgroundFXProp.FindPropertyRelative("layers");
+                
+                if (enabledProp != null) AddBoundPropertyField(fxFoldout, enabledProp);
+                if (paddingProp != null) AddBoundPropertyField(fxFoldout, paddingProp);
+                if (bgColorProp != null) AddBoundPropertyField(fxFoldout, bgColorProp);
+                
+                // Use helper class for Texture FX Layers UI
+                if (layersProp != null)
+                {
+                    var layersUI = TextureFXLayersEditorHelper.CreateTextureFXLayersUI(
+                        layersProp, 
+                        "Texture FX Layers", 
+                        ScheduleUpdatePreview);
+                    fxFoldout.Add(layersUI);
+                }
+
+                var fxBox = CreateGroupBox();
+                fxBox.Add(fxContainer);
+                chartSettingsFoldout.Add(fxBox);
+            }
+
             ScheduleRefreshSeriesList();
             ScheduleUpdatePreview();
         }
+
     }
 }

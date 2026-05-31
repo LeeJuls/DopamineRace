@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c7c860c7282e8554dbd8905ed6287bdb
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/docs/Manual/easy-chart/en/02_07-SeriesSync.md
+  uploadId: 906968

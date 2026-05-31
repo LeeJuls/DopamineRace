@@ -84,6 +84,7 @@ namespace EasyChart
 
         public CoordinateSystemType coordinateSystem = CoordinateSystemType.Cartesian2D;
         public CartesianMapping cartesian = new CartesianMapping();
+        public Cartesian3DMapping cartesian3D = new Cartesian3DMapping();
         public List<AxisConfig> axes = new List<AxisConfig>();
 
         // New axis fields (X/Y based)
@@ -96,8 +97,11 @@ namespace EasyChart
         public BackgroundSettings background = new BackgroundSettings
         {
             show = true,
-            textureFill = new TextureFillSettings { color = new Color(0.15f, 0.15f, 0.15f, 1f) }
+            textureFill = new TextureFillSettings { color = Color.white }
         };
+
+        [Header("Background FX")]
+        public TextureFXSettings backgroundFX = new TextureFXSettings();
 
         public float chartWidth = 450f;
         public float chartHeight = 300f;
@@ -111,9 +115,11 @@ namespace EasyChart
         public float yGridLineWidth = 1.0f;
 
         public CartesianGridSettings cartesianGrid = new CartesianGridSettings();
+        public Cartesian3DGridSettings cartesian3DGrid = new Cartesian3DGridSettings();
         public HoverSettings hover = new HoverSettings();
         public PolarAxesSettings polarAxes = new PolarAxesSettings();
         public bool gridSettingsInitialized = false;
+        public bool grid3DSettingsInitialized = false;
         public bool hoverSettingsInitialized = false;
 
         public LegendSettings legendSettings = new LegendSettings();
@@ -164,6 +170,12 @@ namespace EasyChart
                 changed = true;
             }
 
+            if (cartesian3D == null)
+            {
+                cartesian3D = new Cartesian3DMapping();
+                changed = true;
+            }
+
             if (background == null)
             {
                 background = new BackgroundSettings { show = true };
@@ -196,6 +208,11 @@ namespace EasyChart
                 polarAxes = new PolarAxesSettings();
                 changed = true;
             }
+            if (cartesian3DGrid == null)
+            {
+                cartesian3DGrid = new Cartesian3DGridSettings();
+                changed = true;
+            }
 
             if (!gridSettingsInitialized)
             {
@@ -214,6 +231,7 @@ namespace EasyChart
 
             bool IsXAxis(AxisId id) => id == AxisId.XBottom || id == AxisId.XTop;
             bool IsYAxis(AxisId id) => id == AxisId.YLeft || id == AxisId.YRight;
+            bool IsZAxis(AxisId id) => id == AxisId.ZFront || id == AxisId.ZBack;
 
             // Initialize axis selection from existing cartesian mapping if not yet done
             if (!axisSelectionInitialized)
@@ -262,6 +280,28 @@ namespace EasyChart
                     axisType = AxisType.Value  // Default: Y axis is Value
                 });
                 changed = true;
+            }
+
+            // Ensure Z axis exists for Cartesian3D
+            if (coordinateSystem == CoordinateSystemType.Cartesian3D)
+            {
+                var zAxisId = cartesian3D != null ? cartesian3D.zAxisId : AxisId.ZFront;
+                if (!IsZAxis(zAxisId))
+                {
+                    zAxisId = AxisId.ZFront;
+                    if (cartesian3D != null) cartesian3D.zAxisId = zAxisId;
+                    changed = true;
+                }
+                
+                if (GetAxis(zAxisId) == null)
+                {
+                    axes.Add(new AxisConfig
+                    {
+                        id = zAxisId,
+                        axisType = AxisType.Value  // Default: Z axis is Value (depth)
+                    });
+                    changed = true;
+                }
             }
 
             // One-time default axis type initialization:
@@ -592,6 +632,7 @@ namespace EasyChart
 
             bool hasPolar = false;
             bool hasCartesian = false;
+            bool hasCartesian3D = false;
             bool hasPie = false;
             for (int i = 0; i < series.Count; i++)
             {
@@ -605,6 +646,7 @@ namespace EasyChart
 
                 if (s.type == SerieType.Radar) hasPolar = true;
                 else if (s.type == SerieType.Line || s.type == SerieType.Bar || s.type == SerieType.Scatter || s.type == SerieType.Heatmap) hasCartesian = true;
+                else if (s.type == SerieType.Bar3D) hasCartesian3D = true;
             }
 
             // CoordinateSystem is a user-chosen plot space. Do not rewrite it automatically.
@@ -627,11 +669,19 @@ namespace EasyChart
                 {
                     Debug.LogWarning("[EasyChart] CoordinateSystem is Polar2D but Line/Bar/Scatter series exist. They will be rendered, but Cartesian axes/grid settings may be semantically inconsistent with the selected CoordinateSystem.");
                 }
-                else if (coordinateSystem == CoordinateSystemType.None && (hasPolar || hasCartesian))
+                else if (coordinateSystem == CoordinateSystemType.Cartesian3D && !hasCartesian3D && (hasCartesian || hasPolar))
+                {
+                    Debug.LogWarning("[EasyChart] CoordinateSystem is Cartesian3D but no 3D series exist. Consider using Cartesian2D or Polar2D instead.");
+                }
+                else if (coordinateSystem != CoordinateSystemType.Cartesian3D && hasCartesian3D)
+                {
+                    Debug.LogWarning("[EasyChart] Bar3D series exists but CoordinateSystem is not Cartesian3D. Consider switching to Cartesian3D coordinate system.");
+                }
+                else if (coordinateSystem == CoordinateSystemType.None && (hasPolar || hasCartesian || hasCartesian3D))
                 {
                     Debug.LogWarning("[EasyChart] CoordinateSystem is None but coordinate-based series exist. They will be rendered, but axis/grid settings may be semantically inconsistent.");
                 }
-                else if (coordinateSystem != CoordinateSystemType.None && hasPie && !hasPolar && !hasCartesian)
+                else if (coordinateSystem != CoordinateSystemType.None && hasPie && !hasPolar && !hasCartesian && !hasCartesian3D)
                 {
                     Debug.LogWarning("[EasyChart] Only Pie series exist but CoordinateSystem is not None. Consider switching to None coordinate system.");
                 }
@@ -670,6 +720,7 @@ namespace EasyChart
             s.seriesData.Add(new SeriesData { x = 2, value = 15 });
             s.seriesData.Add(new SeriesData { x = 3, value = 30 });
             s.seriesData.Add(new SeriesData { x = 4, value = 25 });
+            s.EnsureIntegrity(); // Generate unique ID for the default serie
             series.Add(s);
         }
 
@@ -679,18 +730,22 @@ namespace EasyChart
             EnsureRuntimeData();
             data.CoordinateSystem = coordinateSystem;
             data.Cartesian = cartesian;
+            data.Cartesian3D = cartesian3D;
             data.Axes = axes;
 
             data.XAxisId = xAxisId;
+            data.ZAxisId = cartesian3D != null ? cartesian3D.zAxisId : AxisId.ZFront;
             data.YAxisId = yAxisId;
 
             data.CartesianGrid = cartesianGrid;
+            data.Cartesian3DGrid = cartesian3DGrid;
             data.Hover = hover;
             data.PolarAxes = polarAxes;
             data.Plot = plotSettings;
 
             data.Series = this.series;
             data.legend = this.legendSettings;
+            data.backgroundFX = this.backgroundFX;
             data.animationDuration = this.animationDuration;
             return data;
         }

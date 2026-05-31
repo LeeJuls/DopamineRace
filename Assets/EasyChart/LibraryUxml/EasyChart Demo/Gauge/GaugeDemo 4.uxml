@@ -1,0 +1,3 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ec="EasyChart" editor-extension-mode="False">
+    <ec:ChartElement profile-name="GaugeDemo 4" profile-guid="98fe5ed60828a924bacbb5eac80958fc" style="width: 450px; height: 300px;" />
+</ui:UXML>

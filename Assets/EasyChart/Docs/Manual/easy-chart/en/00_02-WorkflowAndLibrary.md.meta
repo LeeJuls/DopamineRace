@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ff8cfb842dfce2e4290fa174455a32ad
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/docs/Manual/easy-chart/en/00_02-WorkflowAndLibrary.md
+  uploadId: 906968

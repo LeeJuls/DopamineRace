@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0e25f5b3268d2b14ab9ef8e75063bf37
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/UGUI/Prefabs/EasyChart Demo/HorizontalBar/HorizontalBar
+    3.prefab
+  uploadId: 906968

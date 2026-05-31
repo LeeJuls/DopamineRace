@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d0760ace53a8c154ba2d9341053e3369
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/LibraryUxml/EasyChart Demo/Radar/RadarDemo 2.chartprofile.json
+  uploadId: 906968

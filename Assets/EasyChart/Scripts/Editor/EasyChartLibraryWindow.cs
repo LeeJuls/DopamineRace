@@ -7,6 +7,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using EasyChart;
+using EasyChart.Internal;
 
 namespace EasyChart.Editor
 {
@@ -14,6 +15,13 @@ namespace EasyChart.Editor
     {
         private const string RootLibraryName = "<Root>";
         private const string SelectedLibraryPrefsKey = "EasyChart.LibraryWindow.SelectedLibrary";
+        private const string PopupOnlyClickPrefsKey = "EasyChart.LibraryWindow.PopupOnlyClick";
+
+        /// <summary>
+        /// External callers (e.g. inspector helpers) can invoke this to show the Pro popup
+        /// anchored to a given world-space rect.
+        /// </summary>
+        public static Action<Rect> RequestShowProPopup;
 
         private const string LibraryThemeAssetFileName = "LibraryTheme.asset";
 
@@ -88,75 +96,179 @@ namespace EasyChart.Editor
             LibraryThemeEditorWindow.Open(this, GetSelectedLibraryName(), theme);
         }
 
+        private void OpenSettingsWindow()
+        {
+            EasyChartSettingsWindow.Open();
+        }
+
         private sealed class LibraryThemeEditorWindow : EditorWindow
         {
             private EasyChartLibraryWindow _owner;
             private string _libraryName;
             private ChartTheme _theme;
-            private UnityEditor.Editor _editor;
+            private ScrollView _scrollView;
+            private VisualElement _themeInspectorRoot;
 
             public static void Open(EasyChartLibraryWindow owner, string libraryName, ChartTheme theme)
             {
-                var wnd = CreateInstance<LibraryThemeEditorWindow>();
+                var wnd = GetWindow<LibraryThemeEditorWindow>();
                 wnd._owner = owner;
                 wnd._libraryName = libraryName;
                 wnd._theme = theme;
                 wnd.titleContent = new GUIContent("Theme");
-                wnd.minSize = new Vector2(380, 420);
-                wnd.ShowUtility();
+                wnd.minSize = new Vector2(320, 400);
+                wnd.RebuildUI();
+                wnd.Show();
             }
 
-            private void OnDisable()
+            private void OnEnable()
             {
-                if (_editor != null)
+                RebuildUI();
+            }
+
+            private void RebuildUI()
+            {
+                if (rootVisualElement == null) return;
+                rootVisualElement.Clear();
+
+                rootVisualElement.style.paddingTop = 8;
+                rootVisualElement.style.paddingLeft = 8;
+                rootVisualElement.style.paddingRight = 8;
+                rootVisualElement.style.paddingBottom = 8;
+
+                // Header
+                var header = new Label(_libraryName != null ? $"Library: {_libraryName}" : string.Empty);
+                header.style.unityFontStyleAndWeight = FontStyle.Bold;
+                header.style.marginBottom = 6;
+                rootVisualElement.Add(header);
+
+                // Theme asset picker
+                var themeRow = new VisualElement();
+                themeRow.style.flexDirection = FlexDirection.Row;
+                themeRow.style.alignItems = Align.Center;
+                themeRow.style.marginBottom = 8;
+
+                var themeLabel = new Label("Theme Asset");
+                themeLabel.style.width = 100;
+                themeRow.Add(themeLabel);
+
+                var themeField = new ObjectField { objectType = typeof(ChartTheme), allowSceneObjects = false };
+                themeField.style.flexGrow = 1;
+                themeField.SetValueWithoutNotify(_theme);
+                themeField.RegisterValueChangedCallback(evt =>
                 {
-                    DestroyImmediate(_editor);
-                    _editor = null;
-                }
-            }
-
-            private void EnsureEditor()
-            {
-                if (_editor != null) return;
-                if (_theme == null) return;
-                _editor = UnityEditor.Editor.CreateEditor(_theme);
-            }
-
-            private void OnGUI()
-            {
-                EditorGUILayout.LabelField($"Library: {_libraryName}", EditorStyles.boldLabel);
-                EditorGUILayout.Space(6);
-
-                var nextTheme = (ChartTheme)EditorGUILayout.ObjectField("Theme", _theme, typeof(ChartTheme), false);
-                if (!ReferenceEquals(nextTheme, _theme))
-                {
-                    _theme = nextTheme;
-                    if (_editor != null)
-                    {
-                        DestroyImmediate(_editor);
-                        _editor = null;
-                    }
+                    _theme = evt.newValue as ChartTheme;
                     _owner?.ApplyActiveLibraryThemeToPreview(force: true);
                     _owner?.ScheduleUpdatePreview();
-                }
-                EditorGUILayout.Space(6);
+                    RebuildInspector();
+                });
+                themeRow.Add(themeField);
+                rootVisualElement.Add(themeRow);
+
+                // Separator
+                var sep = new VisualElement();
+                sep.style.height = 1;
+                sep.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 1f);
+                sep.style.marginBottom = 8;
+                rootVisualElement.Add(sep);
+
+                // Scrollable inspector area
+                _scrollView = new ScrollView(ScrollViewMode.Vertical);
+                _scrollView.style.flexGrow = 1;
+                rootVisualElement.Add(_scrollView);
+
+                _themeInspectorRoot = new VisualElement();
+                _scrollView.Add(_themeInspectorRoot);
+
+                RebuildInspector();
+            }
+
+            private void RebuildInspector()
+            {
+                if (_themeInspectorRoot == null) return;
+                _themeInspectorRoot.Clear();
+                _themeInspectorRoot.Unbind();
 
                 if (_theme == null)
                 {
-                    EditorGUILayout.HelpBox("No ChartTheme assigned.", MessageType.Info);
+                    var msg = EditorStyleHelper.CreateWarningBox("No ChartTheme assigned. Select or create a theme asset.");
+                    _themeInspectorRoot.Add(msg);
                     return;
                 }
 
-                EnsureEditor();
-                if (_editor == null) return;
+                var so = new SerializedObject(_theme);
 
-                EditorGUI.BeginChangeCheck();
-                _editor.OnInspectorGUI();
-                if (EditorGUI.EndChangeCheck())
+                _themeInspectorRoot.Add(BuildSection(so, "Font", new[]
+                {
+                    ("primaryFont", "Primary Font", "Main font for chart text (supports SDF FontAsset)"),
+                    ("monoFont",    "Mono Font",    "Monospace font for numeric values"),
+                    ("fontScale",   "Font Scale",   "Global font size multiplier"),
+                }));
+
+                _themeInspectorRoot.Add(BuildSection(so, "Font Size", new[]
+                {
+                    ("titleFontSize",       "Title",        "Override title font size (-1 = use USS default)"),
+                    ("subtitleFontSize",    "Subtitle",     "Override subtitle font size (-1 = use USS default)"),
+                    ("axisFontSize",        "Axis",         "Override axis label font size (-1 = use USS default)"),
+                    ("legendFontSize",      "Legend",       "Override legend font size (-1 = use USS default)"),
+                    ("tooltipFontSize",     "Tooltip",      "Override tooltip font size (-1 = use USS default)"),
+                    ("seriesLabelFontSize", "Series Label", "Override series label font size (-1 = use USS default)"),
+                }));
+
+                _themeInspectorRoot.Add(BuildSection(so, "Default Template", new[]
+                {
+                    ("baseProfile", "Base Profile", "Template profile used when creating new charts. If empty, clones the first profile in current library."),
+                }));
+
+                _themeInspectorRoot.Bind(so);
+
+                // Propagate changes to preview
+                _themeInspectorRoot.RegisterCallback<SerializedPropertyChangeEvent>(_ =>
                 {
                     _owner?.ApplyActiveLibraryThemeToPreview(force: true);
                     _owner?.ScheduleUpdatePreview();
+                });
+            }
+
+            private static VisualElement BuildSection(SerializedObject so, string title, (string prop, string label, string tooltip)[] fields)
+            {
+                // Create foldout with box styling matching Settings window style
+                var foldout = new Foldout { text = title };
+                foldout.bindingPath = string.Empty;
+                foldout.SetValueWithoutNotify(true);
+
+                var borderColor = new Color(0.1f, 0.1f, 0.1f);
+                var backgroundColor = new Color(0.18f, 0.18f, 0.18f);
+
+                foldout.style.borderTopWidth = 1;
+                foldout.style.borderBottomWidth = 1;
+                foldout.style.borderLeftWidth = 1;
+                foldout.style.borderRightWidth = 1;
+                foldout.style.borderTopColor = borderColor;
+                foldout.style.borderBottomColor = borderColor;
+                foldout.style.borderLeftColor = borderColor;
+                foldout.style.borderRightColor = borderColor;
+                foldout.style.backgroundColor = backgroundColor;
+                foldout.style.marginTop = 6;
+                foldout.style.marginBottom = 6;
+                foldout.style.paddingLeft = 6;
+                foldout.style.paddingRight = 6;
+                foldout.style.paddingTop = 4;
+                foldout.style.paddingBottom = 6;
+                foldout.style.borderTopLeftRadius = 3;
+                foldout.style.borderTopRightRadius = 3;
+                foldout.style.borderBottomLeftRadius = 3;
+                foldout.style.borderBottomRightRadius = 3;
+
+                foreach (var (propName, labelText, tooltipText) in fields)
+                {
+                    var prop = so.FindProperty(propName);
+                    if (prop == null) continue;
+                    var pf = new PropertyField(prop, labelText) { tooltip = tooltipText };
+                    foldout.Add(pf);
                 }
+
+                return foldout;
             }
         }
 
@@ -283,20 +395,21 @@ namespace EasyChart.Editor
                 row.Add(okBtn);
                 root.Add(row);
 
-                // Support Enter key to confirm
+                // Support Enter key to confirm (use TrickleDown to catch event early)
                 field.RegisterCallback<KeyDownEvent>(evt =>
                 {
                     if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
                     {
+                        evt.StopImmediatePropagation();
+                        evt.PreventDefault();
                         confirmAction();
-                        evt.StopPropagation();
                     }
                     else if (evt.keyCode == KeyCode.Escape)
                     {
+                        evt.StopImmediatePropagation();
                         Close();
-                        evt.StopPropagation();
                     }
-                });
+                }, TrickleDown.TrickleDown);
 
                 field.Q("unity-text-input")?.Focus();
             }
@@ -346,6 +459,10 @@ namespace EasyChart.Editor
         private const string HelpIconPath = "Assets/EasyChart/Textures/Icon/help.png";
         private const string ApiOnIconPath = "Assets/EasyChart/Textures/Icon/ApiOn.png";
         private const string ApiOffIconPath = "Assets/EasyChart/Textures/Icon/ApiOff.png";
+        private const string ProIconPath = "Assets/EasyChart/Textures/Icon/Pro.png";
+        private const string SupportIconPath = "Assets/EasyChart/Textures/Icon/support.png";
+        private const string PaletteIconPath = "Assets/EasyChart/Textures/Icon/ColorPalette.png";
+        private const string SettingsIconPath = "Assets/EasyChart/Textures/Icon/setting.png";
         private Texture2D _folderIcon;
         private Texture2D _profileIcon;
         private Texture2D _addChartIcon;
@@ -361,6 +478,9 @@ namespace EasyChart.Editor
         private Texture2D _dataIcon;
         private Texture2D _helpIcon;
         private Texture2D _apiOnIcon;
+        private Texture2D _proIcon;
+        private Texture2D _supportIcon;
+        private Texture2D _settingsIcon;
 
         private Action _onSave;
         private Texture2D _apiOffIcon;
@@ -380,6 +500,19 @@ namespace EasyChart.Editor
         private bool _previewUpdateScheduled;
         private bool _isUpdatingPreview;
         private bool _seriesRefreshScheduled;
+        
+        // Series sync feature
+        private bool _seriesSyncEnabled;
+        private bool _isSyncingSeriesProperties;
+        private Toggle _seriesSyncToggle;
+        private Label _seriesSyncLabel;
+        private double _seriesUIRebuildEndTime = -1;
+        private int _seriesBindInitEventCount;
+
+        // Color palette feature
+        private Texture2D _paletteIcon;
+        private VisualElement _paletteBtn;
+        private List<SeriesColorPalette> _colorPalettes;
 
         // Paths
         private const string ROOT_PATH = "Assets/EasyChart/Library";
@@ -424,6 +557,13 @@ namespace EasyChart.Editor
             root.style.flexDirection = FlexDirection.Column;
             root.style.height = Length.Percent(100); // Ensure root fills window
 
+#if UNITY_6000_0_OR_NEWER
+            // Unity 6 adds an overlay toolbar container above rootVisualElement
+            // Hide it by setting negative margin and adjusting height
+            root.style.marginTop = -26;
+            root.style.paddingTop = 0;
+#endif
+
             root.RegisterCallback<PointerDownEvent>(OnRootPointerDownForInlineRename, TrickleDown.TrickleDown);
 
             // Ctrl+S shortcut for Save
@@ -443,6 +583,7 @@ namespace EasyChart.Editor
 
             var globalToolbar = new VisualElement();
             globalToolbar.style.flexDirection = FlexDirection.Row;
+            globalToolbar.style.alignItems = Align.Center;
             globalToolbar.style.paddingTop = 6;
             globalToolbar.style.paddingBottom = 6;
             globalToolbar.style.paddingLeft = 6;
@@ -703,7 +844,7 @@ namespace EasyChart.Editor
                         bool ok = AssetDatabase.CopyAsset(assetPath, dstPath);
                         if (!ok)
                         {
-                            Debug.LogError($"[EasyChartLibraryWindow] Failed to copy asset: {assetPath} -> {dstPath}");
+                            EasyChartLog.Error($"Failed to copy asset: {assetPath} -> {dstPath}");
                         }
                     }
                 }
@@ -814,21 +955,21 @@ namespace EasyChart.Editor
                 if (HasProfileInClipboard()) menu.AddItem(new GUIContent("Paste (As New)"), false, () => PasteProfileAsNewFromClipboard(GetTargetFolder()));
                 else menu.AddDisabledItem(new GUIContent("Paste (As New)"));
 
-                if (isProfileSelected) menu.AddItem(new GUIContent("Clone"), false, () => CloneProfile(selectedPath));
-                else menu.AddDisabledItem(new GUIContent("Clone"));
+                if (isProfileSelected) menu.AddItem(new GUIContent("Clone %d"), false, () => CloneProfile(selectedPath));
+                else menu.AddDisabledItem(new GUIContent("Clone %d"));
 
                 menu.AddSeparator(string.Empty);
 
-                menu.AddItem(new GUIContent("Refresh"), false, RefreshTree);
+                menu.AddItem(new GUIContent("Refresh"), false, () => RefreshTree());
                 menu.AddItem(new GUIContent("Expand All"), false, ExpandAllFolders);
                 menu.AddItem(new GUIContent("Collapse All"), false, CollapseAllFolders);
                 menu.AddSeparator(string.Empty);
 
-                if (canOperateOnSelection) menu.AddItem(new GUIContent("Rename"), false, () => RenameAssetOrFolder(selectedPath));
-                else menu.AddDisabledItem(new GUIContent("Rename"));
+                if (canOperateOnSelection) menu.AddItem(new GUIContent("Rename _F2"), false, () => RenameAssetOrFolder(selectedPath));
+                else menu.AddDisabledItem(new GUIContent("Rename _F2"));
 
-                if (canOperateOnSelection) menu.AddItem(new GUIContent("Delete"), false, () => DeleteAssetOrFolder(selectedPath));
-                else menu.AddDisabledItem(new GUIContent("Delete"));
+                if (canOperateOnSelection) menu.AddItem(new GUIContent("Delete _DELETE"), false, () => DeleteAssetOrFolderWithConfirmation(selectedPath));
+                else menu.AddDisabledItem(new GUIContent("Delete _DELETE"));
 
                 menu.AddSeparator(string.Empty);
 
@@ -836,21 +977,34 @@ namespace EasyChart.Editor
                 if (isProfileSelected) menu.AddItem(new GUIContent("Export UGUI Prefab"), false, () => ExportSelectedProfileAsUGUIPrefab(selectedPath));
                 else menu.AddDisabledItem(new GUIContent("Export UGUI Prefab"));
 
+                menu.AddSeparator(string.Empty);
+                menu.AddItem(new GUIContent("Upgrade All Profiles"), false, UpgradeAllProfiles);
+
                 menu.ShowAsContext();
             });
             // Add spacer and tree menu button to libraryHeaderRow
             var libraryHeaderSpacer = new VisualElement();
             libraryHeaderSpacer.style.flexGrow = 1;
             libraryHeaderRow.Add(libraryHeaderSpacer);
-            
-            treeMenuBtn.style.marginLeft = 0;
-            libraryHeaderRow.Add(treeMenuBtn);
 
             var libraryHelpBtn = CreateClickableIconImage(_helpIcon, "Help", () => EasyChartManualWeb.OpenChapter("01_02-LibraryPanel"));
-            libraryHelpBtn.style.marginLeft = 6;
+            libraryHelpBtn.style.marginLeft = 0;
             libraryHeaderRow.Add(libraryHelpBtn);
+            
+            treeMenuBtn.style.marginLeft = 6;
+            libraryHeaderRow.Add(treeMenuBtn);
 
             // Global Toolbar (editor-wide actions)
+            // Logo
+            var logoImage = new Image();
+            logoImage.image = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/EasyChart/Textures/Icon/UEC_Colorfull.png");
+            logoImage.scaleMode = ScaleMode.ScaleToFit;
+            logoImage.style.width = 56;
+            logoImage.style.height = 28;
+            logoImage.style.marginRight = 8;
+            logoImage.style.flexShrink = 0;
+            globalToolbar.Add(logoImage);
+            
             // Import dropdown button
             var importDropdownBtn = new Button(() =>
             {
@@ -931,7 +1085,7 @@ namespace EasyChart.Editor
                 RefreshTree();
                 ScheduleRefreshSeriesList();
                 ScheduleUpdatePreview();
-                Debug.Log(BuildSelectedProfileSummaryForDebug());
+                EasyChartLog.Info(BuildSelectedProfileSummaryForDebug());
             });
 
             VisualElement saveBtn;
@@ -953,7 +1107,7 @@ namespace EasyChart.Editor
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"[EasyChartLibraryWindow] Save failed: {ex.Message}\n{ex.StackTrace}");
+                    EasyChart.Internal.EasyChartLog.Error($"Save failed: {ex.Message}\n{ex.StackTrace}");
                 }
             };
 
@@ -974,7 +1128,20 @@ namespace EasyChart.Editor
             refreshSaveSeparator.style.opacity = 0.75f;
             refreshSaveSeparator.style.flexShrink = 0;
 
-            // Library controls (moved from libraryHeaderRow to globalToolbar)
+            // Import/Export at the beginning
+            globalToolbar.Add(importDropdownBtn);
+            globalToolbar.Add(exportDropdownBtn);
+            
+            var importExportSeparator = new Label("|");
+            importExportSeparator.style.marginLeft = 8;
+            importExportSeparator.style.marginRight = 8;
+            importExportSeparator.style.unityTextAlign = TextAnchor.MiddleCenter;
+            importExportSeparator.style.color = Color.white;
+            importExportSeparator.style.opacity = 0.75f;
+            importExportSeparator.style.flexShrink = 0;
+            globalToolbar.Add(importExportSeparator);
+            
+            // Library controls
             var libraryLabel = new Label("Library:");
             libraryLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             libraryLabel.style.marginRight = 4;
@@ -995,15 +1162,122 @@ namespace EasyChart.Editor
             librarySeparator.style.flexShrink = 0;
             globalToolbar.Add(librarySeparator);
             
-            globalToolbar.Add(importDropdownBtn);
-            globalToolbar.Add(exportDropdownBtn);
-            globalToolbar.Add(globalSpacer);
+            // Save and Refresh (moved here)
             globalToolbar.Add(saveBtn);
             globalToolbar.Add(refreshSaveSeparator);
             globalToolbar.Add(refreshBtn);
+            
+            globalToolbar.Add(globalSpacer);
+
+            // Settings button (show in all versions)
+            var settingsBtn = CreateClickableIconImage(_settingsIcon, "Settings", OpenSettingsWindow);
+            settingsBtn.style.marginRight = 6;
+            globalToolbar.Add(settingsBtn);
+
+            // Separator between Settings and Support
+            var settingsSupportSeparator = new Label("|");
+            settingsSupportSeparator.style.marginLeft = 2;
+            settingsSupportSeparator.style.marginRight = 6;
+            settingsSupportSeparator.style.unityTextAlign = TextAnchor.MiddleCenter;
+            settingsSupportSeparator.style.color = Color.white;
+            settingsSupportSeparator.style.opacity = 0.75f;
+            settingsSupportSeparator.style.flexShrink = 0;
+            globalToolbar.Add(settingsSupportSeparator);
+
+            // Support button (show in all versions)
+            var supportBtn = CreateClickableIconImage(_supportIcon, "", () =>
+            {
+                // Click always shows popup (regardless of OnlyClick setting)
+            });
+            supportBtn.style.marginRight = 6;
+            
+            // Support hover popup
+            var supportPopup = CreateSupportHoverPopup();
+            supportBtn.RegisterCallback<PointerEnterEvent>(_ => 
+            {
+                if (!EditorPrefs.GetBool(PopupOnlyClickPrefsKey, false))
+                {
+                    ShowHoverPopup(supportPopup, supportBtn);
+                }
+            });
+            supportBtn.RegisterCallback<PointerLeaveEvent>(_ => HideHoverPopup(supportPopup));
+            supportBtn.RegisterCallback<ClickEvent>(_ => 
+            {
+                // Toggle popup on click
+                if (supportPopup.style.display == DisplayStyle.None)
+                {
+                    ShowHoverPopup(supportPopup, supportBtn);
+                }
+                else
+                {
+                    supportPopup.style.display = DisplayStyle.None;
+                }
+            });
+            globalToolbar.Add(supportBtn);
+            
+            // Separator between Support and Pro
+            var supportProSeparator = new Label("|");
+            supportProSeparator.style.marginLeft = 2;
+            supportProSeparator.style.marginRight = 6;
+            supportProSeparator.style.unityTextAlign = TextAnchor.MiddleCenter;
+            supportProSeparator.style.color = Color.white;
+            supportProSeparator.style.opacity = 0.75f;
+            supportProSeparator.style.flexShrink = 0;
+            globalToolbar.Add(supportProSeparator);
+            
+            // Pro button (show in all versions)
+            var proBtn = CreateClickableIconImage(_proIcon, "", () =>
+            {
+                // Click always shows popup (regardless of OnlyClick setting)
+            });
+            proBtn.style.marginRight = 6;
+            
+            // Pro hover popup
+            var proPopup = CreateProHoverPopup();
+            proBtn.RegisterCallback<PointerEnterEvent>(_ => 
+            {
+                if (!EditorPrefs.GetBool(PopupOnlyClickPrefsKey, false))
+                {
+                    ShowHoverPopup(proPopup, proBtn);
+                }
+            });
+            proBtn.RegisterCallback<PointerLeaveEvent>(_ => HideHoverPopup(proPopup));
+            proBtn.RegisterCallback<ClickEvent>(_ => 
+            {
+                // Toggle popup on click
+                if (proPopup.style.display == DisplayStyle.None)
+                {
+                    ShowHoverPopup(proPopup, proBtn);
+                }
+                else
+                {
+                    proPopup.style.display = DisplayStyle.None;
+                }
+            });
+            globalToolbar.Add(proBtn);
+
+            // Register static delegate so external callers can show this popup
+            RequestShowProPopup = (worldRect) =>
+            {
+                if (proPopup.parent == null)
+                    rootVisualElement.Add(proPopup);
+                proPopup.style.display = DisplayStyle.Flex;
+                proPopup.userData = false;
+                proPopup.schedule.Execute(() =>
+                {
+                    var rootRect = rootVisualElement.worldBound;
+                    float popupWidth = proPopup.resolvedStyle.width > 10 ? proPopup.resolvedStyle.width : 250;
+                    float left = worldRect.xMax - rootRect.x - popupWidth;
+                    float top = worldRect.yMax - rootRect.y;
+                    if (left < 0) left = 0;
+                    proPopup.style.left = left;
+                    proPopup.style.top = top;
+                }).ExecuteLater(0);
+            };
 
             // Tree View
             _folderTree = new TreeView();
+            _folderTree.selectionType = SelectionType.Multiple; // Support Ctrl/Shift multi-select
             _folderTree.style.flexGrow = 1;
             _folderTree.style.flexShrink = 1;
             _folderTree.style.minHeight = 0;
@@ -1111,6 +1385,7 @@ namespace EasyChart.Editor
             _folderTree.RegisterCallback<PointerUpEvent>(OnTreePointerUp, TrickleDown.TrickleDown);
             _folderTree.RegisterCallback<DragUpdatedEvent>(OnTreeDragUpdated, TrickleDown.TrickleDown);
             _folderTree.RegisterCallback<DragPerformEvent>(OnTreeDragPerform, TrickleDown.TrickleDown);
+            _folderTree.RegisterCallback<KeyDownEvent>(OnTreeKeyDown);
 
             leftPanel.Add(_folderTree);
 
@@ -1145,7 +1420,7 @@ namespace EasyChart.Editor
             previewHeaderRow.Add(previewHeaderSpacer);
 
             var previewHelpBtn = CreateClickableIconImage(_helpIcon, "Help", () => EasyChartManualWeb.OpenChapter("02_04-PreviewPanel"));
-            previewHelpBtn.style.marginLeft = 6;
+            previewHelpBtn.style.marginLeft = 0;
             previewHeaderRow.Add(previewHelpBtn);
 
             centerPanel.Add(previewHeaderRow);
@@ -1190,7 +1465,7 @@ namespace EasyChart.Editor
             inspectorHeaderRow.Add(inspectorHeaderSpacer);
 
             var inspectorHelpBtn = CreateClickableIconImage(_helpIcon, "Help", () => EasyChartManualWeb.OpenChapter("02_05-InspectorPanel"));
-            inspectorHelpBtn.style.marginLeft = 6;
+            inspectorHelpBtn.style.marginLeft = 0;
             inspectorHeaderRow.Add(inspectorHelpBtn);
 
             centerPanel.Add(inspectorHeaderRow);
@@ -1231,7 +1506,38 @@ namespace EasyChart.Editor
             seriesHeaderRow.Add(seriesHeaderSpacer);
 
             var seriesHelpBtn = CreateClickableIconImage(_helpIcon, "Help", () => EasyChartManualWeb.OpenChapter("02_06-SeriesPanel"));
+            seriesHelpBtn.style.marginLeft = 0;
+            seriesHelpBtn.style.marginRight = 6;
             seriesHeaderRow.Add(seriesHelpBtn);
+
+            // Global Sync toggle
+            _seriesSyncToggle = new Toggle();
+            _seriesSyncToggle.value = _seriesSyncEnabled;
+            _seriesSyncToggle.tooltip = "Sync parameter changes to all series of the same type";
+            _seriesSyncToggle.style.marginRight = 2;
+            _seriesSyncToggle.RegisterValueChangedCallback(evt =>
+            {
+                _seriesSyncEnabled = evt.newValue;
+                UpdateSyncLabelStyle();
+            });
+            seriesHeaderRow.Add(_seriesSyncToggle);
+
+            _seriesSyncLabel = new Label("Sync");
+            _seriesSyncLabel.style.fontSize = 12;
+            _seriesSyncLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _seriesSyncLabel.style.marginRight = 6;
+            _seriesSyncLabel.tooltip = "Sync parameter changes to all series of the same type";
+            UpdateSyncLabelStyle();
+            seriesHeaderRow.Add(_seriesSyncLabel);
+
+            // Color Palette button
+            _paletteIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(PaletteIconPath);
+            if (_paletteIcon != null)
+            {
+                _paletteBtn = CreateClickableIconImage(_paletteIcon, "Apply Color Palette", ShowColorPaletteMenu);
+                _paletteBtn.style.marginRight = 6;
+                seriesHeaderRow.Add(_paletteBtn);
+            }
 
             seriesPanel.Add(seriesHeaderRow);
 
@@ -1248,6 +1554,16 @@ namespace EasyChart.Editor
             RefreshTree();
 
             root.Add(mainRow);
+        }
+
+        private void UpdateSyncLabelStyle()
+        {
+            if (_seriesSyncLabel == null) return;
+            // Yellow when unchecked, green when checked, always bold
+            _seriesSyncLabel.style.color = _seriesSyncEnabled 
+                ? new Color(0.3f, 0.9f, 0.3f) 
+                : new Color(1f, 0.85f, 0.2f);
+            _seriesSyncLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
         }
 
         private string BuildSelectedProfileSummaryForDebug()
@@ -1403,8 +1719,8 @@ namespace EasyChart.Editor
         private void OnDisable()
         {
             EditorApplication.delayCall -= RefreshSeriesListDelayed;
-            EditorApplication.delayCall -= OnDeferredUpdatePreview;
             _seriesRefreshScheduled = false;
+            _previewUpdateScheduled = false;
         }
 
         private void ScheduleRefreshSeriesList()
@@ -1417,7 +1733,18 @@ namespace EasyChart.Editor
         private void RefreshSeriesListDelayed()
         {
             _seriesRefreshScheduled = false;
-            RefreshSeriesList();
+            bool savedSync = _seriesSyncEnabled;
+            _seriesSyncEnabled = false;
+            _seriesBindInitEventCount = 0;
+            try
+            {
+                RefreshSeriesList();
+            }
+            finally
+            {
+                _seriesSyncEnabled = savedSync;
+                _seriesUIRebuildEndTime = EditorApplication.timeSinceStartup;
+            }
         }
 
         private StyleBackground CreateCheckerTexture()
@@ -1555,7 +1882,7 @@ namespace EasyChart.Editor
             Selection.activeObject = prefab;
             EditorGUIUtility.PingObject(prefab);
 
-            Debug.Log($"[EasyChart] UGUI Chart prefab created at: {prefabPath}");
+            EasyChart.Internal.EasyChartLog.Info($"UGUI Chart prefab created at: {prefabPath}");
         }
 
         private PanelSettings GetOrCreateDefaultPanelSettings(string folder)
@@ -1612,7 +1939,7 @@ namespace EasyChart.Editor
             if (string.IsNullOrEmpty(savePath)) return;
 
             AssetDatabase.ExportPackage(libraryRoot, savePath, ExportPackageOptions.Recurse | ExportPackageOptions.IncludeDependencies);
-            Debug.Log($"[EasyChart] Exported entire library to: {savePath}");
+            EasyChart.Internal.EasyChartLog.Info($"Exported entire library to: {savePath}");
         }
 
         private void ExportAllProfilesAsUGUIPrefabs()
@@ -1720,7 +2047,359 @@ namespace EasyChart.Editor
                 message += $"\nSkipped {skippedCount} invalid profiles.";
             
             EditorUtility.DisplayDialog("Export UGUI Prefabs", message, "OK");
-            Debug.Log($"[EasyChart] {message}");
+            EasyChart.Internal.EasyChartLog.Info(message);
+        }
+
+        private void UpgradeAllProfiles()
+        {
+            string rootPath = GetActiveProfileRootPath();
+            if (string.IsNullOrEmpty(rootPath) || !AssetDatabase.IsValidFolder(rootPath))
+            {
+                EditorUtility.DisplayDialog("Upgrade Profiles", "No valid library folder found.", "OK");
+                return;
+            }
+
+            var guids = AssetDatabase.FindAssets("t:ChartProfile", new[] { rootPath });
+            if (guids == null || guids.Length == 0)
+            {
+                EditorUtility.DisplayDialog("Upgrade Profiles", "No ChartProfile assets found in the current library.", "OK");
+                return;
+            }
+
+            if (!EditorUtility.DisplayDialog("Upgrade All Profiles", 
+                $"This will re-serialize {guids.Length} ChartProfile(s) in the current library to ensure all new fields have default values.\n\nThis operation cannot be undone. Continue?", 
+                "Upgrade", "Cancel"))
+            {
+                return;
+            }
+
+            int upgradedCount = 0;
+            int errorCount = 0;
+
+            try
+            {
+                AssetDatabase.StartAssetEditing();
+
+                for (int i = 0; i < guids.Length; i++)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                    var profile = AssetDatabase.LoadAssetAtPath<ChartProfile>(path);
+                    if (profile == null)
+                    {
+                        errorCount++;
+                        continue;
+                    }
+
+                    EditorUtility.DisplayProgressBar("Upgrading Profiles", $"Processing {profile.name}...", (float)i / guids.Length);
+
+                    // Mark the asset as dirty to trigger re-serialization
+                    EditorUtility.SetDirty(profile);
+                    upgradedCount++;
+                }
+
+                AssetDatabase.SaveAssets();
+            }
+            finally
+            {
+                AssetDatabase.StopAssetEditing();
+                EditorUtility.ClearProgressBar();
+            }
+
+            AssetDatabase.Refresh();
+
+            string message = $"Upgraded {upgradedCount} ChartProfile(s).";
+            if (errorCount > 0)
+                message += $"\nFailed to load {errorCount} profile(s).";
+
+            EditorUtility.DisplayDialog("Upgrade Complete", message, "OK");
+            EasyChart.Internal.EasyChartLog.Info(message);
+        }
+
+        private void ShowColorPaletteMenu()
+        {
+            if (_selectedProfile == null)
+            {
+                EditorUtility.DisplayDialog("Color Palette", "Please select a ChartProfile first.", "OK");
+                return;
+            }
+
+            // Load or initialize palettes
+            {
+                const string assetPath = "Assets/EasyChart/Scripts/Editor/SeriesColorPalettes.asset";
+                var asset = AssetDatabase.LoadAssetAtPath<SeriesColorPalettesAsset>(assetPath);
+                if (asset != null && asset.palettes != null && asset.palettes.Count > 0)
+                {
+                    _colorPalettes = asset.palettes;
+                }
+                else if (_colorPalettes == null || _colorPalettes.Count == 0)
+                {
+                    _colorPalettes = SeriesColorPalettesAsset.GetDefaultPalettes();
+                }
+            }
+
+            // Show custom picker window with color preview, anchored right next to the palette button
+            Rect activatorRect;
+            if (_paletteBtn != null)
+            {
+                // worldBound coords + window screen position = button's screen Rect for ShowAsDropDown
+                var btnRect = _paletteBtn.worldBound;
+                float dpi = EditorGUIUtility.pixelsPerPoint;
+                float screenX = position.x + btnRect.x / dpi;
+                float screenY = position.y + btnRect.y / dpi;
+                activatorRect = new Rect(screenX, screenY, btnRect.width / dpi, btnRect.height / dpi);
+            }
+            else
+            {
+                activatorRect = new Rect(position.x + position.width - 290f, position.y + 90f, 280f, 20f);
+            }
+            ColorPalettePickerWindow.Show(activatorRect, _colorPalettes, ApplyColorPalette, OpenPaletteManager, ResetColorPalettesToDefaults);
+        }
+
+        private void ResetColorPalettesToDefaults()
+        {
+            const string assetPath = "Assets/EasyChart/Scripts/Editor/SeriesColorPalettes.asset";
+            var asset = AssetDatabase.LoadAssetAtPath<SeriesColorPalettesAsset>(assetPath);
+
+            if (asset == null)
+            {
+                OpenPaletteManager();
+                asset = AssetDatabase.LoadAssetAtPath<SeriesColorPalettesAsset>(assetPath);
+                if (asset == null) return;
+            }
+
+            Undo.RecordObject(asset, "Reset Color Palettes");
+            asset.palettes = SeriesColorPalettesAsset.GetDefaultPalettes();
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssets();
+
+            _colorPalettes = asset.palettes;
+        }
+
+        private void ApplyColorPalette(SeriesColorPalette palette)
+        {
+            if (_selectedProfile == null || palette == null) 
+            {
+                Debug.LogWarning("[EasyChart] ApplyColorPalette: profile or palette is null");
+                return;
+            }
+            if (_serializedProfile == null) 
+            {
+                Debug.LogWarning("[EasyChart] ApplyColorPalette: serializedProfile is null");
+                return;
+            }
+
+            // Temporarily disable sync to prevent colors from being synced across series during apply
+            bool wasSync = _seriesSyncEnabled;
+            if (wasSync)
+            {
+                _seriesSyncEnabled = false;
+                if (_seriesSyncToggle != null) _seriesSyncToggle.SetValueWithoutNotify(false);
+                UpdateSyncLabelStyle();
+            }
+
+            _serializedProfile.Update();
+            
+            var seriesProp = _serializedProfile.FindProperty("series");
+            if (seriesProp == null || !seriesProp.isArray) 
+            {
+                Debug.LogWarning("[EasyChart] ApplyColorPalette: series property not found or not array");
+                return;
+            }
+
+            int seriesCount = seriesProp.arraySize;
+            if (seriesCount == 0)
+            {
+                EditorUtility.DisplayDialog("Color Palette", "No series found in the current profile.", "OK");
+                return;
+            }
+
+            Undo.RecordObject(_selectedProfile, "Apply Color Palette");
+
+            int appliedCount = 0;
+            for (int i = 0; i < seriesCount; i++)
+            {
+                var serieProp = seriesProp.GetArrayElementAtIndex(i);
+                var typeProp = serieProp.FindPropertyRelative("type");
+                if (typeProp == null) 
+                {
+                    Debug.LogWarning($"[EasyChart] Series {i}: type property not found");
+                    continue;
+                }
+
+                SerieType serieType = (SerieType)typeProp.intValue;
+                var colorSet = palette.GetColorSet(i);
+
+                var settingsProp = serieProp.FindPropertyRelative("settings");
+                if (settingsProp == null) 
+                {
+                    Debug.LogWarning($"[EasyChart] Series {i}: settings property not found");
+                    continue;
+                }
+
+                // Apply colors based on series type
+                bool applied = false;
+                switch (serieType)
+                {
+                    case SerieType.Line:
+                        applied = ApplyLineColors(settingsProp, colorSet);
+                        break;
+                    case SerieType.Bar:
+                    case SerieType.HorizontalBar:
+                        applied = ApplyBarColors(settingsProp, colorSet);
+                        break;
+                    case SerieType.Scatter:
+                        applied = ApplyScatterColors(settingsProp, colorSet);
+                        break;
+                    case SerieType.Pie:
+                    case SerieType.RingChart:
+                        // Pie/Ring use data-driven colors, skip for now
+                        break;
+                }
+                
+                if (applied) appliedCount++;
+            }
+
+            // Start cooldown BEFORE ApplyModifiedProperties so that binding update events
+            // fired by UIElements in subsequent frames are suppressed by SyncSeriesProperty.
+            // The count-based guard in CreateSyncablePropertyField handles the exact events;
+            // the timestamp is kept as a safety net for nested/composite property events.
+            _seriesUIRebuildEndTime = EditorApplication.timeSinceStartup;
+
+            _serializedProfile.ApplyModifiedProperties();
+            EditorUtility.SetDirty(_selectedProfile);
+
+            // Restore sync state now — the cooldown above will guard against spurious events
+            if (wasSync)
+            {
+                _seriesSyncEnabled = true;
+                if (_seriesSyncToggle != null) _seriesSyncToggle.SetValueWithoutNotify(true);
+                UpdateSyncLabelStyle();
+            }
+
+            // Immediate preview update for color palette changes (no delay for better UX)
+            UpdatePreview();
+            ScheduleRefreshSeriesList();
+        }
+
+        private bool ApplyLineColors(SerializedProperty settingsProp, SeriesColorSet colorSet)
+        {
+            bool applied = false;
+            
+            // Line stroke color
+            var strokeProp = settingsProp.FindPropertyRelative("stroke");
+            if (strokeProp != null)
+            {
+                var colorProp = strokeProp.FindPropertyRelative("color");
+                if (colorProp != null) 
+                {
+                    colorProp.colorValue = colorSet.lineColor;
+                    applied = true;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[EasyChart] Line: stroke property not found");
+            }
+
+            // Point color
+            var pointProp = settingsProp.FindPropertyRelative("point");
+            if (pointProp != null)
+            {
+                var textureFillProp = pointProp.FindPropertyRelative("textureFill");
+                if (textureFillProp != null)
+                {
+                    var colorProp = textureFillProp.FindPropertyRelative("color");
+                    if (colorProp != null) 
+                    {
+                        colorProp.colorValue = colorSet.pointColor;
+                        applied = true;
+                    }
+                }
+            }
+
+            // Area color
+            var areaProp = settingsProp.FindPropertyRelative("area");
+            if (areaProp != null)
+            {
+                var textureFillProp = areaProp.FindPropertyRelative("textureFill");
+                if (textureFillProp != null)
+                {
+                    var colorProp = textureFillProp.FindPropertyRelative("color");
+                    if (colorProp != null) 
+                    {
+                        colorProp.colorValue = colorSet.areaColor;
+                        applied = true;
+                    }
+                }
+            }
+            
+            return applied;
+        }
+
+        private bool ApplyBarColors(SerializedProperty settingsProp, SeriesColorSet colorSet)
+        {
+            // Bar fill color
+            var textureFillProp = settingsProp.FindPropertyRelative("textureFill");
+            if (textureFillProp != null)
+            {
+                var colorProp = textureFillProp.FindPropertyRelative("color");
+                if (colorProp != null) 
+                {
+                    colorProp.colorValue = colorSet.barColor;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private bool ApplyScatterColors(SerializedProperty settingsProp, SeriesColorSet colorSet)
+        {
+            // Point color
+            var pointProp = settingsProp.FindPropertyRelative("point");
+            if (pointProp != null)
+            {
+                var textureFillProp = pointProp.FindPropertyRelative("textureFill");
+                if (textureFillProp != null)
+                {
+                    var colorProp = textureFillProp.FindPropertyRelative("color");
+                    if (colorProp != null) 
+                    {
+                        colorProp.colorValue = colorSet.pointColor;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private void OpenPaletteManager()
+        {
+            // Find or create the palettes asset
+            string assetPath = "Assets/EasyChart/Scripts/Editor/SeriesColorPalettes.asset";
+            var asset = AssetDatabase.LoadAssetAtPath<SeriesColorPalettesAsset>(assetPath);
+            
+            if (asset == null)
+            {
+                // Create the asset with default palettes
+                asset = ScriptableObject.CreateInstance<SeriesColorPalettesAsset>();
+                asset.palettes = SeriesColorPalettesAsset.GetDefaultPalettes();
+                
+                // Ensure directory exists
+                string dir = System.IO.Path.GetDirectoryName(assetPath);
+                if (!AssetDatabase.IsValidFolder(dir))
+                {
+                    System.IO.Directory.CreateDirectory(dir);
+                    AssetDatabase.Refresh();
+                }
+                
+                AssetDatabase.CreateAsset(asset, assetPath);
+                AssetDatabase.SaveAssets();
+                Debug.Log($"[EasyChart] Created color palettes asset at {assetPath}");
+            }
+
+            // Select and ping the asset
+            Selection.activeObject = asset;
+            EditorGUIUtility.PingObject(asset);
         }
     }
 }

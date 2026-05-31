@@ -589,29 +589,27 @@ namespace EasyChart.Layers
             // Background fill (from first serie's settings)
             var primarySettings = primarySerie.settings as RadarSettings;
             var radarLayout = primarySettings != null ? primarySettings.radar : null;
-            if (radarLayout != null && radarLayout.background != null)
+            if (radarLayout != null && radarLayout.textureFill != null)
             {
-                UnpackTextureFill(radarLayout.background, out var bgTex, out var bgTiling, out var bgOffset, out var bgColor);
+                UnpackTextureFill(radarLayout.textureFill, out var bgTex, out var bgTiling, out var bgOffset, out var bgColor);
+
+                // Build polygon vertices (needed for both fill and TextureFX)
+                var bgVertices = new List<Vector2>(dimensionCount);
+                for (int i = 0; i < dimensionCount; i++)
+                {
+                    float angle = startAngleDeg + sign * (i * step);
+                    bgVertices.Add(center + AngleToDir(angle) * outerRadiusPx);
+                }
+                Rect bgBounds = new Rect(center.x - outerRadiusPx, center.y - outerRadiusPx, outerRadiusPx * 2f, outerRadiusPx * 2f);
+
                 if (bgColor.a > 0f || bgTex != null)
                 {
-                    // Build polygon vertices
-                    var bgVertices = new List<Vector2>(dimensionCount);
-                    for (int i = 0; i < dimensionCount; i++)
-                    {
-                        float angle = startAngleDeg + sign * (i * step);
-                        Vector2 p = center + AngleToDir(angle) * outerRadiusPx;
-                        bgVertices.Add(p);
-                    }
-
                     if (bgTex != null)
                     {
-                        // Draw textured polygon
-                        Rect bounds = new Rect(center.x - outerRadiusPx, center.y - outerRadiusPx, outerRadiusPx * 2f, outerRadiusPx * 2f);
-                        DrawTexturedFan(context, bgVertices, bounds, bgTex, bgTiling, bgOffset, bgColor, true);
+                        DrawTexturedFan(context, bgVertices, bgBounds, bgTex, bgTiling, bgOffset, bgColor, true);
                     }
                     else
                     {
-                        // Draw solid color polygon
                         painter.fillColor = bgColor;
                         painter.BeginPath();
                         for (int i = 0; i < bgVertices.Count; i++)
@@ -622,6 +620,12 @@ namespace EasyChart.Layers
                         painter.ClosePath();
                         painter.Fill();
                     }
+                }
+
+                // Draw TextureFX layers on top of the radar background (Pro only) — clipped to polygon, UV based on bgBounds
+                if (ProPackage.IsInstalled && radarLayout.textureFXLayers != null && radarLayout.textureFXLayers.Count > 0)
+                {
+                    TextureFXBridge.DrawPolygonClippedLayers(context, bgVertices, bgBounds, radarLayout.textureFXLayers, TextureFXBridge.GetAnimationTime());
                 }
             }
 
@@ -688,15 +692,30 @@ namespace EasyChart.Layers
                 if (settings.area != null && settings.area.show)
                 {
                     UnpackTextureFill(settings.area.textureFill, out var _areaTex, out var _areaTiling, out var _areaOffset, out var _areaColor);
-                    painter.fillColor = _areaColor;
-                    painter.BeginPath();
-                    for (int i = 0; i < vertices.Count; i++)
+                    if (_areaTex != null && _areaColor.a > 0f)
                     {
-                        if (i == 0) painter.MoveTo(vertices[i]);
-                        else painter.LineTo(vertices[i]);
+                        Rect areaBounds = new Rect(center.x - outerRadiusPx, center.y - outerRadiusPx, outerRadiusPx * 2f, outerRadiusPx * 2f);
+                        DrawTexturedFan(context, vertices, areaBounds, _areaTex, _areaTiling, _areaOffset, _areaColor, true);
                     }
-                    painter.ClosePath();
-                    painter.Fill();
+                    else if (_areaColor.a > 0f)
+                    {
+                        painter.fillColor = _areaColor;
+                        painter.BeginPath();
+                        for (int i = 0; i < vertices.Count; i++)
+                        {
+                            if (i == 0) painter.MoveTo(vertices[i]);
+                            else painter.LineTo(vertices[i]);
+                        }
+                        painter.ClosePath();
+                        painter.Fill();
+                    }
+                }
+
+                // Area TextureFX layers (Pro only) — clipped to radar polygon, UV based on areaBounds
+                if (ProPackage.IsInstalled && settings.area != null && settings.area.textureFXLayers != null && settings.area.textureFXLayers.Count > 0)
+                {
+                    Rect areaBounds = new Rect(center.x - outerRadiusPx, center.y - outerRadiusPx, outerRadiusPx * 2f, outerRadiusPx * 2f);
+                    TextureFXBridge.DrawPolygonClippedLayers(context, vertices, areaBounds, settings.area.textureFXLayers, TextureFXBridge.GetAnimationTime());
                 }
 
                 // Stroke
@@ -732,6 +751,14 @@ namespace EasyChart.Layers
                         }
 
                         DrawPointMarker(context, painter, pos, localPr, settings.point.textureFill, Color.white);
+
+                        // Point TextureFX layers (Pro only)
+                        if (ProPackage.IsInstalled && settings.point.textureFXLayers != null && settings.point.textureFXLayers.Count > 0)
+                        {
+                            float r = localPr;
+                            var pointRect = new Rect(pos.x - r, pos.y - r, r * 2f, r * 2f);
+                            TextureFXBridge.DrawLayers(context, pointRect, settings.point.textureFXLayers, TextureFXBridge.GetAnimationTime());
+                        }
                     }
                 }
             }

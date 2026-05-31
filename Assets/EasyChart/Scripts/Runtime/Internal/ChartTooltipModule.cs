@@ -37,7 +37,7 @@ namespace EasyChart
             {
                 _tooltip = new Label();
                 _tooltip.style.position = Position.Absolute;
-                _tooltip.style.backgroundColor = new Color(0, 0, 0, 0.8f);
+                _tooltip.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 0.95f);
                 _tooltip.style.color = Color.white;
                 _tooltip.style.paddingTop = 4;
                 _tooltip.style.paddingBottom = 4;
@@ -47,6 +47,14 @@ namespace EasyChart
                 _tooltip.style.borderTopRightRadius = 4;
                 _tooltip.style.borderBottomLeftRadius = 4;
                 _tooltip.style.borderBottomRightRadius = 4;
+                _tooltip.style.borderTopWidth = 1;
+                _tooltip.style.borderBottomWidth = 1;
+                _tooltip.style.borderLeftWidth = 1;
+                _tooltip.style.borderRightWidth = 1;
+                _tooltip.style.borderTopColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+                _tooltip.style.borderBottomColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+                _tooltip.style.borderLeftColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+                _tooltip.style.borderRightColor = new Color(0.3f, 0.3f, 0.3f, 1f);
                 _tooltip.visible = false;
                 _tooltip.userData = _owner;
                 ChartTextStyleApplier.ApplyLabel(_tooltip, _owner, ChartTextRole.Tooltip);

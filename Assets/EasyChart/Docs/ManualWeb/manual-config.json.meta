@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 4c89e15f864174d4885a7dd56f320249
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/docs/ManualWeb/manual-config.json
+  uploadId: 906968

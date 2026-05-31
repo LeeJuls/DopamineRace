@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 3086a0281c0330d42a489984c3c7afe5
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/docs/Manual/easy-chart/zh/03_14-BoxPlotChart.md
+  uploadId: 906968

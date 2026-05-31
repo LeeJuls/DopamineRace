@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ecb9a0a57b8c6114eb6a9d84a2c42969
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/Library/EasyChart Demo/Line3D/Line3D 4.asset
+  uploadId: 906968

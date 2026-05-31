@@ -19,6 +19,106 @@ namespace EasyChart.Layers
         private readonly HashSet<long> _categoryHoverTmp = new HashSet<long>();
         private int _categoryHoverIndex = int.MinValue;
 
+        private bool _isRegisteredForGlobalUpdate = false;
+
+        public BarSeriesRenderer()
+        {
+            RegisterCallback<AttachToPanelEvent>(OnAttachToPanel);
+            RegisterCallback<DetachFromPanelEvent>(OnDetachFromPanel);
+        }
+
+        private void OnAttachToPanel(AttachToPanelEvent evt)
+        {
+            UpdateUpdateLoopState();
+        }
+
+        private void OnDetachFromPanel(DetachFromPanelEvent evt)
+        {
+            StopUpdateLoop();
+        }
+
+        private ChartElement GetChartElement()
+        {
+            if (Data == null) return null;
+            var current = this.parent;
+            while (current != null)
+            {
+                if (current is ChartElement chart) return chart;
+                current = current.parent;
+            }
+            return null;
+        }
+
+        private void StartUpdateLoop()
+        {
+            if (_isRegisteredForGlobalUpdate) return;
+            var chart = GetChartElement();
+            if (chart != null)
+            {
+                ChartElement.RegisterGlobalAnimationCallback(chart, OnUpdate);
+                _isRegisteredForGlobalUpdate = true;
+            }
+        }
+
+        private void StopUpdateLoop()
+        {
+            if (!_isRegisteredForGlobalUpdate) return;
+            var chart = GetChartElement();
+            if (chart != null)
+            {
+                ChartElement.UnregisterGlobalAnimationCallback(chart, OnUpdate);
+            }
+            _isRegisteredForGlobalUpdate = false;
+        }
+
+        private void UpdateUpdateLoopState()
+        {
+            if (panel == null) { StopUpdateLoop(); return; }
+            if (HasActiveAnimations())
+            {
+                if (!_isRegisteredForGlobalUpdate && GetChartElement() != null)
+                {
+                    StartUpdateLoop();
+                }
+            }
+            else StopUpdateLoop();
+        }
+
+        private bool HasActiveAnimations()
+        {
+            if (Data == null || Data.Series == null) return false;
+            if (!ProPackage.IsInstalled) return false;
+
+            for (int i = 0; i < Data.Series.Count; i++)
+            {
+                var s = Data.Series[i];
+                if (s == null || !s.visible) continue;
+                if (s.type != SerieType.Bar) continue;
+                if (s.settings is not BarSettings settings) continue;
+
+                if (TextureFXBridge.HasAnyAnimation(settings.textureFXLayers)) return true;
+            }
+
+            return false;
+        }
+
+        private void OnUpdate()
+        {
+            if (panel == null)
+            {
+                StopUpdateLoop();
+                return;
+            }
+
+            if (!HasActiveAnimations())
+            {
+                StopUpdateLoop();
+                return;
+            }
+
+            MarkDirtyRepaint();
+        }
+
         private static long GetHoverKey(int serieIndex, int pointIndex)
         {
             return ((long)serieIndex << 32) ^ (uint)pointIndex;
@@ -1032,6 +1132,7 @@ namespace EasyChart.Layers
 
         protected override void OnGenerateVisualContent(MeshGenerationContext context)
         {
+            UpdateUpdateLoopState();
             if (Data == null || Data.Series == null) return;
 
             var width = contentRect.width;
@@ -1098,6 +1199,7 @@ namespace EasyChart.Layers
                     DrawBarSerie(context, painter, serie, width, height, currentOffset, isStackedGroup, isLastInStackGroup, stackPos, stackNeg, edgePad, barWidth);
                 }
             }
+
         }
 
         private void DrawBarSerie(MeshGenerationContext context, Painter2D painter, Serie serie, float width, float height, float offset, bool isStacked, bool isLastInStackGroup, Dictionary<int, float> stackPos, Dictionary<int, float> stackNeg, float edgePad, float effectiveBarWidth)
@@ -1183,6 +1285,19 @@ namespace EasyChart.Layers
                 float localBarWidth = baseBarWidth;
                 var barFill = settings.textureFill;
                 UnpackTextureFill(barFill, Color.white, out var barTex, out var tiling, out var uvOffset, out var barTint);
+
+                
+                // Adaptive tiling: adjust Y tiling based on bar height to maintain consistent texture appearance
+                if (barFill != null && barFill.adaptiveTiling && barTex != null && localBarWidth > 0f)
+                {
+                    // Use bar width as reference to calculate proportional Y tiling
+                    float barHeight = Mathf.Abs(drawH);
+                    if (barHeight > 0.001f)
+                    {
+                        float aspectRatio = barHeight / localBarWidth;
+                        tiling.y = tiling.x * aspectRatio;
+                    }
+                }
 
                 Texture2D hoverTex = null;
                 Vector2 hoverTiling = Vector2.one;
@@ -1320,6 +1435,13 @@ namespace EasyChart.Layers
                     }
 
                     painter.Stroke();
+                }
+
+                // Draw TextureFX layers on top of the bar (Pro only)
+                if (ProPackage.IsInstalled && settings.textureFXLayers != null && settings.textureFXLayers.Count > 0)
+                {
+                    TextureFXBridge.DrawBarLayers(context, rect, settings.textureFXLayers, TextureFXBridge.GetAnimationTime(),
+                        isHorizontal: false, cornerRadius: r, cornerSegments: cornerSegments, roundTop: roundTop, roundBottom: roundBottom);
                 }
 
                 _ = zeroY;

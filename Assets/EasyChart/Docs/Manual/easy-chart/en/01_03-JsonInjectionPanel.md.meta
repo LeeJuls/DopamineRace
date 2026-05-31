@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 7a5dfdb4eff72ef40a23cf455e3187eb
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/docs/Manual/easy-chart/en/01_03-JsonInjectionPanel.md
+  uploadId: 906968

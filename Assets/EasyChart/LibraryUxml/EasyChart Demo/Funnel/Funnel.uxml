@@ -1,0 +1,3 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ec="EasyChart" editor-extension-mode="False">
+    <ec:ChartElement profile-name="Funnel" profile-guid="7456f54fddc37ce43a463347e89bd567" style="width: 450px; height: 300px;" />
+</ui:UXML>

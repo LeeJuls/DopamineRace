@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f43715b43d08b1e4c82740be53bae5d5
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/Library/EasyChart Demo/BoxPlot/BoxPlot 1.asset
+  uploadId: 906968

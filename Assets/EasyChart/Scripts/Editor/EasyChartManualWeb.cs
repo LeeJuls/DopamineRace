@@ -10,7 +10,7 @@ namespace EasyChart.Editor
 {
     public static class EasyChartManualWeb
     {
-        private const string ManualRootFolder = "Assets/EasyChart/Docs/Manual";
+        private const string ManualRootFolder = "Assets/EasyChart/Docs/Manual/easy-chart";
         private const string WebRootFolder = "Assets/EasyChart/Docs/ManualWeb";
         private const string DataFileName = "manual-data.js";
         private const string DataFileNameZh = "manual-data.zh.js";

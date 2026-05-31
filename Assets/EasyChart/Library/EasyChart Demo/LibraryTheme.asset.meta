@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f736bc7712a93cd4293fb99dda485352
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/Library/EasyChart Demo/LibraryTheme.asset
+  uploadId: 906968

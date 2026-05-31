@@ -32,6 +32,7 @@ namespace EasyChart.Editor
             for (int i = 0; i < _seriesProperty.arraySize; i++)
             {
                 int index = i;
+                _currentSeriesIndex = index; // Set current series index for sync feature
                 var elementProp = _seriesProperty.GetArrayElementAtIndex(i);
 
                 string foldoutKey = (_selectedProfile != null ? _selectedProfile.GetInstanceID().ToString() : "null") + ":" + index;
@@ -102,6 +103,9 @@ namespace EasyChart.Editor
                         case SerieType.Pie:
                         case SerieType.Pie3D: return "03_06-PieChart";
                         case SerieType.RingChart: return "03_07-RingChart";
+                        case SerieType.Gauge: return "03_08-GaugeChart";
+                        case SerieType.Funnel: return "03_09-FunnelChart";
+                        case SerieType.Waterfall: return "03_10-WaterfallChart";
                         default: return null;
                     }
                 }
@@ -120,8 +124,127 @@ namespace EasyChart.Editor
                         EasyChartManualWeb.OpenChapter("02_06-SeriesPanel");
                     }
                 });
-                serieHelpBtn.style.marginLeft = 6;
+                serieHelpBtn.style.marginLeft = 0;
                 header.Add(serieHelpBtn);
+                
+                // Clone button - clone current series
+                int cloneSourceIndex = index; // Capture for closure
+                var serieCloneBtn = CreateClickableIconImage(_cloneIcon, "Clone this series", () =>
+                {
+                    if (_serializedProfile == null) return;
+                    if (_seriesProperty == null || !_seriesProperty.isArray) return;
+                    
+                    _serializedProfile.Update();
+                    
+                    // Insert a new element after the current one
+                    int insertIndex = cloneSourceIndex + 1;
+                    _seriesProperty.InsertArrayElementAtIndex(cloneSourceIndex);
+                    
+                    // The inserted element is a copy of the source, now at insertIndex
+                    // We need to update its name and id
+                    var newElement = _seriesProperty.GetArrayElementAtIndex(insertIndex);
+                    
+                    var nameProp = newElement.FindPropertyRelative("name");
+                    if (nameProp != null)
+                    {
+                        // Helper to check if name exists in other series
+                        bool IsNameDuplicate(string name, int excludeIndex)
+                        {
+                            for (int si = 0; si < _seriesProperty.arraySize; si++)
+                            {
+                                if (si == excludeIndex) continue;
+                                var otherNameProp = _seriesProperty.GetArrayElementAtIndex(si).FindPropertyRelative("name");
+                                if (otherNameProp != null && otherNameProp.stringValue == name)
+                                    return true;
+                            }
+                            return false;
+                        }
+                        
+                        // Helper to generate next name
+                        string GenerateNextName(string currentName)
+                        {
+                            var match = System.Text.RegularExpressions.Regex.Match(currentName, @"^(.+?)(\d+)$");
+                            if (match.Success)
+                            {
+                                string prefix = match.Groups[1].Value;
+                                int num = int.Parse(match.Groups[2].Value);
+                                return prefix + (num + 1);
+                            }
+                            else
+                            {
+                                return currentName + " 1";
+                            }
+                        }
+                        
+                        // Generate unique name
+                        string newName = GenerateNextName(nameProp.stringValue);
+                        while (IsNameDuplicate(newName, insertIndex))
+                        {
+                            newName = GenerateNextName(newName);
+                        }
+                        
+                        nameProp.stringValue = newName;
+                    }
+                    
+                    // Generate a new unique id
+                    var idProp = newElement.FindPropertyRelative("id");
+                    if (idProp != null)
+                    {
+                        idProp.stringValue = System.Guid.NewGuid().ToString("N");
+                    }
+                    
+                    _serializedProfile.ApplyModifiedProperties();
+                    
+                    EditorApplication.delayCall += () =>
+                    {
+                        if (_selectedProfile == null || _serializedProfile == null) return;
+                        
+                        bool changed = false;
+                        if (_selectedProfile.EnsureRuntimeData()) changed = true;
+                        
+                        if (changed) EditorUtility.SetDirty(_selectedProfile);
+                        _serializedProfile.Update();
+                        ScheduleRefreshSeriesList();
+                        ScheduleUpdatePreview();
+                    };
+                    ScheduleRefreshSeriesList();
+                    ScheduleUpdatePreview();
+                });
+                serieCloneBtn.style.marginLeft = 4;
+                header.Add(serieCloneBtn);
+
+                // Up/Down/Remove buttons moved to header (right side)
+                var upBtn = new Button(() => {
+                    _seriesProperty.MoveArrayElement(index, index - 1);
+                    _serializedProfile.ApplyModifiedProperties();
+                    ScheduleRefreshSeriesList();
+                    ScheduleUpdatePreview();
+                }) { text = "↑" };
+                upBtn.style.width = 22;
+                upBtn.style.marginLeft = 4;
+                upBtn.SetEnabled(index > 0);
+                header.Add(upBtn);
+
+                var downBtn = new Button(() => {
+                    _seriesProperty.MoveArrayElement(index, index + 1);
+                    _serializedProfile.ApplyModifiedProperties();
+                    ScheduleRefreshSeriesList();
+                    ScheduleUpdatePreview();
+                }) { text = "↓" };
+                downBtn.style.width = 22;
+                downBtn.style.marginLeft = 2;
+                downBtn.SetEnabled(index < _seriesProperty.arraySize - 1);
+                header.Add(downBtn);
+
+                var removeBtn = new Button(() => {
+                    _seriesProperty.DeleteArrayElementAtIndex(index);
+                    _serializedProfile.ApplyModifiedProperties();
+                    ScheduleRefreshSeriesList();
+                    ScheduleUpdatePreview();
+                }) { text = "X" };
+                removeBtn.style.width = 22;
+                removeBtn.style.marginLeft = 2;
+                header.Add(removeBtn);
 
                 container.Add(header);
 
@@ -137,7 +260,7 @@ namespace EasyChart.Editor
                     body.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
                 };
 
-                // Name Field
+                // Name Field (not synced - name should be unique)
                 var nameField = new PropertyField(nameProp);
                 nameField.Bind(_serializedProfile);
                 nameField.RegisterCallback<SerializedPropertyChangeEvent>(evt =>
@@ -157,6 +280,44 @@ namespace EasyChart.Editor
                     idRow.style.flexDirection = FlexDirection.Row;
                     idRow.style.alignItems = Align.Center;
                     idRow.style.width = Length.Percent(100);
+                    
+                    // Check if this id is duplicated
+                    bool IsDuplicateId(string currentId, int currentIndex)
+                    {
+                        if (string.IsNullOrEmpty(currentId)) return false;
+                        if (_seriesProperty == null) return false;
+                        for (int si = 0; si < _seriesProperty.arraySize; si++)
+                        {
+                            if (si == currentIndex) continue;
+                            var otherIdProp = _seriesProperty.GetArrayElementAtIndex(si).FindPropertyRelative("id");
+                            if (otherIdProp != null && otherIdProp.stringValue == currentId)
+                                return true;
+                        }
+                        return false;
+                    }
+                    
+                    // Warning button for duplicate id (only visible when duplicate)
+                    var duplicateBtn = new Button(() =>
+                    {
+                        if (_serializedProfile == null) return;
+                        _serializedProfile.Update();
+                        idProp.stringValue = System.Guid.NewGuid().ToString("N");
+                        _serializedProfile.ApplyModifiedProperties();
+                        EditorUtility.SetDirty(_selectedProfile);
+                        ScheduleRefreshSeriesList();
+                    })
+                    { text = "⚠", tooltip = "Duplicate ID detected! Click to generate a new unique ID." };
+                    duplicateBtn.style.width = 24;
+                    duplicateBtn.style.marginRight = 4;
+                    duplicateBtn.style.flexShrink = 0;
+                    duplicateBtn.style.backgroundColor = new Color(0.8f, 0.4f, 0.1f);
+                    duplicateBtn.style.color = Color.white;
+                    duplicateBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
+                    
+                    // Check and set visibility
+                    bool isDuplicate = IsDuplicateId(idProp.stringValue, index);
+                    duplicateBtn.style.display = isDuplicate ? DisplayStyle.Flex : DisplayStyle.None;
+                    idRow.Add(duplicateBtn);
 
                     var idField = new TextField("Serie Id");
                     idField.isReadOnly = true;
@@ -201,12 +362,19 @@ namespace EasyChart.Editor
                 }
 
                 var currentTypeForFlags = ReadSerieType();
+                bool isLine = currentTypeForFlags == SerieType.Line;
                 bool isScatter = currentTypeForFlags == SerieType.Scatter;
-                bool isPie = currentTypeForFlags == SerieType.Pie || currentTypeForFlags == SerieType.Pie3D;
+                bool isPie = currentTypeForFlags == SerieType.Pie;
+                bool isPie3D = currentTypeForFlags == SerieType.Pie3D;
+                bool isBar3D = currentTypeForFlags == SerieType.Bar3D;
+                bool isLine3D = currentTypeForFlags == SerieType.Line3D;
                 bool isRingChart = currentTypeForFlags == SerieType.RingChart;
                 bool isRadar = currentTypeForFlags == SerieType.Radar;
                 bool isBar = currentTypeForFlags == SerieType.Bar;
                 bool isHeatmap = currentTypeForFlags == SerieType.Heatmap;
+                bool isGauge = currentTypeForFlags == SerieType.Gauge;
+                bool isFunnel = currentTypeForFlags == SerieType.Funnel;
+                bool isWaterfall = currentTypeForFlags == SerieType.Waterfall;
 
                 bool profileIsPolar = _selectedProfile != null && _selectedProfile.coordinateSystem == CoordinateSystemType.Polar2D;
                 bool profileIsNone = _selectedProfile != null && _selectedProfile.coordinateSystem == CoordinateSystemType.None;
@@ -217,11 +385,14 @@ namespace EasyChart.Editor
                 if (!allowedTypes.Contains(currentType)) allowedTypes.Insert(0, currentType);
 
                 Label warn = null;
-                bool isPieType = currentType == SerieType.Pie || currentType == SerieType.RingChart || currentType == SerieType.Pie3D;
+                bool isPieType = currentType == SerieType.Pie || currentType == SerieType.RingChart || currentType == SerieType.Pie3D || currentType == SerieType.Gauge || currentType == SerieType.Funnel;
+                bool is3DType = currentType == SerieType.Bar3D || currentType == SerieType.Pie3D || currentType == SerieType.Line3D || currentType == SerieType.Scatter3D;
+                bool profileIsCartesian3D = _selectedProfile != null && _selectedProfile.coordinateSystem == CoordinateSystemType.Cartesian3D;
                 bool typeCompatible = isPieType
                                       || (profileIsNone && isPieType)
                                       || (profileIsPolar && currentType == SerieType.Radar)
-                                      || (!profileIsPolar && !profileIsNone && (currentType == SerieType.Line || currentType == SerieType.Bar || currentType == SerieType.HorizontalBar || currentType == SerieType.Scatter || currentType == SerieType.Heatmap));
+                                      || (profileIsCartesian3D && is3DType)
+                                      || (!profileIsPolar && !profileIsNone && !profileIsCartesian3D && (currentType == SerieType.Line || currentType == SerieType.Bar || currentType == SerieType.HorizontalBar || currentType == SerieType.Scatter || currentType == SerieType.Heatmap || currentType == SerieType.Waterfall || currentType == SerieType.Candlestick || currentType == SerieType.OHLC || currentType == SerieType.BoxPlot));
                 if (!typeCompatible)
                 {
                     string cs = _selectedProfile != null ? _selectedProfile.coordinateSystem.ToString() : "<null>";
@@ -292,20 +463,49 @@ namespace EasyChart.Editor
                 else if (currentTypeForFlags == SerieType.RingChart) rootSettingsTitle = "RingChartSettings";
                 else if (currentTypeForFlags == SerieType.Pie3D) rootSettingsTitle = "Pie3DSettings";
                 else if (currentTypeForFlags == SerieType.Heatmap) rootSettingsTitle = "HeatMapSettings";
+                else if (currentTypeForFlags == SerieType.Gauge) rootSettingsTitle = "GaugeSettings";
+                else if (currentTypeForFlags == SerieType.Funnel) rootSettingsTitle = "FunnelSettings";
+                else if (currentTypeForFlags == SerieType.Waterfall) rootSettingsTitle = "WaterfallSettings";
                 else rootSettingsTitle = currentTypeForFlags + "Settings";
 
-                var rootSettingsFoldout = new Foldout
+                // Helper to create styled foldout with left highlight bar
+                (VisualElement container, Foldout foldout) CreateSeriesFoldout(string title, string stateKey, bool defaultExpanded)
                 {
-                    text = rootSettingsTitle,
-                    value = rootSettingsExpanded
-                };
-                rootSettingsFoldout.RegisterValueChangedCallback(evt =>
-                {
-                    _seriesFoldoutState[rootSettingsFoldoutKey] = evt.newValue;
-                });
+                    var cont = new VisualElement();
+                    bool expanded = _seriesFoldoutState.TryGetValue(stateKey, out bool storedVal) ? storedVal : defaultExpanded;
+                    var fold = new Foldout { text = title };
+                    fold.bindingPath = string.Empty;
+                    EditorStyleHelper.ApplyExpandedStyle(cont, expanded, false);
+                    fold.SetValueWithoutNotify(expanded);
+                    bool expectedValue = expanded;
+                    bool userInitiated = false;
+                    fold.RegisterCallback<PointerDownEvent>(evt => userInitiated = true, TrickleDown.TrickleDown);
+                    fold.RegisterValueChangedCallback(evt =>
+                    {
+                        evt.StopPropagation();
+                        if (!userInitiated)
+                        {
+                            if (evt.newValue != expectedValue)
+                            {
+                                fold.SetValueWithoutNotify(expectedValue);
+                                EditorStyleHelper.ApplyExpandedStyle(cont, expectedValue, false);
+                            }
+                            return;
+                        }
+                        userInitiated = false;
+                        expectedValue = evt.newValue;
+                        _seriesFoldoutState[stateKey] = evt.newValue;
+                        EditorStyleHelper.ApplyExpandedStyle(cont, evt.newValue, evt.newValue);
+                    });
+                    EditorStyleHelper.RegisterFocusCallbacks(cont, fold);
+                    cont.Add(fold);
+                    return (cont, fold);
+                }
+
+                var (rootSettingsContainer, rootSettingsFoldout) = CreateSeriesFoldout(rootSettingsTitle, rootSettingsFoldoutKey, rootSettingsExpanded);
 
                 var rootSettingsBox = CreateGroupBox();
-                rootSettingsBox.Add(rootSettingsFoldout);
+                rootSettingsBox.Add(rootSettingsContainer);
                 body.Add(rootSettingsBox);
 
                 VisualElement settingsRoot = rootSettingsFoldout;
@@ -313,45 +513,536 @@ namespace EasyChart.Editor
                 // Flatten settings properties to ensure they are visible
                 if (settingsProp != null)
                 {
+                    // Pie3D specific foldouts - placed at top
+                    Foldout pie3DMainFoldout = null;
+                    VisualElement pie3DMainContainer = null;
+                    Foldout pie3DCameraFoldout = null;
+                    VisualElement pie3DCameraContainer = null;
+                    Foldout pie3DLightingFoldout = null;
+                    VisualElement pie3DLightingContainer = null;
+                    Foldout pie3DMaterialFoldout = null;
+                    VisualElement pie3DMaterialContainer = null;
+                    var pie3DHiddenProps = new HashSet<string>();
+
+                    if (isPie3D)
+                    {
+                        // Pie3D main foldout (thickness, heightByValue, background settings)
+                        string pie3DMainFoldoutKey = foldoutKey + ":settings:pie3d:main";
+                        (pie3DMainContainer, pie3DMainFoldout) = CreateSeriesFoldout("Pie3D", pie3DMainFoldoutKey, true);
+
+                        var thicknessProp = settingsProp.FindPropertyRelative("thickness");
+                        var heightByValueProp = settingsProp.FindPropertyRelative("heightByValue");
+                        var transparentBackgroundProp = settingsProp.FindPropertyRelative("transparentBackground");
+                        var backgroundColorProp = settingsProp.FindPropertyRelative("backgroundColor");
+
+                        if (thicknessProp != null) { AddBoundPropertyField(pie3DMainFoldout, thicknessProp); pie3DHiddenProps.Add(thicknessProp.propertyPath); }
+                        if (heightByValueProp != null) { AddBoundPropertyField(pie3DMainFoldout, heightByValueProp); pie3DHiddenProps.Add(heightByValueProp.propertyPath); }
+                        if (transparentBackgroundProp != null) { AddBoundPropertyField(pie3DMainFoldout, transparentBackgroundProp); pie3DHiddenProps.Add(transparentBackgroundProp.propertyPath); }
+                        if (backgroundColorProp != null) { AddBoundPropertyField(pie3DMainFoldout, backgroundColorProp); pie3DHiddenProps.Add(backgroundColorProp.propertyPath); }
+
+                        var pie3DMainBox = CreateGroupBox();
+                        pie3DMainBox.Add(pie3DMainContainer);
+                        settingsRoot.Add(pie3DMainBox);
+
+                        // Layout foldout (between Pie3D and Camera)
+                        string layoutFoldoutKey = foldoutKey + ":settings:pie3d:layout";
+                        var (pie3DLayoutContainer, pie3DLayoutFoldout) = CreateSeriesFoldout("Layout", layoutFoldoutKey, true);
+
+                        // Add sortByValue at the top of layout
+                        var sortByValueProp = settingsProp.FindPropertyRelative("sortByValue");
+                        if (sortByValueProp != null) { AddBoundPropertyField(pie3DLayoutFoldout, sortByValueProp); pie3DHiddenProps.Add(sortByValueProp.propertyPath); }
+
+                        // Add only used layout properties (hide unused: innerRadiusColor, cornerRadius, sliceGapType, plot)
+                        var layoutProp = settingsProp.FindPropertyRelative("layout");
+                        if (layoutProp != null)
+                        {
+                            pie3DHiddenProps.Add(layoutProp.propertyPath);
+                            
+                            // Only add properties that are actually used by Pie3DSeriesRenderer
+                            var startAngleProp = layoutProp.FindPropertyRelative("startAngleDeg");
+                            var clockwiseProp = layoutProp.FindPropertyRelative("clockwise");
+                            var angleRangeProp = layoutProp.FindPropertyRelative("angleRangeDeg");
+                            var innerRadiusProp = layoutProp.FindPropertyRelative("innerRadius");
+                            var outerRadiusProp = layoutProp.FindPropertyRelative("outerRadius");
+                            var sliceGapProp = layoutProp.FindPropertyRelative("sliceGapPx");
+
+                            if (startAngleProp != null) AddBoundPropertyField(pie3DLayoutFoldout, startAngleProp);
+                            if (clockwiseProp != null) AddBoundPropertyField(pie3DLayoutFoldout, clockwiseProp);
+                            if (angleRangeProp != null) AddBoundPropertyField(pie3DLayoutFoldout, angleRangeProp);
+                            if (innerRadiusProp != null) AddBoundPropertyField(pie3DLayoutFoldout, innerRadiusProp);
+                            if (outerRadiusProp != null) AddBoundPropertyField(pie3DLayoutFoldout, outerRadiusProp);
+                            if (sliceGapProp != null) AddBoundPropertyField(pie3DLayoutFoldout, sliceGapProp);
+                        }
+
+                        var layoutBox = CreateGroupBox();
+                        layoutBox.Add(pie3DLayoutContainer);
+                        settingsRoot.Add(layoutBox);
+
+                        // Camera foldout
+                        string cameraFoldoutKey = foldoutKey + ":settings:pie3d:camera";
+                        (pie3DCameraContainer, pie3DCameraFoldout) = CreateSeriesFoldout("Camera", cameraFoldoutKey, true);
+
+                        var cameraYawProp = settingsProp.FindPropertyRelative("cameraYawDeg");
+                        var cameraPitchProp = settingsProp.FindPropertyRelative("cameraPitchDeg");
+                        var cameraDistanceProp = settingsProp.FindPropertyRelative("cameraDistance");
+                        var cameraFovProp = settingsProp.FindPropertyRelative("cameraFov");
+                        var cameraTargetProp = settingsProp.FindPropertyRelative("cameraTarget");
+                        var cameraAutoRotateProp = settingsProp.FindPropertyRelative("cameraAutoRotate");
+                        var cameraAutoRotateSpeedProp = settingsProp.FindPropertyRelative("cameraAutoRotateSpeed");
+
+                        if (cameraYawProp != null) { AddBoundPropertyField(pie3DCameraFoldout, cameraYawProp); pie3DHiddenProps.Add(cameraYawProp.propertyPath); }
+                        if (cameraPitchProp != null) { AddBoundPropertyField(pie3DCameraFoldout, cameraPitchProp); pie3DHiddenProps.Add(cameraPitchProp.propertyPath); }
+                        if (cameraDistanceProp != null) { AddBoundPropertyField(pie3DCameraFoldout, cameraDistanceProp); pie3DHiddenProps.Add(cameraDistanceProp.propertyPath); }
+                        if (cameraFovProp != null) { AddBoundPropertyField(pie3DCameraFoldout, cameraFovProp); pie3DHiddenProps.Add(cameraFovProp.propertyPath); }
+                        if (cameraTargetProp != null) { AddBoundPropertyField(pie3DCameraFoldout, cameraTargetProp); pie3DHiddenProps.Add(cameraTargetProp.propertyPath); }
+                        if (cameraAutoRotateProp != null) { AddBoundPropertyField(pie3DCameraFoldout, cameraAutoRotateProp); pie3DHiddenProps.Add(cameraAutoRotateProp.propertyPath); }
+                        if (cameraAutoRotateSpeedProp != null) { AddBoundPropertyField(pie3DCameraFoldout, cameraAutoRotateSpeedProp); pie3DHiddenProps.Add(cameraAutoRotateSpeedProp.propertyPath); }
+
+                        var cameraBox = CreateGroupBox();
+                        cameraBox.Add(pie3DCameraContainer);
+                        settingsRoot.Add(cameraBox);
+
+                        // Lighting foldout
+                        string lightingFoldoutKey = foldoutKey + ":settings:pie3d:lighting";
+                        (pie3DLightingContainer, pie3DLightingFoldout) = CreateSeriesFoldout("Lighting", lightingFoldoutKey, true);
+
+                        var lightYawProp = settingsProp.FindPropertyRelative("lightYawDeg");
+                        var lightPitchProp = settingsProp.FindPropertyRelative("lightPitchDeg");
+                        var lightIntensityProp = settingsProp.FindPropertyRelative("lightIntensity");
+                        var ambientColorProp = settingsProp.FindPropertyRelative("ambientColor");
+                        var lightColorProp = settingsProp.FindPropertyRelative("lightColor");
+
+                        if (lightYawProp != null) { AddBoundPropertyField(pie3DLightingFoldout, lightYawProp); pie3DHiddenProps.Add(lightYawProp.propertyPath); }
+                        if (lightPitchProp != null) { AddBoundPropertyField(pie3DLightingFoldout, lightPitchProp); pie3DHiddenProps.Add(lightPitchProp.propertyPath); }
+                        if (lightIntensityProp != null) { AddBoundPropertyField(pie3DLightingFoldout, lightIntensityProp); pie3DHiddenProps.Add(lightIntensityProp.propertyPath); }
+                        if (ambientColorProp != null) { AddBoundPropertyField(pie3DLightingFoldout, ambientColorProp); pie3DHiddenProps.Add(ambientColorProp.propertyPath); }
+                        if (lightColorProp != null) { AddBoundPropertyField(pie3DLightingFoldout, lightColorProp); pie3DHiddenProps.Add(lightColorProp.propertyPath); }
+
+                        var lightingBox = CreateGroupBox();
+                        lightingBox.Add(pie3DLightingContainer);
+                        settingsRoot.Add(lightingBox);
+
+                        // Material foldout
+                        string materialFoldoutKey = foldoutKey + ":settings:pie3d:material";
+                        (pie3DMaterialContainer, pie3DMaterialFoldout) = CreateSeriesFoldout("Material", materialFoldoutKey, true);
+
+                        var shaderPresetProp = settingsProp.FindPropertyRelative("shaderPreset");
+                        var materialModeProp = settingsProp.FindPropertyRelative("materialMode");
+                        var specularColorProp = settingsProp.FindPropertyRelative("specularColor");
+                        var glossProp = settingsProp.FindPropertyRelative("gloss");
+                        var rimColorProp = settingsProp.FindPropertyRelative("rimColor");
+                        var rimPowerProp = settingsProp.FindPropertyRelative("rimPower");
+                        var toonStepsProp = settingsProp.FindPropertyRelative("toonSteps");
+                        var sliceAlphaProp = settingsProp.FindPropertyRelative("sliceAlpha");
+
+                        if (shaderPresetProp != null) { AddBoundPropertyField(pie3DMaterialFoldout, shaderPresetProp); pie3DHiddenProps.Add(shaderPresetProp.propertyPath); }
+                        if (materialModeProp != null) { AddBoundPropertyField(pie3DMaterialFoldout, materialModeProp); pie3DHiddenProps.Add(materialModeProp.propertyPath); }
+                        if (specularColorProp != null) { AddBoundPropertyField(pie3DMaterialFoldout, specularColorProp); pie3DHiddenProps.Add(specularColorProp.propertyPath); }
+                        if (glossProp != null) { AddBoundPropertyField(pie3DMaterialFoldout, glossProp); pie3DHiddenProps.Add(glossProp.propertyPath); }
+                        if (rimColorProp != null) { AddBoundPropertyField(pie3DMaterialFoldout, rimColorProp); pie3DHiddenProps.Add(rimColorProp.propertyPath); }
+                        if (rimPowerProp != null) { AddBoundPropertyField(pie3DMaterialFoldout, rimPowerProp); pie3DHiddenProps.Add(rimPowerProp.propertyPath); }
+                        if (toonStepsProp != null) { AddBoundPropertyField(pie3DMaterialFoldout, toonStepsProp); pie3DHiddenProps.Add(toonStepsProp.propertyPath); }
+                        if (sliceAlphaProp != null) { AddBoundPropertyField(pie3DMaterialFoldout, sliceAlphaProp); pie3DHiddenProps.Add(sliceAlphaProp.propertyPath); }
+
+                        var materialBox = CreateGroupBox();
+                        materialBox.Add(pie3DMaterialContainer);
+                        settingsRoot.Add(materialBox);
+
+                        // Hide ring property for Pie3D (not used)
+                        var ringProp = settingsProp.FindPropertyRelative("ring");
+                        if (ringProp != null) { pie3DHiddenProps.Add(ringProp.propertyPath); }
+                    }
+
+                    // Bar3D specific foldouts
+                    var bar3DHiddenProps = new HashSet<string>();
+                    if (isBar3D)
+                    {
+                        // Hide background property (always transparent by default)
+                        var backgroundProp = settingsProp.FindPropertyRelative("background");
+                        if (backgroundProp != null)
+                        {
+                            bar3DHiddenProps.Add(backgroundProp.propertyPath);
+                        }
+
+                        // Layout foldout
+                        string bar3DLayoutFoldoutKey = foldoutKey + ":settings:bar3d:layout";
+                        var (bar3DLayoutContainer, bar3DLayoutFoldout) = CreateSeriesFoldout("Layout", bar3DLayoutFoldoutKey, true);
+
+                        var layoutProp = settingsProp.FindPropertyRelative("layout");
+                        if (layoutProp != null)
+                        {
+                            bar3DHiddenProps.Add(layoutProp.propertyPath);
+                            var barWidthProp = layoutProp.FindPropertyRelative("barWidth");
+                            var barDepthProp = layoutProp.FindPropertyRelative("barDepth");
+                            var barGapProp = layoutProp.FindPropertyRelative("barGap");
+                            var cornerRadiusProp = layoutProp.FindPropertyRelative("cornerRadius");
+                            var baseYProp = layoutProp.FindPropertyRelative("baseY");
+                            var heightScaleProp = layoutProp.FindPropertyRelative("heightScale");
+
+                            if (barWidthProp != null) AddBoundPropertyField(bar3DLayoutFoldout, barWidthProp);
+                            if (barDepthProp != null) AddBoundPropertyField(bar3DLayoutFoldout, barDepthProp);
+                            if (barGapProp != null) AddBoundPropertyField(bar3DLayoutFoldout, barGapProp);
+                            if (cornerRadiusProp != null) AddBoundPropertyField(bar3DLayoutFoldout, cornerRadiusProp);
+                            if (baseYProp != null) AddBoundPropertyField(bar3DLayoutFoldout, baseYProp);
+                            if (heightScaleProp != null) AddBoundPropertyField(bar3DLayoutFoldout, heightScaleProp);
+                        }
+
+                        var bar3DLayoutBox = CreateGroupBox();
+                        bar3DLayoutBox.Add(bar3DLayoutContainer);
+                        settingsRoot.Add(bar3DLayoutBox);
+
+                        // Camera foldout
+                        string bar3DCameraFoldoutKey = foldoutKey + ":settings:bar3d:camera";
+                        var (bar3DCameraContainer, bar3DCameraFoldout) = CreateSeriesFoldout("Camera", bar3DCameraFoldoutKey, true);
+
+                        var cameraProp = settingsProp.FindPropertyRelative("camera");
+                        if (cameraProp != null)
+                        {
+                            bar3DHiddenProps.Add(cameraProp.propertyPath);
+                            var yawProp = cameraProp.FindPropertyRelative("yawDeg");
+                            var pitchProp = cameraProp.FindPropertyRelative("pitchDeg");
+                            var distanceProp = cameraProp.FindPropertyRelative("distance");
+                            var fovProp = cameraProp.FindPropertyRelative("fov");
+                            var targetProp = cameraProp.FindPropertyRelative("target");
+                            var autoRotateProp = cameraProp.FindPropertyRelative("autoRotate");
+                            var autoRotateSpeedProp = cameraProp.FindPropertyRelative("autoRotateSpeed");
+
+                            if (yawProp != null) AddBoundPropertyField(bar3DCameraFoldout, yawProp);
+                            if (pitchProp != null) AddBoundPropertyField(bar3DCameraFoldout, pitchProp);
+                            if (distanceProp != null) AddBoundPropertyField(bar3DCameraFoldout, distanceProp);
+                            if (fovProp != null) AddBoundPropertyField(bar3DCameraFoldout, fovProp);
+                            if (targetProp != null) AddBoundPropertyField(bar3DCameraFoldout, targetProp);
+                            if (autoRotateProp != null) AddBoundPropertyField(bar3DCameraFoldout, autoRotateProp);
+                            if (autoRotateSpeedProp != null) AddBoundPropertyField(bar3DCameraFoldout, autoRotateSpeedProp);
+                        }
+
+                        var bar3DCameraBox = CreateGroupBox();
+                        bar3DCameraBox.Add(bar3DCameraContainer);
+                        settingsRoot.Add(bar3DCameraBox);
+
+                        // Lighting foldout
+                        string bar3DLightingFoldoutKey = foldoutKey + ":settings:bar3d:lighting";
+                        var (bar3DLightingContainer, bar3DLightingFoldout) = CreateSeriesFoldout("Lighting", bar3DLightingFoldoutKey, true);
+
+                        var lightingProp = settingsProp.FindPropertyRelative("lighting");
+                        if (lightingProp != null)
+                        {
+                            bar3DHiddenProps.Add(lightingProp.propertyPath);
+                            var ambientColorProp = lightingProp.FindPropertyRelative("ambientColor");
+                            var lightColorProp = lightingProp.FindPropertyRelative("lightColor");
+                            var specularColorProp = lightingProp.FindPropertyRelative("specularColor");
+                            var glossProp = lightingProp.FindPropertyRelative("gloss");
+                            var rimColorProp = lightingProp.FindPropertyRelative("rimColor");
+                            var rimPowerProp = lightingProp.FindPropertyRelative("rimPower");
+                            var toonStepsProp = lightingProp.FindPropertyRelative("toonSteps");
+                            var lightYawProp = lightingProp.FindPropertyRelative("lightYawDeg");
+                            var lightPitchProp = lightingProp.FindPropertyRelative("lightPitchDeg");
+                            var lightIntensityProp = lightingProp.FindPropertyRelative("lightIntensity");
+
+                            if (lightYawProp != null) AddBoundPropertyField(bar3DLightingFoldout, lightYawProp);
+                            if (lightPitchProp != null) AddBoundPropertyField(bar3DLightingFoldout, lightPitchProp);
+                            if (lightIntensityProp != null) AddBoundPropertyField(bar3DLightingFoldout, lightIntensityProp);
+                            if (ambientColorProp != null) AddBoundPropertyField(bar3DLightingFoldout, ambientColorProp);
+                            if (lightColorProp != null) AddBoundPropertyField(bar3DLightingFoldout, lightColorProp);
+                            if (specularColorProp != null) AddBoundPropertyField(bar3DLightingFoldout, specularColorProp);
+                            if (glossProp != null) AddBoundPropertyField(bar3DLightingFoldout, glossProp);
+                            if (rimColorProp != null) AddBoundPropertyField(bar3DLightingFoldout, rimColorProp);
+                            if (rimPowerProp != null) AddBoundPropertyField(bar3DLightingFoldout, rimPowerProp);
+                            if (toonStepsProp != null) AddBoundPropertyField(bar3DLightingFoldout, toonStepsProp);
+                        }
+
+                        var bar3DLightingBox = CreateGroupBox();
+                        bar3DLightingBox.Add(bar3DLightingContainer);
+                        settingsRoot.Add(bar3DLightingBox);
+
+                        // Rendering foldout
+                        string bar3DRenderingFoldoutKey = foldoutKey + ":settings:bar3d:rendering";
+                        var (bar3DRenderingContainer, bar3DRenderingFoldout) = CreateSeriesFoldout("Rendering", bar3DRenderingFoldoutKey, true);
+
+                        // Add color and useSeriesColor to Rendering foldout
+                        var colorProp = settingsProp.FindPropertyRelative("color");
+                        var useSeriesColorProp = settingsProp.FindPropertyRelative("useSeriesColor");
+                        if (colorProp != null) { AddBoundPropertyField(bar3DRenderingFoldout, colorProp); bar3DHiddenProps.Add(colorProp.propertyPath); }
+                        if (useSeriesColorProp != null) { AddBoundPropertyField(bar3DRenderingFoldout, useSeriesColorProp); bar3DHiddenProps.Add(useSeriesColorProp.propertyPath); }
+
+                        var renderingProp = settingsProp.FindPropertyRelative("rendering");
+                        if (renderingProp != null)
+                        {
+                            bar3DHiddenProps.Add(renderingProp.propertyPath);
+                            var shaderPresetProp = renderingProp.FindPropertyRelative("shaderPreset");
+                            var materialModeProp = renderingProp.FindPropertyRelative("materialMode");
+                            var barAlphaProp = renderingProp.FindPropertyRelative("barAlpha");
+
+                            if (shaderPresetProp != null) AddBoundPropertyField(bar3DRenderingFoldout, shaderPresetProp);
+                            if (materialModeProp != null) AddBoundPropertyField(bar3DRenderingFoldout, materialModeProp);
+                            if (barAlphaProp != null) AddBoundPropertyField(bar3DRenderingFoldout, barAlphaProp);
+                        }
+
+                        var bar3DRenderingBox = CreateGroupBox();
+                        bar3DRenderingBox.Add(bar3DRenderingContainer);
+                        settingsRoot.Add(bar3DRenderingBox);
+
+                        // Hover foldout
+                        string bar3DHoverFoldoutKey = foldoutKey + ":settings:bar3d:hover";
+                        var (bar3DHoverContainer, bar3DHoverFoldout) = CreateSeriesFoldout("Hover", bar3DHoverFoldoutKey, true);
+
+                        var hoverProp = settingsProp.FindPropertyRelative("hover");
+                        if (hoverProp != null)
+                        {
+                            bar3DHiddenProps.Add(hoverProp.propertyPath);
+                            var enabledProp = hoverProp.FindPropertyRelative("enabled");
+                            var highlightIntensityProp = hoverProp.FindPropertyRelative("highlightIntensity");
+                            var scaleMultiplierProp = hoverProp.FindPropertyRelative("scaleMultiplier");
+
+                            if (enabledProp != null) AddBoundPropertyField(bar3DHoverFoldout, enabledProp);
+                            if (highlightIntensityProp != null) AddBoundPropertyField(bar3DHoverFoldout, highlightIntensityProp);
+                            if (scaleMultiplierProp != null) AddBoundPropertyField(bar3DHoverFoldout, scaleMultiplierProp);
+                        }
+
+                        var bar3DHoverBox = CreateGroupBox();
+                        bar3DHoverBox.Add(bar3DHoverContainer);
+                        settingsRoot.Add(bar3DHoverBox);
+                    }
+
+                    // Line3D specific foldouts
+                    var line3DHiddenProps = new HashSet<string>();
+                    if (isLine3D)
+                    {
+                        // Hide background property (always transparent by default)
+                        var backgroundProp = settingsProp.FindPropertyRelative("background");
+                        if (backgroundProp != null)
+                        {
+                            line3DHiddenProps.Add(backgroundProp.propertyPath);
+                        }
+
+                        // Stroke foldout
+                        string line3DStrokeFoldoutKey = foldoutKey + ":settings:line3d:stroke";
+                        var (line3DStrokeContainer, line3DStrokeFoldout) = CreateSeriesFoldout("Line", line3DStrokeFoldoutKey, true);
+
+                        var strokeProp = settingsProp.FindPropertyRelative("stroke");
+                        if (strokeProp != null)
+                        {
+                            line3DHiddenProps.Add(strokeProp.propertyPath);
+                            var lineTypeProp = strokeProp.FindPropertyRelative("lineType");
+                            var lineWidthProp = strokeProp.FindPropertyRelative("width");
+                            var lineColorProp = strokeProp.FindPropertyRelative("color");
+                            var textureFillProp = strokeProp.FindPropertyRelative("textureFill");
+                            var textureFXLayersProp = strokeProp.FindPropertyRelative("textureFXLayers");
+
+                            if (lineTypeProp != null) AddBoundPropertyField(line3DStrokeFoldout, lineTypeProp);
+                            if (lineWidthProp != null) AddBoundPropertyField(line3DStrokeFoldout, lineWidthProp);
+                            if (lineColorProp != null) AddBoundPropertyField(line3DStrokeFoldout, lineColorProp);
+                            if (textureFillProp != null) AddBoundPropertyField(line3DStrokeFoldout, textureFillProp);
+                            if (textureFXLayersProp != null) AddBoundPropertyField(line3DStrokeFoldout, textureFXLayersProp);
+                        }
+
+                        var line3DStrokeBox = CreateGroupBox();
+                        line3DStrokeBox.Add(line3DStrokeContainer);
+                        settingsRoot.Add(line3DStrokeBox);
+
+                        // Point foldout
+                        string line3DPointFoldoutKey = foldoutKey + ":settings:line3d:point";
+                        var (line3DPointContainer, line3DPointFoldout) = CreateSeriesFoldout("Point", line3DPointFoldoutKey, true);
+
+                        var pointProp = settingsProp.FindPropertyRelative("point");
+                        if (pointProp != null)
+                        {
+                            line3DHiddenProps.Add(pointProp.propertyPath);
+                            var showProp = pointProp.FindPropertyRelative("show");
+                            var sizeProp = pointProp.FindPropertyRelative("size");
+                            var textureProp = pointProp.FindPropertyRelative("texture");
+                            var colorProp = pointProp.FindPropertyRelative("color");
+                            var pointTextureFXLayersProp = pointProp.FindPropertyRelative("textureFXLayers");
+
+                            if (showProp != null) AddBoundPropertyField(line3DPointFoldout, showProp);
+                            if (sizeProp != null) AddBoundPropertyField(line3DPointFoldout, sizeProp);
+                            if (textureProp != null) AddBoundPropertyField(line3DPointFoldout, textureProp);
+                            if (colorProp != null) AddBoundPropertyField(line3DPointFoldout, colorProp);
+                            if (pointTextureFXLayersProp != null) AddBoundPropertyField(line3DPointFoldout, pointTextureFXLayersProp);
+                        }
+
+                        var line3DPointBox = CreateGroupBox();
+                        line3DPointBox.Add(line3DPointContainer);
+                        settingsRoot.Add(line3DPointBox);
+
+                        // Camera foldout
+                        string line3DCameraFoldoutKey = foldoutKey + ":settings:line3d:camera";
+                        var (line3DCameraContainer, line3DCameraFoldout) = CreateSeriesFoldout("Camera", line3DCameraFoldoutKey, true);
+
+                        var cameraProp = settingsProp.FindPropertyRelative("camera");
+                        if (cameraProp != null)
+                        {
+                            line3DHiddenProps.Add(cameraProp.propertyPath);
+                            var yawProp = cameraProp.FindPropertyRelative("yawDeg");
+                            var pitchProp = cameraProp.FindPropertyRelative("pitchDeg");
+                            var distanceProp = cameraProp.FindPropertyRelative("distance");
+                            var fovProp = cameraProp.FindPropertyRelative("fov");
+                            var targetProp = cameraProp.FindPropertyRelative("target");
+                            var autoRotateProp = cameraProp.FindPropertyRelative("autoRotate");
+                            var autoRotateSpeedProp = cameraProp.FindPropertyRelative("autoRotateSpeed");
+
+                            if (yawProp != null) AddBoundPropertyField(line3DCameraFoldout, yawProp);
+                            if (pitchProp != null) AddBoundPropertyField(line3DCameraFoldout, pitchProp);
+                            if (distanceProp != null) AddBoundPropertyField(line3DCameraFoldout, distanceProp);
+                            if (fovProp != null) AddBoundPropertyField(line3DCameraFoldout, fovProp);
+                            if (targetProp != null) AddBoundPropertyField(line3DCameraFoldout, targetProp);
+                            if (autoRotateProp != null) AddBoundPropertyField(line3DCameraFoldout, autoRotateProp);
+                            if (autoRotateSpeedProp != null) AddBoundPropertyField(line3DCameraFoldout, autoRotateSpeedProp);
+                        }
+
+                        var line3DCameraBox = CreateGroupBox();
+                        line3DCameraBox.Add(line3DCameraContainer);
+                        settingsRoot.Add(line3DCameraBox);
+
+                        // Hover foldout
+                        string line3DHoverFoldoutKey = foldoutKey + ":settings:line3d:hover";
+                        var (line3DHoverContainer, line3DHoverFoldout) = CreateSeriesFoldout("Hover", line3DHoverFoldoutKey, true);
+
+                        var hoverProp = settingsProp.FindPropertyRelative("hover");
+                        if (hoverProp != null)
+                        {
+                            line3DHiddenProps.Add(hoverProp.propertyPath);
+                            var enabledProp = hoverProp.FindPropertyRelative("enabled");
+                            var highlightIntensityProp = hoverProp.FindPropertyRelative("highlightIntensity");
+                            var scaleMultiplierProp = hoverProp.FindPropertyRelative("scaleMultiplier");
+
+                            if (enabledProp != null) AddBoundPropertyField(line3DHoverFoldout, enabledProp);
+                            if (highlightIntensityProp != null) AddBoundPropertyField(line3DHoverFoldout, highlightIntensityProp);
+                            if (scaleMultiplierProp != null) AddBoundPropertyField(line3DHoverFoldout, scaleMultiplierProp);
+                        }
+
+                        var line3DHoverBox = CreateGroupBox();
+                        line3DHoverBox.Add(line3DHoverContainer);
+                        settingsRoot.Add(line3DHoverBox);
+                    }
+
+                    // Scatter3D specific foldouts
+                    var scatter3DHiddenProps = new HashSet<string>();
+                    bool isScatter3D = currentTypeForFlags == SerieType.Scatter3D;
+                    if (isScatter3D)
+                    {
+                        // Hide background property
+                        var backgroundProp = settingsProp.FindPropertyRelative("background");
+                        if (backgroundProp != null) scatter3DHiddenProps.Add(backgroundProp.propertyPath);
+
+                        // Hide color and useSeriesColor - Point.textureFill has color settings
+                        var colorProp = settingsProp.FindPropertyRelative("color");
+                        var useSeriesColorProp = settingsProp.FindPropertyRelative("useSeriesColor");
+                        if (colorProp != null) scatter3DHiddenProps.Add(colorProp.propertyPath);
+                        if (useSeriesColorProp != null) scatter3DHiddenProps.Add(useSeriesColorProp.propertyPath);
+
+                        // Camera foldout
+                        string scatter3DCameraFoldoutKey = foldoutKey + ":settings:scatter3d:camera";
+                        var (scatter3DCameraContainer, scatter3DCameraFoldout) = CreateSeriesFoldout("Camera", scatter3DCameraFoldoutKey, true);
+
+                        var cameraProp = settingsProp.FindPropertyRelative("camera");
+                        if (cameraProp != null)
+                        {
+                            scatter3DHiddenProps.Add(cameraProp.propertyPath);
+                            var yawProp = cameraProp.FindPropertyRelative("yawDeg");
+                            var pitchProp = cameraProp.FindPropertyRelative("pitchDeg");
+                            var distanceProp = cameraProp.FindPropertyRelative("distance");
+                            var fovProp = cameraProp.FindPropertyRelative("fov");
+                            var targetProp = cameraProp.FindPropertyRelative("target");
+                            var autoRotateProp = cameraProp.FindPropertyRelative("autoRotate");
+                            var autoRotateSpeedProp = cameraProp.FindPropertyRelative("autoRotateSpeed");
+
+                            if (yawProp != null) AddBoundPropertyField(scatter3DCameraFoldout, yawProp);
+                            if (pitchProp != null) AddBoundPropertyField(scatter3DCameraFoldout, pitchProp);
+                            if (distanceProp != null) AddBoundPropertyField(scatter3DCameraFoldout, distanceProp);
+                            if (fovProp != null) AddBoundPropertyField(scatter3DCameraFoldout, fovProp);
+                            if (targetProp != null) AddBoundPropertyField(scatter3DCameraFoldout, targetProp);
+                            if (autoRotateProp != null) AddBoundPropertyField(scatter3DCameraFoldout, autoRotateProp);
+                            if (autoRotateSpeedProp != null) AddBoundPropertyField(scatter3DCameraFoldout, autoRotateSpeedProp);
+                        }
+
+                        var scatter3DCameraBox = CreateGroupBox();
+                        scatter3DCameraBox.Add(scatter3DCameraContainer);
+                        settingsRoot.Add(scatter3DCameraBox);
+
+                        // Point foldout
+                        string scatter3DPointFoldoutKey = foldoutKey + ":settings:scatter3d:point";
+                        var (scatter3DPointContainer, scatter3DPointFoldout) = CreateSeriesFoldout("Point", scatter3DPointFoldoutKey, true);
+
+                        var pointProp = settingsProp.FindPropertyRelative("point");
+                        if (pointProp != null)
+                        {
+                            scatter3DHiddenProps.Add(pointProp.propertyPath);
+                            var sizeProp = pointProp.FindPropertyRelative("size");
+                            var textureFillProp = pointProp.FindPropertyRelative("textureFill");
+
+                            if (sizeProp != null) AddBoundPropertyField(scatter3DPointFoldout, sizeProp);
+                            if (textureFillProp != null) AddBoundPropertyField(scatter3DPointFoldout, textureFillProp);
+                        }
+
+                        var scatter3DPointBox = CreateGroupBox();
+                        scatter3DPointBox.Add(scatter3DPointContainer);
+                        settingsRoot.Add(scatter3DPointBox);
+
+                        // Size Mapping foldout
+                        string scatter3DSizeMappingFoldoutKey = foldoutKey + ":settings:scatter3d:sizeMapping";
+                        var (scatter3DSizeMappingContainer, scatter3DSizeMappingFoldout) = CreateSeriesFoldout("Size Mapping", scatter3DSizeMappingFoldoutKey, true);
+
+                        var sizeMappingProp = settingsProp.FindPropertyRelative("sizeMapping");
+                        if (sizeMappingProp != null)
+                        {
+                            scatter3DHiddenProps.Add(sizeMappingProp.propertyPath);
+                            var enabledProp = sizeMappingProp.FindPropertyRelative("enabled");
+                            var minSizeProp = sizeMappingProp.FindPropertyRelative("minSize");
+                            var maxSizeProp = sizeMappingProp.FindPropertyRelative("maxSize");
+                            var autoRangeProp = sizeMappingProp.FindPropertyRelative("autoRange");
+                            var minValueProp = sizeMappingProp.FindPropertyRelative("minValue");
+                            var maxValueProp = sizeMappingProp.FindPropertyRelative("maxValue");
+
+                            if (enabledProp != null) AddBoundPropertyField(scatter3DSizeMappingFoldout, enabledProp);
+                            if (minSizeProp != null) AddBoundPropertyField(scatter3DSizeMappingFoldout, minSizeProp);
+                            if (maxSizeProp != null) AddBoundPropertyField(scatter3DSizeMappingFoldout, maxSizeProp);
+                            if (autoRangeProp != null) AddBoundPropertyField(scatter3DSizeMappingFoldout, autoRangeProp);
+                            if (minValueProp != null) AddBoundPropertyField(scatter3DSizeMappingFoldout, minValueProp);
+                            if (maxValueProp != null) AddBoundPropertyField(scatter3DSizeMappingFoldout, maxValueProp);
+                        }
+
+                        var scatter3DSizeMappingBox = CreateGroupBox();
+                        scatter3DSizeMappingBox.Add(scatter3DSizeMappingContainer);
+                        settingsRoot.Add(scatter3DSizeMappingBox);
+
+                        // Hover foldout
+                        string scatter3DHoverFoldoutKey = foldoutKey + ":settings:scatter3d:hover";
+                        var (scatter3DHoverContainer, scatter3DHoverFoldout) = CreateSeriesFoldout("Hover", scatter3DHoverFoldoutKey, true);
+
+                        var hoverProp = settingsProp.FindPropertyRelative("hover");
+                        if (hoverProp != null)
+                        {
+                            scatter3DHiddenProps.Add(hoverProp.propertyPath);
+                            var hoverEnabledProp = hoverProp.FindPropertyRelative("enabled");
+                            var scaleProp = hoverProp.FindPropertyRelative("scale");
+                            var hoverTextureFillProp = hoverProp.FindPropertyRelative("textureFill");
+
+                            if (hoverEnabledProp != null) AddBoundPropertyField(scatter3DHoverFoldout, hoverEnabledProp);
+                            if (scaleProp != null) AddBoundPropertyField(scatter3DHoverFoldout, scaleProp);
+                            if (hoverTextureFillProp != null) AddBoundPropertyField(scatter3DHoverFoldout, hoverTextureFillProp);
+                        }
+
+                        var scatter3DHoverBox = CreateGroupBox();
+                        scatter3DHoverBox.Add(scatter3DHoverContainer);
+                        settingsRoot.Add(scatter3DHoverBox);
+                    }
+
                     Foldout barMiscFoldout = null;
                     VisualElement barMiscContainer = null;
                     if (isBar)
                     {
                         string barMiscFoldoutKey = foldoutKey + ":settings:bar:misc";
-                        bool barMiscExpanded = true;
-                        if (_seriesFoldoutState.TryGetValue(barMiscFoldoutKey, out bool storedBarMiscExpanded)) barMiscExpanded = storedBarMiscExpanded;
-
-                        barMiscFoldout = new Foldout
-                        {
-                            text = "Bar",
-                            value = barMiscExpanded
-                        };
-                        barMiscFoldout.RegisterValueChangedCallback(evt =>
-                        {
-                            _seriesFoldoutState[barMiscFoldoutKey] = evt.newValue;
-                        });
-
-                        barMiscContainer = barMiscFoldout;
+                        (barMiscContainer, barMiscFoldout) = CreateSeriesFoldout("Bar", barMiscFoldoutKey, true);
                         var barMiscBox = CreateGroupBox();
-                        barMiscBox.Add(barMiscFoldout);
+                        barMiscBox.Add(barMiscContainer);
                         settingsRoot.Add(barMiscBox);
                     }
 
                     if (isRingChart)
                     {
                         string ringFoldoutKey = foldoutKey + ":settings:ring";
-                        bool ringExpanded = true;
-                        if (_seriesFoldoutState.TryGetValue(ringFoldoutKey, out bool storedRingExpanded)) ringExpanded = storedRingExpanded;
-
-                        var ringFoldout = new Foldout
-                        {
-                            text = "Ring",
-                            value = ringExpanded
-                        };
-                        ringFoldout.RegisterValueChangedCallback(evt =>
-                        {
-                            _seriesFoldoutState[ringFoldoutKey] = evt.newValue;
-                        });
+                        var (ringContainer, ringFoldout) = CreateSeriesFoldout("Ring", ringFoldoutKey, true);
 
                         var layoutProp = settingsProp.FindPropertyRelative("layout");
                         if (layoutProp != null)
@@ -424,7 +1115,7 @@ namespace EasyChart.Editor
                         if (ringGapPxProp != null) AddBoundPropertyField(ringFoldout, ringGapPxProp);
 
                         var ringBox = CreateGroupBox();
-                        ringBox.Add(ringFoldout);
+                        ringBox.Add(ringContainer);
                         settingsRoot.Add(ringBox);
                     }
 
@@ -432,11 +1123,48 @@ namespace EasyChart.Editor
                     var childSettingsProp = settingsProp.Copy();
                     var hiddenRootAutoRangePaths = new HashSet<string>();
 
+                    // For Line type, hide stacked and legendColorSource from root level (they are shown in Line foldout)
+                    if (isLine)
+                    {
+                        var stackedProp = settingsProp.FindPropertyRelative("stacked");
+                        if (stackedProp != null) hiddenRootAutoRangePaths.Add(stackedProp.propertyPath);
+                        var legendColorSourceProp = settingsProp.FindPropertyRelative("legendColorSource");
+                        if (legendColorSourceProp != null) hiddenRootAutoRangePaths.Add(legendColorSourceProp.propertyPath);
+                    }
+
                     // Enter children
                     if (childSettingsProp.NextVisible(true))
                     {
                         while (childSettingsProp.depth > settingsDepth)
                         {
+                            // Skip properties already shown in Pie3D foldouts
+                            if (isPie3D && pie3DHiddenProps.Contains(childSettingsProp.propertyPath))
+                            {
+                                if (!childSettingsProp.NextVisible(false)) break;
+                                continue;
+                            }
+
+                            // Skip properties already shown in Bar3D foldouts
+                            if (isBar3D && bar3DHiddenProps.Contains(childSettingsProp.propertyPath))
+                            {
+                                if (!childSettingsProp.NextVisible(false)) break;
+                                continue;
+                            }
+
+                            // Skip properties already shown in Line3D foldouts
+                            if (isLine3D && line3DHiddenProps.Contains(childSettingsProp.propertyPath))
+                            {
+                                if (!childSettingsProp.NextVisible(false)) break;
+                                continue;
+                            }
+
+                            // Skip properties already shown in Scatter3D foldouts
+                            if (isScatter3D && scatter3DHiddenProps.Contains(childSettingsProp.propertyPath))
+                            {
+                                if (!childSettingsProp.NextVisible(false)) break;
+                                continue;
+                            }
+
                             if (hiddenRootAutoRangePaths.Contains(childSettingsProp.propertyPath))
                             {
                                 if (!childSettingsProp.NextVisible(false)) break;
@@ -455,8 +1183,8 @@ namespace EasyChart.Editor
                                 continue;
                             }
 
-                            // Hide sortByValue at root level for Pie - it will be shown inside Pie (layout) foldout
-                            if (isPie && childSettingsProp.name == "sortByValue")
+                            // Hide sortByValue at root level for Pie/Pie3D - it will be shown inside layout foldout
+                            if ((isPie || isPie3D) && childSettingsProp.name == "sortByValue")
                             {
                                 if (!childSettingsProp.NextVisible(false)) break;
                                 continue;
@@ -493,8 +1221,7 @@ namespace EasyChart.Editor
                                 if (gradientProp != null) hiddenRootAutoRangePaths.Add(gradientProp.propertyPath);
                                 if (contourProp != null) hiddenRootAutoRangePaths.Add(contourProp.propertyPath);
 
-                                var renderModeField = new PropertyField(renderModeProp);
-                                renderModeField.Bind(_serializedProfile);
+                                var renderModeField = CreateSyncablePropertyField(renderModeProp);
                                 settingsRoot.Add(renderModeField);
 
                                 // Grid mode container
@@ -529,8 +1256,7 @@ namespace EasyChart.Editor
                                 if (contourProp != null) AddBoundPropertyField(contourContainer, contourProp.Copy());
                                 if (gradientProp != null)
                                 {
-                                    var gradientForContour = new PropertyField(gradientProp.Copy());
-                                    gradientForContour.Bind(_serializedProfile);
+                                    var gradientForContour = CreateSyncablePropertyField(gradientProp.Copy());
                                     contourContainer.Add(gradientForContour);
                                 }
                                 settingsRoot.Add(contourContainer);
@@ -601,8 +1327,7 @@ namespace EasyChart.Editor
                                 if (bleedProp != null) hiddenRootAutoRangePaths.Add(bleedProp.propertyPath);
                                 if (smoothProp != null) hiddenRootAutoRangePaths.Add(smoothProp.propertyPath);
 
-                                var modeField = new PropertyField(influenceModeProp);
-                                modeField.Bind(_serializedProfile);
+                                var modeField = CreateSyncablePropertyField(influenceModeProp);
                                 settingsRoot.Add(modeField);
 
                                 var bleedContainer = new VisualElement();
@@ -671,10 +1396,54 @@ namespace EasyChart.Editor
                                     if (!childSettingsProp.NextVisible(false)) break;
                                     continue;
                                 }
+
+                                // Custom handling for Scatter hover with point.textureFXLayers
+                                if (n == "hover")
+                                {
+                                    string hoverFoldoutKey = foldoutKey + ":settings:hover";
+                                    var (hoverContainer, hoverFoldout) = CreateSeriesFoldout("Hover", hoverFoldoutKey, true);
+
+                                    var hoverProp = childSettingsProp;
+                                    var hoverEnabledProp = hoverProp.FindPropertyRelative("enabled");
+                                    if (hoverEnabledProp != null) AddBoundPropertyField(hoverFoldout, hoverEnabledProp);
+
+                                    // Handle hover.point with custom TextureFXLayers UI
+                                    var hoverPointProp = hoverProp.FindPropertyRelative("point");
+                                    if (hoverPointProp != null)
+                                    {
+                                        string hoverPointFoldoutKey = foldoutKey + ":settings:hover:point";
+                                        var (hoverPointContainer, hoverPointFoldout) = CreateSeriesFoldout("Point", hoverPointFoldoutKey, true);
+
+                                        var showProp = hoverPointProp.FindPropertyRelative("show");
+                                        if (showProp != null) AddBoundPropertyField(hoverPointFoldout, showProp);
+
+                                        var sizeProp = hoverPointProp.FindPropertyRelative("size");
+                                        if (sizeProp != null) AddBoundPropertyField(hoverPointFoldout, sizeProp);
+
+                                        var textureFillProp = hoverPointProp.FindPropertyRelative("textureFill");
+                                        if (textureFillProp != null) AddBoundPropertyField(hoverPointFoldout, textureFillProp);
+
+                                        var textureFXLayersProp = hoverPointProp.FindPropertyRelative("textureFXLayers");
+                                        if (textureFXLayersProp != null) AddBoundPropertyField(hoverPointFoldout, textureFXLayersProp);
+
+                                        var hoverPointBox = CreateGroupBox();
+                                        hoverPointBox.Add(hoverPointContainer);
+                                        hoverFoldout.Add(hoverPointBox);
+                                    }
+
+                                    var hoverBox = CreateGroupBox();
+                                    hoverBox.Add(hoverContainer);
+                                    settingsRoot.Add(hoverBox);
+
+                                    if (!childSettingsProp.NextVisible(false)) break;
+                                    continue;
+                                }
                             }
 
                             if (childSettingsProp.propertyType == SerializedPropertyType.Generic &&
-                                (childSettingsProp.name == "layout" || childSettingsProp.name == "radar" || childSettingsProp.name == "point" || childSettingsProp.name == "stroke" || childSettingsProp.name == "area" || childSettingsProp.name == "border" || childSettingsProp.name == "background" || childSettingsProp.name == "sizeMapping" || childSettingsProp.name == "hover" || childSettingsProp.name == "aggregation" || childSettingsProp.name == "ring" || childSettingsProp.name == "legend" || childSettingsProp.name == "valueMapping"))
+                                (childSettingsProp.name == "layout" || childSettingsProp.name == "radar" || childSettingsProp.name == "point" || childSettingsProp.name == "stroke" || childSettingsProp.name == "area" || childSettingsProp.name == "border" || childSettingsProp.name == "background" || childSettingsProp.name == "sizeMapping" || childSettingsProp.name == "hover" || childSettingsProp.name == "aggregation" || childSettingsProp.name == "ring" || childSettingsProp.name == "legend" || childSettingsProp.name == "valueMapping" ||
+                                 childSettingsProp.name == "axis" || childSettingsProp.name == "progress" || childSettingsProp.name == "pointer" || childSettingsProp.name == "ticks" || childSettingsProp.name == "valueDisplay" ||
+                                 childSettingsProp.name == "colors" || childSettingsProp.name == "connector" || childSettingsProp.name == "runningTotal" || childSettingsProp.name == "labels"))
                             {
                                 if (isRingChart && childSettingsProp.name == "layout")
                                 {
@@ -696,26 +1465,46 @@ namespace EasyChart.Editor
                                     continue;
                                 }
 
+                                if (isGauge && childSettingsProp.name == "legend")
+                                {
+                                    // Gauge does not support legend
+                                    if (!childSettingsProp.NextVisible(false)) break;
+                                    continue;
+                                }
+
                                 string settingsFoldoutKey = foldoutKey + ":settings:" + childSettingsProp.name;
-                                bool settingsExpanded = true;
-                                if (_seriesFoldoutState.TryGetValue(settingsFoldoutKey, out bool storedSettingsExpanded)) settingsExpanded = storedSettingsExpanded;
 
-                                string settingsTitle = childSettingsProp.displayName;
-                                if (childSettingsProp.name == "layout") settingsTitle = isPie ? "Pie" : "Layout";
-                                if (childSettingsProp.name == "stroke") settingsTitle = currentTypeForFlags == SerieType.Line ? "Line" : "LineSettings";
+                                // Use property name with capitalized first letter for easier API lookup
+                                string propName = childSettingsProp.name;
+                                string settingsTitle = char.ToUpper(propName[0]) + propName.Substring(1);
 
-                                var settingsFoldout = new Foldout
+                                // For Line/Radar type, rename "Stroke" to "Line"
+                                if ((isLine || isRadar) && propName == "stroke")
                                 {
-                                    text = settingsTitle,
-                                    value = settingsExpanded
-                                };
-                                settingsFoldout.RegisterValueChangedCallback(evt =>
-                                {
-                                    _seriesFoldoutState[settingsFoldoutKey] = evt.newValue;
-                                });
+                                    settingsTitle = "Line";
+                                }
 
-                                // For Pie layout foldout, add sortByValue at the top
-                                if (isPie && childSettingsProp.name == "layout")
+                                var (settingsContainer, settingsFoldout) = CreateSeriesFoldout(settingsTitle, settingsFoldoutKey, true);
+
+                                // For Line type stroke foldout, add lineType first, then stacked
+                                if (isLine && propName == "stroke")
+                                {
+                                    // Add lineType first
+                                    var lineTypeProp = childSettingsProp.FindPropertyRelative("lineType");
+                                    if (lineTypeProp != null)
+                                    {
+                                        AddBoundPropertyField(settingsFoldout, lineTypeProp.Copy());
+                                    }
+                                    // Then add stacked
+                                    var stackedProp = settingsProp.FindPropertyRelative("stacked");
+                                    if (stackedProp != null)
+                                    {
+                                        AddBoundPropertyField(settingsFoldout, stackedProp.Copy());
+                                    }
+                                }
+
+                                // For Pie/Pie3D layout foldout, add sortByValue at the top
+                                if ((isPie || isPie3D) && childSettingsProp.name == "layout")
                                 {
                                     var sortByValueProp = settingsProp.FindPropertyRelative("sortByValue");
                                     if (sortByValueProp != null)
@@ -743,6 +1532,20 @@ namespace EasyChart.Editor
                                             continue;
                                         }
 
+                                        // For Line type, skip lineType (already added at top)
+                                        if (isLine && propName == "stroke" && subProp.name == "lineType")
+                                        {
+                                            if (!subProp.NextVisible(false)) break;
+                                            continue;
+                                        }
+
+                                        // For Radar type, stroke texture/FX are not supported — hide them
+                                        if (isRadar && propName == "stroke" && (subProp.name == "textureFill" || subProp.name == "textureFXLayers"))
+                                        {
+                                            if (!subProp.NextVisible(false)) break;
+                                            continue;
+                                        }
+
                                         if (subProp.propertyType == SerializedPropertyType.Boolean && subProp.name == "autoRange")
                                         {
                                             var minProp = subProp.serializedObject.FindProperty(subProp.propertyPath.Replace(".autoRange", ".minValue"));
@@ -764,42 +1567,63 @@ namespace EasyChart.Editor
                                             }
                                         }
 
-                                        var subField = new PropertyField(subProp.Copy());
-                                        subField.Bind(_serializedProfile);
-                                        subField.RegisterCallback<SerializedPropertyChangeEvent>(evt =>
+                                        // Handle GaugeProgressSettings.overrideWidth - show width only when overrideWidth is true
+                                        if (subProp.propertyType == SerializedPropertyType.Boolean && subProp.name == "overrideWidth")
                                         {
-                                            if (_serializedProfile == null) return;
-                                            if (subField.panel == null) return;
-                                            // Avoid capturing loop variables like `subProp` (may be advanced/disposed after the loop).
-                                            // Only rely on the window's current SerializedObject.
-                                            if (_serializedProfile.targetObject != null) ScheduleUpdatePreview();
-                                        });
-                                        settingsFoldout.Add(subField);
+                                            var widthProp = subProp.serializedObject.FindProperty(subProp.propertyPath.Replace(".overrideWidth", ".width"));
+
+                                            if (widthProp != null)
+                                            {
+                                                hiddenAutoRangePaths.Add(widthProp.propertyPath);
+
+                                                var widthContainer = new VisualElement();
+                                                widthContainer.style.marginLeft = 8;
+                                                AddToggleContainer(settingsFoldout, subProp.Copy(), widthContainer, true);
+                                                AddBoundPropertyField(widthContainer, widthProp.Copy());
+
+                                                if (!subProp.NextVisible(false)) break;
+                                                continue;
+                                            }
+                                        }
+
+                                        var subField = CreatePropertyElement(subProp.Copy());
+                                        if (subField != null) settingsFoldout.Add(subField);
 
                                         if (!subProp.NextVisible(false)) break;
                                     }
                                 }
 
+                                // For Line type stroke foldout, add legendColorSource at the end
+                                if (isLine && propName == "stroke")
+                                {
+                                    var legendColorSourceProp = settingsProp.FindPropertyRelative("legendColorSource");
+                                    if (legendColorSourceProp != null)
+                                    {
+                                        AddBoundPropertyField(settingsFoldout, legendColorSourceProp.Copy());
+                                    }
+                                }
+
                                 var settingsBox = CreateGroupBox();
-                                settingsBox.Add(settingsFoldout);
+                                settingsBox.Add(settingsContainer);
                                 settingsRoot.Add(settingsBox);
 
                                 if (!childSettingsProp.NextVisible(false)) break;
                                 continue;
                             }
 
-                            var pf = new PropertyField(childSettingsProp.Copy());
-                            pf.Bind(_serializedProfile);
-                            pf.RegisterCallback<SerializedPropertyChangeEvent>(evt =>
+                            // Skip Funnel label-related properties (they are shown in Label Settings)
+                            if (isFunnel && (childSettingsProp.name == "showPercentage" || childSettingsProp.name == "showValue" || childSettingsProp.name == "labelPosition"))
                             {
-                                if (_serializedProfile == null) return;
-                                if (pf.panel == null) return;
-                                // Avoid capturing loop variables like `childSettingsProp` (may be advanced/disposed after the loop).
-                                // Only rely on the window's current SerializedObject.
-                                if (_serializedProfile.targetObject != null) ScheduleUpdatePreview();
-                            });
-                            if (isBar && barMiscContainer != null) barMiscContainer.Add(pf);
-                            else settingsRoot.Add(pf);
+                                if (!childSettingsProp.NextVisible(false)) break;
+                                continue;
+                            }
+
+                            var pf = CreatePropertyElement(childSettingsProp.Copy());
+                            if (pf != null)
+                            {
+                                if (isBar && barMiscContainer != null) barMiscContainer.Add(pf);
+                                else settingsRoot.Add(pf);
+                            }
 
                             if (!childSettingsProp.NextVisible(false)) break;
                         }
@@ -811,18 +1635,8 @@ namespace EasyChart.Editor
                 if (labelProp != null && !isRingChart)
                 {
                     string labelFoldoutKey = foldoutKey + ":label";
-                    bool labelExpanded = true;
-                    if (_seriesFoldoutState.TryGetValue(labelFoldoutKey, out bool storedLabelExpanded)) labelExpanded = storedLabelExpanded;
 
-                    var labelFoldout = new Foldout
-                    {
-                        text = "Label Settings",
-                        value = labelExpanded
-                    };
-                    labelFoldout.RegisterValueChangedCallback(evt =>
-                    {
-                        _seriesFoldoutState[labelFoldoutKey] = evt.newValue;
-                    });
+                    var (labelContainer, labelFoldout) = CreateSeriesFoldout("Label Settings", labelFoldoutKey, true);
 
                     var labelDepth = labelProp.depth;
                     var childLabelProp = labelProp.Copy();
@@ -831,24 +1645,78 @@ namespace EasyChart.Editor
                     {
                         while (childLabelProp.depth > labelDepth)
                         {
-                            var pf = new PropertyField(childLabelProp.Copy());
-                            pf.Bind(_serializedProfile);
-                            pf.RegisterCallback<SerializedPropertyChangeEvent>(evt =>
+                            // For Gauge, hide offset field (use ticks.labelOffset instead)
+                            if (isGauge && childLabelProp.name == "offset")
                             {
-                                if (_serializedProfile == null) return;
-                                if (pf.panel == null) return;
-                                ScheduleUpdatePreview();
-                            });
-                            labelFoldout.Add(pf);
+                                // Skip - Gauge uses ticks.labelOffset for label positioning
+                            }
+                            else
+                            {
+                                var pf = CreateSyncablePropertyField(childLabelProp.Copy());
+                                labelFoldout.Add(pf);
+                            }
 
                             if (!childLabelProp.NextVisible(false)) break;
                         }
                     }
 
+                    // Add Funnel-specific label properties to the label foldout
+                    if (isFunnel && settingsProp != null)
+                    {
+                        var showPercentageProp = settingsProp.FindPropertyRelative("showPercentage");
+                        var showValueProp = settingsProp.FindPropertyRelative("showValue");
+                        var labelPositionProp = settingsProp.FindPropertyRelative("labelPosition");
+
+                        if (showPercentageProp != null)
+                        {
+                            var pf = CreateSyncablePropertyField(showPercentageProp);
+                            labelFoldout.Add(pf);
+                        }
+                        if (showValueProp != null)
+                        {
+                            var pf = CreateSyncablePropertyField(showValueProp);
+                            labelFoldout.Add(pf);
+                        }
+                        if (labelPositionProp != null)
+                        {
+                            var pf = CreateSyncablePropertyField(labelPositionProp);
+                            labelFoldout.Add(pf);
+                        }
+                    }
+
                     var labelBox = CreateGroupBox();
-                    labelBox.Add(labelFoldout);
+                    labelBox.Add(labelContainer);
                     if (settingsRoot != null) settingsRoot.Add(labelBox);
                     else body.Add(labelBox);
+                }
+
+                // Legend Override Settings (Hidden for Pie/Funnel/RingChart/Gauge - they use PieLegendSettings instead)
+                bool hasPieLegend = isPie || isPie3D || isFunnel || isRingChart || isGauge;
+                var legendOverrideProp = elementProp.FindPropertyRelative("legendOverride");
+                if (legendOverrideProp != null && !hasPieLegend)
+                {
+                    string legendOverrideFoldoutKey = foldoutKey + ":legendOverride";
+
+                    var (legendOverrideContainer, legendOverrideFoldout) = CreateSeriesFoldout("Legend Override", legendOverrideFoldoutKey, false);
+
+                    var legendOverrideDepth = legendOverrideProp.depth;
+                    var childLegendOverrideProp = legendOverrideProp.Copy();
+
+                    if (childLegendOverrideProp.NextVisible(true))
+                    {
+                        while (childLegendOverrideProp.depth > legendOverrideDepth)
+                        {
+                            var pf = CreateSyncablePropertyField(childLegendOverrideProp.Copy());
+                            legendOverrideFoldout.Add(pf);
+
+                            if (!childLegendOverrideProp.NextVisible(false)) break;
+                        }
+                    }
+
+                    var legendOverrideBox = CreateGroupBox();
+                    legendOverrideBox.Add(legendOverrideContainer);
+                    if (settingsRoot != null) settingsRoot.Add(legendOverrideBox);
+                    else body.Add(legendOverrideBox);
                 }
 
                 // Actual Data
@@ -931,6 +1799,15 @@ namespace EasyChart.Editor
                             case SerieType.Pie3D:
                                 settingsAlreadyMatch = false;
                                 break;
+                            case SerieType.Gauge:
+                                settingsAlreadyMatch = false;
+                                break;
+                            case SerieType.Funnel:
+                                settingsAlreadyMatch = false;
+                                break;
+                            case SerieType.Waterfall:
+                                settingsAlreadyMatch = false;
+                                break;
                         }
                     }
 
@@ -1011,37 +1888,7 @@ namespace EasyChart.Editor
                 footer.style.marginTop = 5;
                 footer.style.alignItems = Align.Center;
 
-                var upBtn = new Button(() => {
-                    _seriesProperty.MoveArrayElement(index, index - 1);
-                    _serializedProfile.ApplyModifiedProperties();
-                    ScheduleRefreshSeriesList();
-                    ScheduleUpdatePreview();
-                }) { text = "↑" };
-                upBtn.style.width = 25;
-                upBtn.style.marginRight = 2;
-                upBtn.SetEnabled(index > 0);
-                footer.Add(upBtn);
-
-                var downBtn = new Button(() => {
-                    _seriesProperty.MoveArrayElement(index, index + 1);
-                    _serializedProfile.ApplyModifiedProperties();
-                    ScheduleRefreshSeriesList();
-                    ScheduleUpdatePreview();
-                }) { text = "↓" };
-                downBtn.style.width = 25;
-                downBtn.style.marginRight = 2;
-                downBtn.SetEnabled(index < _seriesProperty.arraySize - 1);
-                footer.Add(downBtn);
-
-                var removeBtn = new Button(() => {
-                    _seriesProperty.DeleteArrayElementAtIndex(index);
-                    _serializedProfile.ApplyModifiedProperties();
-                    ScheduleRefreshSeriesList();
-                    ScheduleUpdatePreview();
-                }) { text = "X" };
-                removeBtn.style.width = 25;
-                footer.Add(removeBtn);
-
+                // Up/Down/Remove buttons moved to header above
                 container.Add(footer);
 
                 _seriesContainer.Add(container);
@@ -1078,6 +1925,14 @@ namespace EasyChart.Editor
                 if (nameProp != null)
                 {
                     nameProp.stringValue = $"Serie {newIndex + 1}";
+                }
+                
+                // Generate a new unique id immediately
+                // This is important because InsertArrayElementAtIndex duplicates the last element including its id
+                var idProp = newElement.FindPropertyRelative("id");
+                if (idProp != null)
+                {
+                    idProp.stringValue = System.Guid.NewGuid().ToString("N");
                 }
 
                 var visibleProp = newElement.FindPropertyRelative("visible");
@@ -1134,6 +1989,217 @@ namespace EasyChart.Editor
             addBtn.style.marginTop = 10;
             addBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
             _seriesContainer.Add(addBtn);
+            
+            // Reset current series index after building all series UI
+            _currentSeriesIndex = -1;
+        }
+
+        private const double SeriesUIRebuildCooldown = 0.5;
+
+        private void SyncSeriesProperty(int sourceIndex, string propertyPath)
+        {
+            if (_isSyncingSeriesProperties) return;
+            if (_serializedProfile == null) return;
+            if (_seriesProperty == null) return;
+            if (!_seriesSyncEnabled) return;
+            // Ignore bind-initialization events that fire in the frames after a UI rebuild
+            if (_seriesUIRebuildEndTime >= 0 &&
+                EditorApplication.timeSinceStartup - _seriesUIRebuildEndTime < SeriesUIRebuildCooldown)
+                return;
+            if (sourceIndex < 0 || sourceIndex >= _seriesProperty.arraySize) return;
+
+            // Get source series type
+            var sourceElement = _seriesProperty.GetArrayElementAtIndex(sourceIndex);
+            var sourceTypeProp = sourceElement.FindPropertyRelative("type");
+            if (sourceTypeProp == null) return;
+            SerieType sourceType = (SerieType)sourceTypeProp.intValue;
+
+            // Get the relative property path (remove the array element prefix)
+            // propertyPath format: "series.Array.data[0].propertyName"
+            string relativePath = ExtractRelativePropertyPath(propertyPath, sourceIndex);
+            if (string.IsNullOrEmpty(relativePath)) return;
+
+            // Skip syncing name, id, type, and data properties
+            if (relativePath == "name" || relativePath == "id" || relativePath == "type" || 
+                relativePath.StartsWith("data.") || relativePath.StartsWith("data[")) return;
+
+            var sourceProp = sourceElement.FindPropertyRelative(relativePath);
+            if (sourceProp == null) return;
+
+            _isSyncingSeriesProperties = true;
+            try
+            {
+                // Sync to all series of the same type
+                for (int i = 0; i < _seriesProperty.arraySize; i++)
+                {
+                    if (i == sourceIndex) continue;
+
+                    var targetElement = _seriesProperty.GetArrayElementAtIndex(i);
+                    var targetTypeProp = targetElement.FindPropertyRelative("type");
+                    if (targetTypeProp == null) continue;
+
+                    SerieType targetType = (SerieType)targetTypeProp.intValue;
+                    if (targetType != sourceType) continue;
+
+                    var targetProp = targetElement.FindPropertyRelative(relativePath);
+                    if (targetProp == null) continue;
+
+                    CopySerializedPropertyValue(sourceProp, targetProp);
+                }
+
+                _serializedProfile.ApplyModifiedProperties();
+            }
+            finally
+            {
+                _isSyncingSeriesProperties = false;
+            }
+        }
+
+        private string ExtractRelativePropertyPath(string fullPath, int arrayIndex)
+        {
+            // fullPath format: "series.Array.data[0].propertyName" or "series.Array.data[0].nested.property"
+            string prefix = $"series.Array.data[{arrayIndex}].";
+            if (fullPath.StartsWith(prefix))
+            {
+                return fullPath.Substring(prefix.Length);
+            }
+            return null;
+        }
+
+        private void CopySerializedPropertyValue(SerializedProperty source, SerializedProperty target)
+        {
+            if (source.propertyType != target.propertyType) return;
+
+            // Handle arrays specially - always deep copy arrays
+            if (source.isArray && target.isArray)
+            {
+                CopySerializedArray(source, target);
+                return;
+            }
+
+            switch (source.propertyType)
+            {
+                case SerializedPropertyType.Integer:
+                    target.intValue = source.intValue;
+                    break;
+                case SerializedPropertyType.Boolean:
+                    target.boolValue = source.boolValue;
+                    break;
+                case SerializedPropertyType.Float:
+                    target.floatValue = source.floatValue;
+                    break;
+                case SerializedPropertyType.String:
+                    target.stringValue = source.stringValue;
+                    break;
+                case SerializedPropertyType.Color:
+                    target.colorValue = source.colorValue;
+                    break;
+                case SerializedPropertyType.ObjectReference:
+                    target.objectReferenceValue = source.objectReferenceValue;
+                    break;
+                case SerializedPropertyType.Enum:
+                    target.enumValueIndex = source.enumValueIndex;
+                    break;
+                case SerializedPropertyType.Vector2:
+                    target.vector2Value = source.vector2Value;
+                    break;
+                case SerializedPropertyType.Vector3:
+                    target.vector3Value = source.vector3Value;
+                    break;
+                case SerializedPropertyType.Vector4:
+                    target.vector4Value = source.vector4Value;
+                    break;
+                case SerializedPropertyType.Rect:
+                    target.rectValue = source.rectValue;
+                    break;
+                case SerializedPropertyType.AnimationCurve:
+                    target.animationCurveValue = source.animationCurveValue;
+                    break;
+                case SerializedPropertyType.Bounds:
+                    target.boundsValue = source.boundsValue;
+                    break;
+                case SerializedPropertyType.Gradient:
+                    // Gradient requires special handling - copy color keys and alpha keys
+                    var sourceGradient = source.gradientValue;
+                    if (sourceGradient != null)
+                    {
+                        var newGradient = new Gradient();
+                        newGradient.SetKeys(sourceGradient.colorKeys, sourceGradient.alphaKeys);
+                        newGradient.mode = sourceGradient.mode;
+                        target.gradientValue = newGradient;
+                    }
+                    break;
+                case SerializedPropertyType.Quaternion:
+                    target.quaternionValue = source.quaternionValue;
+                    break;
+                case SerializedPropertyType.Vector2Int:
+                    target.vector2IntValue = source.vector2IntValue;
+                    break;
+                case SerializedPropertyType.Vector3Int:
+                    target.vector3IntValue = source.vector3IntValue;
+                    break;
+                case SerializedPropertyType.RectInt:
+                    target.rectIntValue = source.rectIntValue;
+                    break;
+                case SerializedPropertyType.BoundsInt:
+                    target.boundsIntValue = source.boundsIntValue;
+                    break;
+                case SerializedPropertyType.Generic:
+                    // For generic types (like custom classes), do NOT copy recursively
+                    // This prevents unintended side effects like copying Color when only Texture was changed
+                    // Individual child properties will be synced when they are modified directly
+                    // Exception: arrays are handled separately above
+                    break;
+            }
+        }
+
+        private void CopySerializedArray(SerializedProperty source, SerializedProperty target)
+        {
+            target.arraySize = source.arraySize;
+            for (int i = 0; i < source.arraySize; i++)
+            {
+                var sourceElement = source.GetArrayElementAtIndex(i);
+                var targetElement = target.GetArrayElementAtIndex(i);
+                // For array elements, use deep copy to copy entire objects
+                CopySerializedPropertyDeep(sourceElement, targetElement);
+            }
+        }
+
+        private void CopySerializedPropertyDeep(SerializedProperty source, SerializedProperty target)
+        {
+            if (source.propertyType != target.propertyType) return;
+
+            // Handle arrays
+            if (source.isArray && target.isArray)
+            {
+                CopySerializedArray(source, target);
+                return;
+            }
+
+            // For Generic types, recursively copy all child properties
+            if (source.propertyType == SerializedPropertyType.Generic)
+            {
+                var sourceChild = source.Copy();
+                var targetChild = target.Copy();
+                
+                var sourceEnd = source.GetEndProperty();
+                var targetEnd = target.GetEndProperty();
+                
+                if (sourceChild.NextVisible(true) && targetChild.NextVisible(true))
+                {
+                    do
+                    {
+                        if (SerializedProperty.EqualContents(sourceChild, sourceEnd)) break;
+                        if (SerializedProperty.EqualContents(targetChild, targetEnd)) break;
+                        
+                        CopySerializedPropertyDeep(sourceChild, targetChild);
+                    } while (sourceChild.NextVisible(false) && targetChild.NextVisible(false));
+                }
+                return;
+            }
+
+            // For primitive types, use the regular copy
+            CopySerializedPropertyValue(source, target);
         }
     }
 }

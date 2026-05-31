@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b5250a850d829b642b5d2868c1396d11
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/UGUI/Prefabs/EasyChart Demo/Candlestick/Candlestick
+    1.prefab
+  uploadId: 906968

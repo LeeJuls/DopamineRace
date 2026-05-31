@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 0b8b074eb98de5a4ba4698b37e0f1228
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 12388, guid: 0000000000000000e000000000000000, type: 0}
+  disableValidation: 0
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/Demo/UIToolKit/UnityDefaultRuntimeTheme.tss
+  uploadId: 906968

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 93a7d5a2af47f5b4d802d95a3654bd24
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/docs/Manual/easy-chart/zh/02_04-PreviewPanel.md
+  uploadId: 906968

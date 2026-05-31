@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 63909814ab04fac4d915a1a3e893a6d5
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/LibraryUxml/EasyChart Demo/Scater3D/Scatter3D 3.chartprofile.json
+  uploadId: 906968

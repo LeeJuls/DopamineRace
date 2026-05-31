@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: be4ad9133c4030d459c31ec1e5e2df3b
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/UGUI/Prefabs/EasyChart Demo/Pie/PieDemo 1.prefab
+  uploadId: 906968

@@ -18,6 +18,10 @@ MonoBehaviour:
   cartesian:
     xAxisId: 0
     yAxisId: 2
+  cartesian3D:
+    xAxisId: 0
+    yAxisId: 2
+    zAxisId: 4
   axes:
   - id: 0
     axisType: 1
@@ -31,6 +35,7 @@ MonoBehaviour:
       color: {r: 1, g: 1, b: 1, a: 1}
       position: 0
       offset: {x: 0, y: 0}
+      rotation: 0
     showLabels: 1
     fontSize: 10
     labelColor: {r: 1, g: 1, b: 1, a: 1}
@@ -58,6 +63,7 @@ MonoBehaviour:
       color: {r: 1, g: 1, b: 1, a: 1}
       position: 0
       offset: {x: 0, y: 0}
+      rotation: 0
   - id: 2
     axisType: 1
     labels: []
@@ -70,6 +76,7 @@ MonoBehaviour:
       color: {r: 1, g: 1, b: 1, a: 1}
       position: 0
       offset: {x: 0, y: 0}
+      rotation: 0
     showLabels: 1
     fontSize: 10
     labelColor: {r: 1, g: 1, b: 1, a: 1}
@@ -97,6 +104,7 @@ MonoBehaviour:
       color: {r: 1, g: 1, b: 1, a: 1}
       position: 0
       offset: {x: 0, y: 0}
+      rotation: 0
   xAxisId: 0
   yAxisId: 2
   axisSelectionInitialized: 1
@@ -109,49 +117,15 @@ MonoBehaviour:
       tiling: {x: 1, y: 1}
       offset: {x: 0, y: 0}
       color: {r: 1, g: 1, b: 1, a: 1}
-      animationType: 1
-      uvMoveSpeed: {x: 0, y: 0}
-      scaleType: 2
-      scaleSpeed: 1
-      scaleFrom: {x: 1, y: 1}
-      scaleTo: {x: 1.2, y: 1.2}
-      colorFadeStart: {r: 1, g: 1, b: 1, a: 1}
-      colorFadeEnd: {r: 1, g: 1, b: 1, a: 0}
-      colorFadeSpeed: 1
-      colorFadeWrap: 1
-      colorFadeGradient:
-        serializedVersion: 2
-        key0: {r: 1, g: 1, b: 1, a: 1}
-        key1: {r: 1, g: 1, b: 1, a: 0}
-        key2: {r: 0, g: 0, b: 0, a: 0}
-        key3: {r: 0, g: 0, b: 0, a: 0}
-        key4: {r: 0, g: 0, b: 0, a: 0}
-        key5: {r: 0, g: 0, b: 0, a: 0}
-        key6: {r: 0, g: 0, b: 0, a: 0}
-        key7: {r: 0, g: 0, b: 0, a: 0}
-        ctime0: 0
-        ctime1: 65535
-        ctime2: 0
-        ctime3: 0
-        ctime4: 0
-        ctime5: 0
-        ctime6: 0
-        ctime7: 0
-        atime0: 0
-        atime1: 65535
-        atime2: 0
-        atime3: 0
-        atime4: 0
-        atime5: 0
-        atime6: 0
-        atime7: 0
-        m_Mode: 0
-        m_ColorSpace: -1
-        m_NumColorKeys: 2
-        m_NumAlphaKeys: 2
+      adaptiveTiling: 0
+  backgroundFX:
+    enabled: 0
+    padding: {x: 0, y: 0, z: 0, w: 0}
+    backgroundColor: {r: 0, g: 0, b: 0, a: 0}
+    layers: []
   chartWidth: 450
   chartHeight: 300
-  padding: {x: 50, y: 30, z: 50, w: 50}
+  padding: {x: 50, y: 50, z: 30, w: 50}
   paddingInitialized: 1
   xGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.2}
   xGridLineWidth: 1
@@ -170,6 +144,23 @@ MonoBehaviour:
     yGridDashLength: 4
     yGridDashGap: 2
     yGridDashOffset: 0
+  cartesian3DGrid:
+    show: 1
+    gridColor: {r: 0.4, g: 0.4, b: 0.4, a: 0.5}
+    gridLineWidth: 1
+    showXYPlane: 1
+    showXZPlane: 1
+    showYZPlane: 1
+    useAxisColors: 0
+    xGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.3}
+    yGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.3}
+    zGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.3}
+    gridWidth: 4
+    gridHeight: 2
+    gridDepth: 2
+    showLabels: 1
+    labelColor: {r: 1, g: 1, b: 1, a: 1}
+    labelFontSize: 12
   hover:
     cursorLineDashed: 0
     cursorLineWidth: 1
@@ -195,6 +186,7 @@ MonoBehaviour:
         color: {r: 1, g: 1, b: 1, a: 1}
         position: 0
         offset: {x: 0, y: 0}
+        rotation: 0
       showLabels: 1
       fontSize: 10
       labelColor: {r: 1, g: 1, b: 1, a: 1}
@@ -221,6 +213,7 @@ MonoBehaviour:
         color: {r: 1, g: 1, b: 1, a: 1}
         position: 0
         offset: {x: 0, y: 0}
+        rotation: 0
       showLabels: 1
       fontSize: 10
       labelColor: {r: 1, g: 1, b: 1, a: 1}
@@ -236,6 +229,7 @@ MonoBehaviour:
       splitCount: 5
       labelFormat: 
   gridSettingsInitialized: 1
+  grid3DSettingsInitialized: 0
   hoverSettingsInitialized: 1
   legendSettings:
     enabled: 1
@@ -245,6 +239,9 @@ MonoBehaviour:
     backgroundColor: {r: 0, g: 0, b: 0, a: 0}
     itemSpacing: 10
     offset: {x: 0, y: 30}
+    icon: {fileID: 0}
+    iconSize: {x: 10, y: 10}
+    iconRadius: 2
   plotSettings:
     overrideTheme: 0
     backgroundColor: {r: 0, g: 0, b: 0, a: 0}
@@ -253,7 +250,7 @@ MonoBehaviour:
     labelEdgeFadePx: 20
   series:
   - name: Series 1
-    id: 99b5edc44cc54b43b2f4c04142accd43
+    id: 756730e27789450c8f7a7b226583d507
     type: 4
     visible: 1
     settings:
@@ -285,52 +282,22 @@ MonoBehaviour:
         tiling: {x: 1, y: 1}
         offset: {x: 0, y: 0}
         color: {r: 0, g: 0, b: 0, a: 0}
-        animationType: 0
-        uvMoveSpeed: {x: 0, y: 0}
-        scaleType: 2
-        scaleSpeed: 1
-        scaleFrom: {x: 1, y: 1}
-        scaleTo: {x: 1.2, y: 1.2}
-        colorFadeStart: {r: 1, g: 1, b: 1, a: 1}
-        colorFadeEnd: {r: 1, g: 1, b: 1, a: 0}
-        colorFadeSpeed: 1
-        colorFadeWrap: 1
-        colorFadeGradient:
-          serializedVersion: 2
-          key0: {r: 1, g: 1, b: 1, a: 1}
-          key1: {r: 1, g: 1, b: 1, a: 1}
-          key2: {r: 0, g: 0, b: 0, a: 0}
-          key3: {r: 0, g: 0, b: 0, a: 0}
-          key4: {r: 0, g: 0, b: 0, a: 0}
-          key5: {r: 0, g: 0, b: 0, a: 0}
-          key6: {r: 0, g: 0, b: 0, a: 0}
-          key7: {r: 0, g: 0, b: 0, a: 0}
-          ctime0: 0
-          ctime1: 65535
-          ctime2: 0
-          ctime3: 0
-          ctime4: 0
-          ctime5: 0
-          ctime6: 0
-          ctime7: 0
-          atime0: 0
-          atime1: 65535
-          atime2: 0
-          atime3: 0
-          atime4: 0
-          atime5: 0
-          atime6: 0
-          atime7: 0
-          m_Mode: 0
-          m_ColorSpace: -1
-          m_NumColorKeys: 2
-          m_NumAlphaKeys: 2
+        adaptiveTiling: 0
+    legendOverride:
+      enabled: 0
+      icon: {fileID: 0}
+      iconSize: {x: -1, y: -1}
+      iconRadius: -1
+      useColor: 0
+      color: {r: 1, g: 1, b: 1, a: 1}
     seriesData:
     - id: 894e326fbbf14fe8b829161f9beeda40
       x: 16.43
       value: 10
       y: 10.59
       z: 25
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -339,6 +306,8 @@ MonoBehaviour:
       value: 20
       y: 15.89
       z: 50
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -347,6 +316,8 @@ MonoBehaviour:
       value: 15
       y: 4.54
       z: 40
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -355,6 +326,8 @@ MonoBehaviour:
       value: 30
       y: 3.39
       z: 30
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -363,6 +336,8 @@ MonoBehaviour:
       value: 25
       y: 29.22
       z: 30
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -371,11 +346,13 @@ MonoBehaviour:
       value: 30
       y: 40
       z: 50
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
   - name: Serie 2
-    id: 99b5edc44cc54b43b2f4c04142accd43
+    id: 07e46c090ba641a6ba46295a19532bbd
     type: 4
     visible: 1
     settings:
@@ -407,52 +384,22 @@ MonoBehaviour:
         tiling: {x: 1, y: 1}
         offset: {x: 0, y: 0}
         color: {r: 0, g: 0, b: 0, a: 0}
-        animationType: 0
-        uvMoveSpeed: {x: 0, y: 0}
-        scaleType: 2
-        scaleSpeed: 1
-        scaleFrom: {x: 1, y: 1}
-        scaleTo: {x: 1.2, y: 1.2}
-        colorFadeStart: {r: 1, g: 1, b: 1, a: 1}
-        colorFadeEnd: {r: 1, g: 1, b: 1, a: 0}
-        colorFadeSpeed: 1
-        colorFadeWrap: 1
-        colorFadeGradient:
-          serializedVersion: 2
-          key0: {r: 1, g: 1, b: 1, a: 1}
-          key1: {r: 1, g: 1, b: 1, a: 1}
-          key2: {r: 0, g: 0, b: 0, a: 0}
-          key3: {r: 0, g: 0, b: 0, a: 0}
-          key4: {r: 0, g: 0, b: 0, a: 0}
-          key5: {r: 0, g: 0, b: 0, a: 0}
-          key6: {r: 0, g: 0, b: 0, a: 0}
-          key7: {r: 0, g: 0, b: 0, a: 0}
-          ctime0: 0
-          ctime1: 65535
-          ctime2: 0
-          ctime3: 0
-          ctime4: 0
-          ctime5: 0
-          ctime6: 0
-          ctime7: 0
-          atime0: 0
-          atime1: 65535
-          atime2: 0
-          atime3: 0
-          atime4: 0
-          atime5: 0
-          atime6: 0
-          atime7: 0
-          m_Mode: 0
-          m_ColorSpace: -1
-          m_NumColorKeys: 2
-          m_NumAlphaKeys: 2
+        adaptiveTiling: 0
+    legendOverride:
+      enabled: 0
+      icon: {fileID: 0}
+      iconSize: {x: -1, y: -1}
+      iconRadius: -1
+      useColor: 0
+      color: {r: 1, g: 1, b: 1, a: 1}
     seriesData:
     - id: 894e326fbbf14fe8b829161f9beeda40
       x: 6.37
       value: 10
       y: 8
       z: 5.53
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -461,6 +408,8 @@ MonoBehaviour:
       value: 20
       y: 4.44
       z: 3.08
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -469,6 +418,8 @@ MonoBehaviour:
       value: 15
       y: 20
       z: 3.26
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -477,6 +428,8 @@ MonoBehaviour:
       value: 30
       y: 30
       z: 7.43
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -485,6 +438,8 @@ MonoBehaviour:
       value: 25
       y: 40
       z: 4.29
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -493,11 +448,13 @@ MonoBehaviour:
       value: 30
       y: 10
       z: 9.18
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
   - name: Serie 3
-    id: 99b5edc44cc54b43b2f4c04142accd43
+    id: adfac6cdce92446e9a5c254acaea3386
     type: 4
     visible: 1
     settings:
@@ -529,52 +486,22 @@ MonoBehaviour:
         tiling: {x: 1, y: 1}
         offset: {x: 0, y: 0}
         color: {r: 0, g: 0, b: 0, a: 0}
-        animationType: 0
-        uvMoveSpeed: {x: 0, y: 0}
-        scaleType: 2
-        scaleSpeed: 1
-        scaleFrom: {x: 1, y: 1}
-        scaleTo: {x: 1.2, y: 1.2}
-        colorFadeStart: {r: 1, g: 1, b: 1, a: 1}
-        colorFadeEnd: {r: 1, g: 1, b: 1, a: 0}
-        colorFadeSpeed: 1
-        colorFadeWrap: 1
-        colorFadeGradient:
-          serializedVersion: 2
-          key0: {r: 1, g: 1, b: 1, a: 1}
-          key1: {r: 1, g: 1, b: 1, a: 1}
-          key2: {r: 0, g: 0, b: 0, a: 0}
-          key3: {r: 0, g: 0, b: 0, a: 0}
-          key4: {r: 0, g: 0, b: 0, a: 0}
-          key5: {r: 0, g: 0, b: 0, a: 0}
-          key6: {r: 0, g: 0, b: 0, a: 0}
-          key7: {r: 0, g: 0, b: 0, a: 0}
-          ctime0: 0
-          ctime1: 65535
-          ctime2: 0
-          ctime3: 0
-          ctime4: 0
-          ctime5: 0
-          ctime6: 0
-          ctime7: 0
-          atime0: 0
-          atime1: 65535
-          atime2: 0
-          atime3: 0
-          atime4: 0
-          atime5: 0
-          atime6: 0
-          atime7: 0
-          m_Mode: 0
-          m_ColorSpace: -1
-          m_NumColorKeys: 2
-          m_NumAlphaKeys: 2
+        adaptiveTiling: 0
+    legendOverride:
+      enabled: 0
+      icon: {fileID: 0}
+      iconSize: {x: -1, y: -1}
+      iconRadius: -1
+      useColor: 0
+      color: {r: 1, g: 1, b: 1, a: 1}
     seriesData:
     - id: 894e326fbbf14fe8b829161f9beeda40
       x: 9.1
       value: 10
       y: 30
       z: 50
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -583,6 +510,8 @@ MonoBehaviour:
       value: 20
       y: 7.32
       z: 30
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -591,6 +520,8 @@ MonoBehaviour:
       value: 15
       y: 20
       z: 30
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -599,6 +530,8 @@ MonoBehaviour:
       value: 30
       y: 30
       z: 20
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -607,6 +540,8 @@ MonoBehaviour:
       value: 25
       y: 40
       z: 15
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -615,6 +550,8 @@ MonoBehaviour:
       value: 30
       y: 10
       z: 10
+      w: 0
+      v: 0
       name: 
       useColor: 0
       color: {r: 1, g: 1, b: 1, a: 1}
@@ -634,46 +571,8 @@ MonoBehaviour:
             tiling: {x: 1, y: 1}
             offset: {x: 0, y: 0}
             color: {r: 0.5198192, g: 1, b: 0.48584908, a: 1}
-            animationType: 0
-            uvMoveSpeed: {x: 0, y: 0}
-            scaleType: 2
-            scaleSpeed: 3
-            scaleFrom: {x: 1, y: 1.5}
-            scaleTo: {x: 1.5, y: 1}
-            colorFadeStart: {r: 1, g: 1, b: 1, a: 1}
-            colorFadeEnd: {r: 1, g: 1, b: 1, a: 0}
-            colorFadeSpeed: 1
-            colorFadeWrap: 1
-            colorFadeGradient:
-              serializedVersion: 2
-              key0: {r: 1, g: 1, b: 1, a: 1}
-              key1: {r: 1, g: 1, b: 1, a: 0.6901961}
-              key2: {r: 0, g: 0, b: 0, a: 0}
-              key3: {r: 0, g: 0, b: 0, a: 0}
-              key4: {r: 0, g: 0, b: 0, a: 0}
-              key5: {r: 0, g: 0, b: 0, a: 0}
-              key6: {r: 0, g: 0, b: 0, a: 0}
-              key7: {r: 0, g: 0, b: 0, a: 0}
-              ctime0: 0
-              ctime1: 65535
-              ctime2: 0
-              ctime3: 0
-              ctime4: 0
-              ctime5: 0
-              ctime6: 0
-              ctime7: 0
-              atime0: 0
-              atime1: 65535
-              atime2: 0
-              atime3: 0
-              atime4: 0
-              atime5: 0
-              atime6: 0
-              atime7: 0
-              m_Mode: 0
-              m_ColorSpace: -1
-              m_NumColorKeys: 2
-              m_NumAlphaKeys: 2
+            adaptiveTiling: 0
+          textureFXLayers: []
         sizeMapping:
           enabled: 1
           minValue: 0
@@ -713,46 +612,7 @@ MonoBehaviour:
             tiling: {x: 1, y: 1}
             offset: {x: 0, y: 0}
             color: {r: 1, g: 1, b: 1, a: 0.35}
-            animationType: 0
-            uvMoveSpeed: {x: 0, y: 0}
-            scaleType: 2
-            scaleSpeed: 1
-            scaleFrom: {x: 1, y: 1}
-            scaleTo: {x: 1.2, y: 1.2}
-            colorFadeStart: {r: 1, g: 1, b: 1, a: 1}
-            colorFadeEnd: {r: 1, g: 1, b: 1, a: 0}
-            colorFadeSpeed: 1
-            colorFadeWrap: 1
-            colorFadeGradient:
-              serializedVersion: 2
-              key0: {r: 1, g: 1, b: 1, a: 1}
-              key1: {r: 1, g: 1, b: 1, a: 1}
-              key2: {r: 0, g: 0, b: 0, a: 0}
-              key3: {r: 0, g: 0, b: 0, a: 0}
-              key4: {r: 0, g: 0, b: 0, a: 0}
-              key5: {r: 0, g: 0, b: 0, a: 0}
-              key6: {r: 0, g: 0, b: 0, a: 0}
-              key7: {r: 0, g: 0, b: 0, a: 0}
-              ctime0: 0
-              ctime1: 65535
-              ctime2: 0
-              ctime3: 0
-              ctime4: 0
-              ctime5: 0
-              ctime6: 0
-              ctime7: 0
-              atime0: 0
-              atime1: 65535
-              atime2: 0
-              atime3: 0
-              atime4: 0
-              atime5: 0
-              atime6: 0
-              atime7: 0
-              m_Mode: 0
-              m_ColorSpace: -1
-              m_NumColorKeys: 2
-              m_NumAlphaKeys: 2
+            adaptiveTiling: 0
           pickRadius: 8
           point:
             show: 1
@@ -762,46 +622,8 @@ MonoBehaviour:
               tiling: {x: 1, y: 1}
               offset: {x: 0, y: 0}
               color: {r: 1, g: 1, b: 1, a: 1}
-              animationType: 0
-              uvMoveSpeed: {x: 0, y: 0}
-              scaleType: 2
-              scaleSpeed: 1
-              scaleFrom: {x: 1, y: 1}
-              scaleTo: {x: 1.2, y: 1.2}
-              colorFadeStart: {r: 1, g: 1, b: 1, a: 1}
-              colorFadeEnd: {r: 1, g: 1, b: 1, a: 0}
-              colorFadeSpeed: 1
-              colorFadeWrap: 1
-              colorFadeGradient:
-                serializedVersion: 2
-                key0: {r: 1, g: 1, b: 1, a: 1}
-                key1: {r: 1, g: 1, b: 1, a: 1}
-                key2: {r: 0, g: 0, b: 0, a: 0}
-                key3: {r: 0, g: 0, b: 0, a: 0}
-                key4: {r: 0, g: 0, b: 0, a: 0}
-                key5: {r: 0, g: 0, b: 0, a: 0}
-                key6: {r: 0, g: 0, b: 0, a: 0}
-                key7: {r: 0, g: 0, b: 0, a: 0}
-                ctime0: 0
-                ctime1: 65535
-                ctime2: 0
-                ctime3: 0
-                ctime4: 0
-                ctime5: 0
-                ctime6: 0
-                ctime7: 0
-                atime0: 0
-                atime1: 65535
-                atime2: 0
-                atime3: 0
-                atime4: 0
-                atime5: 0
-                atime6: 0
-                atime7: 0
-                m_Mode: 0
-                m_ColorSpace: -1
-                m_NumColorKeys: 2
-                m_NumAlphaKeys: 2
+              adaptiveTiling: 0
+            textureFXLayers: []
           lineColor: {r: 1, g: 1, b: 1, a: 0.35}
     - rid: 7489263413846867968
       type: {class: ScatterSettings, ns: EasyChart, asm: EasyChart.Runtime}
@@ -814,46 +636,8 @@ MonoBehaviour:
             tiling: {x: 1, y: 1}
             offset: {x: 0, y: 0}
             color: {r: 1, g: 0.90600467, b: 0.19339621, a: 1}
-            animationType: 0
-            uvMoveSpeed: {x: 0, y: 0}
-            scaleType: 2
-            scaleSpeed: 3
-            scaleFrom: {x: 1, y: 1.5}
-            scaleTo: {x: 1.5, y: 1}
-            colorFadeStart: {r: 1, g: 1, b: 1, a: 1}
-            colorFadeEnd: {r: 1, g: 1, b: 1, a: 0}
-            colorFadeSpeed: 1
-            colorFadeWrap: 1
-            colorFadeGradient:
-              serializedVersion: 2
-              key0: {r: 1, g: 1, b: 1, a: 1}
-              key1: {r: 1, g: 1, b: 1, a: 0.6901961}
-              key2: {r: 0, g: 0, b: 0, a: 0}
-              key3: {r: 0, g: 0, b: 0, a: 0}
-              key4: {r: 0, g: 0, b: 0, a: 0}
-              key5: {r: 0, g: 0, b: 0, a: 0}
-              key6: {r: 0, g: 0, b: 0, a: 0}
-              key7: {r: 0, g: 0, b: 0, a: 0}
-              ctime0: 0
-              ctime1: 65535
-              ctime2: 0
-              ctime3: 0
-              ctime4: 0
-              ctime5: 0
-              ctime6: 0
-              ctime7: 0
-              atime0: 0
-              atime1: 65535
-              atime2: 0
-              atime3: 0
-              atime4: 0
-              atime5: 0
-              atime6: 0
-              atime7: 0
-              m_Mode: 0
-              m_ColorSpace: -1
-              m_NumColorKeys: 2
-              m_NumAlphaKeys: 2
+            adaptiveTiling: 0
+          textureFXLayers: []
         sizeMapping:
           enabled: 0
           minValue: 0
@@ -893,46 +677,7 @@ MonoBehaviour:
             tiling: {x: 1, y: 1}
             offset: {x: 0, y: 0}
             color: {r: 1, g: 1, b: 1, a: 0.35}
-            animationType: 0
-            uvMoveSpeed: {x: 0, y: 0}
-            scaleType: 2
-            scaleSpeed: 1
-            scaleFrom: {x: 1, y: 1}
-            scaleTo: {x: 1.2, y: 1.2}
-            colorFadeStart: {r: 1, g: 1, b: 1, a: 1}
-            colorFadeEnd: {r: 1, g: 1, b: 1, a: 0}
-            colorFadeSpeed: 1
-            colorFadeWrap: 1
-            colorFadeGradient:
-              serializedVersion: 2
-              key0: {r: 1, g: 1, b: 1, a: 1}
-              key1: {r: 1, g: 1, b: 1, a: 1}
-              key2: {r: 0, g: 0, b: 0, a: 0}
-              key3: {r: 0, g: 0, b: 0, a: 0}
-              key4: {r: 0, g: 0, b: 0, a: 0}
-              key5: {r: 0, g: 0, b: 0, a: 0}
-              key6: {r: 0, g: 0, b: 0, a: 0}
-              key7: {r: 0, g: 0, b: 0, a: 0}
-              ctime0: 0
-              ctime1: 65535
-              ctime2: 0
-              ctime3: 0
-              ctime4: 0
-              ctime5: 0
-              ctime6: 0
-              ctime7: 0
-              atime0: 0
-              atime1: 65535
-              atime2: 0
-              atime3: 0
-              atime4: 0
-              atime5: 0
-              atime6: 0
-              atime7: 0
-              m_Mode: 0
-              m_ColorSpace: -1
-              m_NumColorKeys: 2
-              m_NumAlphaKeys: 2
+            adaptiveTiling: 0
           pickRadius: 8
           point:
             show: 1
@@ -942,46 +687,8 @@ MonoBehaviour:
               tiling: {x: 1, y: 1}
               offset: {x: 0, y: 0}
               color: {r: 1, g: 1, b: 1, a: 1}
-              animationType: 0
-              uvMoveSpeed: {x: 0, y: 0}
-              scaleType: 2
-              scaleSpeed: 1
-              scaleFrom: {x: 1, y: 1}
-              scaleTo: {x: 1.2, y: 1.2}
-              colorFadeStart: {r: 1, g: 1, b: 1, a: 1}
-              colorFadeEnd: {r: 1, g: 1, b: 1, a: 0}
-              colorFadeSpeed: 1
-              colorFadeWrap: 1
-              colorFadeGradient:
-                serializedVersion: 2
-                key0: {r: 1, g: 1, b: 1, a: 1}
-                key1: {r: 1, g: 1, b: 1, a: 1}
-                key2: {r: 0, g: 0, b: 0, a: 0}
-                key3: {r: 0, g: 0, b: 0, a: 0}
-                key4: {r: 0, g: 0, b: 0, a: 0}
-                key5: {r: 0, g: 0, b: 0, a: 0}
-                key6: {r: 0, g: 0, b: 0, a: 0}
-                key7: {r: 0, g: 0, b: 0, a: 0}
-                ctime0: 0
-                ctime1: 65535
-                ctime2: 0
-                ctime3: 0
-                ctime4: 0
-                ctime5: 0
-                ctime6: 0
-                ctime7: 0
-                atime0: 0
-                atime1: 65535
-                atime2: 0
-                atime3: 0
-                atime4: 0
-                atime5: 0
-                atime6: 0
-                atime7: 0
-                m_Mode: 0
-                m_ColorSpace: -1
-                m_NumColorKeys: 2
-                m_NumAlphaKeys: 2
+              adaptiveTiling: 0
+            textureFXLayers: []
           lineColor: {r: 1, g: 1, b: 1, a: 0.35}
     - rid: 7489263413846867969
       type: {class: ScatterSettings, ns: EasyChart, asm: EasyChart.Runtime}
@@ -994,46 +701,8 @@ MonoBehaviour:
             tiling: {x: 1, y: 1}
             offset: {x: 0, y: 0}
             color: {r: 1, g: 0.4495311, b: 0.41037738, a: 1}
-            animationType: 0
-            uvMoveSpeed: {x: 0, y: 0}
-            scaleType: 2
-            scaleSpeed: 3
-            scaleFrom: {x: 1, y: 1.5}
-            scaleTo: {x: 1.5, y: 1}
-            colorFadeStart: {r: 1, g: 1, b: 1, a: 1}
-            colorFadeEnd: {r: 1, g: 1, b: 1, a: 0}
-            colorFadeSpeed: 1
-            colorFadeWrap: 1
-            colorFadeGradient:
-              serializedVersion: 2
-              key0: {r: 1, g: 1, b: 1, a: 1}
-              key1: {r: 1, g: 1, b: 1, a: 0.6901961}
-              key2: {r: 0, g: 0, b: 0, a: 0}
-              key3: {r: 0, g: 0, b: 0, a: 0}
-              key4: {r: 0, g: 0, b: 0, a: 0}
-              key5: {r: 0, g: 0, b: 0, a: 0}
-              key6: {r: 0, g: 0, b: 0, a: 0}
-              key7: {r: 0, g: 0, b: 0, a: 0}
-              ctime0: 0
-              ctime1: 65535
-              ctime2: 0
-              ctime3: 0
-              ctime4: 0
-              ctime5: 0
-              ctime6: 0
-              ctime7: 0
-              atime0: 0
-              atime1: 65535
-              atime2: 0
-              atime3: 0
-              atime4: 0
-              atime5: 0
-              atime6: 0
-              atime7: 0
-              m_Mode: 0
-              m_ColorSpace: -1
-              m_NumColorKeys: 2
-              m_NumAlphaKeys: 2
+            adaptiveTiling: 0
+          textureFXLayers: []
         sizeMapping:
           enabled: 1
           minValue: 0
@@ -1073,46 +742,7 @@ MonoBehaviour:
             tiling: {x: 1, y: 1}
             offset: {x: 0, y: 0}
             color: {r: 1, g: 1, b: 1, a: 0.35}
-            animationType: 0
-            uvMoveSpeed: {x: 0, y: 0}
-            scaleType: 2
-            scaleSpeed: 1
-            scaleFrom: {x: 1, y: 1}
-            scaleTo: {x: 1.2, y: 1.2}
-            colorFadeStart: {r: 1, g: 1, b: 1, a: 1}
-            colorFadeEnd: {r: 1, g: 1, b: 1, a: 0}
-            colorFadeSpeed: 1
-            colorFadeWrap: 1
-            colorFadeGradient:
-              serializedVersion: 2
-              key0: {r: 1, g: 1, b: 1, a: 1}
-              key1: {r: 1, g: 1, b: 1, a: 1}
-              key2: {r: 0, g: 0, b: 0, a: 0}
-              key3: {r: 0, g: 0, b: 0, a: 0}
-              key4: {r: 0, g: 0, b: 0, a: 0}
-              key5: {r: 0, g: 0, b: 0, a: 0}
-              key6: {r: 0, g: 0, b: 0, a: 0}
-              key7: {r: 0, g: 0, b: 0, a: 0}
-              ctime0: 0
-              ctime1: 65535
-              ctime2: 0
-              ctime3: 0
-              ctime4: 0
-              ctime5: 0
-              ctime6: 0
-              ctime7: 0
-              atime0: 0
-              atime1: 65535
-              atime2: 0
-              atime3: 0
-              atime4: 0
-              atime5: 0
-              atime6: 0
-              atime7: 0
-              m_Mode: 0
-              m_ColorSpace: -1
-              m_NumColorKeys: 2
-              m_NumAlphaKeys: 2
+            adaptiveTiling: 0
           pickRadius: 8
           point:
             show: 1
@@ -1122,44 +752,6 @@ MonoBehaviour:
               tiling: {x: 1, y: 1}
               offset: {x: 0, y: 0}
               color: {r: 1, g: 1, b: 1, a: 1}
-              animationType: 0
-              uvMoveSpeed: {x: 0, y: 0}
-              scaleType: 2
-              scaleSpeed: 1
-              scaleFrom: {x: 1, y: 1}
-              scaleTo: {x: 1.2, y: 1.2}
-              colorFadeStart: {r: 1, g: 1, b: 1, a: 1}
-              colorFadeEnd: {r: 1, g: 1, b: 1, a: 0}
-              colorFadeSpeed: 1
-              colorFadeWrap: 1
-              colorFadeGradient:
-                serializedVersion: 2
-                key0: {r: 1, g: 1, b: 1, a: 1}
-                key1: {r: 1, g: 1, b: 1, a: 1}
-                key2: {r: 0, g: 0, b: 0, a: 0}
-                key3: {r: 0, g: 0, b: 0, a: 0}
-                key4: {r: 0, g: 0, b: 0, a: 0}
-                key5: {r: 0, g: 0, b: 0, a: 0}
-                key6: {r: 0, g: 0, b: 0, a: 0}
-                key7: {r: 0, g: 0, b: 0, a: 0}
-                ctime0: 0
-                ctime1: 65535
-                ctime2: 0
-                ctime3: 0
-                ctime4: 0
-                ctime5: 0
-                ctime6: 0
-                ctime7: 0
-                atime0: 0
-                atime1: 65535
-                atime2: 0
-                atime3: 0
-                atime4: 0
-                atime5: 0
-                atime6: 0
-                atime7: 0
-                m_Mode: 0
-                m_ColorSpace: -1
-                m_NumColorKeys: 2
-                m_NumAlphaKeys: 2
+              adaptiveTiling: 0
+            textureFXLayers: []
           lineColor: {r: 1, g: 1, b: 1, a: 0.35}

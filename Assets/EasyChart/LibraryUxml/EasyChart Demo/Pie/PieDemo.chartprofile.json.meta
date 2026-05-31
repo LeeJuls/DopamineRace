@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 6371753b781b9aa4fbcf84f3d439f6da
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/LibraryUxml/EasyChart Demo/Pie/PieDemo.chartprofile.json
+  uploadId: 906968

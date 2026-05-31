@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: fc8cc0d6ca6e91648bd5c3ab6ca181d4
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 12385, guid: 0000000000000000e000000000000000, type: 0}
+  disableValidation: 0
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/Demo/UIToolKit/EasyChart Demo_Preview.uss
+  uploadId: 906968

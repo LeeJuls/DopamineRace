@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: fdd9ca9010fe65340a8b75544f32fdc3
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/docs/Manual/easy-chart/en/03_02-BarChart.md
+  uploadId: 906968

@@ -17,7 +17,7 @@ namespace EasyChart
             bool editorDiagnosticsEnabled
         )
         {
-            if (_scheduled) return;
+            // Always allow new requests - the scheduled callback will use the latest data
             _scheduled = true;
             if (!Application.isPlaying && isEditorCoordSwitchInProgress)
             {

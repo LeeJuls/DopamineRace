@@ -8,8 +8,7 @@ namespace EasyChart.Editor
     public class UIToolKitRuntimeJsonInjectionEditor : UnityEditor.Editor
     {
         private SerializedProperty _chartElementNameProp;
-        private SerializedProperty _exampleModeProp;
-        private SerializedProperty _datasModeProp;
+        private SerializedProperty _jsonModeProp;
         private SerializedProperty _useApiEnvelopeProp;
         private SerializedProperty _autoGenerateJsonProp;
         private SerializedProperty _jsonContentProp;
@@ -27,8 +26,7 @@ namespace EasyChart.Editor
         private void OnEnable()
         {
             _chartElementNameProp = serializedObject.FindProperty("_chartElementName");
-            _exampleModeProp = serializedObject.FindProperty("_exampleMode");
-            _datasModeProp = serializedObject.FindProperty("_datasMode");
+            _jsonModeProp = serializedObject.FindProperty("_jsonMode");
             _useApiEnvelopeProp = serializedObject.FindProperty("_useApiEnvelope");
             _autoGenerateJsonProp = serializedObject.FindProperty("_autoGenerateJson");
             _jsonContentProp = serializedObject.FindProperty("_jsonContent");
@@ -70,8 +68,7 @@ namespace EasyChart.Editor
                 EditorGUILayout.Space(2);
 
                 EditorGUI.BeginChangeCheck();
-                EditorGUILayout.PropertyField(_exampleModeProp, new GUIContent("Example Mode", "The format mode for generating example JSON"));
-                EditorGUILayout.PropertyField(_datasModeProp, new GUIContent("Data Mode", "The data format mode for series data"));
+                EditorGUILayout.PropertyField(_jsonModeProp, new GUIContent("JSON Mode", "The format mode for generating JSON\n• Compact: Data values only\n• Standard: Names + structured data\n• Full: All metadata"));
                 EditorGUILayout.PropertyField(_useApiEnvelopeProp, new GUIContent("API Envelope", "Wrap JSON in API response envelope"));
                 bool settingsChanged = EditorGUI.EndChangeCheck();
 

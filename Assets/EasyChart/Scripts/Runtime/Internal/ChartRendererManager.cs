@@ -125,7 +125,9 @@ namespace EasyChart
             if (created != null)
             {
                 created.visible = true;
-                created.pickingMode = PickingMode.Ignore;
+                // 3D renderers need mouse events for hover detection
+                bool needs3DHover = (type == SerieType.Pie3D || type == SerieType.Bar3D || type == SerieType.Line3D);
+                created.pickingMode = needs3DHover ? PickingMode.Position : PickingMode.Ignore;
                 created.StretchToParentSize();
                 if (plotContentRoot != null) plotContentRoot.Add(created);
                 if (dynamicRenderers != null) dynamicRenderers[type] = created;

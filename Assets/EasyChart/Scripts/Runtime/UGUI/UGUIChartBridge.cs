@@ -74,6 +74,19 @@ namespace EasyChart.UGUI
         private RenderTexture _renderTexture;
         private UnityEngine.UI.RawImage _rawImage;
         private ChartRenderMode _lastRenderMode;
+        
+        // Continuous refresh support for 3D chart animations
+        private bool _needsContinuousRefresh;
+        
+        /// <summary>
+        /// When true, forces continuous panel refresh for animations (World Space mode).
+        /// Set by 3D chart renderers when auto-rotation is enabled.
+        /// </summary>
+        public bool NeedsContinuousRefresh
+        {
+            get => _needsContinuousRefresh;
+            set => _needsContinuousRefresh = value;
+        }
 
         /// <summary>
         /// The ChartProfile being displayed.
@@ -218,6 +231,12 @@ namespace EasyChart.UGUI
             {
                 UpdateWorldSpaceRenderTexture();
             }
+            
+            // For 3D chart animations (auto-rotation), force panel refresh in both modes
+            if (_needsContinuousRefresh && _uiDocument != null)
+            {
+                _uiDocument.rootVisualElement?.MarkDirtyRepaint();
+            }
         }
 
         private void OnValidate()
@@ -289,6 +308,8 @@ namespace EasyChart.UGUI
             _chartElement.style.flexGrow = 1;
             _chartElement.style.width = Length.Percent(100);
             _chartElement.style.height = Length.Percent(100);
+            // Store UGUIChartBridge reference for 3D renderers to access
+            _chartElement.userData = this;
 
             _rootContainer.Add(_chartElement);
             _uiDocument.rootVisualElement.Add(_rootContainer);
@@ -572,6 +593,8 @@ namespace EasyChart.UGUI
             _chartElement.style.flexGrow = 1;
             _chartElement.style.width = Length.Percent(100);
             _chartElement.style.height = Length.Percent(100);
+            // Store UGUIChartBridge reference for 3D renderers to access
+            _chartElement.userData = this;
 
             _rootContainer.Add(_chartElement);
             _uiDocument.rootVisualElement.Add(_rootContainer);

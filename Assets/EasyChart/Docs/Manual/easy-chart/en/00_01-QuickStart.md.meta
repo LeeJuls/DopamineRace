@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 3833a97d3ebba084bbbe66e2f6f35749
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/docs/Manual/easy-chart/en/00_01-QuickStart.md
+  uploadId: 906968

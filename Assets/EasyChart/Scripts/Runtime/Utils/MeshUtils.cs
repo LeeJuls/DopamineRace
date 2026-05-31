@@ -77,10 +77,33 @@ namespace EasyChart
             Color tint,
             Vector2 tiling,
             Vector2 offset,
-            bool doubleSided = true)
+            bool doubleSided = true,
+            bool usePathLength = false)
+        {
+            // Create a uniform bottom Y array
+            float[] bottomYs = new float[topVertices.Count];
+            for (int i = 0; i < bottomYs.Length; i++)
+                bottomYs[i] = bottomY;
+            
+            WriteTexturedVerticalStrip(context, topVertices, bottomYs, texture, tint, tiling, offset, doubleSided, usePathLength);
+        }
+
+        /// <summary>
+        /// Write a textured vertical strip with variable bottom Y values (for stacked areas)
+        /// </summary>
+        public static void WriteTexturedVerticalStrip(MeshGenerationContext context,
+            IList<Vector2> topVertices,
+            IList<float> bottomYs,
+            Texture texture,
+            Color tint,
+            Vector2 tiling,
+            Vector2 offset,
+            bool doubleSided = true,
+            bool usePathLength = false)
         {
             if (texture == null) return;
             if (topVertices == null || topVertices.Count < 2) return;
+            if (bottomYs == null || bottomYs.Count != topVertices.Count) return;
 
             int segmentCount = topVertices.Count - 1;
             int vertexCount = topVertices.Count * 2;
@@ -88,30 +111,54 @@ namespace EasyChart
 
             var mesh = context.Allocate(vertexCount, indexCount, texture);
 
-            float startX = topVertices[0].x;
-            float endX = topVertices[topVertices.Count - 1].x;
-            float rangeX = endX - startX;
-            if (rangeX <= 0f) rangeX = 1f;
+            // Calculate bounding box for UV normalization (same as TextureFXLayer)
+            float minX = float.MaxValue, maxX = float.MinValue;
+            float minY = float.MaxValue, maxY = float.MinValue;
+            for (int i = 0; i < topVertices.Count; i++)
+            {
+                var v = topVertices[i];
+                minX = Mathf.Min(minX, v.x);
+                maxX = Mathf.Max(maxX, v.x);
+                minY = Mathf.Min(minY, v.y);
+                maxY = Mathf.Max(maxY, v.y);
+                minY = Mathf.Min(minY, bottomYs[i]);
+                maxY = Mathf.Max(maxY, bottomYs[i]);
+            }
+
+            float rectWidth = maxX - minX;
+            float rectHeight = maxY - minY;
+            if (rectWidth <= 0.001f) rectWidth = 1f;
+            if (rectHeight <= 0.001f) rectHeight = 1f;
 
             for (int i = 0; i < topVertices.Count; i++)
             {
                 Vector2 topPos = topVertices[i];
-                Vector2 bottomPos = new Vector2(topPos.x, bottomY);
+                float bottomYi = bottomYs[i];
+                Vector2 bottomPos = new Vector2(topPos.x, bottomYi);
 
-                float u = (topPos.x - startX) / rangeX;
-                float uu = u * tiling.x + offset.x;
+                // Normalized positions for UV (based on bounding rect for uniform texture)
+                float normalizedX = (topPos.x - minX) / rectWidth;
+                float normalizedYTop = (topPos.y - minY) / rectHeight;
+                float normalizedYBottom = (bottomYi - minY) / rectHeight;
+
+                // Calculate UV based on rectangle position (not polygon shape)
+                // Flip V coordinate because UI Toolkit Y axis is top-to-bottom
+                float uTop = normalizedX * tiling.x + offset.x;
+                float vTop = (1f - normalizedYTop) * tiling.y + offset.y;
+                float uBottom = normalizedX * tiling.x + offset.x;
+                float vBottom = (1f - normalizedYBottom) * tiling.y + offset.y;
 
                 mesh.SetNextVertex(new Vertex
                 {
                     position = new Vector3(topPos.x, topPos.y, Vertex.nearZ),
                     tint = tint,
-                    uv = new Vector2(uu, tiling.y + offset.y)
+                    uv = new Vector2(uTop, vTop)
                 });
                 mesh.SetNextVertex(new Vertex
                 {
                     position = new Vector3(bottomPos.x, bottomPos.y, Vertex.nearZ),
                     tint = tint,
-                    uv = new Vector2(uu, offset.y)
+                    uv = new Vector2(uBottom, vBottom)
                 });
             }
 

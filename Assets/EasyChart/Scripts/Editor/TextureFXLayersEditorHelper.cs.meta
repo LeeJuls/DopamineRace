@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: a67a8e6674b558a4885799a34471991d
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/Scripts/Editor/TextureFXLayersEditorHelper.cs
+  uploadId: 906968

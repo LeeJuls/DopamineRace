@@ -1,1 +1,1 @@
-﻿window.EASYCHART_MANUAL_OPEN = {chapterId: "", anchor: "", at: "2026-02-04 17:00:51"};
+﻿window.EASYCHART_MANUAL_OPEN = {chapterId: "00_01-QuickStart", anchor: "", at: "2026-04-27 17:30:17"};

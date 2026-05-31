@@ -1,0 +1,456 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae49c3ed628aba644bf39a8d33a833ab, type: 3}
+  m_Name: HeatMap 2
+  m_EditorClassIdentifier: 
+  chartName: HeatMap
+  chartId: 3dc3eb17350d4afe85483ec68671d152
+  coordinateSystem: 0
+  cartesian:
+    xAxisId: 0
+    yAxisId: 2
+  cartesian3D:
+    xAxisId: 0
+    yAxisId: 2
+    zAxisId: 4
+  axes:
+  - id: 0
+    axisType: 1
+    labels: []
+    visible: 1
+    color: {r: 1, g: 1, b: 1, a: 1}
+    width: 2
+    labelStyle:
+      enabled: 1
+      fontSize: 10
+      color: {r: 1, g: 1, b: 1, a: 1}
+      position: 0
+      offset: {x: 0, y: 0}
+      rotation: 0
+    showLabels: 1
+    fontSize: 10
+    labelColor: {r: 1, g: 1, b: 1, a: 1}
+    labelPosition: 0
+    labelPlacement: 0
+    labelOffset: {x: 0, y: 0}
+    autoRangeMin: 0
+    autoRangeMax: 0
+    autoRangeRounding: 2
+    autoRangeUnit: 1
+    minValue: 0
+    maxValue: 100
+    autoTicks: 0
+    splitCount: 20
+    labelFormat: 
+    categoryAutoScroll: 0
+    categorySmoothScroll: 1
+    categoryScrollInterval: 1
+    categoryScrollStep: 1
+    showUnit: 0
+    unitText: 
+    unitLabelStyle:
+      enabled: 1
+      fontSize: 10
+      color: {r: 1, g: 1, b: 1, a: 1}
+      position: 0
+      offset: {x: 0, y: 0}
+      rotation: 0
+  - id: 2
+    axisType: 1
+    labels: []
+    visible: 1
+    color: {r: 1, g: 1, b: 1, a: 1}
+    width: 2
+    labelStyle:
+      enabled: 1
+      fontSize: 10
+      color: {r: 1, g: 1, b: 1, a: 1}
+      position: 0
+      offset: {x: 0, y: 0}
+      rotation: 0
+    showLabels: 1
+    fontSize: 10
+    labelColor: {r: 1, g: 1, b: 1, a: 1}
+    labelPosition: 0
+    labelPlacement: 0
+    labelOffset: {x: 0, y: 0}
+    autoRangeMin: 0
+    autoRangeMax: 0
+    autoRangeRounding: 2
+    autoRangeUnit: 1
+    minValue: 0
+    maxValue: 100
+    autoTicks: 0
+    splitCount: 10
+    labelFormat: 
+    categoryAutoScroll: 0
+    categorySmoothScroll: 1
+    categoryScrollInterval: 1
+    categoryScrollStep: 1
+    showUnit: 0
+    unitText: 
+    unitLabelStyle:
+      enabled: 1
+      fontSize: 10
+      color: {r: 1, g: 1, b: 1, a: 1}
+      position: 0
+      offset: {x: 0, y: 0}
+      rotation: 0
+  xAxisId: 0
+  yAxisId: 2
+  axisSelectionInitialized: 1
+  axisTypeSelectionInitialized: 1
+  animationDuration: 1
+  background:
+    show: 1
+    textureFill:
+      texture: {fileID: 2800000, guid: bdde8ca846f9dac408680bcf16c76c34, type: 3}
+      tiling: {x: 1, y: 1}
+      offset: {x: 0, y: 0}
+      color: {r: 1, g: 1, b: 1, a: 1}
+      adaptiveTiling: 0
+  backgroundFX:
+    enabled: 0
+    padding: {x: 0, y: 0, z: 0, w: 0}
+    backgroundColor: {r: 0, g: 0, b: 0, a: 0}
+    layers: []
+  chartWidth: 450
+  chartHeight: 300
+  padding: {x: 50, y: 50, z: 30, w: 50}
+  paddingInitialized: 1
+  xGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.2}
+  xGridLineWidth: 1
+  yGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.2}
+  yGridLineWidth: 1
+  cartesianGrid:
+    xGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.2}
+    xGridLineWidth: 1
+    xGridDashed: 0
+    xGridDashLength: 4
+    xGridDashGap: 2
+    xGridDashOffset: 0
+    yGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.2}
+    yGridLineWidth: 1
+    yGridDashed: 0
+    yGridDashLength: 4
+    yGridDashGap: 2
+    yGridDashOffset: 0
+  cartesian3DGrid:
+    show: 1
+    gridColor: {r: 0.4, g: 0.4, b: 0.4, a: 0.5}
+    gridLineWidth: 1
+    showXYPlane: 1
+    showXZPlane: 1
+    showYZPlane: 1
+    useAxisColors: 0
+    xGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.3}
+    yGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.3}
+    zGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.3}
+    gridWidth: 4
+    gridHeight: 2
+    gridDepth: 2
+    showLabels: 1
+    labelColor: {r: 1, g: 1, b: 1, a: 1}
+    labelFontSize: 12
+  hover:
+    cursorLineDashed: 0
+    cursorLineWidth: 1
+    cursorLineColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+    cursorLineDashLength: 4
+    cursorLineDashGap: 2
+    cursorLineDashOffset: 0
+  polarAxes:
+    angleAxis:
+      labels:
+      - A
+      - B
+      - C
+      - D
+      - E
+      visible: 1
+      color: {r: 1, g: 1, b: 1, a: 1}
+      edgeColor: {r: 1, g: 1, b: 1, a: 1}
+      width: 2
+      labelStyle:
+        enabled: 1
+        fontSize: 10
+        color: {r: 1, g: 1, b: 1, a: 1}
+        position: 0
+        offset: {x: 0, y: 0}
+        rotation: 0
+      showLabels: 1
+      fontSize: 10
+      labelColor: {r: 1, g: 1, b: 1, a: 1}
+      labelPosition: 0
+      labelOffset: {x: 0, y: 0}
+      autoRangeMin: 1
+      autoRangeMax: 1
+      autoRangeRounding: 0
+      autoRangeUnit: 1
+      minValue: 0
+      maxValue: 1
+      autoTicks: 1
+      splitCount: 5
+      labelFormat: 
+    radiusAxis:
+      labels: []
+      visible: 1
+      color: {r: 1, g: 1, b: 1, a: 1}
+      edgeColor: {r: 1, g: 1, b: 1, a: 1}
+      width: 2
+      labelStyle:
+        enabled: 1
+        fontSize: 10
+        color: {r: 1, g: 1, b: 1, a: 1}
+        position: 0
+        offset: {x: 0, y: 0}
+        rotation: 0
+      showLabels: 1
+      fontSize: 10
+      labelColor: {r: 1, g: 1, b: 1, a: 1}
+      labelPosition: 0
+      labelOffset: {x: 0, y: 0}
+      autoRangeMin: 1
+      autoRangeMax: 1
+      autoRangeRounding: 0
+      autoRangeUnit: 1
+      minValue: 0
+      maxValue: 1
+      autoTicks: 1
+      splitCount: 5
+      labelFormat: 
+  gridSettingsInitialized: 1
+  grid3DSettingsInitialized: 0
+  hoverSettingsInitialized: 1
+  legendSettings:
+    enabled: 1
+    position: 0
+    fontSize: 12
+    color: {r: 1, g: 1, b: 1, a: 1}
+    backgroundColor: {r: 0, g: 0, b: 0, a: 0}
+    itemSpacing: 10
+    offset: {x: 0, y: 30}
+    icon: {fileID: 0}
+    iconSize: {x: 10, y: 10}
+    iconRadius: 2
+  plotSettings:
+    overrideTheme: 1
+    backgroundColor: {r: 0, g: 0, b: 0, a: 0}
+    borderColor: {r: 0, g: 0, b: 0, a: 0}
+    borderWidth: 0
+    labelEdgeFadePx: 20
+  series:
+  - name: Serie 3
+    id: 836d90a495754ab199d6422a8e830c25
+    type: 7
+    visible: 1
+    settings:
+      rid: 7489263503693053953
+    _cachedLineSettings:
+      rid: -2
+    _cachedBarSettings:
+      rid: -2
+    _cachedPieSettings:
+      rid: -2
+    _cachedRingChartSettings:
+      rid: -2
+    _cachedScatterSettings:
+      rid: 7489263413846867969
+    _cachedRadarSettings:
+      rid: -2
+    _cachedHeatmapSettings:
+      rid: 7489263503693053953
+    labelSettings:
+      enabled: 0
+      color: {r: 1, g: 1, b: 1, a: 1}
+      fontSize: 10
+      decimalPlaces: 2
+      showName: 0
+      offset: {x: 0, y: 0}
+      position: 0
+      background:
+        texture: {fileID: 0}
+        tiling: {x: 1, y: 1}
+        offset: {x: 0, y: 0}
+        color: {r: 0, g: 0, b: 0, a: 0}
+        adaptiveTiling: 0
+    legendOverride:
+      enabled: 0
+      icon: {fileID: 0}
+      iconSize: {x: -1, y: -1}
+      iconRadius: -1
+      useColor: 0
+      color: {r: 1, g: 1, b: 1, a: 1}
+    seriesData:
+    - id: 894e326fbbf14fe8b829161f9beeda40
+      x: 10
+      value: 53
+      y: 80
+      z: 0
+      w: 0
+      v: 0
+      name: 
+      useColor: 0
+      color: {r: 1, g: 1, b: 1, a: 1}
+    - id: 9190a68c3c1c41a7b227d9a53261095e
+      x: 60
+      value: 68.2
+      y: 68.5
+      z: 0
+      w: 0
+      v: 0
+      name: 
+      useColor: 0
+      color: {r: 1, g: 1, b: 1, a: 1}
+    - id: b5dda34c85964897823ccb3bcda21233
+      x: 80
+      value: 30
+      y: 9.7
+      z: 0
+      w: 0
+      v: 0
+      name: 
+      useColor: 0
+      color: {r: 1, g: 1, b: 1, a: 1}
+    - id: e0b7ffd6aff54221bbefc0af29d0ab9f
+      x: 38.6
+      value: 53.2
+      y: 35.7
+      z: 0
+      w: 0
+      v: 0
+      name: 
+      useColor: 0
+      color: {r: 1, g: 1, b: 1, a: 1}
+    - id: 3a70297b812a41049bbc45356f893261
+      x: 70
+      value: 15
+      y: 38.2
+      z: 0
+      w: 0
+      v: 0
+      name: 
+      useColor: 0
+      color: {r: 1, g: 1, b: 1, a: 1}
+    - id: 3a70297b812a41049bbc45356f893261
+      x: 20
+      value: 10
+      y: 30
+      z: 0
+      w: 0
+      v: 0
+      name: 
+      useColor: 0
+      color: {r: 1, g: 1, b: 1, a: 1}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 7489263413846867969
+      type: {class: ScatterSettings, ns: EasyChart, asm: EasyChart.Runtime}
+      data:
+        point:
+          show: 1
+          size: 30
+          textureFill:
+            texture: {fileID: 2800000, guid: 5f187b619df3b1a4e8ea000bb649ff53, type: 3}
+            tiling: {x: 1, y: 1}
+            offset: {x: 0, y: 0}
+            color: {r: 1, g: 0.4495311, b: 0.41037738, a: 1}
+            adaptiveTiling: 0
+          textureFXLayers: []
+        sizeMapping:
+          enabled: 1
+          minValue: 0
+          maxValue: 100
+          minSize: 10
+          maxSize: 110
+          clamp: 1
+          curve:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 3
+              time: 0
+              value: 0
+              inSlope: 0
+              outSlope: 1
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 1
+              value: 1
+              inSlope: 1
+              outSlope: 0
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
+        hover:
+          enabled: 0
+          _scale: 1.5
+          _textureFill:
+            texture: {fileID: 0}
+            tiling: {x: 1, y: 1}
+            offset: {x: 0, y: 0}
+            color: {r: 1, g: 1, b: 1, a: 0.35}
+            adaptiveTiling: 0
+          pickRadius: 8
+          point:
+            show: 1
+            size: 4
+            textureFill:
+              texture: {fileID: 0}
+              tiling: {x: 1, y: 1}
+              offset: {x: 0, y: 0}
+              color: {r: 1, g: 1, b: 1, a: 1}
+              adaptiveTiling: 0
+            textureFXLayers: []
+          lineColor: {r: 1, g: 1, b: 1, a: 0.35}
+    - rid: 7489263503693053953
+      type: {class: HeatmapSettings, ns: EasyChart, asm: EasyChart.Runtime}
+      data:
+        renderMode: 0
+        cellGapPx: 1
+        xSplitCount: 50
+        ySplitCount: 30
+        autoRange: 1
+        minValue: 0
+        maxValue: 80
+        influenceMode: 2
+        bleed:
+          radiusCells: 11
+          steps: 15
+          strength: 0.4
+        smooth:
+          radiusCells: 3
+          passes: 3
+          sigma: 2.1
+        gradient:
+          resolution: 253
+          sigma: 25.7
+          intensity: 0.74
+        contour:
+          levels: 15
+          lineWidth: 0.28
+          showFill: 1
+          showLines: 1
+          lineColor: {r: 1, g: 1, b: 1, a: 0.8}
+        clamp: 1
+        lowColor: {r: 0.41176486, g: 1, b: 0, a: 0}
+        midColor: {r: 1, g: 0.86827826, b: 0, a: 1}
+        highColor: {r: 1, g: 0.25, b: 0.25, a: 1}

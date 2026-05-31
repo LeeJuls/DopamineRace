@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: cdbac02c342ac1b4a968fa6eddae469c
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/Scripts/Runtime/Data/IPieLegendProvider.cs
+  uploadId: 906968

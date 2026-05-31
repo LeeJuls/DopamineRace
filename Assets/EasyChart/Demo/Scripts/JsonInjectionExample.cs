@@ -15,8 +15,11 @@ namespace EasyChart.Samples
         [Tooltip("Reference to the UGUIRuntimeJsonInjection component on the chart (for UGUI)")]
         [SerializeField] private UGUIRuntimeJsonInjection _uguiJsonInjection;
 
-        [Tooltip("Reference to the UIToolKitRuntimeJsonInjection component on the chart (for UI Toolkit)")]
+        [Tooltip("Reference to the UIToolKitRuntimeJsonInjection component on the chart (for UI Toolkit).\nPlace this component on the same GameObject as UIDocument.")]
         [SerializeField] private UIToolKitRuntimeJsonInjection _uiToolkitJsonInjection;
+
+        [Tooltip("Optional: Specify which ChartElement to update by name.\nFor UIToolKit with multiple charts, set the chart element name here.\nIf empty, updates the first ChartElement found.")]
+        [SerializeField] private string _chartElementName = "";
 
         [Tooltip("Optional: Button to trigger the update. If not set, will try to get from this GameObject.")]
         [SerializeField] private Button _updateButton;
@@ -98,6 +101,12 @@ namespace EasyChart.Samples
             // Try UI Toolkit injection
             if (_uiToolkitJsonInjection != null)
             {
+                // Set chart element name if specified (for multi-chart pages)
+                if (!string.IsNullOrEmpty(_chartElementName))
+                {
+                    _uiToolkitJsonInjection.ChartElementName = _chartElementName;
+                    Debug.Log($"[JsonInjectionExample] Targeting ChartElement: {_chartElementName}");
+                }
                 _uiToolkitJsonInjection.JsonContent = JsonData;
                 _uiToolkitJsonInjection.ApplyJsonToChart();
                 Debug.Log("[JsonInjectionExample] Chart updated via UIToolKitRuntimeJsonInjection.");

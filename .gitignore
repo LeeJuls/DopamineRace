@@ -93,3 +93,5 @@ Docs/logs/
 
 # UI 디자이너 파일 전달 임시 폴더 (적용 후 불필요, 히스토리 관리 없음)
 /[Aa]ssets/[Dd]esign/[Ii]ncoming/
+
+Assets/Plugins/UnityCodeMcpServer/Editor/STDIO~/src/unity_code_mcp_stdio/*.log*

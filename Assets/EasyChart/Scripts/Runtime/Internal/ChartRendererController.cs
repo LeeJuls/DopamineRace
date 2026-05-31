@@ -36,6 +36,7 @@ namespace EasyChart
         private bool _editorDesiredNeedPie;
         private bool _editorDesiredShowCartesian;
         private bool _editorDesiredAllowOverflow;
+        private HashSet<SerieType> _editorDesiredNeedDynamic;
 #endif
 
         public List<BaseSeriesRenderer> Renderers => _renderers;
@@ -111,6 +112,7 @@ namespace EasyChart
                 _editorDesiredNeedRadar = needRadar;
                 _editorDesiredNeedPie = needPie;
                 _editorDesiredShowCartesian = selection.ShowCartesian;
+                _editorDesiredNeedDynamic = needDynamic;
 
                 if (!_editorDeferredRendererVisualApplyScheduled)
                 {
@@ -315,13 +317,21 @@ namespace EasyChart
             {
                 if (kv.Value == null) continue;
                 bool needed = needDynamic != null && needDynamic.Contains(kv.Key);
-                if (!needed && kv.Value.visible) kv.Value.ClearLabels();
+                if (!needed && kv.Value.visible)
+                {
+                    kv.Value.ClearLabels();
+                    kv.Value.ClearScene();
+                }
                 kv.Value.visible = needed;
             }
 
             // Toggle Axis/Grid visibility based on coordinate system
             if (_gridLayer != null) _gridLayer.visible = showCartesian;
-            if (_axisLayer != null) _axisLayer.visible = showCartesian;
+            if (_axisLayer != null)
+            {
+                if (!showCartesian && _axisLayer.visible) _axisLayer.ClearLabels();
+                _axisLayer.visible = showCartesian;
+            }
         }
 
 #if UNITY_EDITOR
@@ -360,8 +370,25 @@ namespace EasyChart
                 _pieRenderer.visible = _editorDesiredNeedPie;
             }
 
+            // Handle dynamic renderers in editor mode
+            foreach (var kv in _dynamicRenderers)
+            {
+                if (kv.Value == null) continue;
+                bool needed = _editorDesiredNeedDynamic != null && _editorDesiredNeedDynamic.Contains(kv.Key);
+                if (!needed && kv.Value.visible)
+                {
+                    kv.Value.ClearLabels();
+                    kv.Value.ClearScene();
+                }
+                kv.Value.visible = needed;
+            }
+
             if (_gridLayer != null) _gridLayer.visible = _editorDesiredShowCartesian;
-            if (_axisLayer != null) _axisLayer.visible = _editorDesiredShowCartesian;
+            if (_axisLayer != null)
+            {
+                if (!_editorDesiredShowCartesian && _axisLayer.visible) _axisLayer.ClearLabels();
+                _axisLayer.visible = _editorDesiredShowCartesian;
+            }
         }
 #endif
     }

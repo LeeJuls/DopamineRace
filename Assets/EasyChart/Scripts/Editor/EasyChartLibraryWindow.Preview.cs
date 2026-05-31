@@ -1,4 +1,5 @@
 using UnityEditor;
+using EasyChart.Internal;
 
 namespace EasyChart.Editor
 {
@@ -7,16 +8,20 @@ namespace EasyChart.Editor
         private void ScheduleUpdatePreview()
         {
             if (_isUpdatingPreview) return;
+            if (_previewUpdateScheduled) return;
 
-            // Always unregister first to prevent duplicate callbacks
-            EditorApplication.delayCall -= OnDeferredUpdatePreview;
-            EditorApplication.delayCall += OnDeferredUpdatePreview;
-        }
+            _previewUpdateScheduled = true;
 
-        private void OnDeferredUpdatePreview()
-        {
-            if (this == null || rootVisualElement == null) return;
-            UpdatePreview();
+            var settings = EasyChartSettings.Instance;
+            int delayMs = settings?.previewDelay ?? 100;
+
+            // Use schedule with delay from settings
+            rootVisualElement?.schedule.Execute(() =>
+            {
+                _previewUpdateScheduled = false;
+                if (this == null || rootVisualElement == null) return;
+                UpdatePreview();
+            }).ExecuteLater(delayMs);
         }
 
         private void UpdatePreview()
@@ -34,11 +39,13 @@ namespace EasyChart.Editor
                     _serializedProfile.ApplyModifiedProperties();
                 }
                 _previewChart.Profile = _selectedProfile;
+                // Force refresh even if Profile instance hasn't changed (e.g., color palette applied)
+                _previewChart.ForceRefreshProfile();
                 UpdateInjectionJsonExample();
             }
             catch (System.Exception ex)
             {
-                UnityEngine.Debug.LogError($"[EasyChartLibraryWindow] Preview refresh failed: {ex.Message}\n{ex.StackTrace}");
+                EasyChartLog.Error($"Preview refresh failed: {ex.Message}\n{ex.StackTrace}");
             }
             finally
             {

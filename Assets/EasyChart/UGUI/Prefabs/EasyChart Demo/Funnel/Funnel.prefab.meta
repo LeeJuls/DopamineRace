@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 09c15eacc84c9ae46b3194697285d83d
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/UGUI/Prefabs/EasyChart Demo/Funnel/Funnel.prefab
+  uploadId: 906968

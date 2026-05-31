@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 4ad70a07129b53c4d9b78529e4122b4c
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/Scripts/Editor/TextureFillDrawer.cs
+  uploadId: 906968

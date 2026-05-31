@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 57fe84b7bb325a740983f433570437c5
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/UGUI/Prefabs/EasyChart Demo/HeatMap/HeatMap.prefab
+  uploadId: 906968

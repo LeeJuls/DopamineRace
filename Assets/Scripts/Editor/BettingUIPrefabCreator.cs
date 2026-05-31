@@ -519,9 +519,9 @@ public static class BettingUIPrefabCreator
             0f, 0f, 1f, 0.13f, Vector2.zero, Vector2.zero);
         layout3.AddComponent<Image>().color = new Color(0.10f, 0.08f, 0.06f, 0.8f);
 
-        // SkillIcon (sword 아이콘)
+        // SkillIcon (스킬 아이콘) — 정사각형 64x64 (preserveAspect 위해 가로=세로 필수)
         GameObject skillIconObj = MkChild(layout3, "SkillIcon",
-            0.04f, 0.5f, 0.04f, 0.5f, Vector2.zero, new Vector2(32, 32));
+            0.04f, 0.5f, 0.04f, 0.5f, new Vector2(45, 0), new Vector2(64, 64));
         Image skillImg = skillIconObj.AddComponent<Image>();
         skillImg.color = Color.white;
         skillImg.preserveAspect = true;

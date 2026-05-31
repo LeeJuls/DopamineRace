@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5bcef8fb203a0bc409c9d56c194f03ca
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/UGUI/Prefabs/EasyChart Demo/Bar/BarDemo 0.prefab
+  uploadId: 906968

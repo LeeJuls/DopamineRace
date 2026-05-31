@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 9316beb51ac86a341b197c86e58a5598
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/LibraryUxml/EasyChart Demo/OHLC/OHLC.chartprofile.json
+  uploadId: 906968

@@ -32,7 +32,11 @@ namespace EasyChart
             if (grid != null) grid.visible = showCartesian;
 
             AxisLayer axis = _owner.AxisLayerInternal;
-            if (axis != null) axis.visible = showCartesian;
+            if (axis != null)
+            {
+                if (!showCartesian && axis.visible) axis.ClearLabels();
+                axis.visible = showCartesian;
+            }
 
             float tx = _owner.IsCategorySmoothTranslatingInternal ? _owner.CategoryScrollOffsetXInternal : 0f;
             float ty = _owner.IsCategorySmoothTranslatingInternal ? _owner.CategoryScrollOffsetYInternal : 0f;

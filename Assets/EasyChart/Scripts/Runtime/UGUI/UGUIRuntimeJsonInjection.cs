@@ -11,16 +11,13 @@ namespace EasyChart.UGUI
     public class UGUIRuntimeJsonInjection : MonoBehaviour
     {
         [Header("JSON Generation Settings")]
-        [Tooltip("The format mode for generating example JSON")]
-        [SerializeField] private ChartJsonExampleMode _exampleMode = ChartJsonExampleMode.Standard;
-
-        [Tooltip("The data format mode for series data")]
-        [SerializeField] private ChartJsonDatasMode _datasMode = ChartJsonDatasMode.Standard;
+        [Tooltip("The format mode for generating JSON\n• Compact: Data values only\n• Standard: Names + structured data\n• Full: All metadata including axes, types")]
+        [SerializeField] private ChartJsonMode _jsonMode = ChartJsonMode.Standard;
 
         [Tooltip("Wrap JSON in API response envelope")]
         [SerializeField] private bool _useApiEnvelope = false;
 
-        [Tooltip("Automatically regenerate JSON when ExampleMode or DatasMode changes")]
+        [Tooltip("Automatically regenerate JSON when JSON Mode or API Envelope changes")]
         [SerializeField] private bool _autoGenerateJson = false;
 
         [Header("JSON Content")]
@@ -30,7 +27,6 @@ namespace EasyChart.UGUI
 
         private UGUIChartBridge _bridge;
         private ChartProfile _runtimeProfile;
-        private bool _profileCloned;
 
         /// <summary>
         /// The JSON content to inject.
@@ -42,31 +38,37 @@ namespace EasyChart.UGUI
         }
 
         /// <summary>
-        /// The example mode for JSON generation.
+        /// The JSON generation mode (Compact, Standard, or Full).
+        /// Automatically regenerates JSON if AutoGenerateJson is enabled.
         /// </summary>
-        public ChartJsonExampleMode ExampleMode
+        public ChartJsonMode JsonMode
         {
-            get => _exampleMode;
-            set => _exampleMode = value;
-        }
-
-        /// <summary>
-        /// The data format mode for series data.
-        /// </summary>
-        public ChartJsonDatasMode DatasMode
-        {
-            get => _datasMode;
-            set => _datasMode = value;
+            get => _jsonMode;
+            set
+            {
+                _jsonMode = value;
+                if (_autoGenerateJson) GenerateExampleJson();
+            }
         }
 
         /// <summary>
         /// Whether to wrap JSON in API response envelope.
+        /// Automatically regenerates JSON if AutoGenerateJson is enabled.
         /// </summary>
         public bool UseApiEnvelope
         {
             get => _useApiEnvelope;
-            set => _useApiEnvelope = value;
+            set
+            {
+                _useApiEnvelope = value;
+                if (_autoGenerateJson) GenerateExampleJson();
+            }
         }
+
+        /// <summary>
+        /// Event fired when JSON is applied to the chart. Parameter indicates success.
+        /// </summary>
+        public event System.Action<bool, string> OnJsonApplied;
 
         /// <summary>
         /// Whether to automatically regenerate JSON when ExampleMode or DatasMode changes.
@@ -104,29 +106,65 @@ namespace EasyChart.UGUI
                 return;
             }
 
-            string json = _jsonContent;
-
-            // Try to extract data from API envelope if present
-            if (ChartJsonUtils.TryExtractWrappedDataJson(json, out var dataJson) && !string.IsNullOrEmpty(dataJson))
+            // Use validation method for detailed error reporting
+            var validationResult = ChartJsonUtils.ValidateAndParseFeed(_jsonContent);
+            
+            // Log warnings if any
+            if (validationResult.Warnings.Count > 0)
             {
-                json = dataJson;
+                Debug.LogWarning($"[UGUIRuntimeJsonInjection] {validationResult.GetWarningSummary()}");
             }
-
-            // Deserialize and apply JSON to profile
-            if (!ChartJsonUtils.TryDeserializeFeed(json, out var feed))
+            
+            // Check for errors
+            if (!validationResult.IsValid)
             {
-                Debug.LogError("[UGUIRuntimeJsonInjection] Failed to parse JSON.");
+                var error = $"[UGUIRuntimeJsonInjection] {validationResult.GetErrorSummary()}";
+                Debug.LogError(error);
+                OnJsonApplied?.Invoke(false, error);
                 return;
             }
 
             // Clone profile on first injection to avoid modifying the original asset
             EnsureRuntimeProfile();
 
-            ChartJsonUtils.ApplyFeedToProfile(_runtimeProfile, feed);
+            ChartJsonUtils.ApplyFeedToProfile(_runtimeProfile, validationResult.Feed);
             
             // Refresh the chart
             _bridge.Refresh();
-            Debug.Log("[UGUIRuntimeJsonInjection] JSON applied to chart.");
+            var message = "[UGUIRuntimeJsonInjection] JSON applied to chart.";
+            Debug.Log(message);
+            OnJsonApplied?.Invoke(true, message);
+        }
+
+        /// <summary>
+        /// Directly apply a parsed feed to the chart. More efficient for periodic updates
+        /// when you already have the feed object (avoids re-parsing JSON each time).
+        /// </summary>
+        /// <param name="feed">The parsed ChartFeed to apply</param>
+        /// <returns>True if successful, false otherwise</returns>
+        public bool ApplyFeed(ChartFeed feed)
+        {
+            if (feed == null)
+            {
+                Debug.LogWarning("[UGUIRuntimeJsonInjection] Feed is null.");
+                return false;
+            }
+
+            if (_bridge == null)
+            {
+                _bridge = GetComponent<UGUIChartBridge>();
+            }
+
+            if (_bridge == null || _bridge.Profile == null)
+            {
+                Debug.LogWarning("[UGUIRuntimeJsonInjection] No UGUIChartBridge or ChartProfile found.");
+                return false;
+            }
+
+            EnsureRuntimeProfile();
+            ChartJsonUtils.ApplyFeedToProfile(_runtimeProfile, feed);
+            _bridge.Refresh();
+            return true;
         }
 
         /// <summary>
@@ -134,10 +172,15 @@ namespace EasyChart.UGUI
         /// </summary>
         private void EnsureRuntimeProfile()
         {
-            if (_profileCloned) return;
-
             var originalProfile = _bridge.Profile;
             if (originalProfile == null) return;
+
+            // Check if profile is already a runtime copy (has DontSave hideFlags)
+            if ((originalProfile.hideFlags & HideFlags.DontSave) != 0)
+            {
+                _runtimeProfile = originalProfile;
+                return;
+            }
 
             // Create a runtime copy
             _runtimeProfile = Object.Instantiate(originalProfile);
@@ -146,15 +189,16 @@ namespace EasyChart.UGUI
 
             // Assign the cloned profile to the bridge
             _bridge.Profile = _runtimeProfile;
-            _profileCloned = true;
 
             Debug.Log($"[UGUIRuntimeJsonInjection] Created runtime copy of profile: {_runtimeProfile.name}");
         }
 
         /// <summary>
-        /// Generate example JSON from the current chart profile.
+        /// Generate example JSON from the current chart profile configuration.
+        /// This exports the current profile settings to JSON format for reference.
         /// </summary>
-        public void GenerateExampleJson()
+        /// <returns>The generated JSON string, or null if generation failed.</returns>
+        public string GenerateExampleJson()
         {
             if (_bridge == null)
             {
@@ -164,14 +208,15 @@ namespace EasyChart.UGUI
             if (_bridge == null || _bridge.Profile == null)
             {
                 Debug.LogWarning("[UGUIRuntimeJsonInjection] No UGUIChartBridge or ChartProfile found.");
-                return;
+                return null;
             }
 
             var profile = _bridge.Profile;
             profile.EnsureRuntimeData();
 
-            string json = ChartJsonUtils.BuildInjectionJson(profile, profile.chartId, _exampleMode, _datasMode);
+            string json = ChartJsonUtils.BuildJson(profile, _jsonMode, profile.chartId);
             _jsonContent = _useApiEnvelope ? ChartJsonUtils.WrapAsApiResponse(json) : json;
+            return _jsonContent;
         }
     }
 }

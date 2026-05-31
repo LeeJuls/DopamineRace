@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c6dc9f43efdb9cd4186449856393684f
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/UGUI/Prefabs/EasyChart Demo/BoxPlot/BoxPlot 2.prefab
+  uploadId: 906968

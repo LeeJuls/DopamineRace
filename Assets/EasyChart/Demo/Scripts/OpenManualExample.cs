@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+using System.Text;
 using UnityEngine;
 
 namespace EasyChart.Samples
@@ -17,14 +20,51 @@ namespace EasyChart.Samples
         /// </summary>
         public void OpenManual()
         {
-            string manualPath = System.IO.Path.GetFullPath(
-                System.IO.Path.Combine(Application.dataPath, "EasyChart/Docs/ManualWeb/manual.html")
+            // Update manual-open.js so the correct chapter opens even if browser drops the hash
+            WriteOpenRequestJs(manualPage);
+
+            string manualPath = Path.GetFullPath(
+                Path.Combine(Application.dataPath, "EasyChart/Docs/ManualWeb/manual.html")
             );
             
-            string url = $"file:///{manualPath.Replace("\\", "/")}#/{manualPage}";
+            // Add timestamp to prevent browser caching
+            string timestamp = DateTime.Now.Ticks.ToString();
+            string url = $"file:///{manualPath.Replace("\\", "/")}?t={timestamp}#/{manualPage}";
             
             Debug.Log($"[OpenManualExample] Opening manual: {url}");
             Application.OpenURL(url);
+        }
+
+        /// <summary>
+        /// Writes the open request to manual-open.js so the manual opens to the correct page.
+        /// This handles browsers that drop the URL hash when opening file:// URLs.
+        /// </summary>
+        private void WriteOpenRequestJs(string chapterId)
+        {
+            try
+            {
+                string webFolder = Path.Combine(Application.dataPath, "EasyChart/Docs/ManualWeb");
+                string openFilePath = Path.Combine(webFolder, "manual-open.js");
+                
+                var sb = new StringBuilder(256);
+                sb.Append("window.EASYCHART_MANUAL_OPEN = {");
+                sb.Append("chapterId: \"").Append(EscapeJsString(chapterId)).Append("\",");
+                sb.Append(" anchor: \"\",");
+                sb.Append(" at: \"").Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")).Append("\"");
+                sb.Append("};\n");
+                
+                File.WriteAllText(openFilePath, sb.ToString(), Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[OpenManualExample] Failed to write manual-open.js: {ex.Message}");
+            }
+        }
+
+        private string EscapeJsString(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return "";
+            return s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r");
         }
 
         /// <summary>

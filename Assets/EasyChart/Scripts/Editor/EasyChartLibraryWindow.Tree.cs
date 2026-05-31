@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -106,61 +107,80 @@ namespace EasyChart.Editor
         private void OnTreeDragPerform(DragPerformEvent evt)
         {
             var folderPath = TryGetDropTargetFolderUnderTreeMouse(evt.localMousePosition);
-            var draggedPath = GetDraggedChartAssetPath();
+            var draggedPaths = GetAllDraggedAssetPaths();
             if (string.IsNullOrEmpty(folderPath) || !AssetDatabase.IsValidFolder(folderPath)) return;
-            if (string.IsNullOrEmpty(draggedPath)) return;
-
-            if (AssetDatabase.IsValidFolder(draggedPath))
-            {
-                if (string.Equals(folderPath, draggedPath, StringComparison.OrdinalIgnoreCase)) return;
-                if (IsSubFolderOf(folderPath, draggedPath)) return;
-
-                string folderName = Path.GetFileName(draggedPath);
-                if (string.IsNullOrEmpty(folderName)) return;
-
-                string destFolderPath = $"{folderPath}/{folderName}";
-                if (string.Equals(destFolderPath, draggedPath, StringComparison.OrdinalIgnoreCase)) return;
-                if (AssetPathExists(destFolderPath)) return;
-
-                DragAndDrop.AcceptDrag();
-
-                string err = AssetDatabase.MoveAsset(draggedPath, destFolderPath);
-                if (!string.IsNullOrEmpty(err))
-                {
-                    EditorUtility.DisplayDialog("Error", err, "OK");
-                    return;
-                }
-
-                AssetDatabase.SaveAssets();
-                RefreshTree();
-                evt.StopPropagation();
-                return;
-            }
-
-            string srcFolder = Path.GetDirectoryName(draggedPath)?.Replace("\\", "/");
-            if (!string.IsNullOrEmpty(srcFolder) && AssetDatabase.IsValidFolder(srcFolder) && string.Equals(srcFolder, folderPath, StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
-            string fileName = Path.GetFileName(draggedPath);
-            if (string.IsNullOrEmpty(fileName)) return;
-
-            string destPath = $"{folderPath}/{fileName}";
-            if (string.Equals(destPath, draggedPath, StringComparison.OrdinalIgnoreCase)) return;
-            if (AssetPathExists(destPath)) return;
+            if (draggedPaths.Count == 0) return;
 
             DragAndDrop.AcceptDrag();
+            
+            bool anyMoved = false;
+            var errors = new List<string>();
 
-            string err2 = AssetDatabase.MoveAsset(draggedPath, destPath);
-            if (!string.IsNullOrEmpty(err2))
+            foreach (var draggedPath in draggedPaths)
             {
-                EditorUtility.DisplayDialog("Error", err2, "OK");
-                return;
+                if (string.IsNullOrEmpty(draggedPath)) continue;
+
+                if (AssetDatabase.IsValidFolder(draggedPath))
+                {
+                    if (string.Equals(folderPath, draggedPath, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (IsSubFolderOf(folderPath, draggedPath)) continue;
+
+                    string folderName = Path.GetFileName(draggedPath);
+                    if (string.IsNullOrEmpty(folderName)) continue;
+
+                    string destFolderPath = $"{folderPath}/{folderName}";
+                    if (string.Equals(destFolderPath, draggedPath, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (AssetPathExists(destFolderPath)) continue;
+
+                    string err = AssetDatabase.MoveAsset(draggedPath, destFolderPath);
+                    if (!string.IsNullOrEmpty(err))
+                    {
+                        errors.Add(err);
+                    }
+                    else
+                    {
+                        anyMoved = true;
+                    }
+                }
+                else
+                {
+                    string srcFolder = Path.GetDirectoryName(draggedPath)?.Replace("\\", "/");
+                    if (!string.IsNullOrEmpty(srcFolder) && AssetDatabase.IsValidFolder(srcFolder) && 
+                        string.Equals(srcFolder, folderPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    string fileName = Path.GetFileName(draggedPath);
+                    if (string.IsNullOrEmpty(fileName)) continue;
+
+                    string destPath = $"{folderPath}/{fileName}";
+                    if (string.Equals(destPath, draggedPath, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (AssetPathExists(destPath)) continue;
+
+                    string err = AssetDatabase.MoveAsset(draggedPath, destPath);
+                    if (!string.IsNullOrEmpty(err))
+                    {
+                        errors.Add(err);
+                    }
+                    else
+                    {
+                        anyMoved = true;
+                    }
+                }
             }
 
-            AssetDatabase.SaveAssets();
-            RefreshTree();
+            if (errors.Count > 0)
+            {
+                EditorUtility.DisplayDialog("Error", string.Join("\n", errors), "OK");
+            }
+
+            if (anyMoved)
+            {
+                AssetDatabase.SaveAssets();
+                RefreshTree();
+            }
+            
             evt.StopPropagation();
         }
 
@@ -201,49 +221,87 @@ namespace EasyChart.Editor
 
         private static string GetDraggedChartAssetPath()
         {
-            var draggedPath = DragAndDrop.GetGenericData(DragDataKey) as string;
-            if (!string.IsNullOrEmpty(draggedPath)) return draggedPath;
+            var paths = GetAllDraggedAssetPaths();
+            return paths.Count > 0 ? paths[0] : null;
+        }
 
+        private static List<string> GetAllDraggedAssetPaths()
+        {
+            var result = new List<string>();
+            
+            Debug.Log($"[EasyChart] GetAllDraggedAssetPaths: objectReferences={DragAndDrop.objectReferences?.Length ?? 0}, paths={DragAndDrop.paths?.Length ?? 0}");
+            
+            // Check generic data first (single item drag from tree) - but only if no multi-select
+            var draggedPath = DragAndDrop.GetGenericData(DragDataKey) as string;
+            bool hasMultipleObjects = DragAndDrop.objectReferences != null && DragAndDrop.objectReferences.Length > 1;
+            
+            if (!string.IsNullOrEmpty(draggedPath) && !hasMultipleObjects)
+            {
+                Debug.Log($"[EasyChart] Found generic data (single): {draggedPath}");
+                result.Add(draggedPath);
+                return result;
+            }
+
+            // Check object references (multi-select from Unity)
             if (DragAndDrop.objectReferences != null)
             {
+                Debug.Log($"[EasyChart] Checking objectReferences: {DragAndDrop.objectReferences.Length} items");
+                for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
+                {
+                    var obj = DragAndDrop.objectReferences[i];
+                    Debug.Log($"[EasyChart] objectReferences[{i}]: {obj?.GetType().Name ?? "null"} - {obj?.name ?? "null"}");
+                    if (obj == null) continue;
+                    if (obj is ChartProfile)
+                    {
+                        var p = AssetDatabase.GetAssetPath(obj);
+                        if (!string.IsNullOrEmpty(p) && !result.Contains(p))
+                        {
+                            result.Add(p);
+                        }
+                    }
+                }
+                
+                if (result.Count > 0) return result;
+
+                // Fallback: check all .asset files
                 for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
                 {
                     var obj = DragAndDrop.objectReferences[i];
                     if (obj == null) continue;
-                    if (obj is ChartProfile)
-                    {
-                        return AssetDatabase.GetAssetPath(obj);
-                    }
-                }
-
-                if (DragAndDrop.objectReferences.Length > 0)
-                {
-                    var p = AssetDatabase.GetAssetPath(DragAndDrop.objectReferences[0]);
+                    var p = AssetDatabase.GetAssetPath(obj);
                     if (!string.IsNullOrEmpty(p) && p.EndsWith(".asset", StringComparison.OrdinalIgnoreCase))
                     {
-                        return p;
+                        if (!result.Contains(p)) result.Add(p);
                     }
                 }
+                
+                if (result.Count > 0) return result;
             }
 
+            // Check paths (folders or assets)
             if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
             {
                 for (int i = 0; i < DragAndDrop.paths.Length; i++)
                 {
                     var p = DragAndDrop.paths[i];
-                    if (!string.IsNullOrEmpty(p) && AssetDatabase.IsValidFolder(p))
+                    if (string.IsNullOrEmpty(p)) continue;
+                    
+                    if (AssetDatabase.IsValidFolder(p))
                     {
-                        return p;
+                        if (!result.Contains(p)) result.Add(p);
                     }
-                    if (!string.IsNullOrEmpty(p) && p.EndsWith(".asset", StringComparison.OrdinalIgnoreCase))
+                    else if (p.EndsWith(".asset", StringComparison.OrdinalIgnoreCase))
                     {
                         var profile = AssetDatabase.LoadAssetAtPath<ChartProfile>(p);
-                        if (profile != null) return p;
+                        if (profile != null && !result.Contains(p))
+                        {
+                            result.Add(p);
+                        }
                     }
                 }
             }
 
-            return null;
+            return result;
         }
 
         private void OnTreePointerDown(PointerDownEvent evt)
@@ -291,20 +349,56 @@ namespace EasyChart.Editor
             float sqrDist = (pos2 - _dragStartPos).sqrMagnitude;
             if (sqrDist < DragStartThreshold * DragStartThreshold) return;
 
-            var obj = AssetDatabase.LoadMainAssetAtPath(_dragCandidateAssetPath);
-            if (obj == null)
+            // Collect all selected items for multi-select drag
+            var selectedPaths = new List<string>();
+            var selectedObjects = new List<UnityEngine.Object>();
+            
+            if (_folderTree != null && _folderTree.selectedItems != null)
             {
-                ClearDragState();
-                return;
+                foreach (var item in _folderTree.selectedItems)
+                {
+                    var itemPath = item as string;
+                    if (!string.IsNullOrEmpty(itemPath))
+                    {
+                        var itemObj = AssetDatabase.LoadMainAssetAtPath(itemPath);
+                        if (itemObj != null)
+                        {
+                            selectedPaths.Add(itemPath);
+                            selectedObjects.Add(itemObj);
+                        }
+                    }
+                }
+            }
+            
+            // If no selection or current drag item not in selection, use single item
+            if (selectedPaths.Count == 0 || !selectedPaths.Contains(_dragCandidateAssetPath))
+            {
+                var obj = AssetDatabase.LoadMainAssetAtPath(_dragCandidateAssetPath);
+                if (obj == null)
+                {
+                    ClearDragState();
+                    return;
+                }
+                selectedPaths.Clear();
+                selectedObjects.Clear();
+                selectedPaths.Add(_dragCandidateAssetPath);
+                selectedObjects.Add(obj);
             }
 
             DragAndDrop.PrepareStartDrag();
-            DragAndDrop.objectReferences = new[] { obj };
-            DragAndDrop.SetGenericData(DragDataKey, _dragCandidateAssetPath);
+            DragAndDrop.objectReferences = selectedObjects.ToArray();
+            DragAndDrop.paths = selectedPaths.ToArray();
+            // Only set generic data for single item (backward compatibility)
+            if (selectedPaths.Count == 1)
+            {
+                DragAndDrop.SetGenericData(DragDataKey, selectedPaths[0]);
+            }
             DragAndDrop.visualMode = DragAndDropVisualMode.Move;
-            string dragLabel = AssetDatabase.IsValidFolder(_dragCandidateAssetPath)
-                ? Path.GetFileName(_dragCandidateAssetPath)
-                : Path.GetFileNameWithoutExtension(_dragCandidateAssetPath);
+            string dragLabel = selectedPaths.Count > 1 
+                ? $"{selectedPaths.Count} items"
+                : (AssetDatabase.IsValidFolder(_dragCandidateAssetPath)
+                    ? Path.GetFileName(_dragCandidateAssetPath)
+                    : Path.GetFileNameWithoutExtension(_dragCandidateAssetPath));
             DragAndDrop.StartDrag(dragLabel);
             _dragInProgress = true;
         }
@@ -342,6 +436,155 @@ namespace EasyChart.Editor
             _dragCandidateAssetPath = null;
             _dragPointerId = -1;
             _dragInProgress = false;
+        }
+
+        private void OnTreeKeyDown(KeyDownEvent evt)
+        {
+            if (_folderTree == null) return;
+            
+            var selectedItems = _folderTree.selectedItems;
+            if (selectedItems == null) return;
+            
+            string selectedPath = null;
+            foreach (var item in selectedItems)
+            {
+                selectedPath = item as string;
+                break;
+            }
+            
+            if (string.IsNullOrEmpty(selectedPath)) return;
+            
+            // Check if this is the root path (cannot delete/clone root)
+            bool canOperateOnSelection = !string.Equals(selectedPath, GetActiveProfileRootPath(), StringComparison.OrdinalIgnoreCase);
+            bool isProfileSelected = selectedPath.EndsWith(".asset") && AssetDatabase.LoadAssetAtPath<ChartProfile>(selectedPath) != null;
+            
+            if (evt.keyCode == KeyCode.F2)
+            {
+                // F2 to rename selected item (like Windows Explorer)
+                if (canOperateOnSelection)
+                {
+                    RenameAssetOrFolder(selectedPath);
+                    evt.StopPropagation();
+                    evt.PreventDefault();
+                }
+            }
+            else if (evt.keyCode == KeyCode.Delete)
+            {
+                // Delete key to delete selected item
+                if (canOperateOnSelection)
+                {
+                    DeleteAssetOrFolderWithConfirmation(selectedPath);
+                    evt.StopPropagation();
+                    evt.PreventDefault();
+                }
+            }
+            else if (evt.keyCode == KeyCode.D && evt.ctrlKey)
+            {
+                // Ctrl+D to clone selected profile
+                if (isProfileSelected)
+                {
+                    CloneProfile(selectedPath);
+                    evt.StopPropagation();
+                    evt.PreventDefault();
+                }
+            }
+        }
+        
+        private void DeleteAssetOrFolderWithConfirmation(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return;
+            
+            string name = System.IO.Path.GetFileNameWithoutExtension(path);
+            bool isFolder = AssetDatabase.IsValidFolder(path);
+            string itemType = isFolder ? "folder" : "profile";
+            
+            // Show confirmation dialog that can be confirmed with Enter key
+            bool confirmed = EditorUtility.DisplayDialog(
+                "Delete " + itemType,
+                $"Are you sure you want to delete '{name}'?\n\nThis cannot be undone.",
+                "Delete",
+                "Cancel");
+            
+            if (confirmed)
+            {
+                // Find sibling to select after deletion
+                string siblingToSelect = GetSiblingPath(path);
+                
+                DeleteAssetOrFolderInternal(path, siblingToSelect);
+            }
+        }
+        
+        private string GetSiblingPath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return null;
+            
+            string parentFolder = System.IO.Path.GetDirectoryName(path)?.Replace("\\", "/");
+            if (string.IsNullOrEmpty(parentFolder)) return null;
+            
+            // Get all siblings in the same folder
+            var siblings = new List<string>();
+            
+            // Add subfolders
+            var subFolders = AssetDatabase.GetSubFolders(parentFolder);
+            if (subFolders != null) siblings.AddRange(subFolders);
+            
+            // Add assets
+            var guids = AssetDatabase.FindAssets("t:ChartProfile", new[] { parentFolder });
+            foreach (var guid in guids)
+            {
+                var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                // Only include direct children
+                if (System.IO.Path.GetDirectoryName(assetPath)?.Replace("\\", "/") == parentFolder)
+                {
+                    siblings.Add(assetPath);
+                }
+            }
+            
+            // Sort siblings using natural sort
+            siblings.Sort((a, b) => NaturalCompare(Path.GetFileName(a), Path.GetFileName(b)));
+            
+            // Find current index
+            int currentIndex = siblings.IndexOf(path);
+            if (currentIndex < 0) return parentFolder; // Fallback to parent
+            
+            // Return next sibling, or previous if at end, or parent if only child
+            if (siblings.Count <= 1) return parentFolder;
+            if (currentIndex < siblings.Count - 1) return siblings[currentIndex + 1];
+            return siblings[currentIndex - 1];
+        }
+        
+        private void DeleteAssetOrFolderInternal(string path, string selectAfterDelete = null)
+        {
+            if (string.IsNullOrEmpty(path)) return;
+
+            bool ok = AssetDatabase.DeleteAsset(path);
+            if (!ok)
+            {
+                EditorUtility.DisplayDialog("Error", "Delete failed.", "OK");
+                return;
+            }
+
+            AssetDatabase.SaveAssets();
+            RefreshTree(selectAfterDelete);
+        }
+        
+        private int FindTreeItemId(IEnumerable<TreeViewItemData<string>> items, string targetPath)
+        {
+            if (items == null || string.IsNullOrEmpty(targetPath)) return -1;
+            
+            foreach (var item in items)
+            {
+                if (string.Equals(item.data, targetPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return item.id;
+                }
+                if (item.children != null)
+                {
+                    int childId = FindTreeItemId(item.children, targetPath);
+                    if (childId >= 0) return childId;
+                }
+            }
+            return -1;
         }
 
         private void RenameAssetOrFolder(string path)
@@ -446,7 +689,7 @@ namespace EasyChart.Editor
             });
         }
 
-        private void RefreshTree()
+        private void RefreshTree(string selectPathAfterRefresh = null)
         {
             EnsureSharedIconsLoaded();
 
@@ -459,6 +702,16 @@ namespace EasyChart.Editor
             _folderTree.Rebuild();
 
             RestoreExpandedFolderPaths(expandedFolderPaths);
+            
+            // Select specified path after refresh
+            if (!string.IsNullOrEmpty(selectPathAfterRefresh) && _treeRoots != null)
+            {
+                int targetId = FindTreeItemId(_treeRoots, selectPathAfterRefresh);
+                if (targetId >= 0)
+                {
+                    _folderTree.SetSelection(new[] { targetId });
+                }
+            }
         }
 
         private HashSet<string> CaptureExpandedFolderPaths()
@@ -579,7 +832,7 @@ namespace EasyChart.Editor
             var items = new List<TreeViewItemData<string>>();
 
             string[] dirs = Directory.GetDirectories(path);
-            Array.Sort(dirs, StringComparer.OrdinalIgnoreCase);
+            Array.Sort(dirs, (a, b) => NaturalCompare(Path.GetFileName(a), Path.GetFileName(b)));
             foreach (var dir in dirs)
             {
                 string unityPath = dir.Replace("\\", "/");
@@ -633,7 +886,7 @@ namespace EasyChart.Editor
         private List<string> GetProfilesInFolderSortedByName(string folderPath)
         {
             var list = GetProfilesInFolder(folderPath);
-            list.Sort((a, b) => string.Compare(GetProfileDisplayNameForSort(a), GetProfileDisplayNameForSort(b), StringComparison.OrdinalIgnoreCase));
+            list.Sort((a, b) => NaturalCompare(GetProfileDisplayNameForSort(a), GetProfileDisplayNameForSort(b)));
             return list;
         }
 
@@ -641,6 +894,41 @@ namespace EasyChart.Editor
         {
             if (string.IsNullOrEmpty(assetPath)) return string.Empty;
             return Path.GetFileNameWithoutExtension(assetPath);
+        }
+
+        private static int NaturalCompare(string a, string b)
+        {
+            if (a == null && b == null) return 0;
+            if (a == null) return -1;
+            if (b == null) return 1;
+
+            var regex = new Regex(@"(\d+)|(\D+)");
+            var partsA = regex.Matches(a);
+            var partsB = regex.Matches(b);
+
+            int count = Math.Min(partsA.Count, partsB.Count);
+            for (int i = 0; i < count; i++)
+            {
+                string partA = partsA[i].Value;
+                string partB = partsB[i].Value;
+
+                bool isNumA = int.TryParse(partA, out int numA);
+                bool isNumB = int.TryParse(partB, out int numB);
+
+                int result;
+                if (isNumA && isNumB)
+                {
+                    result = numA.CompareTo(numB);
+                }
+                else
+                {
+                    result = string.Compare(partA, partB, StringComparison.OrdinalIgnoreCase);
+                }
+
+                if (result != 0) return result;
+            }
+
+            return partsA.Count.CompareTo(partsB.Count);
         }
     }
 }

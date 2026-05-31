@@ -1,0 +1,3 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ec="EasyChart" editor-extension-mode="False">
+    <ec:ChartElement profile-name="Candlestick 1" profile-guid="354bc35c42c7eee4496005955e680b87" style="width: 450px; height: 300px;" />
+</ui:UXML>

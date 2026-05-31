@@ -61,15 +61,9 @@ namespace EasyChart
                 return;
             }
 
-            if (Application.isPlaying)
+            if (Application.isPlaying && tex.wrapMode != TextureWrapMode.Repeat)
             {
-                bool hasPro = ProPackage.IsInstalled;
-                var desiredWrap = (hasPro && fill != null && fill.animationType == TextureFillAnimationType.TextureScale)
-                    ? TextureWrapMode.Clamp
-                    : TextureWrapMode.Repeat;
-
-                if (tex.wrapMode != desiredWrap)
-                    tex.wrapMode = desiredWrap;
+                tex.wrapMode = TextureWrapMode.Repeat;
             }
 
             var mesh = ctx.Allocate(4, 6, tex);
@@ -77,100 +71,6 @@ namespace EasyChart
 
             Vector2 tiling = fill != null ? fill.tiling : Vector2.one;
             Vector2 offset = fill != null ? fill.offset : Vector2.zero;
-
-            if (fill != null && ProPackage.IsInstalled && fill.animationType != TextureFillAnimationType.None)
-            {
-                float t = Time.realtimeSinceStartup;
-                if (fill.animationType == TextureFillAnimationType.TextureUvMove)
-                {
-                    offset -= fill.uvMoveSpeed * t;
-                }
-                else if (fill.animationType == TextureFillAnimationType.TextureScale)
-                {
-                    var baseTiling = tiling;
-
-                    float u = t * fill.scaleSpeed;
-                    float c01;
-
-                    Vector2 factor;
-                    switch (fill.scaleType)
-                    {
-                        case TextureFillScaleType.ZoomIn:
-                        {
-                            float p = Mathf.Repeat(u, 1f);
-                            var s = Vector2.Lerp(fill.scaleFrom, fill.scaleTo, p);
-                            s.x = Mathf.Max(0.0001f, s.x);
-                            s.y = Mathf.Max(0.0001f, s.y);
-                            factor = new Vector2(1f / s.x, 1f / s.y);
-                            c01 = p;
-                            break;
-                        }
-                        case TextureFillScaleType.ZoomOut:
-                        {
-                            float p = Mathf.Repeat(u, 1f);
-                            var s = Vector2.Lerp(fill.scaleTo, fill.scaleFrom, p);
-                            s.x = Mathf.Max(0.0001f, s.x);
-                            s.y = Mathf.Max(0.0001f, s.y);
-                            factor = new Vector2(1f / s.x, 1f / s.y);
-                            c01 = p;
-                            break;
-                        }
-                        case TextureFillScaleType.PingPong:
-                        {
-                            float p = Mathf.PingPong(u, 1f);
-                            var s = Vector2.Lerp(fill.scaleFrom, fill.scaleTo, p);
-                            s.x = Mathf.Max(0.0001f, s.x);
-                            s.y = Mathf.Max(0.0001f, s.y);
-                            factor = new Vector2(1f / s.x, 1f / s.y);
-                            c01 = p;
-                            break;
-                        }
-                        case TextureFillScaleType.Sin:
-                        default:
-                        {
-                            float s = Mathf.Sin(u);
-                            float p = (s + 1f) * 0.5f;
-                            var sc = Vector2.Lerp(fill.scaleFrom, fill.scaleTo, p);
-                            sc.x = Mathf.Max(0.0001f, sc.x);
-                            sc.y = Mathf.Max(0.0001f, sc.y);
-                            factor = new Vector2(1f / sc.x, 1f / sc.y);
-                            c01 = p;
-                            break;
-                        }
-                    }
-
-                    factor.x = Mathf.Max(0.0001f, factor.x);
-                    factor.y = Mathf.Max(0.0001f, factor.y);
-                    tiling = new Vector2(baseTiling.x * factor.x, baseTiling.y * factor.y);
-                    offset += (baseTiling - tiling) * 0.5f;
-
-                    if (fill.colorFadeGradient != null)
-                        tint *= fill.colorFadeGradient.Evaluate(c01);
-                }
-                else if (fill.animationType == TextureFillAnimationType.TextureFade)
-                {
-                    float u = t * fill.colorFadeSpeed;
-                    float c01;
-                    switch (fill.colorFadeWrap)
-                    {
-                        case TextureFillColorOverLifeWrap.Loop:
-                            c01 = Mathf.Repeat(u, 1f);
-                            break;
-                        case TextureFillColorOverLifeWrap.Clamp:
-                            c01 = Mathf.Clamp01(u);
-                            break;
-                        case TextureFillColorOverLifeWrap.PingPong:
-                        default:
-                            c01 = Mathf.PingPong(u, 1f);
-                            break;
-                    }
-
-                    if (fill.colorFadeGradient != null)
-                        tint = fill.colorFadeGradient.Evaluate(c01);
-                    else
-                        tint = Color.Lerp(fill.colorFadeStart, fill.colorFadeEnd, c01);
-                }
-            }
 
             float u0 = 0f * tiling.x + offset.x;
             float u1 = 1f * tiling.x + offset.x;

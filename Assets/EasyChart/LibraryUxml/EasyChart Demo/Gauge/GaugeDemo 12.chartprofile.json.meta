@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f82f795d41309564290684b0ae7732d9
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/LibraryUxml/EasyChart Demo/Gauge/GaugeDemo 12.chartprofile.json
+  uploadId: 906968

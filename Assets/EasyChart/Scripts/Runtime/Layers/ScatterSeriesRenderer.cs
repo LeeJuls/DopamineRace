@@ -17,22 +17,72 @@ namespace EasyChart.Layers
 
         private ScatterHit? _hover;
 
+        private bool _isRegisteredForGlobalUpdate = false;
+
         public ScatterSeriesRenderer()
         {
-            schedule.Execute(OnUpdate).Every(16);
+            RegisterCallback<AttachToPanelEvent>(OnAttachToPanel);
+            RegisterCallback<DetachFromPanelEvent>(OnDetachFromPanel);
         }
 
-        private static bool HasTextureFillAnimation(TextureFillSettings fill)
+        private void OnAttachToPanel(AttachToPanelEvent evt)
         {
-            return fill != null && fill.animationType != TextureFillAnimationType.None;
+            UpdateUpdateLoopState();
         }
 
-        private void OnUpdate()
+        private void OnDetachFromPanel(DetachFromPanelEvent evt)
         {
-            if (panel == null) return;
-            if (Data == null || Data.Series == null) return;
+            StopUpdateLoop();
+        }
 
-            if (!ProPackage.IsInstalled) return;
+        private ChartElement GetChartElement()
+        {
+            var current = this.parent;
+            while (current != null)
+            {
+                if (current is ChartElement chart) return chart;
+                current = current.parent;
+            }
+            return null;
+        }
+
+        private void StartUpdateLoop()
+        {
+            if (_isRegisteredForGlobalUpdate) return;
+            var chart = GetChartElement();
+            if (chart != null)
+            {
+                ChartElement.RegisterGlobalAnimationCallback(chart, OnUpdate);
+                _isRegisteredForGlobalUpdate = true;
+            }
+        }
+
+        private void StopUpdateLoop()
+        {
+            if (!_isRegisteredForGlobalUpdate) return;
+            var chart = GetChartElement();
+            if (chart != null)
+            {
+                ChartElement.UnregisterGlobalAnimationCallback(chart, OnUpdate);
+            }
+            _isRegisteredForGlobalUpdate = false;
+        }
+
+        private void UpdateUpdateLoopState()
+        {
+            if (panel == null) { StopUpdateLoop(); return; }
+            if (HasActiveAnimations())
+            {
+                if (!_isRegisteredForGlobalUpdate && GetChartElement() != null)
+                    StartUpdateLoop();
+            }
+            else StopUpdateLoop();
+        }
+
+        private bool HasActiveAnimations()
+        {
+            if (Data == null || Data.Series == null) return false;
+            if (!ProPackage.IsInstalled) return false;
 
             for (int i = 0; i < Data.Series.Count; i++)
             {
@@ -40,10 +90,32 @@ namespace EasyChart.Layers
                 if (s == null || !s.visible) continue;
                 if (s.type != SerieType.Scatter) continue;
                 if (s.settings is not ScatterSettings settings) continue;
-                if (settings.point != null && HasTextureFillAnimation(settings.point.textureFill)) { MarkDirtyRepaint(); return; }
-                if (settings.hover != null && HasTextureFillAnimation(settings.hover.textureFill)) { MarkDirtyRepaint(); return; }
-                if (settings.hover != null && settings.hover.point != null && HasTextureFillAnimation(settings.hover.point.textureFill)) { MarkDirtyRepaint(); return; }
+
+                if (settings.point != null && HasTextureFillAnimation(settings.point.textureFill)) return true;
+                if (settings.point != null && TextureFXBridge.HasAnyAnimation(settings.point.textureFXLayers)) return true;
+                if (settings.hover != null && settings.hover.point != null && TextureFXBridge.HasAnyAnimation(settings.hover.point.textureFXLayers)) return true;
             }
+
+            return false;
+        }
+
+        private static bool HasTextureFillAnimation(TextureFillSettings fill)
+        {
+            return false;
+        }
+
+
+        private void OnUpdate()
+        {
+            if (panel == null) { StopUpdateLoop(); return; }
+
+            if (!HasActiveAnimations())
+            {
+                StopUpdateLoop();
+                return;
+            }
+
+            MarkDirtyRepaint();
         }
 
         private void DrawPointMarkerWithAlpha(MeshGenerationContext context, Painter2D painter, Vector2 pos, float radius, TextureFillSettings fill, Color defaultColor, float alpha, Vector2 uvOffsetAdd)
@@ -53,19 +125,11 @@ namespace EasyChart.Layers
 
             UnpackTextureFill(fill, defaultColor, out var tex, out var tiling, out var offset, out var color);
 
-            bool hasPro = ProPackage.IsInstalled;
-            if (hasPro && fill != null && fill.animationType == TextureFillAnimationType.TextureScale)
-            {
-                tiling = fill.tiling;
-                offset = fill.offset;
-            }
-
             offset += uvOffsetAdd;
             color.a *= alpha;
             if (color.a <= 0.001f) return;
 
             float r = radius;
-            if (tex != null) r *= EvalTextureScaleSizeMul(fill);
 
             if (tex != null)
             {
@@ -123,14 +187,7 @@ namespace EasyChart.Layers
         private static float GetScatterY(SeriesData p, ScatterSettings settings)
         {
             if (p == null) return 0f;
-
-            float y = p.y;
-            if (Mathf.Approximately(y, 0f) && !Mathf.Approximately(p.value, 0f))
-            {
-                y = p.value;
-            }
-
-            return y;
+            return p.y;
         }
 
         private float EvalPointSize(SeriesData dataPoint, ScatterSettings settings)
@@ -150,7 +207,7 @@ namespace EasyChart.Layers
             {
                 t = 0f;
             }
-            else t = (dataPoint.z - minV) / (maxV - minV);
+            else t = (dataPoint.value - minV) / (maxV - minV);
 
             if (settings.sizeMapping.clamp) t = Mathf.Clamp01(t);
 
@@ -276,18 +333,26 @@ namespace EasyChart.Layers
                 for (int pi = 0; pi < points.Count; pi++)
                 {
                     var point = points[pi];
-                    if (point == null) continue;
+                    if (point == null)
+                    {
+                        continue;
+                    }
 
                     float y = GetScatterY(point, settings);
                     Vector2 pos = GetPixelPos(new Vector2(point.x, y), w, h);
-                    if (!IsAnchorVisibleInPlot(pos, w, h, scrollOffsetX, scrollOffsetY)) continue;
+                    if (!IsAnchorVisibleInPlot(pos, w, h, scrollOffsetX, scrollOffsetY))
+                    {
+                        continue;
+                    }
 
-                    string text = FormatAxisValue(y, yAxis, dpPlaces);
+                    // Display value field for label (used for sizeMapping), not y coordinate
+                    string text = point.value.ToString($"F{dpPlaces}");
                     if (showName) text = $"{serie.name}\n{text}";
 
                     string pointId = GetStableKeyForPoint(xIsCategory, point.x, point.id, pi);
+                    string labelKey = $"scatter:{si}:{pointId}";
                     var desc = BuildSeriesLabelDesc(
-                        $"scatter:{si}:{pointId}",
+                        labelKey,
                         text,
                         pos,
                         new Vector2(-10 + extraOffset.x, -baseMarginTop + extraOffset.y),
@@ -375,6 +440,7 @@ namespace EasyChart.Layers
 
         protected override void OnGenerateVisualContent(MeshGenerationContext context)
         {
+            UpdateUpdateLoopState();
             if (Data == null || Data.Series == null) return;
 
             var width = contentRect.width;
@@ -415,6 +481,7 @@ namespace EasyChart.Layers
                         if (!hp.show) continue;
                         float radius = hp.size * 0.5f;
                         DrawPointMarkerWithAlpha(context, painter, pos, radius, hp.textureFill, Color.white, 1f, Vector2.zero);
+
                     }
                     else
                     {
@@ -429,6 +496,56 @@ namespace EasyChart.Layers
                         DrawPointMarkerWithAlpha(context, painter, pos, radius, pointFill, Color.white, 1f, Vector2.zero);
                         DrawPointOverlay(context, painter, pos, radius, hoverFill);
                     }
+                }
+
+                // Draw TextureFX layers on top of points (Pro only)
+                bool hasBasePointFX = settings.point != null && settings.point.textureFXLayers != null && settings.point.textureFXLayers.Count > 0;
+                bool hasHoverPointFX = settings.hover != null && settings.hover.point != null && settings.hover.point.textureFXLayers != null && settings.hover.point.textureFXLayers.Count > 0;
+                if (ProPackage.IsInstalled && (hasBasePointFX || hasHoverPointFX))
+                {
+                    DrawPointTextureFXLayers(context, serie, settings, width, height, pixelClipX, si);
+                }
+            }
+        }  
+        private void DrawPointTextureFXLayers(MeshGenerationContext context, Serie serie, ScatterSettings settings, float width, float height, float pixelClipX, int serieIndex)
+        {
+            if (serie.seriesData == null) return;
+            var point = settings.point;
+            bool basePointShow = point != null && point.show;
+            bool hoverPointShow = settings.hover != null && settings.hover.point != null && settings.hover.point.show;
+            if (!basePointShow && !hoverPointShow) return;
+
+            float time = TextureFXBridge.GetAnimationTime();
+
+            for (int pi = 0; pi < serie.seriesData.Count; pi++)
+            {
+                var p = serie.seriesData[pi];
+                if (p == null) continue;
+                Vector2 pos = GetPixelPos(new Vector2(p.x, GetScatterY(p, settings)), width, height);
+                if (pos.x > pixelClipX) continue;
+
+                float size = EvalPointSize(p, settings);
+
+                bool hoverEnabled = settings.hover != null && settings.hover.enabled;
+                bool isHovered = _hover.HasValue && _hover.Value.SerieIndex == serieIndex && _hover.Value.PointIndex == pi;
+
+                if (hoverEnabled && isHovered && settings.hover.point != null)
+                {
+                    var hp = settings.hover.point;
+                    if (!hp.show) continue;
+                    float radius = hp.size * 0.5f;
+                    var pointRect = new Rect(pos.x - radius, pos.y - radius, radius * 2f, radius * 2f);
+                    if (hp.textureFXLayers != null && hp.textureFXLayers.Count > 0)
+                        TextureFXBridge.DrawLayers(context, pointRect, hp.textureFXLayers, time);
+                }
+                else if (basePointShow)
+                {
+                    if (hoverEnabled && isHovered)
+                        size *= Mathf.Max(0f, settings.hover.scale);
+
+                    float radius = size * 0.5f;
+                    var pointRect = new Rect(pos.x - radius, pos.y - radius, radius * 2f, radius * 2f);
+                    TextureFXBridge.DrawLayers(context, pointRect, point.textureFXLayers, time);
                 }
             }
         }

@@ -19,6 +19,14 @@ namespace EasyChart
             public float ScaleAnimStartTime;
             public bool ScaleAnimating;
             public bool HideOnScaleZero;
+            
+            // Store anchor info for re-applying after layout changes
+            public ChartLabelAnchor Anchor;
+            public float AnchorX;
+            public float AnchorY;
+            
+            // Square background support
+            public bool SquareBackground;
         }
 
         private readonly Dictionary<string, Entry> _active = new Dictionary<string, Entry>(256);
@@ -79,6 +87,11 @@ namespace EasyChart
                 entry.Label = GetPooledLabel();
                 _active.Add(desc.key, entry);
             }
+            else if (entry.Label == null)
+            {
+                // Label was destroyed, recreate it
+                entry.Label = GetPooledLabel();
+            }
 
             entry.Used = true;
             entry.ZOrder = desc.zOrder;
@@ -128,10 +141,26 @@ namespace EasyChart
             bool hasBackground = desc.backgroundColor.a > 0f || desc.backgroundTexture != null;
             if (hasBackground)
             {
-                label.style.paddingLeft = 4f;
-                label.style.paddingRight = 4f;
-                label.style.paddingTop = 2f;
-                label.style.paddingBottom = 2f;
+                float basePadding = 4f;
+                float scale = desc.backgroundScale > 0f ? desc.backgroundScale : 1f;
+                float scaledPadding = basePadding * scale;
+
+                if (desc.squareBackground)
+                {
+                    // For square background, use equal padding on all sides
+                    // The actual square sizing will be handled by measuring text and adjusting
+                    label.style.paddingLeft = scaledPadding;
+                    label.style.paddingRight = scaledPadding;
+                    label.style.paddingTop = scaledPadding;
+                    label.style.paddingBottom = scaledPadding;
+                }
+                else
+                {
+                    label.style.paddingLeft = scaledPadding;
+                    label.style.paddingRight = scaledPadding;
+                    label.style.paddingTop = 2f * scale;
+                    label.style.paddingBottom = 2f * scale;
+                }
 
                 if (desc.backgroundTexture != null)
                 {
@@ -168,7 +197,19 @@ namespace EasyChart
             float x = (desc.clipToPlot ? containerOffsetX : _plotRect.x) + desc.anchorPx.x + resolvedOffset.x;
             float y = (desc.clipToPlot ? containerOffsetY : _plotRect.y) + desc.anchorPx.y + resolvedOffset.y;
 
+            // Store anchor info for re-applying after layout changes
+            entry.Anchor = desc.anchor;
+            entry.AnchorX = x;
+            entry.AnchorY = y;
+            entry.SquareBackground = desc.squareBackground;
+
             ApplyAnchor(label, desc.anchor, x, y);
+            
+            // Register for geometry changed event to re-apply anchor after layout
+            // This ensures correct centering when font size changes
+            label.UnregisterCallback<GeometryChangedEvent>(OnLabelGeometryChanged);
+            label.RegisterCallback<GeometryChangedEvent>(OnLabelGeometryChanged);
+            label.userData = entry;
 
             // Apply edge fade transparency for clipToPlot labels
             if (desc.clipToPlot && _edgeFadePx > 0f)
@@ -191,11 +232,41 @@ namespace EasyChart
             }
         }
 
+        /// <summary>
+        /// Immediately hides all labels. Call this when coordinate system changes
+        /// to prevent label residue from previous coordinate system.
+        /// </summary>
+        public void HideAll()
+        {
+            foreach (var kv in _active)
+            {
+                RequestHide(kv.Value);
+            }
+        }
+
         private void EnsureScaleAnimTicker()
         {
             if (_root == null) return;
             if (_scaleAnimItem != null) return;
-            _scaleAnimItem = _root.schedule.Execute(TickScaleAnimations).Every(16);
+            if (!HasActiveScaleAnimations()) return;
+            _scaleAnimItem = _root.schedule.Execute(TickScaleAnimations).Every(ChartTiming.UpdateIntervalMs);
+        }
+
+        private void StopScaleAnimTicker()
+        {
+            if (_scaleAnimItem == null) return;
+            _scaleAnimItem.Pause();
+            _scaleAnimItem = null;
+        }
+
+        private bool HasActiveScaleAnimations()
+        {
+            foreach (var kv in _active)
+            {
+                var e = kv.Value;
+                if (e != null && e.ScaleAnimating) return true;
+            }
+            return false;
         }
 
         private void TickScaleAnimations()
@@ -203,11 +274,15 @@ namespace EasyChart
             if (_root == null) return;
             float now = Time.realtimeSinceStartup;
 
+            bool anyAnimating = false;
+
             foreach (var kv in _active)
             {
                 var e = kv.Value;
                 if (e == null) continue;
                 if (!e.ScaleAnimating) continue;
+
+                anyAnimating = true;
 
                 float t = (now - e.ScaleAnimStartTime) / k_ScaleAnimDurationSec;
                 if (t >= 1f)
@@ -227,6 +302,11 @@ namespace EasyChart
                 e.Scale = Mathf.Lerp(e.ScaleFrom, e.ScaleTo, t);
                 ApplyScale(e);
             }
+
+            if (!anyAnimating)
+            {
+                StopScaleAnimTicker();
+            }
         }
 
         private static void ApplyScale(Entry entry)
@@ -237,7 +317,7 @@ namespace EasyChart
             entry.Label.transform.scale = new Vector3(s, s, 1f);
         }
 
-        private static void EnsureShown(Entry entry)
+        private void EnsureShown(Entry entry)
         {
             if (entry == null) return;
             if (entry.Label == null) return;
@@ -264,6 +344,9 @@ namespace EasyChart
             entry.ScaleAnimStartTime = Time.realtimeSinceStartup;
             entry.ScaleAnimating = true;
             ApplyScale(entry);
+
+            // Ensure ticker is running to animate the scale
+            EnsureScaleAnimTicker();
         }
 
         private void RequestHide(Entry entry)
@@ -272,7 +355,7 @@ namespace EasyChart
             if (entry.Label == null) return;
             if (!entry.Label.visible && entry.Scale <= 0f) return;
 
-                // Freeze position while hiding: if the label is under the plot-clipped container,
+            // Freeze position while hiding: if the label is under the plot-clipped container,
             // its visual position would keep changing when plotRect/container layout changes.
             // Move it to the overlay container and convert coordinates once when hide starts.
             if (entry.Label.parent == _plotClippedContainer && _overlayContainer != null)
@@ -384,6 +467,10 @@ namespace EasyChart
 
             switch (anchor)
             {
+                case ChartLabelAnchor.Center:
+                    label.style.translate = new StyleTranslate(new Translate(new Length(-50, LengthUnit.Percent), new Length(-50, LengthUnit.Percent), 0));
+                    label.style.unityTextAlign = TextAnchor.MiddleCenter;
+                    break;
                 case ChartLabelAnchor.TopLeft:
                     label.style.translate = new StyleTranslate(new Translate(0, 0, 0));
                     label.style.unityTextAlign = TextAnchor.UpperLeft;
@@ -421,6 +508,89 @@ namespace EasyChart
                     label.style.unityTextAlign = TextAnchor.MiddleCenter;
                     break;
             }
+        }
+
+        private static void OnLabelGeometryChanged(GeometryChangedEvent evt)
+        {
+            var label = evt.target as Label;
+            if (label == null) return;
+            
+            var entry = label.userData as Entry;
+            if (entry == null) return;
+            
+            var size = evt.newRect.size;
+            
+            // Apply square background by making width and height equal (use max dimension)
+            if (entry.SquareBackground && size.x > 0 && size.y > 0)
+            {
+                float maxDim = Mathf.Max(size.x, size.y);
+                label.style.width = maxDim;
+                label.style.height = maxDim;
+                size = new Vector2(maxDim, maxDim);
+            }
+            
+            // Use pixel-based centering instead of percentage-based translate
+            // This is more reliable when element size changes
+            ApplyAnchorWithPixelOffset(label, entry.Anchor, entry.AnchorX, entry.AnchorY, size);
+        }
+        
+        private static void ApplyAnchorWithPixelOffset(Label label, ChartLabelAnchor anchor, float x, float y, Vector2 size)
+        {
+            if (label == null) return;
+            
+            float offsetX = 0f;
+            float offsetY = 0f;
+            
+            switch (anchor)
+            {
+                case ChartLabelAnchor.Center:
+                    offsetX = -size.x * 0.5f;
+                    offsetY = -size.y * 0.5f;
+                    label.style.unityTextAlign = TextAnchor.MiddleCenter;
+                    break;
+                case ChartLabelAnchor.TopLeft:
+                    label.style.unityTextAlign = TextAnchor.UpperLeft;
+                    break;
+                case ChartLabelAnchor.Top:
+                    offsetX = -size.x * 0.5f;
+                    label.style.unityTextAlign = TextAnchor.UpperCenter;
+                    break;
+                case ChartLabelAnchor.TopRight:
+                    offsetX = -size.x;
+                    label.style.unityTextAlign = TextAnchor.UpperRight;
+                    break;
+                case ChartLabelAnchor.Left:
+                    offsetY = -size.y * 0.5f;
+                    label.style.unityTextAlign = TextAnchor.MiddleLeft;
+                    break;
+                case ChartLabelAnchor.Right:
+                    offsetX = -size.x;
+                    offsetY = -size.y * 0.5f;
+                    label.style.unityTextAlign = TextAnchor.MiddleRight;
+                    break;
+                case ChartLabelAnchor.BottomLeft:
+                    offsetY = -size.y;
+                    label.style.unityTextAlign = TextAnchor.LowerLeft;
+                    break;
+                case ChartLabelAnchor.Bottom:
+                    offsetX = -size.x * 0.5f;
+                    offsetY = -size.y;
+                    label.style.unityTextAlign = TextAnchor.LowerCenter;
+                    break;
+                case ChartLabelAnchor.BottomRight:
+                    offsetX = -size.x;
+                    offsetY = -size.y;
+                    label.style.unityTextAlign = TextAnchor.LowerRight;
+                    break;
+                default:
+                    offsetX = -size.x * 0.5f;
+                    offsetY = -size.y * 0.5f;
+                    label.style.unityTextAlign = TextAnchor.MiddleCenter;
+                    break;
+            }
+            
+            // Use pixel-based translate instead of percentage
+            label.style.translate = new StyleTranslate(new Translate(offsetX, offsetY, 0));
         }
     }
 }

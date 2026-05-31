@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 2cd9d6f72a9c7fe4bbc709d9f067a6e4
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/UGUI/Prefabs/EasyChart Demo/OHLC/OHLC.prefab
+  uploadId: 906968

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 13bc7bf5c47b01f4ca7be60b7ba00047
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359794
+  packageName: Easy Chart Lite
+  packageVersion: 2.0
+  assetPath: Assets/EasyChart/Scripts/Runtime/UIToolkitExampleController.cs
+  uploadId: 906968

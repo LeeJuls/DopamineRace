@@ -188,10 +188,32 @@
 
   function getChapterNumber(relPath){
     const name = getFileName(relPath);
-    const m = name.match(/^(\d+)[-_]/);
-    if(!m) return Number.POSITIVE_INFINITY;
-    const n = parseInt(m[1], 10);
-    return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
+    // Parse XX_YY format: XX is group, YY is chapter within group
+    const m = name.match(/^(\d+)_(\d+)[-_]/);
+    if(m){
+      const group = parseInt(m[1], 10);
+      const chapter = parseInt(m[2], 10);
+      // Combine into sortable number: group * 100 + chapter
+      return (Number.isFinite(group) ? group : 99) * 100 + (Number.isFinite(chapter) ? chapter : 99);
+    }
+    // Fallback: try single number prefix
+    const m2 = name.match(/^(\d+)[-_]/);
+    if(m2){
+      const n = parseInt(m2[1], 10);
+      return Number.isFinite(n) ? n * 100 : Number.POSITIVE_INFINITY;
+    }
+    return Number.POSITIVE_INFINITY;
+  }
+
+  function getGroupNumber(relPath){
+    const name = getFileName(relPath);
+    // Parse XX_YY format: XX is group number
+    const m = name.match(/^(\d+)_/);
+    if(m){
+      const n = parseInt(m[1], 10);
+      return Number.isFinite(n) ? n : 99;
+    }
+    return 99;
   }
 
   function compareChapters(a, b){
@@ -210,11 +232,17 @@
   }
 
   function getGroupKey(ch){
-    const n = getChapterNumber(ch.relPath);
-    if(n >= 0 && n <= 1) return 'workflow';
-    if(n === 2 || (n >= 20 && n <= 29)) return 'editor_ui';
-    if(n >= 10 && n <= 19) return 'charts';
-    if(n >= 3 && n <= 9) return 'reference';
+    const groupNum = getGroupNumber(ch.relPath);
+    // Map group numbers to keys based on file naming convention
+    // 00_XX = overview/workflow
+    // 01_XX, 02_XX = editor_ui
+    // 03_XX = charts (series configuration)
+    // 04_XX = reference
+    // 05_XX+ = other
+    if(groupNum === 0) return 'workflow';
+    if(groupNum === 1 || groupNum === 2) return 'editor_ui';
+    if(groupNum === 3) return 'charts';
+    if(groupNum === 4) return 'reference';
     return 'other';
   }
 
@@ -501,7 +529,9 @@
       return;
     }
 
-    if(active.id !== state.activeId){
+    // Only force update URL if state.activeId was not set (fallback to default)
+    // Don't force update if user specified a valid ID that just isn't loaded yet
+    if(!state.activeId && active){
       state.activeId = active.id;
       location.hash = `#/${encodeURIComponent(active.id)}`;
       return;
@@ -590,6 +620,10 @@
     });
 
     syncFromHash();
+    // Validate activeId exists in current chapters, fallback to first if invalid
+    if(state.activeId && !state.chapters.some(c => c.id === state.activeId)){
+      state.activeId = null;
+    }
     if(!state.activeId && state.chapters.length > 0) state.activeId = state.chapters[0].id;
     render();
   }
