@@ -271,6 +271,34 @@ public class CharacterInfoPopup : MonoBehaviour
             skillDescLabel.text = sb.ToString();
         }
 
+        // 4-b) 스킬 아이콘 — SkillRegistry 경유 (액티브 우선, 없으면 패시브)
+        if (skillIcon != null)
+        {
+            string iconSkillKey = null;
+
+            // 액티브 스킬 (charAbility = skillKey)
+            if (!string.IsNullOrEmpty(data.charAbility) && !data.charAbility.Contains(":"))
+                iconSkillKey = data.charAbility;
+
+            // 폴백: 패시브 스킬 (V4 charPassive = skillKey)
+            if (string.IsNullOrEmpty(iconSkillKey))
+            {
+                var v4Icon = CharacterDatabaseV4.FindById(data.charId);
+                if (v4Icon != null && !string.IsNullOrEmpty(v4Icon.charPassive) && !v4Icon.charPassive.Contains(":"))
+                    iconSkillKey = v4Icon.charPassive;
+            }
+
+            Sprite skillSpr = !string.IsNullOrEmpty(iconSkillKey)
+                ? SkillRegistry.GetIcon(iconSkillKey)
+                : null;
+            if (skillSpr != null)
+            {
+                skillIcon.sprite = skillSpr;
+                skillIcon.color = Color.white;
+            }
+            // 아이콘 없으면 Init()의 placeholder(sword) 유지
+        }
+
         // 5) 코루틴 전달용 저장
         pendingData = data;
         pendingRecord = record;
