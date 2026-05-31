@@ -122,6 +122,23 @@ public partial class SceneBootstrapper
             if (startText != null)
                 startText.text = Loc.Get("str.ui.btn.start");
         }
+
+        // DebugLeaderboardBtn (임시 — 출시 전 제거): 배팅 화면에서 리더보드 오버레이 열기
+        Transform dbgLbObj = root.Find("DebugLeaderboardBtn");
+        if (dbgLbObj != null)
+        {
+            Button dbgLbBtn = dbgLbObj.GetComponent<Button>();
+            if (dbgLbBtn != null)
+            {
+                Image dbgBg = dbgLbObj.GetComponent<Image>();
+                if (dbgBg != null)
+                {
+                    dbgBg.raycastTarget = true;
+                    dbgLbBtn.targetGraphic = dbgBg;
+                }
+                dbgLbBtn.onClick.AddListener(ShowLeaderboard);
+            }
+        }
     }
 
     // ══════════════════════════════════════

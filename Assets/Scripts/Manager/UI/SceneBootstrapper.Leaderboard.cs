@@ -159,6 +159,8 @@ public partial class SceneBootstrapper
             {
                 var emptyGO = Instantiate(leaderboardEntryTemplate, leaderboardEntryContainer);
                 emptyGO.SetActive(true);
+                var emptyBadge = emptyGO.transform.Find("PlaceBadge");
+                if (emptyBadge != null) emptyBadge.gameObject.SetActive(false);
                 var infoT = FindText(emptyGO.transform, "InfoText");
                 if (infoT != null) infoT.text = Loc.Get("str.leaderboard.empty");
             }
@@ -173,20 +175,32 @@ public partial class SceneBootstrapper
                     var entryGO = Instantiate(leaderboardEntryTemplate, leaderboardEntryContainer);
                     entryGO.SetActive(true);
 
-                    // 등수 (영어는 서수, 나머지는 숫자만)
-                    string rankStr = Loc.CurrentLang == "en"
-                        ? GetEnOrdinal(i + 1) : (i + 1).ToString();
+                    // 등수: 별도 배지 박스에 숫자 표시 (InfoText에는 미포함)
+                    string rankStr = (i + 1).ToString();
 
                     // 날짜 압축: "2026-03-05 16:59" → "26-03-05"
                     string dateStr = e.date.Length >= 10 ? e.date.Substring(2, 8) : e.date;
 
-                    string infoLine = Loc.Get("str.leaderboard.row", rankStr, e.score, dateStr);
+                    string infoLine = Loc.Get("str.leaderboard.row", e.score, dateStr);
 
                     var infoText = FindText(entryGO.transform, "InfoText");
                     if (infoText != null)
                     {
                         infoText.text  = infoLine;
                         infoText.color = (i < 3) ? gold : white;
+                    }
+
+                    // 순위 배지 숫자
+                    var placeBadge = entryGO.transform.Find("PlaceBadge");
+                    if (placeBadge != null)
+                    {
+                        placeBadge.gameObject.SetActive(true);
+                        var placeText = placeBadge.GetComponentInChildren<Text>();
+                        if (placeText != null)
+                        {
+                            placeText.text  = rankStr;
+                            placeText.color = (i < 3) ? gold : white;
+                        }
                     }
 
                     var summaryText = FindText(entryGO.transform, "SummaryText");
