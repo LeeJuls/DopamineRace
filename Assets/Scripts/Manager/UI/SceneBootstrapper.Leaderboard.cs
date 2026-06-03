@@ -87,6 +87,17 @@ public partial class SceneBootstrapper
             leaderboardCloseBtnText = FindText(closeT, "BtnText");
             leaderboardCloseButton?.onClick.AddListener(() => leaderboardPopup.SetActive(false));
         }
+
+        // 기록 없을 때 안내 라벨 — 윈도우 중앙 오버레이 (1회 생성, 기본 비활성)
+        if (leaderboardEmptyLabel == null)
+        {
+            leaderboardEmptyLabel = MkText(root, "",
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                Vector2.zero, new Vector2(720, 200), 30, TextAnchor.MiddleCenter, Color.white);
+            leaderboardEmptyLabel.verticalOverflow   = VerticalWrapMode.Overflow;
+            leaderboardEmptyLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
+            leaderboardEmptyLabel.gameObject.SetActive(false);
+        }
     }
 
     // ══════════════════════════════════════
@@ -157,15 +168,20 @@ public partial class SceneBootstrapper
 
             if (entries.Count == 0)
             {
-                var emptyGO = Instantiate(leaderboardEntryTemplate, leaderboardEntryContainer);
-                emptyGO.SetActive(true);
-                var emptyBadge = emptyGO.transform.Find("PlaceBadge");
-                if (emptyBadge != null) emptyBadge.gameObject.SetActive(false);
-                var infoT = FindText(emptyGO.transform, "InfoText");
-                if (infoT != null) infoT.text = Loc.Get("str.leaderboard.empty");
+                // 빈 상태: 행 템플릿 복제 대신 윈도우 중앙 안내 라벨 표시
+                // (행 복제 시 템플릿 SummaryText "R1:Win+0" 잔재가 남던 문제 해소)
+                if (leaderboardEmptyLabel != null)
+                {
+                    leaderboardEmptyLabel.text = Loc.Get("str.leaderboard.empty");
+                    leaderboardEmptyLabel.gameObject.SetActive(true);
+                }
             }
             else
             {
+                // 기록 존재: 안내 라벨 숨김 + 리스트 채우기
+                if (leaderboardEmptyLabel != null)
+                    leaderboardEmptyLabel.gameObject.SetActive(false);
+
                 Color gold  = new Color(1f, 0.84f, 0f, 1f);
                 Color white = Color.white;
 

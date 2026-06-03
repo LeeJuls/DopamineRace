@@ -136,6 +136,7 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Button     leaderboardCloseButton;
     private Text       leaderboardCloseBtnText;
     private Text       leaderboardContentText;      // Legacy 폴백 전용 (null 허용)
+    private Text       leaderboardEmptyLabel;       // 기록 없을 때 윈도우 중앙 안내 (신형 전용)
 
     // ── 런타임 ──
     private float raceTimer;
