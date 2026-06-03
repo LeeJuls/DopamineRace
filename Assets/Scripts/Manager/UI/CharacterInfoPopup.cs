@@ -30,9 +30,9 @@ public class CharacterInfoPopup : MonoBehaviour
     private Text longDistRanks;
 
     // 경기기록 ScrollRect — 3개 동시 스크롤용 (LateUpdate polling)
+    // 절대 픽셀(anchoredPosition.x) 동기화 + 공통 clamp(가장 긴 콘텐츠 기준)
     private ScrollRect _shortScroll, _midScroll, _longScroll;
-    private float _lastShortH = -1f, _lastMidH = -1f, _lastLongH = -1f;
-    private float _lastShortV = -1f, _lastMidV = -1f, _lastLongV = -1f;
+    private float _lastX = 0f;   // 직전 동기화된 content.x (3개 공통)
 
     // 차트 영역
     private GameObject radarChartArea;
@@ -646,6 +646,22 @@ public class CharacterInfoPopup : MonoBehaviour
             midDistRanks.text = FormatRankList(midRanks);
         if (longDistRanks != null)
             longDistRanks.text = FormatRankList(longRanks);
+
+        // ContentSizeFitter 폭 즉시 확정 (LateUpdate clamp 계산용) + 스크롤 좌측 리셋
+        ResetRankScroll(_shortScroll);
+        ResetRankScroll(_midScroll);
+        ResetRankScroll(_longScroll);
+        _lastX = 0f;
+    }
+
+    /// <summary>거리 순위 스크롤 — 콘텐츠 폭 강제 리빌드 + 좌측(0) 정렬 리셋.</summary>
+    private static void ResetRankScroll(ScrollRect sr)
+    {
+        if (sr == null || sr.content == null) return;
+        UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(sr.content);
+        var p = sr.content.anchoredPosition;
+        p.x = 0f;
+        sr.content.anchoredPosition = p;
     }
 
     private List<int> Slice(List<int> src)
@@ -711,47 +727,48 @@ public class CharacterInfoPopup : MonoBehaviour
         if (!gameObject.activeInHierarchy) return;
         if (_shortScroll == null || _midScroll == null || _longScroll == null) return;
 
-        float sH = _shortScroll.horizontalNormalizedPosition;
-        float mH = _midScroll.horizontalNormalizedPosition;
-        float lH = _longScroll.horizontalNormalizedPosition;
-        float sV = _shortScroll.verticalNormalizedPosition;
-        float mV = _midScroll.verticalNormalizedPosition;
-        float lV = _longScroll.verticalNormalizedPosition;
+        var sc = _shortScroll.content;
+        var mc = _midScroll.content;
+        var lc = _longScroll.content;
+        if (sc == null || mc == null || lc == null) return;
 
-        // 변화 감지 — 가장 최근 변화한 값을 master로
-        float targetH = sH;
-        if (Mathf.Abs(mH - _lastMidH) > 0.0005f) targetH = mH;
-        else if (Mathf.Abs(lH - _lastLongH) > 0.0005f) targetH = lH;
-        else if (Mathf.Abs(sH - _lastShortH) > 0.0005f) targetH = sH;
+        // 콘텐츠 폭 확정 전이면 이 프레임 동기화 skip (ContentSizeFitter 반영 대기)
+        float sw = sc.rect.width, mw = mc.rect.width, lw = lc.rect.width;
+        if (sw <= 0f && mw <= 0f && lw <= 0f) return;
 
-        float targetV = sV;
-        if (Mathf.Abs(mV - _lastMidV) > 0.0005f) targetV = mV;
-        else if (Mathf.Abs(lV - _lastLongV) > 0.0005f) targetV = lV;
-        else if (Mathf.Abs(sV - _lastShortV) > 0.0005f) targetV = sV;
+        // 공통 clamp 범위 — 가장 긴 콘텐츠 기준 (오너 결정: 빈 공간 허용)
+        float viewport = ((RectTransform)_shortScroll.transform).rect.width;
+        float maxContent = Mathf.Max(sw, Mathf.Max(mw, lw));
+        float maxScroll = Mathf.Max(0f, maxContent - viewport);
 
-        bool hChanged = Mathf.Abs(sH - _lastShortH) > 0.0005f || Mathf.Abs(mH - _lastMidH) > 0.0005f || Mathf.Abs(lH - _lastLongH) > 0.0005f;
-        bool vChanged = Mathf.Abs(sV - _lastShortV) > 0.0005f || Mathf.Abs(mV - _lastMidV) > 0.0005f || Mathf.Abs(lV - _lastLongV) > 0.0005f;
+        // 마스터 선정 — _lastX 대비 변화 감지된 ScrollRect의 content.x (픽셀 임계 0.5)
+        float sx = sc.anchoredPosition.x;
+        float mx = mc.anchoredPosition.x;
+        float lx = lc.anchoredPosition.x;
 
-        if (hChanged && _shortScroll.horizontal)
+        float master = _lastX;
+        if      (Mathf.Abs(mx - _lastX) > 0.5f) master = mx;
+        else if (Mathf.Abs(lx - _lastX) > 0.5f) master = lx;
+        else if (Mathf.Abs(sx - _lastX) > 0.5f) master = sx;
+
+        float clamped = Mathf.Clamp(master, -maxScroll, 0f);
+
+        // 3개 동일 픽셀 적용
+        SetContentX(sc, clamped);
+        SetContentX(mc, clamped);
+        SetContentX(lc, clamped);
+
+        _lastX = clamped;   // 재조회 대신 방금 쓴 값 저장 (stale 방지)
+    }
+
+    private static void SetContentX(RectTransform content, float x)
+    {
+        var p = content.anchoredPosition;
+        if (!Mathf.Approximately(p.x, x))
         {
-            _shortScroll.horizontalNormalizedPosition = targetH;
-            _midScroll.horizontalNormalizedPosition   = targetH;
-            _longScroll.horizontalNormalizedPosition  = targetH;
+            p.x = x;
+            content.anchoredPosition = p;
         }
-        if (vChanged && _shortScroll.vertical)
-        {
-            _shortScroll.verticalNormalizedPosition = targetV;
-            _midScroll.verticalNormalizedPosition   = targetV;
-            _longScroll.verticalNormalizedPosition  = targetV;
-        }
-
-        // 다음 프레임 비교용 저장
-        _lastShortH = _shortScroll.horizontalNormalizedPosition;
-        _lastMidH   = _midScroll.horizontalNormalizedPosition;
-        _lastLongH  = _longScroll.horizontalNormalizedPosition;
-        _lastShortV = _shortScroll.verticalNormalizedPosition;
-        _lastMidV   = _midScroll.verticalNormalizedPosition;
-        _lastLongV  = _longScroll.verticalNormalizedPosition;
     }
 
     // ═══ 유틸 ═══
