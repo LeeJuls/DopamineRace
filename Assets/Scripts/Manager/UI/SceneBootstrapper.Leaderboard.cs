@@ -88,15 +88,14 @@ public partial class SceneBootstrapper
             leaderboardCloseButton?.onClick.AddListener(() => leaderboardPopup.SetActive(false));
         }
 
-        // 기록 없을 때 안내 라벨 — 윈도우 중앙 오버레이 (1회 생성, 기본 비활성)
-        if (leaderboardEmptyLabel == null)
+        // 기록 없을 때 안내 라벨 — 프리팹의 EmptyLabel 노드 캐싱
+        // (위치/크기/폰트는 LeaderboardPanel.prefab의 EmptyLabel에서 Inspector로 직접 조정)
+        Transform emptyT = root.Find("EmptyLabel");
+        if (emptyT != null)
         {
-            leaderboardEmptyLabel = MkText(root, "",
-                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                Vector2.zero, new Vector2(720, 200), 30, TextAnchor.MiddleCenter, Color.white);
-            leaderboardEmptyLabel.verticalOverflow   = VerticalWrapMode.Overflow;
-            leaderboardEmptyLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
-            leaderboardEmptyLabel.gameObject.SetActive(false);
+            leaderboardEmptyLabel = emptyT.GetComponent<Text>();
+            if (leaderboardEmptyLabel != null)
+                leaderboardEmptyLabel.gameObject.SetActive(false);
         }
     }
 
