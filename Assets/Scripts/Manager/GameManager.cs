@@ -203,11 +203,18 @@ public class GameManager : MonoBehaviour
         if (s == GameState.Result) CalcScore();
         if (s == GameState.Finish)
         {
+            Debug.Log($"[진단][ChangeState] Finish 진입 — RoundHistory.Count={ScoreManager.Instance?.RoundHistory.Count}"); // STEP7
             ScoreManager.Instance?.SaveToLeaderboard();
             // ★ 게임 완료 → 다음에 1라운드부터 시작
             PlayerPrefs.DeleteKey(PREF_LAST_ROUND);
             PlayerPrefs.DeleteKey(PREF_LAST_TRACK);
             PlayerPrefs.Save();
+        }
+        if (s == GameState.GameOver)
+        {
+            Debug.Log($"[진단][ChangeState] GameOver 진입 — RoundHistory.Count={ScoreManager.Instance?.RoundHistory.Count}"); // STEP7
+            // 젤리 소진 중도 종료도 리더보드에 기록 (RoundHistory.Count>0 조건은 SaveToLeaderboard 내부)
+            ScoreManager.Instance?.SaveToLeaderboard();
         }
         OnStateChanged?.Invoke(s);
     }
@@ -251,7 +258,13 @@ public class GameManager : MonoBehaviour
     private void CalcScore()
     {
         var rankings = RaceManager.Instance?.GetFinalRankings();
-        if (rankings == null || rankings.Count < 3) return;
+        // [진단] STEP7 — rankings 부족 시 RecordRound 누락(가설 C) 추적 (검증 후 제거)
+        Debug.Log($"[진단][CalcScore] R{CurrentRound} rankings.Count={(rankings?.Count ?? -1)}");
+        if (rankings == null || rankings.Count < 3)
+        {
+            Debug.LogWarning($"[진단][CalcScore] rankings 부족 → early-return! RecordRound 누락 (RoundHistory 미증가)");
+            return;
+        }
 
         // 인덱스 리스트 (0=1등, 1=2등, 2=3등...)
         List<int> rankingIndices = new List<int>();
@@ -342,22 +355,23 @@ public class GameManager : MonoBehaviour
     // ═══ 다음 라운드 ═══
     public void NextRound()
     {
-        // SPEC-029 / R20·R21: GameOver 즉시 체크 (IsLastRound보다 먼저).
-        // Jelly=0 + 환전 불가(스톤 0 또는 환전 사용 후, R19 구제 포함) → 즉시 GameOver.
-        // NextRound는 Result UI 버튼에서 호출 → ChangeState 중첩이 아니라 정상 전환.
-        if (WalletManager.Instance != null && WalletManager.Instance.ShouldGameOver())
-        {
-            Debug.Log($"[GameManager] SPEC-029: ShouldGameOver=true → GameOver 진입 (Jelly={WalletManager.Instance.Jelly} Stone={WalletManager.Instance.Stone})");
-            ChangeState(GameState.GameOver);
-            return;
-        }
-
+        // ★ IsLastRound 먼저 체크: 전 라운드 완료는 젤리 상태 무관 항상 Finish.
+        // (이전 코드는 ShouldGameOver가 먼저라 마지막 라운드 + 젤리0 시 Finish 대신 GameOver 발동 버그)
         if (IsLastRound)
         {
             // 마지막 라운드 → Finish 화면
             Debug.Log("═══ 전체 " + TotalRounds + " 라운드 종료! 총점: "
                 + ScoreManager.Instance?.CurrentGameScore + " ═══");
             ChangeState(GameState.Finish);
+            return;
+        }
+
+        // SPEC-029 / R20·R21: GameOver 체크 (중간 라운드에서만 적용).
+        // Jelly=0 + 환전 불가(스톤 0 또는 환전 사용 후, R19 구제 포함) → 즉시 GameOver.
+        if (WalletManager.Instance != null && WalletManager.Instance.ShouldGameOver())
+        {
+            Debug.Log($"[GameManager] SPEC-029: ShouldGameOver=true → GameOver 진입 (Jelly={WalletManager.Instance.Jelly} Stone={WalletManager.Instance.Stone})");
+            ChangeState(GameState.GameOver);
             return;
         }
 

@@ -246,7 +246,7 @@ public partial class SceneBootstrapper
                 {
                     var arrowText = resultRankArrows[actualRank];
                     arrowText.gameObject.SetActive(true);
-                    arrowText.text  = "← " + bet.GetSelectionLabel(si);
+                    arrowText.text  = "← " + BuildPickArrowLabel(bet, si, actualRank);
                     arrowText.color = isHit ? COLOR_PICK_HIT : COLOR_PICK_MISS;
                 }
             }
@@ -285,9 +285,32 @@ public partial class SceneBootstrapper
         if (nextRoundBtnText != null)
         {
             nextRoundBtnText.text = (gm != null && gm.IsLastRound)
-                ? Loc.Get("str.ui.btn.new_game")
+                ? Loc.Get("str.ui.btn.check_result")
                 : Loc.Get("str.ui.btn.next_round");
         }
+    }
+
+    /// <summary>
+    /// 결과 화면 픽 화살표 라벨 결정.
+    /// - 입상권(PrizeRankCut) 밖: "선택" (actualRank 0-based, PrizeRankCut 1-based 등수)
+    /// - 입상권 안 + 순서 베팅(쌍승 등 선택순서별 라벨이 다른 타입): "N착 배팅"
+    /// - 입상권 안 + 그 외(단승·입상·순서무관 다중): 기존 베팅 라벨(1착·입상·선택)
+    /// </summary>
+    private string BuildPickArrowLabel(BetInfo bet, int selectionOrder, int actualRank)
+    {
+        // 입상권 밖 → "선택"
+        if (actualRank >= bet.PrizeRankCut)
+            return Loc.Get("str.bet.label.select");
+
+        string baseLabel = bet.GetSelectionLabel(selectionOrder);
+
+        // 순서가 의미있는 베팅(쌍승): 선택 순서별 라벨이 서로 다름 → "N착 배팅"
+        bool isOrdered = bet.RequiredSelections > 1
+                         && bet.GetSelectionLabel(0) != bet.GetSelectionLabel(1);
+        if (isOrdered)
+            return Loc.Get("str.bet.label.rank_bet", baseLabel);
+
+        return baseLabel;
     }
 
     /// <summary>순위 숫자 → 현재 언어에 맞는 서수 표기 (예: 1위, 1st)</summary>

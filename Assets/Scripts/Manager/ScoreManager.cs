@@ -201,6 +201,8 @@ public class ScoreManager : MonoBehaviour
             + " → " + (score > 0 ? "+" + score : "0") + "점"
             + " | 총점: " + TotalScore
             + " | 트랙: " + trackName);
+        // [진단] STEP7 — RecordRound 후 누적 상태 (검증 후 제거)
+        Debug.Log($"[진단][RecordRound] R{roundNum} 추가 후 RoundHistory.Count={RoundHistory.Count}");
 
         OnScoreChanged?.Invoke(score, TotalScore);
     }
@@ -223,6 +225,9 @@ public class ScoreManager : MonoBehaviour
 
     public void ResetAll()
     {
+        // [진단] STEP7 — ResetAll 호출자 추적 (저장 전 Clear 경합 가설 D, 검증 후 제거)
+        Debug.LogWarning($"[진단][ResetAll] 호출 — Clear 직전 RoundHistory.Count={RoundHistory.Count}\n{System.Environment.StackTrace}");
+
         // 2계층만 리셋
         RoundHistory.Clear();
         LastRoundScore = 0;
@@ -266,10 +271,17 @@ public class ScoreManager : MonoBehaviour
 
     public void SaveToLeaderboard()
     {
+        // [진단] STEP7 — 저장 진입 시점 상태 (검증 후 제거)
+        string fp = System.IO.Path.Combine(Application.persistentDataPath, "leaderboard.json");
+        Debug.Log($"[진단][Save] 진입 RoundHistory.Count={RoundHistory.Count} CurrentGameScore={CurrentGameScore} 엔트리전={LeaderboardData.Count} FilePath={fp}");
         if (RoundHistory.Count > 0)
         {
             LeaderboardData.Save(CurrentGameScore, RoundHistory.Count, GetRoundSummary());
-            Debug.Log("[리더보드] 게임 결과 저장: " + CurrentGameScore + "점 (" + RoundHistory.Count + "라운드)");
+            Debug.Log($"[진단][Save] 저장완료 엔트리후={LeaderboardData.Count} | [리더보드] {CurrentGameScore}점 ({RoundHistory.Count}라운드)");
+        }
+        else
+        {
+            Debug.LogWarning("[진단][Save] RoundHistory 비어있음 → 저장 스킵! (가드 C/D 의심)");
         }
     }
 

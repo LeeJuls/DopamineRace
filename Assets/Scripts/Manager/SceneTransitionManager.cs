@@ -97,10 +97,12 @@ public class SceneTransitionManager : MonoBehaviour
     /// <summary>
     /// 블록 디졸브 전환으로 씬 로드
     /// </summary>
-    public void TransitionToScene(string sceneName)
+    /// <param name="sceneName">로드할 씬 이름</param>
+    /// <param name="autoPlayBGM">true(기본): 전환 완료 후 게임 BGM 자동 재생. false: BGM 처리를 씬에서 직접 담당 (TitleScene 이동 시 사용)</param>
+    public void TransitionToScene(string sceneName, bool autoPlayBGM = true)
     {
         if (isTransitioning) return;
-        StartCoroutine(TransitionSequence(sceneName));
+        StartCoroutine(TransitionSequence(sceneName, autoPlayBGM));
     }
 
     public bool IsTransitioning => isTransitioning;
@@ -108,7 +110,7 @@ public class SceneTransitionManager : MonoBehaviour
     // ══════════════════════════════════════
     //  전환 시퀀스
     // ══════════════════════════════════════
-    private IEnumerator TransitionSequence(string sceneName)
+    private IEnumerator TransitionSequence(string sceneName, bool autoPlayBGM = true)
     {
         isTransitioning = true;
 
@@ -130,8 +132,8 @@ public class SceneTransitionManager : MonoBehaviour
         // ⑤ 블록 빌드업 인 (새 화면이 블록 단위로 드러남)
         yield return StartCoroutine(BuildupIn());
 
-        // ⑥ 완료 후 게임 BGM 시작
-        if (BGMManager.Instance != null)
+        // ⑥ 완료 후 게임 BGM 시작 (autoPlayBGM=false 시 스킵 — 씬 자체에서 BGM 담당)
+        if (autoPlayBGM && BGMManager.Instance != null)
         {
             BGMManager.Instance.PlayBGM("Audio/BGM");
             BGMManager.Instance.SetVolume(0f);

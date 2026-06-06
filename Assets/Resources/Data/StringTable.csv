@@ -94,6 +94,7 @@ str.bet.label.second,2착,2nd,2着,第2名,2.,2º,2º
 str.bet.label.third,3착,3rd,3着,第3名,3.,3º,3º
 str.bet.label.place,입상,Place,入着,入围,Platz,Puesto,Posto
 str.bet.label.select,선택,Pick,選択,选择,Wahl,Elegir,Escolher
+str.bet.label.rank_bet,{0} 배팅,{0} Bet,{0} ベット,{0} 投注,{0} Wette,Apuesta {0},Aposta {0}
 str.bet.guide.win.empty,1착 예측 선택!,Pick your 1st place!,1着を予想！,选择第1名预测！,Wähle den 1. Platz!,¡Elige el 1er lugar!,Escolha o 1º lugar!
 str.bet.guide.place.empty,3착 이내 들어올 말 선택!,Pick a horse for top 3!,3着以内の馬を選択！,选择进入前3名的马！,Wähle ein Pferd für Top 3!,¡Elige un caballo para el Top 3!,Escolha um cavalo para o Top 3!
 str.bet.guide.quinella.empty,1~2착 할 말 2마리 선택!,Pick 2 horses for top 2!,1~2着の馬を2頭選択！,选择前2名的2匹马！,Wähle 2 Pferde für Top 2!,¡Elige 2 caballos para el Top 2!,Escolha 2 cavalos para o Top 2!
@@ -109,6 +110,7 @@ str.bet.guide.complete,선택 완료!,Selection complete!,選択完了！,选择
 str.ui.btn.start,Start,Start,スタート,开始,Start,Iniciar,Iniciar
 str.ui.btn.next_round,다음 라운드,Next Round,次のラウンド,下一轮,Nächste Runde,Siguiente Ronda,Próxima Rodada
 str.ui.btn.new_game,새 게임,New Game,新しいゲーム,新游戏,Neues Spiel,Nuevo Juego,Novo Jogo
+str.ui.btn.check_result,결과 확인,Check Results,結果確認,查看结果,Ergebnisse,Resultados,Resultados
 str.ui.btn.close,닫기,Close,閉じる,关闭,Schließen,Cerrar,Fechar
 str.ui.btn.top100,Top 100,Top 100,Top 100,Top 100,Top 100,Top 100,Top 100
 str.ui.btn.panel_close,◀,◀,◀,◀,◀,◀,◀

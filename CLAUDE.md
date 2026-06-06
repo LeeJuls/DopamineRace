@@ -14,6 +14,8 @@
 ## 다국어
 - `Resources/Data/StringTable.csv` — 7개 언어 (ko·en·ja·zh_CN·de·es·br)
 - 하드코딩 금지 — `Loc.Get("키")` 사용
+- **별도 언급 없어도** 모든 UI 문자열(버튼·라벨·모달·에러·툴팁)은 StringTable.csv에 키 발급 후 `Loc.Get()` 사용. 키 미발급 상태 커밋 금지.
+- 서수+접미사 라벨은 포맷 키 재활용 (예: `str.bet.label.rank_bet`="{0} 배팅" + 기존 `first`/`second`)
 
 ## 주요 클래스
 | 클래스 | 규칙 |

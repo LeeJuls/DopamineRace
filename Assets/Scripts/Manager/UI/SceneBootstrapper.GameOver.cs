@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 /// GAME OVER 화면 partial (SPEC-029 / SPEC-029.1).
 /// 젤리 0 + 환전 불가 = GameState.GameOver 진입 시 자동 표시.
 /// "GAME OVER" 텍스트(폰트 42) 표시 후 화면을 클릭하면 타이틀 화면으로 이동.
-/// 스코어/리더보드는 저장 안 함, 캐릭터 개별 기록은 CalcScore에서 이미 저장됨.
+/// 스코어/리더보드는 GameManager.ChangeState(GameOver)에서 저장됨. 캐릭터 개별 기록은 CalcScore에서 이미 저장됨.
 /// </summary>
 public partial class SceneBootstrapper : MonoBehaviour
 {

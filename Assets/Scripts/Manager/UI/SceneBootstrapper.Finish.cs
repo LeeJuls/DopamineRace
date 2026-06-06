@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 최종 결산 화면: 라운드별 결과 테이블, 총점, 새 게임/리더보드 버튼
@@ -51,13 +52,22 @@ public partial class SceneBootstrapper
             finishRoundDetailText = FindText(root, "RoundDetailText");
         }
 
-        // NewGameBtn
+        // NewGameBtn — TitleScene 파편 전환 (SceneTransitionManager 블록 디졸브)
         Transform ngT = root.Find("NewGameBtn");
         if (ngT != null)
         {
             finishNewGameButton  = ngT.GetComponent<Button>();
             finishNewGameBtnText = FindText(ngT, "BtnText");
-            finishNewGameButton?.onClick.AddListener(() => GameManager.Instance?.StartNewGame());
+            finishNewGameButton?.onClick.RemoveAllListeners();
+            finishNewGameButton?.onClick.AddListener(() =>
+            {
+                if (finishNewGameButton != null)
+                    finishNewGameButton.interactable = false;   // 연타 방지
+                if (SceneTransitionManager.Instance != null)
+                    SceneTransitionManager.Instance.TransitionToScene("TitleScene", autoPlayBGM: false);
+                else
+                    SceneManager.LoadScene("TitleScene");
+            });
         }
 
         // Top100Btn
@@ -101,7 +111,15 @@ public partial class SceneBootstrapper
         ngrt.sizeDelta = new Vector2(220, 55);
         newGameBtn.AddComponent<Image>().color = new Color(0.25f, 0.5f, 0.9f);
         finishNewGameButton = newGameBtn.AddComponent<Button>();
-        finishNewGameButton.onClick.AddListener(() => GameManager.Instance?.StartNewGame());
+        finishNewGameButton.onClick.RemoveAllListeners();
+        finishNewGameButton.onClick.AddListener(() =>
+        {
+            finishNewGameButton.interactable = false;   // 연타 방지
+            if (SceneTransitionManager.Instance != null)
+                SceneTransitionManager.Instance.TransitionToScene("TitleScene", autoPlayBGM: false);
+            else
+                SceneManager.LoadScene("TitleScene");
+        });
         MkText(newGameBtn.transform, Loc.Get("str.ui.btn.new_game"),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             Vector2.zero, new Vector2(220, 55), 26, TextAnchor.MiddleCenter, Color.white);

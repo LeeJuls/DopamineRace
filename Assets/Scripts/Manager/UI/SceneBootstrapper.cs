@@ -195,6 +195,10 @@ public partial class SceneBootstrapper : MonoBehaviour
             new GameObject("BGMManager").AddComponent<BGMManager>();
         if (SFXManager.Instance == null)
             new GameObject("SFXManager").AddComponent<SFXManager>();
+        // SceneTransitionManager — DontDestroyOnLoad 씬 전환 매니저
+        // TitleScene 거치지 않고 SampleScene 직접 Play 시에도 항상 인스턴스 보장
+        if (SceneTransitionManager.Instance == null)
+            new GameObject("SceneTransitionManager").AddComponent<SceneTransitionManager>();
 
         Camera cam = Camera.main;
         if (cam != null)
