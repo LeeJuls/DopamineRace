@@ -1,0 +1,22 @@
+name = "dopamine-leaderboard"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+
+# --- D1 바인딩 ---
+# database_id 는 `wrangler d1 create dopamine-leaderboard-db` 출력값으로 교체
+[[d1_databases]]
+binding = "DB"                       # 코드에서 env.DB
+database_name = "dopamine-leaderboard-db"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+# --- 비밀 아닌 튜너블 (재배포로 조정, 코드 수정 불필요) ---
+[vars]
+MAX_SCORE = "150000"                 # 7라운드 이론최대 69,930의 ~2.1배 (balance 산정)
+MAX_ROUNDS = "12"                    # 프로덕션 7 + 여유
+KEEP_ROWS = "200"                    # 물리 보관 행수(>100 안전마진), GET은 100
+TOP_LIMIT = "100"                    # GET 기본/최대
+CACHE_TTL = "30"                     # GET 엣지 캐시 초
+# CORS_ORIGIN = "*"                  # 강화 시 게임 도메인으로 교체
+
+# WRITE_TOKEN 은 secret — 절대 toml/git 에 넣지 말 것
+#   설정: wrangler secret put WRITE_TOKEN
