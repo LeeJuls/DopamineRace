@@ -60,15 +60,19 @@ public partial class SceneBootstrapper
             {
                 leaderboardEntryContainer = containerT;
 
-                // 첫 번째 비활성 자식 = EntryTemplate
-                for (int i = 0; i < containerT.childCount; i++)
+                // EntryTemplate 탐색: 이름 우선 → 첫 자식 (prefab 활성상태 의존 제거, 자기치유)
+                // 회귀 방지: prefab 루트가 active로 저장돼도(m_IsActive=1) 런타임 강제 비활성
+                Transform tmplT = containerT.Find("EntryTemplate");
+                if (tmplT == null && containerT.childCount > 0)
+                    tmplT = containerT.GetChild(0);
+                if (tmplT != null)
                 {
-                    var child = containerT.GetChild(i);
-                    if (!child.gameObject.activeSelf)
-                    {
-                        leaderboardEntryTemplate = child.gameObject;
-                        break;
-                    }
+                    leaderboardEntryTemplate = tmplT.gameObject;
+                    leaderboardEntryTemplate.SetActive(false);   // 활성 방치 회귀 자기치유
+                }
+                else
+                {
+                    Debug.LogWarning("[Leaderboard] EntryTemplate 탐색 실패 — 프리팹 구조 확인");
                 }
             }
             else
@@ -196,13 +200,18 @@ public partial class SceneBootstrapper
                     // 날짜 압축: "2026-03-05 16:59" → "26-03-05"
                     string dateStr = e.date.Length >= 10 ? e.date.Substring(2, 8) : e.date;
 
-                    string infoLine = Loc.Get("str.leaderboard.row", e.score, dateStr);
+                    string nameStr = string.IsNullOrEmpty(e.name) ? "---" : e.name;
+                    string infoLine = SafeLocFor("str.leaderboard.row", "{0}  {1}pt  {2}", nameStr, e.score, dateStr);
 
                     var infoText = FindText(entryGO.transform, "InfoText");
                     if (infoText != null)
                     {
                         infoText.text  = infoLine;
                         infoText.color = (i < 3) ? gold : white;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[Leaderboard] InfoText 노드 없음 — EntryTemplate 프리팹 구조 확인");
                     }
 
                     // 순위 배지 숫자
@@ -263,7 +272,8 @@ public partial class SceneBootstrapper
                     : (i + 1).ToString();
 
                 string dateStr = e.date.Length >= 10 ? e.date.Substring(2, 8) : e.date;
-                string infoLine = Loc.Get("str.leaderboard.row", rankStr, e.score, dateStr);
+                string nameStr = string.IsNullOrEmpty(e.name) ? "---" : e.name;
+                string infoLine = rankStr + "  " + SafeLocFor("str.leaderboard.row", "{0}  {1}pt  {2}", nameStr, e.score, dateStr);
                 string summaryBlock = BuildSummaryBlock(e.summary);
                 string entry = infoLine + summaryBlock;
 

@@ -12,6 +12,7 @@ public class LeaderboardEntry
     public int score;
     public int rounds;
     public string date;         // "2026-02-11 14:30"
+    public string name;         // 아케이드 이니셜 3글자 (레거시 데이터는 "" → 표시 시 "---")
     public string summary;      // "R1:쌍승+6 | R2:단승+0 | R3:복연승+2"
 }
 
@@ -40,7 +41,7 @@ public static class LeaderboardData
     /// <summary>
     /// 게임 결과 저장 (점수 높은 순 정렬, 100개 초과 시 최하위 삭제)
     /// </summary>
-    public static void Save(int score, int rounds, string summary)
+    public static void Save(int score, int rounds, string summary, string name = "AAA")
     {
         var data = Load();
 
@@ -49,6 +50,7 @@ public static class LeaderboardData
             score = score,
             rounds = rounds,
             date = DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
+            name = name,
             summary = summary
         };
 
@@ -96,6 +98,21 @@ public static class LeaderboardData
         var data = Load();
         int n = Mathf.Min(count, data.entries.Count);
         return data.entries.GetRange(0, n);
+    }
+
+    /// <summary>
+    /// 점수가 Top100 자격(이름 입력·저장 대상)인지 판정.
+    /// 미포화(100개 미만)면 점수 무관 true, 포화면 현 최하위 초과만 true
+    /// (동점 미자격 — Save 정렬·100컷과 일치).
+    /// </summary>
+    public static bool Qualifies(int score)
+    {
+        var data = Load();
+        if (data.entries.Count < MAX_ENTRIES) return true;
+        int lowest = int.MaxValue;
+        foreach (var e in data.entries)
+            if (e.score < lowest) lowest = e.score;
+        return score > lowest;
     }
 
     /// <summary>

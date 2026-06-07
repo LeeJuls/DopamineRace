@@ -9,7 +9,7 @@
 - push는 명시 요청 시에만
 
 ## 에이전트
-`.claude/agents/` — leader(PM) · balance(수치) · client(Unity) · qa(검증) · marketing(Steam)
+`.claude/agents/` — leader(PM) · balance(수치) · client(Unity) · qa(검증) · design(UX/UI) · marketing(Steam)
 
 ## 다국어
 - `Resources/Data/StringTable.csv` — 7개 언어 (ko·en·ja·zh_CN·de·es·br)

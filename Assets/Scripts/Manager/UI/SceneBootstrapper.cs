@@ -252,6 +252,9 @@ public partial class SceneBootstrapper : MonoBehaviour
 
     private void Update()
     {
+        // STEP8: 이름 입력 모달 표시 중엔 ESC(옵션 패널) 차단 — 모달이 키 입력 독점
+        if (_nameEntryModal != null && _nameEntryModal.IsOpen) return;
+
         // ESC 키 → 옵션 패널 열기/닫기
         if (Input.GetKeyDown(KeyCode.Escape) && _optionPanel != null)
         {
@@ -354,6 +357,9 @@ public partial class SceneBootstrapper : MonoBehaviour
         // SPEC-028 Step 2.16: ExchangeModal 임시 레이아웃 생성
         BuildExchangeModal(root);
 
+        // STEP8: 아케이드 이름 입력 모달 (Top100 자격 시 종료화면 전 표시)
+        BuildNameEntryModal(root);
+
         // SPEC-028 Step 2.2: CurrencyHeader 베팅 UI 우상단 배치
         BuildCurrencyHeader(bettingUI.transform);
 
@@ -412,14 +418,15 @@ public partial class SceneBootstrapper : MonoBehaviour
             case GameManager.GameState.Finish:
                 DestroyArrows();
                 ShowAllRaceLabels();
-                finishUI.SetActive(true);
-                ShowFinish();
+                // STEP8: Top100 자격 시 이름 입력 → 저장 후 Finish 화면 (미자격 시 바로 표시)
+                TryNameEntryThen(() => { finishUI.SetActive(true); ShowFinish(); });
                 break;
             case GameManager.GameState.GameOver:
                 // SPEC-028 Step 3.3: GAME OVER 진입 자동 표시
                 DestroyArrows();
                 ShowAllRaceLabels();
-                ShowGameOverPanel();
+                // STEP8: Top100 자격 시 이름 입력 → 저장 후 GameOver 화면 (미자격 시 바로 표시)
+                TryNameEntryThen(ShowGameOverPanel);
                 break;
         }
     }

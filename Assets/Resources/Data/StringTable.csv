@@ -117,7 +117,7 @@ str.ui.btn.panel_close,◀,◀,◀,◀,◀,◀,◀
 str.ui.btn.panel_open,▶,▶,▶,▶,▶,▶,▶
 str.ui.panel.bet_title,배팅 선택,Bet Select,ベット選択,投注选择,Wett-Auswahl,Selección de Apuesta,Seleção de Aposta
 str.leaderboard.title,Top 100 리더보드,Top 100 Leaderboard,Top 100リーダーボード,Top 100 排行榜,Top 100 Rangliste,Top 100 Clasificación,Top 100 Classificação
-str.leaderboard.header,등수  포인트  달성일,Rank  Score  Date,順位  ポイント  日付,排名  分数  日期,Rang  Punkte  Datum,Rango  Puntos  Fecha,Posição  Pontos  Data
+str.leaderboard.header,등수  이름  포인트  달성일,Rank  Name  Score  Date,順位  名前  ポイント  日付,排名  名字  分数  日期,Rang  Name  Punkte  Datum,Rango  Nombre  Puntos  Fecha,Posição  Nome  Pontos  Data
 str.leaderboard.empty,"기록이 없습니다.\n게임을 완료하면 자동으로 기록됩니다.","No records yet.\nComplete a game to save your score.","記録がありません。\nゲームを完了すると自動的に記録されます。","暂无记录。\n完成游戏后自动保存。","Noch keine Einträge.\nBeende ein Spiel zum Speichern.","Sin registros.\nCompleta un juego para guardar.","Sem registros.\nComplete um jogo para salvar."
 str.hud.round,Round {0}/{1},Round {0}/{1},ラウンド{0}/{1},第{0}/{1}轮,Runde {0}/{1},Ronda {0}/{1},Rodada {0}/{1}
 str.hud.lap,{0}바퀴,{0} Laps,{0}周,{0}圈,{0} Runden,{0} Vueltas,{0} Voltas
@@ -149,7 +149,12 @@ str.finish.miss,실패,Miss,失敗,失败,Daneben,Fallo,Errou
 str.finish.score_plus,+{0}점,+{0}pt,+{0}点,+{0}分,+{0} Pkt,+{0} pts,+{0} pts
 str.finish.score_zero,+0점,+0pt,+0点,+0分,+0 Pkt,+0 pts,+0 pts
 str.finish.total,"총점: {0}점\n({1}/{2} 적중)","Total: {0} pt\n({1}/{2} hits)","合計: {0}点\n（{1}/{2}的中）","总分: {0}分\n（{1}/{2}命中）","Gesamt: {0} Pkt\n({1}/{2} Treffer)","Total: {0} pt\n({1}/{2} aciertos)","Total: {0} pt\n({1}/{2} acertos)"
-str.leaderboard.row,"{0}점  {1}","{0}pt  {1}",{0}点  {1},{0}分  {1},{0}Pkt  {1},{0}pts  {1},{0}pts  {1}
+str.leaderboard.row,"{0}  {1}점  {2}","{0}  {1}pt  {2}","{0}  {1}点  {2}","{0}  {1}分  {2}","{0}  {1}Pkt  {2}","{0}  {1}pts  {2}","{0}  {1}pts  {2}"
+str.nameentry.title,신기록!,NEW RECORD!,新記録！,新纪录！,Neuer Rekord!,¡Nuevo Récord!,Novo Recorde!
+str.nameentry.prompt,이름을 입력하세요,Enter your name,名前を入力,输入你的名字,Gib deinen Namen ein,Ingresa tu nombre,Digite seu nome
+str.nameentry.guide,↑↓ 글자  ←→ 이동,↑↓ Letter  ←→ Move,↑↓ 文字  ←→ 移動,↑↓ 字母  ←→ 移动,↑↓ Buchstabe  ←→ Bewegen,↑↓ Letra  ←→ Mover,↑↓ Letra  ←→ Mover
+str.nameentry.confirm,확인,Confirm,確認,确认,Bestätigen,Confirmar,Confirmar
+str.nameentry.score,{0}점,{0}pt,{0}点,{0}分,{0}Pkt,{0}pts,{0}pts
 str.ui.betting.round,{0}라운드,Round {0},{0}ラウンド,第{0}轮,Runde {0},Ronda {0},Rodada {0}
 str.ui.betting.title,배팅 선택!,Bet Select!,ベット選択！,投注选择！,Wett-Auswahl!,¡Selección de Apuesta!,Seleção de Aposta!
 str.ui.betting.odds,배당률 : {0}배,Odds : {0}x,配当率 : {0}倍,赔率: {0}倍,Quote: {0}x,Cuota: {0}x,Cota: {0}x

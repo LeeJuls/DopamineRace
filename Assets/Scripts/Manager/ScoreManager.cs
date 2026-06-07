@@ -201,9 +201,6 @@ public class ScoreManager : MonoBehaviour
             + " → " + (score > 0 ? "+" + score : "0") + "점"
             + " | 총점: " + TotalScore
             + " | 트랙: " + trackName);
-        // [진단] STEP7 — RecordRound 후 누적 상태 (검증 후 제거)
-        Debug.Log($"[진단][RecordRound] R{roundNum} 추가 후 RoundHistory.Count={RoundHistory.Count}");
-
         OnScoreChanged?.Invoke(score, TotalScore);
     }
 
@@ -225,13 +222,11 @@ public class ScoreManager : MonoBehaviour
 
     public void ResetAll()
     {
-        // [진단] STEP7 — ResetAll 호출자 추적 (저장 전 Clear 경합 가설 D, 검증 후 제거)
-        Debug.LogWarning($"[진단][ResetAll] 호출 — Clear 직전 RoundHistory.Count={RoundHistory.Count}\n{System.Environment.StackTrace}");
-
         // 2계층만 리셋
         RoundHistory.Clear();
         LastRoundScore = 0;
         currentGameAppearances.Clear();
+        _savedThisGame = false;   // 멱등 리셋 — 새 게임은 재저장 허용
 
         // 1계층(누적), 캐릭터 기록, 배팅 기록은 유지!
         Debug.Log("[점수] 새 게임 시작 → 게임 히스토리 초기화 (누적 통계 유지)");
@@ -269,19 +264,16 @@ public class ScoreManager : MonoBehaviour
     //  Finish 시 리더보드 저장
     // ═══════════════════════════════════════
 
-    public void SaveToLeaderboard()
+    private bool _savedThisGame = false;   // 멱등 플래그 — 한 게임 1회만 저장 (ResetAll에서 리셋)
+
+    public void SaveToLeaderboard(string name = "AAA")
     {
-        // [진단] STEP7 — 저장 진입 시점 상태 (검증 후 제거)
-        string fp = System.IO.Path.Combine(Application.persistentDataPath, "leaderboard.json");
-        Debug.Log($"[진단][Save] 진입 RoundHistory.Count={RoundHistory.Count} CurrentGameScore={CurrentGameScore} 엔트리전={LeaderboardData.Count} FilePath={fp}");
+        if (_savedThisGame) return;   // 멱등 — 한 게임 1회만 저장 (ResetAll에서 리셋)
         if (RoundHistory.Count > 0)
         {
-            LeaderboardData.Save(CurrentGameScore, RoundHistory.Count, GetRoundSummary());
-            Debug.Log($"[진단][Save] 저장완료 엔트리후={LeaderboardData.Count} | [리더보드] {CurrentGameScore}점 ({RoundHistory.Count}라운드)");
-        }
-        else
-        {
-            Debug.LogWarning("[진단][Save] RoundHistory 비어있음 → 저장 스킵! (가드 C/D 의심)");
+            LeaderboardData.Save(CurrentGameScore, RoundHistory.Count, GetRoundSummary(), name);
+            _savedThisGame = true;
+            Debug.Log($"[리더보드] 저장: {CurrentGameScore}점 ({RoundHistory.Count}R) name={name}");
         }
     }
 

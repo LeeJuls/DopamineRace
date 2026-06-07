@@ -203,19 +203,13 @@ public class GameManager : MonoBehaviour
         if (s == GameState.Result) CalcScore();
         if (s == GameState.Finish)
         {
-            Debug.Log($"[진단][ChangeState] Finish 진입 — RoundHistory.Count={ScoreManager.Instance?.RoundHistory.Count}"); // STEP7
-            ScoreManager.Instance?.SaveToLeaderboard();
+            // STEP8: 리더보드 저장은 SceneBootstrapper가 이름 입력 후 수행 (자동저장 제거 — 이중저장 방지)
             // ★ 게임 완료 → 다음에 1라운드부터 시작
             PlayerPrefs.DeleteKey(PREF_LAST_ROUND);
             PlayerPrefs.DeleteKey(PREF_LAST_TRACK);
             PlayerPrefs.Save();
         }
-        if (s == GameState.GameOver)
-        {
-            Debug.Log($"[진단][ChangeState] GameOver 진입 — RoundHistory.Count={ScoreManager.Instance?.RoundHistory.Count}"); // STEP7
-            // 젤리 소진 중도 종료도 리더보드에 기록 (RoundHistory.Count>0 조건은 SaveToLeaderboard 내부)
-            ScoreManager.Instance?.SaveToLeaderboard();
-        }
+        // STEP8: GameOver 저장도 SceneBootstrapper 이름 입력 흐름으로 이관 (자동저장 제거)
         OnStateChanged?.Invoke(s);
     }
 
@@ -258,13 +252,7 @@ public class GameManager : MonoBehaviour
     private void CalcScore()
     {
         var rankings = RaceManager.Instance?.GetFinalRankings();
-        // [진단] STEP7 — rankings 부족 시 RecordRound 누락(가설 C) 추적 (검증 후 제거)
-        Debug.Log($"[진단][CalcScore] R{CurrentRound} rankings.Count={(rankings?.Count ?? -1)}");
-        if (rankings == null || rankings.Count < 3)
-        {
-            Debug.LogWarning($"[진단][CalcScore] rankings 부족 → early-return! RecordRound 누락 (RoundHistory 미증가)");
-            return;
-        }
+        if (rankings == null || rankings.Count < 3) return;
 
         // 인덱스 리스트 (0=1등, 1=2등, 2=3등...)
         List<int> rankingIndices = new List<int>();
