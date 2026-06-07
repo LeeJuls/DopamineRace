@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 /// <summary>
 /// Top 100 리더보드 팝업
@@ -19,6 +20,9 @@ using UnityEngine.UI;
 ///   │           └─ SummaryText (22pt, gray  — 라운드 요약)
 ///   └─ CloseBtn
 ///      └─ BtnText
+///
+/// [원격] RemoteEnabled 시 ShowLeaderboard가 LeaderboardService.FetchTop로 비동기 로드 →
+///        성공 렌더 / 실패 시 로컬 캐시 폴백(헤더 오프라인 태그). RemoteEnabled=false면 로컬 직접.
 /// </summary>
 public partial class SceneBootstrapper
 {
@@ -94,6 +98,7 @@ public partial class SceneBootstrapper
 
         // 기록 없을 때 안내 라벨 — 프리팹의 EmptyLabel 노드 캐싱
         // (위치/크기/폰트는 LeaderboardPanel.prefab의 EmptyLabel에서 Inspector로 직접 조정)
+        // 행이 없는 상태(로딩/빈/에러) 전용 — 행과 동시 표시되지 않아 충돌 없음. 오프라인+데이터는 헤더 태그.
         Transform emptyT = root.Find("EmptyLabel");
         if (emptyT != null)
         {
@@ -115,7 +120,7 @@ public partial class SceneBootstrapper
             new Vector2(0.5f, 0.95f), new Vector2(0.5f, 0.95f),
             Vector2.zero, new Vector2(500, 50), 36, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.2f));
 
-        MkText(parent, Loc.Get("str.leaderboard.header"),
+        leaderboardHeaderText = MkText(parent, Loc.Get("str.leaderboard.header"),
             new Vector2(0.5f, 0.89f), new Vector2(0.5f, 0.89f),
             Vector2.zero, new Vector2(800, 35), 28, TextAnchor.MiddleCenter, new Color(0.8f, 0.8f, 0.8f));
 
@@ -141,19 +146,70 @@ public partial class SceneBootstrapper
     }
 
     // ══════════════════════════════════════
-    //  ShowLeaderboard — 데이터 채우기
-    //
-    //  [신형] EntryContainer != null → Instantiate(EntryTemplate) per entry
-    //         InfoText  : 등수/점수/날짜 (top3 금색)
-    //         SummaryText : 요약 5개씩 줄 분리
-    //
-    //  [Legacy] ContentText 단일 블롭 — 구형 프리팹 폴백
+    //  ShowLeaderboard — 오케스트레이터 (원격 fetch → 렌더 / 실패 시 로컬 폴백)
+    //  시그니처(무인자 void) 유지 — Finish/Debug/Betting 4 호출처 불변
     // ══════════════════════════════════════
+    private bool _leaderboardFetching = false;
+
     private void ShowLeaderboard()
     {
+        leaderboardPopup.SetActive(true);
+
+        var svc = LeaderboardService.Instance;
+        if (svc != null && svc.RemoteEnabled)
+        {
+            if (_leaderboardFetching) return;          // 재진입 가드 (연타·중복 코루틴 방지)
+            _leaderboardFetching = true;
+            ShowLeaderboardLoading();                  // 로딩 표시
+            svc.FetchTop(100,
+                list => { _leaderboardFetching = false; RenderLeaderboard(list, false); },
+                err  => { _leaderboardFetching = false; RenderLeaderboard(LeaderboardData.GetTop(100), true); });
+        }
+        else
+        {
+            // 원격 비활성(설정) → 로컬 직접 (오프라인 태그 없음 — 의도된 모드)
+            RenderLeaderboard(LeaderboardData.GetTop(100), false);
+        }
+    }
+
+    /// <summary>로딩 상태 — 행 비우고 안내 라벨에 "불러오는 중…" 표시.</summary>
+    private void ShowLeaderboardLoading()
+    {
+        if (leaderboardEntryContainer != null && leaderboardEntryTemplate != null)
+        {
+            for (int i = leaderboardEntryContainer.childCount - 1; i >= 0; i--)
+            {
+                var child = leaderboardEntryContainer.GetChild(i);
+                if (child.gameObject != leaderboardEntryTemplate)
+                    Destroy(child.gameObject);
+            }
+        }
+        if (leaderboardEmptyLabel != null)
+        {
+            leaderboardEmptyLabel.text = Loc.Get("str.leaderboard.loading");
+            leaderboardEmptyLabel.gameObject.SetActive(true);
+        }
+    }
+
+    // ══════════════════════════════════════
+    //  RenderLeaderboard — 실제 행 렌더 (데이터 소스 무관)
+    //
+    //  isOffline=true(원격 실패→로컬 캐시): 헤더에 오프라인 태그, 빈 캐시는 error 문구
+    //  [신형] EntryContainer != null → Instantiate(EntryTemplate) per entry
+    //  [Legacy] ContentText 단일 블롭 — 구형 프리팹 폴백
+    // ══════════════════════════════════════
+    private void RenderLeaderboard(List<LeaderboardEntry> entries, bool isOffline)
+    {
+        if (entries == null) entries = new List<LeaderboardEntry>();
+
         // Loc 갱신 (프리팹 기본값이 한국어 고정이므로 런타임 갱신)
-        if (leaderboardTitleText    != null) leaderboardTitleText.text    = Loc.Get("str.leaderboard.title");
-        if (leaderboardHeaderText   != null) leaderboardHeaderText.text   = Loc.Get("str.leaderboard.header");
+        if (leaderboardTitleText != null) leaderboardTitleText.text = Loc.Get("str.leaderboard.title");
+        if (leaderboardHeaderText != null)
+        {
+            string h = Loc.Get("str.leaderboard.header");
+            if (isOffline) h += "   (" + Loc.Get("str.leaderboard.offline") + ")";
+            leaderboardHeaderText.text = h;
+        }
         if (leaderboardCloseBtnText != null) leaderboardCloseBtnText.text = Loc.Get("str.ui.btn.close");
 
         // ── 신형: 항목별 인스턴스 방식 ──
@@ -167,15 +223,15 @@ public partial class SceneBootstrapper
                     Destroy(child.gameObject);
             }
 
-            var entries = LeaderboardData.GetTop(100);
-
             if (entries.Count == 0)
             {
                 // 빈 상태: 행 템플릿 복제 대신 윈도우 중앙 안내 라벨 표시
                 // (행 복제 시 템플릿 SummaryText "R1:Win+0" 잔재가 남던 문제 해소)
                 if (leaderboardEmptyLabel != null)
                 {
-                    leaderboardEmptyLabel.text = Loc.Get("str.leaderboard.empty");
+                    leaderboardEmptyLabel.text = isOffline
+                        ? Loc.Get("str.leaderboard.error")
+                        : Loc.Get("str.leaderboard.empty");
                     leaderboardEmptyLabel.gameObject.SetActive(true);
                 }
             }
@@ -236,10 +292,8 @@ public partial class SceneBootstrapper
         else
         {
             // ── Legacy: 단일 ContentText 폴백 ──
-            ShowLeaderboardLegacy();
+            ShowLeaderboardLegacy(entries);
         }
-
-        leaderboardPopup.SetActive(true);
 
         // 스크롤 맨 위로 리셋
         if (leaderboardScrollRect != null)
@@ -252,9 +306,9 @@ public partial class SceneBootstrapper
     // ══════════════════════════════════════
     //  Legacy ShowLeaderboard (단일 ContentText 폴백)
     // ══════════════════════════════════════
-    private void ShowLeaderboardLegacy()
+    private void ShowLeaderboardLegacy(List<LeaderboardEntry> entries)
     {
-        var entries = LeaderboardData.GetTop(100);
+        if (entries == null) entries = new List<LeaderboardEntry>();
         var sb = new System.Text.StringBuilder();
 
         if (entries.Count == 0)

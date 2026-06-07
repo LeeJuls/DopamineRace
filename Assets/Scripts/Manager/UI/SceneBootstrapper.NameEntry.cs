@@ -86,7 +86,21 @@ public partial class SceneBootstrapper
         {
             _nameEntryModal.Show(score, (name) =>
             {
-                ScoreManager.Instance?.SaveToLeaderboard(name);
+                var sm2 = ScoreManager.Instance;
+                sm2?.SaveToLeaderboard(name);   // 로컬 캐시(멱등) — 항상 성공·즉시
+
+                // 원격 제출 (fire-and-forget, DDOL 서비스 → Finish→TitleScene 전환에도 생존).
+                // 실패해도 로컬 보존. showEndScreen은 제출 완료를 기다리지 않음(지연 0).
+                var svc = LeaderboardService.Instance;
+                if (sm2 != null && svc != null && svc.RemoteEnabled)
+                {
+                    var entry = sm2.BuildLeaderboardEntry(name);
+                    svc.SubmitScore(entry, sm2.GameNonce, ok =>
+                    {
+                        if (!ok) Debug.LogWarning("[Leaderboard] " + Loc.Get("str.leaderboard.submit_failed"));
+                    });
+                }
+
                 showEndScreen();
             });
         }
