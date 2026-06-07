@@ -119,6 +119,10 @@ str.ui.panel.bet_title,배팅 선택,Bet Select,ベット選択,投注选择,Wet
 str.leaderboard.title,Top 100 리더보드,Top 100 Leaderboard,Top 100リーダーボード,Top 100 排行榜,Top 100 Rangliste,Top 100 Clasificación,Top 100 Classificação
 str.leaderboard.header,등수  이름  포인트  달성일,Rank  Name  Score  Date,順位  名前  ポイント  日付,排名  名字  分数  日期,Rang  Name  Punkte  Datum,Rango  Nombre  Puntos  Fecha,Posição  Nome  Pontos  Data
 str.leaderboard.empty,"기록이 없습니다.\n게임을 완료하면 자동으로 기록됩니다.","No records yet.\nComplete a game to save your score.","記録がありません。\nゲームを完了すると自動的に記録されます。","暂无记录。\n完成游戏后自动保存。","Noch keine Einträge.\nBeende ein Spiel zum Speichern.","Sin registros.\nCompleta un juego para guardar.","Sem registros.\nComplete um jogo para salvar."
+str.leaderboard.loading,불러오는 중…,Loading…,読み込み中…,加载中…,Wird geladen…,Cargando…,Carregando…
+str.leaderboard.offline,오프라인 — 저장된 기록 표시,Offline — cached scores,オフライン — キャッシュ表示,离线 — 显示缓存,Offline — gespeichert,Sin conexión — en caché,Offline — em cache
+str.leaderboard.error,순위를 불러오지 못했습니다,Couldn't load rankings,順位を読み込めませんでした,无法加载排行榜,Rangliste nicht geladen,No se pudo cargar,Falha ao carregar o ranking
+str.leaderboard.submit_failed,점수 전송 실패 (로컬 저장됨),Upload failed (saved locally),送信失敗（ローカル保存済み）,上传失败（已本地保存）,Upload fehlgeschlagen (lokal),Error al enviar (guardado local),Falha no envio (salvo local)
 str.hud.round,Round {0}/{1},Round {0}/{1},ラウンド{0}/{1},第{0}/{1}轮,Runde {0}/{1},Ronda {0}/{1},Rodada {0}/{1}
 str.hud.lap,{0}바퀴,{0} Laps,{0}周,{0}圈,{0} Runden,{0} Vueltas,{0} Voltas
 str.hud.this_race,이번 경기: {0}바퀴,This Race: {0} Laps,このレース: {0}周,本场比赛: {0}圈,Dieses Rennen: {0} Runden,Esta Carrera: {0} Vueltas,Esta Corrida: {0} Voltas

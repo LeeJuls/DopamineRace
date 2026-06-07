@@ -227,6 +227,7 @@ public class ScoreManager : MonoBehaviour
         LastRoundScore = 0;
         currentGameAppearances.Clear();
         _savedThisGame = false;   // 멱등 리셋 — 새 게임은 재저장 허용
+        _gameNonce = Guid.NewGuid().ToString("N");   // 새 게임 = 새 원격 멱등 키
 
         // 1계층(누적), 캐릭터 기록, 배팅 기록은 유지!
         Debug.Log("[점수] 새 게임 시작 → 게임 히스토리 초기화 (누적 통계 유지)");
@@ -266,6 +267,18 @@ public class ScoreManager : MonoBehaviour
 
     private bool _savedThisGame = false;   // 멱등 플래그 — 한 게임 1회만 저장 (ResetAll에서 리셋)
 
+    // ═══ 원격 제출 멱등 키 (게임당 1회 GUID, ResetAll에서 재생성) ═══
+    private string _gameNonce;
+    /// <summary>게임당 1회 GUID — 원격 제출(서버 client_nonce) 멱등 키. lazy init + ResetAll 재생성.</summary>
+    public string GameNonce
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(_gameNonce)) _gameNonce = Guid.NewGuid().ToString("N");
+            return _gameNonce;
+        }
+    }
+
     public void SaveToLeaderboard(string name = "AAA")
     {
         if (_savedThisGame) return;   // 멱등 — 한 게임 1회만 저장 (ResetAll에서 리셋)
@@ -275,6 +288,22 @@ public class ScoreManager : MonoBehaviour
             _savedThisGame = true;
             Debug.Log($"[리더보드] 저장: {CurrentGameScore}점 ({RoundHistory.Count}R) name={name}");
         }
+    }
+
+    /// <summary>
+    /// 원격 제출용 엔트리 조립 — LeaderboardData.Save와 동일 데이터.
+    /// new 명시(IL2CPP ctor 보존).
+    /// </summary>
+    public LeaderboardEntry BuildLeaderboardEntry(string name)
+    {
+        return new LeaderboardEntry
+        {
+            score = CurrentGameScore,
+            rounds = RoundHistory.Count,
+            date = DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
+            name = name,
+            summary = GetRoundSummary()
+        };
     }
 
     // ═══════════════════════════════════════

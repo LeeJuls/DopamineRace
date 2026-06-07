@@ -124,6 +124,29 @@ public static class LeaderboardData
     }
 
     /// <summary>
+    /// 원격 fetch 성공 시 로컬 캐시를 서버 스냅샷으로 덮어쓰기(write-through).
+    /// 빈/null 입력은 no-op(캐시 보존) — 일시적 빈 응답이 기존 기록을 지우지 않게.
+    /// </summary>
+    public static void WriteThrough(List<LeaderboardEntry> remote)
+    {
+        if (remote == null || remote.Count == 0) return;   // 보존: 빈 응답 → 캐시 오염 방지
+
+        var data = new LeaderboardSaveData { entries = new List<LeaderboardEntry>(remote) };
+        data.entries.Sort((a, b) => b.score.CompareTo(a.score));
+        if (data.entries.Count > MAX_ENTRIES)
+            data.entries.RemoveRange(MAX_ENTRIES, data.entries.Count - MAX_ENTRIES);
+
+        try
+        {
+            File.WriteAllText(FilePath, JsonUtility.ToJson(data, true));
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[리더보드] 캐시 쓰기 실패: " + e.Message);
+        }
+    }
+
+    /// <summary>
     /// 리더보드 초기화 (디버그용)
     /// </summary>
     public static void Clear()
