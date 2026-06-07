@@ -199,6 +199,10 @@ public partial class SceneBootstrapper : MonoBehaviour
         // TitleScene 거치지 않고 SampleScene 직접 Play 시에도 항상 인스턴스 보장
         if (SceneTransitionManager.Instance == null)
             new GameObject("SceneTransitionManager").AddComponent<SceneTransitionManager>();
+        // LeaderboardService — DontDestroyOnLoad 원격 리더보드 (씬 전환 중 제출 코루틴 생존)
+        if (LeaderboardService.Instance == null)
+            new GameObject("LeaderboardService").AddComponent<LeaderboardService>();
+        LeaderboardService.Instance.WarmFetch();   // 캐시 워밍(자격판정 정확도, best-effort, 로컬이면 no-op)
 
         Camera cam = Camera.main;
         if (cam != null)
