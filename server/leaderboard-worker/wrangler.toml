@@ -7,7 +7,7 @@ compatibility_date = "2026-06-01"
 [[d1_databases]]
 binding = "DB"                       # 코드에서 env.DB
 database_name = "dopamine-leaderboard-db"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "7a16688f-5988-4ad0-ab9a-3776742879af"
 
 # --- 비밀 아닌 튜너블 (재배포로 조정, 코드 수정 불필요) ---
 [vars]

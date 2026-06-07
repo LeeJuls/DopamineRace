@@ -5,6 +5,14 @@
 # 로컬 환경마다 경로가 다른 설정 파일
 .mcp.json
 
+# 리더보드 로컬 시크릿 (쓰기 토큰 — 공개 저장소, 절대 커밋 금지)
+# (*.txt 로도 제외되지만 명시적 이중화)
+*.local.txt
+server/leaderboard-worker/SECRETS.local.txt
+# wrangler 로컬 캐시/상태
+.wrangler/
+node_modules/
+
 # 잘못 생성된 중첩 clone (GitHub Desktop 오설정으로 생성됨)
 /DopamineRace/
 
