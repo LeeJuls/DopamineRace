@@ -534,4 +534,13 @@ public partial class GameSettings : ScriptableObject
 
     /// <summary>v4Settings가 연결되어 있으면 V4 활성.</summary>
     public bool useV4RaceSystem => v4Settings != null;
+
+    // ══════════════════════════════════════════════════════════════
+    //  배팅 화면 고양이 장식
+    // ══════════════════════════════════════════════════════════════
+
+    [Header("═══ 배팅 화면 고양이 장식 ═══")]
+    [Tooltip("배팅 화면 장식 고양이 크기 배율 (기본 3). 종별 등장확률·마리수는 CatSpawnConfig.asset.")]
+    [Range(0.5f, 8f)]
+    public float catScale = 3f;
 }

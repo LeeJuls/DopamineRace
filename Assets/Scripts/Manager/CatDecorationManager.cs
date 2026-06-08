@@ -69,7 +69,8 @@ public class CatDecorationManager : MonoBehaviour
         {
             var go = GetOrCreate(n);
             if (go == null) continue;
-            go.transform.localScale = Vector3.one * Mathf.Max(0.1f, config.catScale); // 크기 배율
+            float scale = (GameSettings.Instance != null) ? GameSettings.Instance.catScale : 3f;
+            go.transform.localScale = Vector3.one * Mathf.Max(0.1f, scale); // 크기 배율 (GameSettings)
             var cc = go.GetComponent<CatController>();
             if (cc != null)
             {

@@ -27,4 +27,3 @@ MonoBehaviour:
     spawnWeight: 10
   spawnCount: 3
   frameInterval: 0.1
-  catScale: 3
