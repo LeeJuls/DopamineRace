@@ -11,7 +11,7 @@ using System;
 public class NameEntryModal : MonoBehaviour
 {
     private GameObject _backdrop;
-    private Text _titleText, _scoreText, _guideText;
+    private Text _titleText, _scoreText, _guideText, _rankResultText;
     private Text[] _slotTexts;
     private Image[] _slotHighlights;
     private Button _confirmButton;
@@ -30,10 +30,11 @@ public class NameEntryModal : MonoBehaviour
     private void Awake() => gameObject.SetActive(false);
 
     /// <summary>SceneBootstrapper 코드 빌드에서 UI 참조 주입 + 버튼 배선.</summary>
-    public void SetReferences(GameObject backdrop, Text title, Text score, Text guide,
+    public void SetReferences(GameObject backdrop, Text title, Text score, Text guide, Text rankResult,
         Text[] slots, Image[] highlights, Button[] ups, Button[] downs, Button confirm)
     {
         _backdrop = backdrop; _titleText = title; _scoreText = score; _guideText = guide;
+        _rankResultText = rankResult;
         _slotTexts = slots; _slotHighlights = highlights; _confirmButton = confirm;
 
         for (int i = 0; i < 3; i++)
@@ -53,9 +54,10 @@ public class NameEntryModal : MonoBehaviour
         _currentSlot = 0;
         _isOpen = true;
 
-        if (_titleText != null) _titleText.text = Loc.Get("str.nameentry.title");
-        if (_guideText != null) _guideText.text = Loc.Get("str.nameentry.guide");
-        if (_scoreText != null) _scoreText.text = Loc.Get("str.nameentry.score", score);
+        if (_titleText    != null) _titleText.text    = Loc.Get("str.nameentry.title");
+        if (_guideText    != null) _guideText.text    = Loc.Get("str.nameentry.guide");
+        if (_scoreText    != null) _scoreText.text    = Loc.Get("str.nameentry.score", score);
+        if (_rankResultText != null) _rankResultText.text = "";   // 초기화
         if (_confirmButton != null)
         {
             var ct = _confirmButton.GetComponentInChildren<Text>();
@@ -65,6 +67,20 @@ public class NameEntryModal : MonoBehaviour
         if (_backdrop != null) _backdrop.SetActive(true);
         gameObject.SetActive(true);
         RefreshSlots();
+    }
+
+    /// <summary>제출 결과 rank 메시지 표시 — 모달이 열린 채로 호출됨.</summary>
+    public void SetRankResult(string text, Color color)
+    {
+        if (_rankResultText != null) { _rankResultText.text = text; _rankResultText.color = color; }
+    }
+
+    /// <summary>제출 완료 후 외부에서 명시적으로 닫기 (Confirm이 모달을 닫지 않으므로).</summary>
+    public void ForceClose()
+    {
+        _isOpen = false;
+        if (_backdrop != null) _backdrop.SetActive(false);
+        gameObject.SetActive(false);
     }
 
     private void Update()
@@ -109,9 +125,8 @@ public class NameEntryModal : MonoBehaviour
         if (!_isOpen) return;
         if (_confirmButton != null) _confirmButton.interactable = false;   // 연타 방지
         string nm = CurrentName;
-        _isOpen = false;
-        if (_backdrop != null) _backdrop.SetActive(false);
-        gameObject.SetActive(false);
+        _isOpen = false;   // Update() 입력 차단, 모달은 ForceClose()로 닫힘
+        if (_guideText != null) _guideText.text = Loc.Get("str.nameentry.submitting");
         _onConfirmed?.Invoke(nm);
     }
 }

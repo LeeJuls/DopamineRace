@@ -25,13 +25,17 @@ public partial class SceneBootstrapper
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(560, 440),
             new Color(0.12f, 0.10f, 0.18f, 0.95f));
 
-        // 타이틀 / 점수 / 가이드
+        // 타이틀 / 점수 / 순위결과 / 가이드
         var title = MkText(panel.transform, "NEW RECORD!",
             new Vector2(0.5f, 0.88f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(520, 60),
             40, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.4f));
         var score = MkText(panel.transform, "",
             new Vector2(0.5f, 0.73f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(520, 44),
             28, TextAnchor.MiddleCenter, Color.white);
+        // 순위 결과 (제출 후 rank 표시 — 평소 빈 문자열)
+        var rankResult = MkText(panel.transform, "",
+            new Vector2(0.5f, 0.625f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(520, 40),
+            18, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.4f));
         var guide = MkText(panel.transform, "",
             new Vector2(0.5f, 0.13f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(520, 36),
             20, TextAnchor.MiddleCenter, new Color(0.8f, 0.8f, 0.8f));
@@ -59,8 +63,20 @@ public partial class SceneBootstrapper
         if (confirm.image != null) confirm.image.color = new Color(0.3f, 0.6f, 0.3f);
 
         _nameEntryModal = modalRoot.AddComponent<NameEntryModal>();
-        _nameEntryModal.SetReferences(backdrop.gameObject, title, score, guide, slots, highlights, ups, downs, confirm);
+        _nameEntryModal.SetReferences(backdrop.gameObject, title, score, guide, rankResult, slots, highlights, ups, downs, confirm);
         modalRoot.SetActive(false);
+    }
+
+    /// <summary>제출 후 NameEntryModal에 rank 결과 텍스트 표시.</summary>
+    private void ShowRankResultInModal(int rank)
+    {
+        if (_nameEntryModal == null) return;
+        bool qualified = rank <= 100;
+        string key   = qualified ? "str.nameentry.rank_qualified" : "str.nameentry.rank_disqualified";
+        string text  = Loc.Get(key, rank);
+        Color  color = qualified ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.7f, 0.2f);
+        _nameEntryModal.SetRankResult(text, color);
+        Debug.Log($"[Leaderboard] rank={rank} ({(qualified ? "등재" : "미등재")}) — {text}");
     }
 
     /// <summary>중앙 기준 픽셀 위치·크기 버튼 (MkSimpleButton은 offset=0이라 rt 후처리).</summary>
@@ -89,19 +105,35 @@ public partial class SceneBootstrapper
                 var sm2 = ScoreManager.Instance;
                 sm2?.SaveToLeaderboard(name);   // 로컬 캐시(멱등) — 항상 성공·즉시
 
-                // 원격 제출 (fire-and-forget, DDOL 서비스 → Finish→TitleScene 전환에도 생존).
-                // 실패해도 로컬 보존. showEndScreen은 제출 완료를 기다리지 않음(지연 0).
+                // 원격 제출 — 응답 rank 기준 결과 메시지 + ForceRefetch 후 종료화면 진입.
+                // 실패/rank=0 시에도 showEndScreen 보장(블로킹 없음).
                 var svc = LeaderboardService.Instance;
+
+                // 모달 닫고 종료화면 진입 (항상 이 경로로 종료)
+                System.Action finishEntry = () => {
+                    _nameEntryModal?.ForceClose();
+                    showEndScreen();
+                };
+
                 if (sm2 != null && svc != null && svc.RemoteEnabled)
                 {
                     var entry = sm2.BuildLeaderboardEntry(name);
-                    svc.SubmitScore(entry, sm2.GameNonce, ok =>
+                    svc.SubmitScore(entry, sm2.GameNonce, (ok, rank) =>
                     {
-                        if (!ok) Debug.LogWarning("[Leaderboard] " + Loc.Get("str.leaderboard.submit_failed"));
+                        if (!ok)
+                        {
+                            Debug.LogWarning("[Leaderboard] " + Loc.Get("str.leaderboard.submit_failed"));
+                            finishEntry();
+                            return;
+                        }
+                        if (rank > 0) ShowRankResultInModal(rank);   // rank 결과 모달에 표시
+                        svc.ForceRefetch(100, _ => finishEntry(), _ => finishEntry());
                     });
                 }
-
-                showEndScreen();
+                else
+                {
+                    finishEntry();
+                }
             });
         }
         else

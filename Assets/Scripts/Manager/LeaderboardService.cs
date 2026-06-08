@@ -37,12 +37,19 @@ public class LeaderboardService : MonoBehaviour
         StartCoroutine(CoFetch(count, onResult, onError));
     }
 
-    /// <summary>점수 제출(fire-and-forget). nonce로 서버 멱등. onDone(성공여부).</summary>
-    public void SubmitScore(LeaderboardEntry entry, string nonce, Action<bool> onDone)
+    /// <summary>점수 제출(fire-and-forget). nonce로 서버 멱등. onDone(성공여부, 실제rank).</summary>
+    public void SubmitScore(LeaderboardEntry entry, string nonce, Action<bool, int> onDone)
     {
-        if (!RemoteEnabled || entry == null) { onDone?.Invoke(false); return; }
-        if (string.IsNullOrEmpty(LeaderboardConfig.Instance.writeToken)) { onDone?.Invoke(false); return; }
+        if (!RemoteEnabled || entry == null) { onDone?.Invoke(false, 0); return; }
+        if (string.IsNullOrEmpty(LeaderboardConfig.Instance.writeToken)) { onDone?.Invoke(false, 0); return; }
         StartCoroutine(CoSubmit(entry, nonce, onDone));
+    }
+
+    /// <summary>즉시 FetchTop — 제출 후 캐시 강제 갱신용. WarmFetch와 달리 _fetchInFlight 무시.</summary>
+    public void ForceRefetch(int count, Action<List<LeaderboardEntry>> onResult, Action<string> onError)
+    {
+        if (!RemoteEnabled) { onError?.Invoke("remote-disabled"); return; }
+        StartCoroutine(CoFetch(count, onResult, onError));
     }
 
     /// <summary>캐시 워밍(best-effort) — 자격판정 로컬 캐시 신선도 확보. 중복 워밍 가드.</summary>
@@ -84,21 +91,38 @@ public class LeaderboardService : MonoBehaviour
         onResult?.Invoke(list);
     }
 
-    private IEnumerator CoSubmit(LeaderboardEntry entry, string nonce, Action<bool> onDone)
+    private IEnumerator CoSubmit(LeaderboardEntry entry, string nonce, Action<bool, int> onDone)
     {
         var cfg = LeaderboardConfig.Instance;
         bool ok = false;
+        int  rank = 0;
+        string body = null;
 
         using (UnityWebRequest req = Adapter_BuildSubmit(cfg, entry, nonce))
         {
             req.timeout = cfg.timeoutSeconds;
             yield return req.SendWebRequest();
             ok = req.result == UnityWebRequest.Result.Success;
-            if (!ok) Debug.LogWarning("[Leaderboard] submit 실패: " +
-                (string.IsNullOrEmpty(req.error) ? "?" : req.error));
+            if (ok)  body = req.downloadHandler.text;
+            else     Debug.LogWarning("[Leaderboard] submit 실패: " +
+                         (string.IsNullOrEmpty(req.error) ? "?" : req.error));
         }
 
-        onDone?.Invoke(ok);
+        if (ok && !string.IsNullOrEmpty(body))
+        {
+            try
+            {
+                var resp = JsonUtility.FromJson<SubmitResponse>(body);
+                if (resp != null) { ok = resp.ok; rank = resp.rank; }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Leaderboard] submit 응답 파싱 실패: " + e.Message);
+                // ok=true·rank=0 유지 → 상위에서 rank=0으로 처리
+            }
+        }
+
+        onDone?.Invoke(ok, rank);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -107,8 +131,9 @@ public class LeaderboardService : MonoBehaviour
     //        POST {base}/submit (X-Write-Token) {"entry":{...},"clientNonce":".."} -> {ok,rank}
     // ═══════════════════════════════════════════════════════════
 
-    [Serializable] private class FetchResponse { public List<LeaderboardEntry> entries = new List<LeaderboardEntry>(); }
-    [Serializable] private class SubmitBody { public LeaderboardEntry entry; public string clientNonce; }
+    [Serializable] private class FetchResponse  { public List<LeaderboardEntry> entries = new List<LeaderboardEntry>(); }
+    [Serializable] private class SubmitBody    { public LeaderboardEntry entry; public string clientNonce; }
+    [Serializable] private class SubmitResponse { public bool ok; public int rank; public bool duplicate; }
 
     private UnityWebRequest Adapter_BuildFetch(LeaderboardConfig cfg, int count)
     {

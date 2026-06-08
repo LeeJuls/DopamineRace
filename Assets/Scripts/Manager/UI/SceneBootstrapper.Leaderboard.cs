@@ -96,6 +96,16 @@ public partial class SceneBootstrapper
             leaderboardCloseButton?.onClick.AddListener(() => leaderboardPopup.SetActive(false));
         }
 
+        // RefreshBtn — 에디터 전용 수동 새로고침 (빌드에서는 바인딩 생략)
+#if UNITY_EDITOR
+        Transform refreshT = root.Find("RefreshBtn");
+        if (refreshT != null)
+        {
+            var refreshBtn = refreshT.GetComponent<Button>();
+            refreshBtn?.onClick.AddListener(RefreshLeaderboard);
+        }
+#endif
+
         // 기록 없을 때 안내 라벨 — 프리팹의 EmptyLabel 노드 캐싱
         // (위치/크기/폰트는 LeaderboardPanel.prefab의 EmptyLabel에서 Inspector로 직접 조정)
         // 행이 없는 상태(로딩/빈/에러) 전용 — 행과 동시 표시되지 않아 충돌 없음. 오프라인+데이터는 헤더 태그.
@@ -146,34 +156,42 @@ public partial class SceneBootstrapper
     }
 
     // ══════════════════════════════════════
-    //  ShowLeaderboard — 오케스트레이터 (원격 fetch → 렌더 / 실패 시 로컬 폴백)
+    //  ShowLeaderboard — 캐시 즉시 렌더 (서버 호출 없음)
     //  시그니처(무인자 void) 유지 — Finish/Debug/Betting 4 호출처 불변
+    //  서버 갱신: ① 씬 시작 WarmFetch  ② 제출 후 ForceRefetch  ③ RefreshLeaderboard(에디터 전용)
     // ══════════════════════════════════════
     private bool _leaderboardFetching = false;
 
     private void ShowLeaderboard()
     {
         leaderboardPopup.SetActive(true);
-
-        var svc = LeaderboardService.Instance;
-        if (svc != null && svc.RemoteEnabled)
-        {
-            if (_leaderboardFetching) return;          // 재진입 가드 (연타·중복 코루틴 방지)
-            _leaderboardFetching = true;
-            ShowLeaderboardLoading();                  // 로딩 표시
-            svc.FetchTop(100,
-                list => { _leaderboardFetching = false; RenderLeaderboard(list, false); },
-                err  => { _leaderboardFetching = false; RenderLeaderboard(LeaderboardData.GetTop(100), true); });
-        }
-        else
-        {
-            // 원격 비활성(설정) → 로컬 직접 (오프라인 태그 없음 — 의도된 모드)
-            RenderLeaderboard(LeaderboardData.GetTop(100), false);
-        }
+        // 캐시 즉시 렌더 — WarmFetch/ForceRefetch가 채워둔 로컬 데이터 사용
+        RenderLeaderboard(LeaderboardData.GetTop(100), false);
     }
 
-    /// <summary>로딩 상태 — 행 비우고 안내 라벨에 "불러오는 중…" 표시.</summary>
-    private void ShowLeaderboardLoading()
+    /// <summary>수동 새로고침 (에디터 전용 RefreshBtn). FetchTop 후 렌더.</summary>
+    private void RefreshLeaderboard()
+    {
+        var svc = LeaderboardService.Instance;
+        if (svc == null || !svc.RemoteEnabled) { RenderLeaderboard(LeaderboardData.GetTop(100), false); return; }
+        if (_leaderboardFetching) return;          // 중복 방지
+        _leaderboardFetching = true;
+        ShowLeaderboardLoading(isRefresh: true);
+        svc.FetchTop(100,
+            list => {
+                _leaderboardFetching = false;
+                if (leaderboardPopup != null && leaderboardPopup.activeSelf)
+                    RenderLeaderboard(list, false);
+            },
+            err  => {
+                _leaderboardFetching = false;
+                if (leaderboardPopup != null && leaderboardPopup.activeSelf)
+                    RenderLeaderboard(LeaderboardData.GetTop(100), true);
+            });
+    }
+
+    /// <summary>로딩 상태 — 행 비우고 안내 라벨 표시.</summary>
+    private void ShowLeaderboardLoading(bool isRefresh = false)
     {
         if (leaderboardEntryContainer != null && leaderboardEntryTemplate != null)
         {
@@ -186,7 +204,8 @@ public partial class SceneBootstrapper
         }
         if (leaderboardEmptyLabel != null)
         {
-            leaderboardEmptyLabel.text = Loc.Get("str.leaderboard.loading");
+            string key = isRefresh ? "str.leaderboard.refreshing" : "str.leaderboard.loading";
+            leaderboardEmptyLabel.text = Loc.Get(key);
             leaderboardEmptyLabel.gameObject.SetActive(true);
         }
     }
