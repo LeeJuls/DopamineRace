@@ -40,15 +40,26 @@ public class CatDecorationManager : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
+    private void Update()
+    {
+        // 런타임에 off로 전환되면 즉시 화면에서 제거
+        if (!CatEnabled() && ActiveCatCount > 0) DespawnCats();
+    }
+
     private void OnStateChanged(GameManager.GameState state)
     {
         if (state == GameManager.GameState.Betting) SpawnCats();
         else DespawnCats();
     }
 
+    /// <summary>GameSettings 토글 (없으면 기본 on).</summary>
+    private bool CatEnabled() => GameSettings.Instance == null || GameSettings.Instance.catDecorationEnabled;
+
     /// <summary>Betting 진입 시 호출. 전부 despawn 후 가중치로 spawnCount 종 재선택 (idempotent).</summary>
     private void SpawnCats()
     {
+        if (!CatEnabled()) { DespawnCats(); return; }   // 사용 off → 미등장
+
         var config = CatSpawnConfig.Instance;
         if (config == null)
         {

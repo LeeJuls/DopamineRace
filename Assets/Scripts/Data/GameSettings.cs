@@ -540,6 +540,9 @@ public partial class GameSettings : ScriptableObject
     // ══════════════════════════════════════════════════════════════
 
     [Header("═══ 배팅 화면 고양이 장식 ═══")]
+    [Tooltip("배팅 화면 장식 고양이 사용 여부. off면 화면에 표시 안 함.")]
+    public bool catDecorationEnabled = true;
+
     [Tooltip("배팅 화면 장식 고양이 크기 배율 (기본 3). 종별 등장확률·마리수는 CatSpawnConfig.asset.")]
     [Range(0.5f, 8f)]
     public float catScale = 3f;
