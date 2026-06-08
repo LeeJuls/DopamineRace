@@ -330,8 +330,8 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // ScoreManager에 라운드 결과 기록
-        ScoreManager.Instance?.RecordRound(CurrentBet.type, score, trackName, racerResults, selectedIds);
+        // ScoreManager에 라운드 결과 기록 (stoneGain = 이번 라운드 획득 도파민 스톤)
+        ScoreManager.Instance?.RecordRound(CurrentBet.type, score, trackName, racerResults, selectedIds, LastRoundStoneGain);
 
         // SPEC-029: GameOver 판정은 NextRound()로 이관.
         // CalcScore()는 ChangeState(Result) 내부에서 동기 호출되므로

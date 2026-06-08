@@ -161,13 +161,12 @@ public partial class SceneBootstrapper
         string mainArea = "<size=42><color=#4DDDDD>" + SafeLocFor("str.finish.stone_total",
             "획득한 도파민 스톤: {0} 💎", stoneTotal) + "</color></size>\n\n";
 
-        // 라운드별 ✓/✗ + 획득 스톤 (베팅액 = 획득 스톤이므로 betAmount가 ScoreManager 저장 안 되는 한
-        // 임시로 score>0 케이스는 적중 / 0은 빗나감으로 표시)
+        // 라운드별 ✓/✗ + 획득 스톤
         foreach (var r in sm.RoundHistory)
         {
             if (r.isWin)
                 mainArea += "<size=24><color=#66FF66>" + SafeLocFor("str.finish.round.hit",
-                    "R{0}: ✓ 적중   (+{1} 💎)", r.round, r.score) + "</color></size>\n";
+                    "R{0}: ✓ 적중   (+{1} 💎)", r.round, r.stoneGain) + "</color></size>\n";
             else
                 mainArea += "<size=24><color=#FF6666>" + SafeLocFor("str.finish.round.miss",
                     "R{0}: ✗ 빗나감", r.round) + "</color></size>\n";
@@ -179,8 +178,8 @@ public partial class SceneBootstrapper
         foreach (var r in sm.RoundHistory)
         {
             string typeName = BettingCalculator.GetTypeName(r.betType);
-            string scoreStr = r.score > 0
-                ? "<color=#FFD700>+" + r.score + "</color>"
+            string scoreStr = r.stoneGain > 0
+                ? "<color=#FFD700>+" + r.stoneGain + " 💎</color>"
                 : "<color=#888888>+0</color>";
             string result = r.isWin
                 ? "<color=#66FF66>적중</color>"
@@ -201,14 +200,13 @@ public partial class SceneBootstrapper
             finishRoundDetailText.supportRichText = true;
         }
 
-        // 메인 totalScoreText는 큰 글씨 통화 강조 (이미 mainArea에 포함됐으나 호환성 위해 같이 표시)
+        // totalScoreText: 획득 도파민 스톤 합계 (SPEC-028 — 적중점수 아님)
         if (finishTotalScoreText != null)
         {
-            int total = sm.CurrentGameScore;
             int wins = 0;
             foreach (var r in sm.RoundHistory)
                 if (r.isWin) wins++;
-            finishTotalScoreText.text = Loc.Get("str.finish.total", total, wins, sm.RoundHistory.Count);
+            finishTotalScoreText.text = Loc.Get("str.finish.total", stoneTotal, wins, sm.RoundHistory.Count);
         }
 
         // 스크롤 맨 위로 리셋 (Canvas 레이아웃 갱신 후)

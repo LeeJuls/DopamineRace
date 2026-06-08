@@ -153,7 +153,7 @@ str.finish.hit,적중!,Hit!,的中！,命中！,Treffer!,¡Acierto!,Acertou!
 str.finish.miss,실패,Miss,失敗,失败,Daneben,Fallo,Errou
 str.finish.score_plus,+{0}점,+{0}pt,+{0}点,+{0}分,+{0} Pkt,+{0} pts,+{0} pts
 str.finish.score_zero,+0점,+0pt,+0点,+0分,+0 Pkt,+0 pts,+0 pts
-str.finish.total,"총점: {0}점\n({1}/{2} 적중)","Total: {0} pt\n({1}/{2} hits)","合計: {0}点\n（{1}/{2}的中）","总分: {0}分\n（{1}/{2}命中）","Gesamt: {0} Pkt\n({1}/{2} Treffer)","Total: {0} pt\n({1}/{2} aciertos)","Total: {0} pt\n({1}/{2} acertos)"
+str.finish.total,"{0} 💎\n({1}/{2} 적중)","{0} 💎\n({1}/{2} hits)","{0} 💎\n({1}/{2}的中)","{0} 💎\n({1}/{2}命中)","{0} 💎\n({1}/{2} Treffer)","{0} 💎\n({1}/{2} aciertos)","{0} 💎\n({1}/{2} acertos)"
 str.leaderboard.row,"{0}  {1}점  {2}","{0}  {1}pt  {2}","{0}  {1}点  {2}","{0}  {1}分  {2}","{0}  {1}Pkt  {2}","{0}  {1}pts  {2}","{0}  {1}pts  {2}"
 str.nameentry.title,신기록!,NEW RECORD!,新記録！,新纪录！,Neuer Rekord!,¡Nuevo Récord!,Novo Recorde!
 str.nameentry.prompt,이름을 입력하세요,Enter your name,名前を入力,输入你的名字,Gib deinen Namen ein,Ingresa tu nombre,Digite seu nome

@@ -10,7 +10,8 @@ public class RoundRecord
 {
     public int round;           // 몇 라운드
     public BetType betType;     // 배팅 타입
-    public int score;           // 획득 점수 (0이면 실패)
+    public int score;           // 배팅 적중 점수 (0이면 실패)
+    public int stoneGain;       // 이번 라운드에서 획득한 도파민 스톤 (betAmount × 배당 — 미적중 시 0)
     public string trackName;    // ★ 트랙명
     public List<RoundRacerResult> racerResults = new List<RoundRacerResult>(); // ★ 캐릭터별 결과
     public bool isWin => score > 0;
@@ -132,7 +133,7 @@ public class ScoreManager : MonoBehaviour
     /// 레이스 종료 후 호출. 순위 + 배팅 결과를 모두 기록.
     /// </summary>
     public void RecordRound(BetType betType, int score, string trackName,
-        List<RoundRacerResult> racerResults, List<string> selectedCharIds)
+        List<RoundRacerResult> racerResults, List<string> selectedCharIds, int stoneGain = 0)
     {
         int roundNum = GameManager.Instance != null ? GameManager.Instance.CurrentRound : RoundHistory.Count + 1;
 
@@ -142,6 +143,7 @@ public class ScoreManager : MonoBehaviour
             round = roundNum,
             betType = betType,
             score = score,
+            stoneGain = stoneGain,   // SPEC-028: 획득 도파민 스톤 (betAmount × 배당)
             trackName = trackName,
             racerResults = racerResults
         };
