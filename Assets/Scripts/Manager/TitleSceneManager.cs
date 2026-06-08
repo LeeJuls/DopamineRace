@@ -488,6 +488,12 @@ public class TitleSceneManager : MonoBehaviour
 
     private void StartTransition()
     {
+        if (isTransitioning) return;
+        // 직전 전환 연출(새 게임→타이틀 빌드업, 약 1.2초)이 아직 진행 중이면 무시.
+        // STM은 전환 중 TransitionToScene을 무시하므로, 여기서 막지 않으면
+        // TitleSceneManager.isTransitioning만 true로 고착 → 입력 영구 차단(데드락).
+        if (SceneTransitionManager.Instance != null && SceneTransitionManager.Instance.IsTransitioning) return;
+
         isTransitioning = true;
 
         // 언어 드롭다운 닫기

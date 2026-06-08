@@ -147,6 +147,23 @@ public static class OddsCalculator
         return CalcComboOdds(bet.type, selectedOdds);
     }
 
+    /// <summary>
+    /// 이 캐릭터를 클릭하면 되는 조합 배당 (캐릭터 리스트 배지 미리보기용).
+    /// 선택됨: 현재 selections 조합 / 미선택+미완성: selections+X / 미선택+완성: [X] 단독(교체).
+    /// </summary>
+    public static float GetPreviewOdds(BetInfo bet, int racerIndex, List<CharacterData> racers)
+    {
+        if (bet == null || racers == null) return 0f;
+        List<int> sels;
+        if (bet.selections.Contains(racerIndex)) sels = bet.selections;              // 선택됨: 참조(읽기만)
+        else if (bet.IsComplete)                 sels = new List<int> { racerIndex };  // 완성: 교체 → 단독
+        else { sels = new List<int>(bet.selections); sels.Add(racerIndex); }          // 미완성: 복사 + 추가
+        var odds = new List<float>();
+        foreach (int s in sels)
+            if (s >= 0 && s < racers.Count) odds.Add(GetWinOdds(racers[s].charId));
+        return CalcComboOdds(bet.type, odds);
+    }
+
     // ══════════════════════════════════════════
     //  내부 계산 메서드
     // ══════════════════════════════════════════

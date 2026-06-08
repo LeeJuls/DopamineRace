@@ -483,7 +483,7 @@ public partial class SceneBootstrapper
         currentTabIndex = tabIndex;
         GameManager.Instance.SelectBetType(type);
         UpdateTabVisuals(tabIndex);
-        UpdateButtonVisuals();
+        UpdateButtonVisuals();   // 내부에서 RefreshOddsBadges 호출 (선택/탭 배지 갱신 일원화)
         UpdateBettingArrows();
         if (charInfoPopup != null) charInfoPopup.Hide();
     }
@@ -622,6 +622,7 @@ public partial class SceneBootstrapper
             startButton.interactable = bet.IsComplete;
 
         UpdateOddsDisplay();
+        RefreshOddsBadges();   // 선택/해제·탭·리셋 시 배지를 현재 선택 기준으로 갱신
     }
 
     // ══════════════════════════════════════
@@ -783,6 +784,19 @@ public partial class SceneBootstrapper
     // ══════════════════════════════════════
     //  캐릭터 아이템 갱신 (CharacterItemUI 위임)
     // ══════════════════════════════════════
+
+    /// <summary>
+    /// 베팅 종류 변경 시 모든 활성 캐릭터 배지를 현재 종류 기준으로 갱신 (경량).
+    /// 선택 클릭(UpdateButtonVisuals) 경로는 betType 불변·CurrentOdds 라운드 중 불변이라 호출 불필요.
+    /// </summary>
+    private void RefreshOddsBadges()
+    {
+        if (characterItems == null) return;
+        foreach (var item in characterItems)
+            if (item != null && item.gameObject.activeSelf)
+                item.RefreshOddsBadge();
+    }
+
     private void RefreshCharacterItems()
     {
         if (characterItems == null) return;
@@ -824,6 +838,7 @@ public partial class SceneBootstrapper
 
                 characterItems[ui].SetData(charData, popRank, oddsInfo, record);
                 characterItems[ui].RacerIndex = racerIdx; // 실제 레이서 인덱스 보존
+                characterItems[ui].RefreshOddsBadge(); // 선택 연동 배당 미리보기
             }
             else
             {

@@ -284,9 +284,9 @@ public class ScoreManager : MonoBehaviour
         if (_savedThisGame) return;   // 멱등 — 한 게임 1회만 저장 (ResetAll에서 리셋)
         if (RoundHistory.Count > 0)
         {
-            LeaderboardData.Save(CurrentGameScore, RoundHistory.Count, GetRoundSummary(), name);
+            LeaderboardData.Save(LeaderboardScore, RoundHistory.Count, GetRoundSummary(), name);
             _savedThisGame = true;
-            Debug.Log($"[리더보드] 저장: {CurrentGameScore}점 ({RoundHistory.Count}R) name={name}");
+            Debug.Log($"[리더보드] 저장: {LeaderboardScore}💎 ({RoundHistory.Count}R) name={name}");
         }
     }
 
@@ -298,7 +298,7 @@ public class ScoreManager : MonoBehaviour
     {
         return new LeaderboardEntry
         {
-            score = CurrentGameScore,
+            score = LeaderboardScore,
             rounds = RoundHistory.Count,
             date = DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
             name = name,
@@ -310,7 +310,7 @@ public class ScoreManager : MonoBehaviour
     //  현재 게임 조회
     // ═══════════════════════════════════════
 
-    /// <summary>이번 게임의 총 획득 점수</summary>
+    /// <summary>이번 게임의 총 획득 점수(적중 점수 합) — HUD/Finish 총점 표시용. 리더보드 아님.</summary>
     public int CurrentGameScore
     {
         get
@@ -321,6 +321,12 @@ public class ScoreManager : MonoBehaviour
             return sum;
         }
     }
+
+    /// <summary>
+    /// 리더보드 제출 점수 = 누적 도파민 스톤 (SPEC-028 R5: "마지막 라운드 완주 시 누적 스톤을 글로벌 랭킹에 제출").
+    /// CurrentGameScore(적중점수)가 아니라 WalletManager.Stone을 사용해야 함. Wallet 없으면 0.
+    /// </summary>
+    public int LeaderboardScore => WalletManager.Instance != null ? WalletManager.Instance.Stone : 0;
 
     /// <summary>현재 게임에서 특정 캐릭터의 출현 횟수</summary>
     public int GetAppearanceCount(string charId)

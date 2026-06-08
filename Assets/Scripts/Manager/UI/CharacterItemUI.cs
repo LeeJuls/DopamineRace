@@ -130,18 +130,27 @@ public class CharacterItemUI : MonoBehaviour
             }
         }
 
-        // Phase 4: 단승 배당률 배지 (모든 캐릭터 항상 표시)
-        if (oddsLabel != null)
-        {
-            oddsLabel.color = oddsLabelBaseColor; // Inspector 설정 색 복원
-            if (oddsInfo != null && oddsInfo.winOdds > 0f)
-                oddsLabel.text = oddsInfo.winOdds.ToString("F1") + "x";
-            else
-                oddsLabel.text = "-";
-        }
+        // 배당률 배지는 RefreshOddsBadge()로 분리 — 선택 연동 조합 미리보기.
+        // RefreshCharacterItems가 SetData 직후 RefreshOddsBadge()를 호출해 그린다.
 
         // 기본 상태: 미선택
         SetBetOrder(0);
+    }
+
+    /// <summary>
+    /// 배당 배지 갱신 — "이 캐릭터를 클릭하면 되는 조합 배당" 미리보기 (선택 연동).
+    /// UpdateButtonVisuals(선택/해제·탭)·RefreshCharacterItems(라운드)에서 호출. 미계산 시 "-".
+    /// </summary>
+    public void RefreshOddsBadge()
+    {
+        if (oddsLabel == null) return;
+        oddsLabel.color = oddsLabelBaseColor; // Inspector 설정 색 복원
+        var bet = GameManager.Instance?.CurrentBet;
+        var racers = CharacterDatabase.Instance?.SelectedCharacters;
+        if (bet != null && racers != null && CharData != null && OddsCalculator.GetInfo(CharData.charId) != null)
+            oddsLabel.text = OddsCalculator.GetPreviewOdds(bet, RacerIndex, racers).ToString("F1") + "x";
+        else
+            oddsLabel.text = "-";
     }
 
     /// <summary>

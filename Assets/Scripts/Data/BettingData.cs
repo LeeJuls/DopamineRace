@@ -53,20 +53,20 @@ public class BetInfo
     /// <summary>
     /// 이 배팅에 필요한 선택 수
     /// </summary>
-    public int RequiredSelections
+    public int RequiredSelections => RequiredSelectionsFor(type);
+
+    /// <summary>베팅 종류별 필요 선택 수 (인스턴스 없이 조회 — 배지 환산 등에서 재사용).</summary>
+    public static int RequiredSelectionsFor(BetType type)
     {
-        get
+        switch (type)
         {
-            switch (type)
-            {
-                case BetType.Win:      return 1;
-                case BetType.Place:    return 1;
-                case BetType.Quinella: return 2;
-                case BetType.Exacta:   return 2;
-                case BetType.Trio:     return 3;
-                case BetType.Wide:     return 2;
-                default: return 1;
-            }
+            case BetType.Win:      return 1;
+            case BetType.Place:    return 1;
+            case BetType.Quinella: return 2;
+            case BetType.Exacta:   return 2;
+            case BetType.Trio:     return 3;
+            case BetType.Wide:     return 2;
+            default: return 1;
         }
     }
 

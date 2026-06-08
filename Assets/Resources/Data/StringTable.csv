@@ -163,6 +163,7 @@ str.nameentry.score,{0}점,{0}pt,{0}点,{0}分,{0}Pkt,{0}pts,{0}pts
 str.nameentry.submitting,등록 중…,Submitting…,登録中…,提交中…,Wird gespeichert…,Enviando…,Enviando…
 str.nameentry.rank_qualified,🏆 {0}위 달성! 등재,🏆 Rank {0}! Registered!,🏆 {0}位達成！登録！,🏆 第{0}名！已登榜！,🏆 Platz {0}! Eingetragen!,🏆 ¡Posición {0}! Registrado!,🏆 Posição {0}! Registrado!
 str.nameentry.rank_disqualified,⚠️ {0}위 (100위 밖),⚠️ Rank {0} (Outside Top 100),⚠️ {0}位 (Top100外),⚠️ 第{0}名 (不在前100),⚠️ Platz {0} (außer Top 100),⚠️ Posición {0} (fuera del Top 100),⚠️ Posição {0} (fora do Top 100)
+str.nameentry.touch_continue,터치하여 계속,Tap to continue,タッチして続行,点击继续,Zum Fortfahren tippen,Toca para continuar,Toque para continuar
 str.ui.betting.round,{0}라운드,Round {0},{0}ラウンド,第{0}轮,Runde {0},Ronda {0},Rodada {0}
 str.ui.betting.title,배팅 선택!,Bet Select!,ベット選択！,投注选择！,Wett-Auswahl!,¡Selección de Apuesta!,Seleção de Aposta!
 str.ui.betting.odds,배당률 : {0}배,Odds : {0}x,配当率 : {0}倍,赔率: {0}倍,Quote: {0}x,Cuota: {0}x,Cota: {0}x

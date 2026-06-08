@@ -67,15 +67,15 @@ public partial class SceneBootstrapper
         modalRoot.SetActive(false);
     }
 
-    /// <summary>제출 후 NameEntryModal에 rank 결과 텍스트 표시.</summary>
-    private void ShowRankResultInModal(int rank)
+    /// <summary>제출 후 rank 결과를 팝업으로 표시 — 터치 시 onClosed(종료화면 진입).</summary>
+    private void ShowRankResultInModal(int rank, System.Action onClosed)
     {
-        if (_nameEntryModal == null) return;
+        if (_nameEntryModal == null) { onClosed?.Invoke(); return; }
         bool qualified = rank <= 100;
         string key   = qualified ? "str.nameentry.rank_qualified" : "str.nameentry.rank_disqualified";
         string text  = Loc.Get(key, rank);
         Color  color = qualified ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.7f, 0.2f);
-        _nameEntryModal.SetRankResult(text, color);
+        _nameEntryModal.ShowResult(text, color, onClosed);   // 팝업 → 터치 시 onClosed
         Debug.Log($"[Leaderboard] rank={rank} ({(qualified ? "등재" : "미등재")}) — {text}");
     }
 
@@ -96,7 +96,7 @@ public partial class SceneBootstrapper
     private void TryNameEntryThen(System.Action showEndScreen)
     {
         var sm = ScoreManager.Instance;
-        int score = sm != null ? sm.CurrentGameScore : 0;
+        int score = sm != null ? sm.LeaderboardScore : 0;   // 리더보드 = 누적 스톤 (SPEC-028 R5)
         bool hasRecord = sm != null && sm.RoundHistory.Count > 0;
         if (hasRecord && LeaderboardData.Qualifies(score) && _nameEntryModal != null)
         {
@@ -126,8 +126,11 @@ public partial class SceneBootstrapper
                             finishEntry();
                             return;
                         }
-                        if (rank > 0) ShowRankResultInModal(rank);   // rank 결과 모달에 표시
-                        svc.ForceRefetch(100, _ => finishEntry(), _ => finishEntry());
+                        // 캐시 갱신은 백그라운드로 — 종료화면 진입을 막지 않음
+                        svc.ForceRefetch(100, _ => { }, _ => { });
+                        // rank 팝업 → 사용자가 터치하면 종료화면 진입. rank 없으면 바로 종료.
+                        if (rank > 0) ShowRankResultInModal(rank, showEndScreen);
+                        else          finishEntry();
                     });
                 }
                 else
