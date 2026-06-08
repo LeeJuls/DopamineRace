@@ -311,7 +311,7 @@ public partial class SceneBootstrapper
     {
         if (myPointLabel == null) return;
         var sm = ScoreManager.Instance;
-        int total = sm != null ? sm.CurrentGameScore : 0;
+        int total = sm != null ? sm.LeaderboardScore : 0;   // 누적 도파민 스톤 (SPEC-028 R5)
         myPointLabel.text = Loc.Get("str.hud.total_score", total);
     }
 

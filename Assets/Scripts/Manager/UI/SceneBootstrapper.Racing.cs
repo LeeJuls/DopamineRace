@@ -399,7 +399,7 @@ public partial class SceneBootstrapper
     private void UpdateScore()
     {
         if (scoreText != null && ScoreManager.Instance != null)
-            scoreText.text = Loc.Get("str.hud.total_score", ScoreManager.Instance.CurrentGameScore);
+            scoreText.text = Loc.Get("str.hud.total_score", ScoreManager.Instance.LeaderboardScore);
     }
 
     private void UpdateMyBet()
