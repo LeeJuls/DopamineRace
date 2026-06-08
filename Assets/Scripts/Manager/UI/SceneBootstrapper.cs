@@ -187,6 +187,9 @@ public partial class SceneBootstrapper : MonoBehaviour
         // SPEC-028 Step 1.3: WalletManager — 젤리/스톤 재화 관리
         if (WalletManager.Instance == null)
             new GameObject("WalletManager").AddComponent<WalletManager>();
+        // 배팅 화면 장식 고양이 (Betting 상태에서만 영역 배회)
+        if (CatDecorationManager.Instance == null)
+            new GameObject("CatDecorationManager").AddComponent<CatDecorationManager>();
 
         // 3단계: 유틸리티
         if (TrackTransition.Instance == null)
@@ -218,6 +221,7 @@ public partial class SceneBootstrapper : MonoBehaviour
         track.AddComponent<WaypointEditor>();
         track.AddComponent<TrackDebugPath>();
         track.AddComponent<SpawnEditor>();
+        track.AddComponent<CatAreaEditor>();   // 고양이 영역 편집기 (C키)
 
         BuildUI();
         ApplyFontToAllText();
