@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GameSettings
   m_EditorClassIdentifier: Assembly-CSharp::GameSettings
   racerCount: 9
-  roundLaps: 02000000030000000400000005000000
+  roundLaps: 02000000
   roundTracks: 04000000000000000000000000000000
   payoutWin: 8
   payoutPlace: 3
@@ -87,16 +87,25 @@ MonoBehaviour:
   oddsMax_trio: 999
   shortDistanceMax: 2
   midDistanceMax: 4
-  bettingPanelPrefab: {fileID: 5633231458979343494, guid: fef3be23b6c277c46bc725f43e7daa89, type: 3}
-  characterItemPrefab: {fileID: 5916920405917991211, guid: 39d93f93d300bd5428eea2e210d9d88f, type: 3}
-  resultPanelPrefab: {fileID: 8567012208848269126, guid: be432a661f51cfd42be4d64449198572, type: 3}
-  finishPanelPrefab: {fileID: 8787253541604398564, guid: 996934117f1431047812b05bf40ec784, type: 3}
-  leaderboardPanelPrefab: {fileID: 588526348272800763, guid: fe2555fdfd8ecef4e9a46d3c4e389ac1, type: 3}
-  optionPanelPrefab: {fileID: 6007032697297080370, guid: e3b568c712468c240b7bf80552544c54, type: 3}
-  gameOverPanelPrefab: {fileID: 6687789135757760158, guid: 21d3304aaac300b4899b78dfe2ae27d4, type: 3}
+  bettingPanelPrefab: {fileID: 5633231458979343494, guid: fef3be23b6c277c46bc725f43e7daa89,
+    type: 3}
+  characterItemPrefab: {fileID: 5916920405917991211, guid: 39d93f93d300bd5428eea2e210d9d88f,
+    type: 3}
+  resultPanelPrefab: {fileID: 8567012208848269126, guid: be432a661f51cfd42be4d64449198572,
+    type: 3}
+  finishPanelPrefab: {fileID: 8787253541604398564, guid: 996934117f1431047812b05bf40ec784,
+    type: 3}
+  leaderboardPanelPrefab: {fileID: 588526348272800763, guid: fe2555fdfd8ecef4e9a46d3c4e389ac1,
+    type: 3}
+  optionPanelPrefab: {fileID: 6007032697297080370, guid: e3b568c712468c240b7bf80552544c54,
+    type: 3}
+  gameOverPanelPrefab: {fileID: 6687789135757760158, guid: 21d3304aaac300b4899b78dfe2ae27d4,
+    type: 3}
   trackProgressBarPrefab: {fileID: 0}
-  betAmountModalPrefab: {fileID: 1084653558380844656, guid: 54699688c2f4ec34296f67cec809b2c9, type: 3}
-  exchangeModalPrefab: {fileID: 1364091916340533889, guid: b67c5d2d9c4edc046a7f4194c4f11786, type: 3}
+  betAmountModalPrefab: {fileID: 1084653558380844656, guid: 54699688c2f4ec34296f67cec809b2c9,
+    type: 3}
+  exchangeModalPrefab: {fileID: 1364091916340533889, guid: b67c5d2d9c4edc046a7f4194c4f11786,
+    type: 3}
   trackBarLerpSpeed: 12
   enableRoundResume: 0
   pathDeviation: 0.3
