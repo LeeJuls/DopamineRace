@@ -29,6 +29,11 @@ public class CatSpawnConfig : ScriptableObject
     [Range(0.02f, 1f)]
     public float frameInterval = 0.1f;
 
+    [Header("═══ 고양이 크기(배율) ═══")]
+    [Range(0.5f, 8f)]
+    [Tooltip("스폰 시 transform.localScale 배율. 기본 3.")]
+    public float catScale = 3f;
+
     // ── 싱글턴 로드 ──
     private static CatSpawnConfig _instance;
     public static CatSpawnConfig Instance

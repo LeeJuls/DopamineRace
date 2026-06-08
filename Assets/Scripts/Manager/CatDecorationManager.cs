@@ -69,6 +69,7 @@ public class CatDecorationManager : MonoBehaviour
         {
             var go = GetOrCreate(n);
             if (go == null) continue;
+            go.transform.localScale = Vector3.one * Mathf.Max(0.1f, config.catScale); // 크기 배율
             var cc = go.GetComponent<CatController>();
             if (cc != null)
             {
