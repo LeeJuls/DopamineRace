@@ -43,7 +43,7 @@ public static class FinishLeaderboardUIPrefabCreator
     // ══════════════════════════════════════════════
     //  메뉴 항목
     // ══════════════════════════════════════════════
-    [MenuItem("DopamineRace/Create Finish UI Prefab")]
+    [MenuItem("DopamineRace/프리팹 생성/Finish UI Prefab")]
     public static void CreateFinishPrefab()
     {
         bool ok = EditorUtility.DisplayDialog(
@@ -133,31 +133,44 @@ public static class FinishLeaderboardUIPrefabCreator
         vpRt.sizeDelta        = Vector2.zero;
         viewport.AddComponent<RectMask2D>();
 
-        // ── RoundDetailText (top-stretch, ContentSizeFitter) ──
-        GameObject detailGo = new GameObject("RoundDetailText");
-        detailGo.transform.SetParent(viewport.transform, false);
-        RectTransform detailRt = detailGo.AddComponent<RectTransform>();
-        detailRt.anchorMin        = new Vector2(0f, 1f);
-        detailRt.anchorMax        = new Vector2(1f, 1f);
-        detailRt.pivot            = new Vector2(0.5f, 1f);
-        detailRt.anchoredPosition = Vector2.zero;
-        detailRt.sizeDelta        = new Vector2(0f, 300f); // 초기값, CSF가 자동 조정
-        Text detailText = detailGo.AddComponent<Text>();
-        detailText.text           = "";
-        detailText.fontSize       = 20;
-        detailText.alignment      = TextAnchor.UpperLeft;
-        detailText.color          = COLOR_WHITE;
-        detailText.supportRichText = true;
-        detailText.verticalOverflow = VerticalWrapMode.Overflow;
-        if (font != null) detailText.font = font;
-        // ContentSizeFitter — 텍스트 내용에 맞춰 높이 자동 확장
-        ContentSizeFitter csf = detailGo.AddComponent<ContentSizeFitter>();
-        csf.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
-        csf.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+        // ── Content (VLG + CSF, top-center 고정 700px) — ScrollView와 동일 폭 고정
+        // 스트레치 앵커 대신 고정 폭: 프리팹 에디터(Canvas 없음)에서도 레이아웃 정상 표시
+        GameObject content = new GameObject("Content");
+        content.transform.SetParent(viewport.transform, false);
+        RectTransform contentRt = content.AddComponent<RectTransform>();
+        contentRt.anchorMin        = new Vector2(0.5f, 1f);
+        contentRt.anchorMax        = new Vector2(0.5f, 1f);
+        contentRt.pivot            = new Vector2(0.5f, 1f);
+        contentRt.anchoredPosition = Vector2.zero;
+        contentRt.sizeDelta        = new Vector2(700f, 0f);  // width=ScrollView 700px 고정, height=CSF 자동
+        VerticalLayoutGroup vlg = content.AddComponent<VerticalLayoutGroup>();
+        vlg.spacing                = 8f;
+        vlg.childForceExpandWidth  = true;
+        vlg.childForceExpandHeight = false;
+        vlg.childAlignment         = TextAnchor.UpperLeft;
+        vlg.padding                = new RectOffset(4, 4, 6, 6);
+        ContentSizeFitter contentCSF = content.AddComponent<ContentSizeFitter>();
+        contentCSF.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
+        contentCSF.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+        // 5개 Text 자식 — fontSize = prefab 기본값 (Inspector에서 직접 편집 가능)
+        MkTextInContent(content.transform, "StoneHeaderText", "", 42,
+            new Color(0.3f, 0.87f, 0.87f, 1f), font, false);   // #4DDDDD 청록
+        MkTextInContent(content.transform, "RoundSummaryText", "", 24,
+            COLOR_WHITE, font, true);                           // color 태그 사용
+        MkTextInContent(content.transform, "DetailHeaderText", "", 18,
+            new Color(0.53f, 0.53f, 0.53f, 1f), font, true);   // #888888 회색
+        MkTextInContent(content.transform, "RoundDetailText", "", 16,
+            COLOR_WHITE, font, true);                           // color 태그 사용
+        MkTextInContent(content.transform, "FinalJellyText", "", 20,
+            new Color(0.67f, 0.81f, 1f, 1f), font, false);     // #AACFFF 하늘색
 
         // ScrollRect 연결
         sr.viewport = vpRt;
-        sr.content  = detailRt;
+        sr.content  = contentRt;
+
+        // 프리팹 에디터 미리보기용: VLG 레이아웃 즉시 계산 → 텍스트 가로 표시
+        LayoutRebuilder.ForceRebuildLayoutImmediate(contentRt);
 
         // ── TotalScoreText (anchor y=0.18, 노랑 38pt) ──
         MkText(root.transform, "TotalScoreText", "",
@@ -176,6 +189,34 @@ public static class FinishLeaderboardUIPrefabCreator
             COLOR_BTN_PURPLE, 26, font);
 
         return root;
+    }
+
+    // ══════════════════════════════════════════════
+    //  헬퍼: Content(VLG) 자식 Text 생성
+    //  top-stretch + ContentSizeFitter(vertical) — VLG가 높이 자동 관리
+    // ══════════════════════════════════════════════
+    private static void MkTextInContent(Transform parent, string name, string text,
+        int fontSize, Color color, Font font, bool richText)
+    {
+        GameObject go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        RectTransform rt = go.AddComponent<RectTransform>();
+        rt.anchorMin        = new Vector2(0f, 1f);
+        rt.anchorMax        = new Vector2(0f, 1f);   // 고정 앵커 — VLG가 런타임에 너비 override
+        rt.pivot            = new Vector2(0f, 1f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta        = new Vector2(692f, 0f); // 초기 너비(≈Content 700-padding 8) — 프리팹 에디터 표시용
+        Text t = go.AddComponent<Text>();
+        t.text              = text;
+        t.fontSize          = fontSize;
+        t.alignment         = TextAnchor.UpperLeft;
+        t.color             = color;
+        t.supportRichText   = richText;
+        t.verticalOverflow  = VerticalWrapMode.Overflow;
+        if (font != null) t.font = font;
+        ContentSizeFitter csf = go.AddComponent<ContentSizeFitter>();
+        csf.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
+        csf.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
     }
 
     // ══════════════════════════════════════════════
@@ -231,7 +272,7 @@ public static class FinishLeaderboardUIPrefabCreator
     // ══════════════════════════════════════════════
     //  메뉴 항목 — LeaderboardPanel
     // ══════════════════════════════════════════════
-    [MenuItem("DopamineRace/Create Leaderboard UI Prefab")]
+    [MenuItem("DopamineRace/프리팹 생성/Leaderboard UI Prefab")]
     public static void CreateLeaderboardPrefab()
     {
         bool ok = EditorUtility.DisplayDialog(

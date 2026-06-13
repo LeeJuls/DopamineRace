@@ -13,7 +13,7 @@ public static class NameEntryModalPrefabFactory
 {
     private const string PREFAB_PATH = "Assets/Prefabs/UI/NameEntryModal.prefab";
 
-    [MenuItem("DopamineRace/Create NameEntry Modal Prefab")]
+    [MenuItem("DopamineRace/프리팹 생성/NameEntry Modal Prefab")]
     public static void CreatePrefab()
     {
         // 1. 계층 구조 생성

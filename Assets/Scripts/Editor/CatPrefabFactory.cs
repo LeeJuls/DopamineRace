@@ -21,7 +21,7 @@ public static class CatPrefabFactory
     private const int CAT_COUNT = 6;
     private const int SORTING_ORDER = -20;
 
-    [MenuItem("DopamineRace/고양이 프리팹 생성")]
+    [MenuItem("DopamineRace/프리팹 생성/고양이 프리팹")]
     public static void CreateCatPrefabs()
     {
         EnsureFolders();

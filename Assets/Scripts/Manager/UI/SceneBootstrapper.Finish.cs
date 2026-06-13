@@ -38,18 +38,36 @@ public partial class SceneBootstrapper
         finishTitleText      = FindText(root, "TitleText");
         finishTotalScoreText = FindText(root, "TotalScoreText");
 
-        // RoundScrollView 구조 (v2: 스크롤 지원)
+        // RoundScrollView 구조 (v3: 5-Text Content 분리)
         Transform scrollT = root.Find("RoundScrollView");
         if (scrollT != null)
         {
-            finishScrollRect      = scrollT.GetComponent<ScrollRect>();
-            Transform detailT     = scrollT.Find("Viewport/RoundDetailText");
-            finishRoundDetailText = detailT?.GetComponent<Text>();
+            finishScrollRect    = scrollT.GetComponent<ScrollRect>();
+            Transform viewportT = scrollT.Find("Viewport");
+            Transform contentT  = viewportT?.Find("Content");   // 신형: VLG+CSF 컨테이너
+            if (contentT != null)
+            {
+                finishStoneHeaderText  = FindText(contentT, "StoneHeaderText");
+                finishRoundSummaryText = FindText(contentT, "RoundSummaryText");
+                finishDetailHeaderText = FindText(contentT, "DetailHeaderText");
+                finishRoundDetailText  = FindText(contentT, "RoundDetailText");
+                finishFinalJellyText   = FindText(contentT, "FinalJellyText");
+            }
+            else
+            {
+                // 구형 프리팹 호환 폴백: 단일 RoundDetailText
+                Transform detailT = viewportT?.Find("RoundDetailText");
+                finishRoundDetailText = detailT?.GetComponent<Text>();
+            }
         }
         else
         {
-            // 레거시: 직접 자식 (폴백)
-            finishRoundDetailText = FindText(root, "RoundDetailText");
+            // 레거시 코드빌드: 직접 자식에서 찾기
+            finishStoneHeaderText  = FindText(root, "StoneHeaderText");
+            finishRoundSummaryText = FindText(root, "RoundSummaryText");
+            finishDetailHeaderText = FindText(root, "DetailHeaderText");
+            finishRoundDetailText  = FindText(root, "RoundDetailText");
+            finishFinalJellyText   = FindText(root, "FinalJellyText");
         }
 
         // NewGameBtn — TitleScene 파편 전환 (SceneTransitionManager 블록 디졸브)
@@ -92,10 +110,27 @@ public partial class SceneBootstrapper
             new Vector2(0.5f, 0.92f), new Vector2(0.5f, 0.92f),
             Vector2.zero, new Vector2(500, 70), 55, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.2f));
 
+        // 5개 Text 분리 — 각각 크기·위치 개별 제어 (Legacy 고정 앵커 버전)
+        finishStoneHeaderText = MkText(parent, "",
+            new Vector2(0.5f, 0.72f), new Vector2(0.5f, 0.72f),
+            Vector2.zero, new Vector2(700, 60), 42, TextAnchor.UpperCenter, new Color(0.3f, 0.87f, 0.87f));
+        finishRoundSummaryText = MkText(parent, "",
+            new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f),
+            Vector2.zero, new Vector2(700, 160), 24, TextAnchor.UpperCenter, Color.white);
+        finishRoundSummaryText.verticalOverflow = VerticalWrapMode.Overflow;
+        finishRoundSummaryText.supportRichText  = true;
+        finishDetailHeaderText = MkText(parent, "",
+            new Vector2(0.5f, 0.48f), new Vector2(0.5f, 0.48f),
+            Vector2.zero, new Vector2(700, 40), 18, TextAnchor.UpperCenter, new Color(0.53f, 0.53f, 0.53f));
+        finishDetailHeaderText.supportRichText = true;
         finishRoundDetailText = MkText(parent, "",
-            new Vector2(0.5f, 0.58f), new Vector2(0.5f, 0.58f),
-            Vector2.zero, new Vector2(700, 400), 20, TextAnchor.UpperCenter, Color.white);
+            new Vector2(0.5f, 0.38f), new Vector2(0.5f, 0.38f),
+            Vector2.zero, new Vector2(700, 160), 16, TextAnchor.UpperCenter, Color.white);
         finishRoundDetailText.verticalOverflow = VerticalWrapMode.Overflow;
+        finishRoundDetailText.supportRichText  = true;
+        finishFinalJellyText = MkText(parent, "",
+            new Vector2(0.5f, 0.26f), new Vector2(0.5f, 0.26f),
+            Vector2.zero, new Vector2(700, 40), 20, TextAnchor.UpperCenter, new Color(0.67f, 0.81f, 1f));
 
         finishTotalScoreText = MkText(parent, "",
             new Vector2(0.5f, 0.18f), new Vector2(0.5f, 0.18f),
@@ -158,47 +193,61 @@ public partial class SceneBootstrapper
         var wallet = WalletManager.Instance;
         int stoneTotal = wallet != null ? wallet.Stone : 0;
 
-        string mainArea = "<size=42><color=#4DDDDD>" + SafeLocFor("str.finish.stone_total",
-            "획득한 도파민 스톤: {0} 💎", stoneTotal) + "</color></size>\n\n";
+        // ── 5개 Text 개별 설정 (size 태그 제거 — prefab fontSize 사용, color 태그 유지) ──
 
-        // 라운드별 ✓/✗ + 획득 스톤
-        foreach (var r in sm.RoundHistory)
+        // 1) 도파민 스톤 총액
+        if (finishStoneHeaderText != null)
+            finishStoneHeaderText.text = SafeLocFor("str.finish.stone_total",
+                "획득한 도파민 스톤: {0} 💎", stoneTotal);
+
+        // 2) 라운드별 ✓/✗ 결과 요약
+        if (finishRoundSummaryText != null)
         {
-            if (r.isWin)
-                mainArea += "<size=24><color=#66FF66>" + SafeLocFor("str.finish.round.hit",
-                    "R{0}: ✓ 적중   (+{1} 💎)", r.round, r.stoneGain) + "</color></size>\n";
-            else
-                mainArea += "<size=24><color=#FF6666>" + SafeLocFor("str.finish.round.miss",
-                    "R{0}: ✗ 빗나감", r.round) + "</color></size>\n";
+            string summaryArea = "";
+            foreach (var r in sm.RoundHistory)
+            {
+                if (r.isWin)
+                    summaryArea += "<color=#66FF66>" + SafeLocFor("str.finish.round.hit",
+                        "R{0}: ✓ 적중   (+{1} 💎)", r.round, r.stoneGain) + "</color>\n";
+                else
+                    summaryArea += "<color=#FF6666>" + SafeLocFor("str.finish.round.miss",
+                        "R{0}: ✗ 빗나감", r.round) + "</color>\n";
+            }
+            finishRoundSummaryText.text = summaryArea.TrimEnd();
+            finishRoundSummaryText.supportRichText = true;
         }
 
-        // 부수 영역 (작은 글씨) — 베팅 상세 + 최종 보유 젤리
-        string detailArea = "\n<size=18><color=#888888>── " + SafeLocFor("str.finish.detail.section",
-            "라운드별 상세") + " ──</color></size>\n";
-        foreach (var r in sm.RoundHistory)
+        // 3) 섹션 구분선
+        if (finishDetailHeaderText != null)
         {
-            string typeName = BettingCalculator.GetTypeName(r.betType);
-            string scoreStr = r.stoneGain > 0
-                ? "<color=#FFD700>+" + r.stoneGain + " 💎</color>"
-                : "<color=#888888>+0</color>";
-            string result = r.isWin
-                ? "<color=#66FF66>적중</color>"
-                : "<color=#FF6666>빗나감</color>";
-            detailArea += "<size=16>R" + r.round + " | " + typeName + " | " + result + " | " + scoreStr + "</size>\n";
+            finishDetailHeaderText.text = "── " + SafeLocFor("str.finish.detail.section",
+                "라운드별 상세") + " ──";
+            finishDetailHeaderText.supportRichText = true;
         }
 
-        if (wallet != null)
-        {
-            detailArea += "\n<size=20><color=#AACFFF>" + SafeLocFor("str.finish.final_jelly",
-                "최종 보유: 🟦 {0}", wallet.Jelly) + "</color></size>";
-        }
-
+        // 4) 라운드별 상세 행
         if (finishRoundDetailText != null)
         {
-            finishRoundDetailText.text = mainArea + detailArea;
-            // RichText 활성 (size·color 태그 동작용)
+            string detailArea = "";
+            foreach (var r in sm.RoundHistory)
+            {
+                string typeName = BettingCalculator.GetTypeName(r.betType);
+                string scoreStr = r.stoneGain > 0
+                    ? "<color=#FFD700>+" + r.stoneGain + " 💎</color>"
+                    : "<color=#888888>+0</color>";
+                string result = r.isWin
+                    ? "<color=#66FF66>적중</color>"
+                    : "<color=#FF6666>빗나감</color>";
+                detailArea += "R" + r.round + " | " + typeName + " | " + result + " | " + scoreStr + "\n";
+            }
+            finishRoundDetailText.text = detailArea.TrimEnd();
             finishRoundDetailText.supportRichText = true;
         }
+
+        // 5) 최종 보유 젤리
+        if (finishFinalJellyText != null && wallet != null)
+            finishFinalJellyText.text = SafeLocFor("str.finish.final_jelly",
+                "최종 보유: 🟦 {0}", wallet.Jelly);
 
         // totalScoreText: 획득 도파민 스톤 합계 (SPEC-028 — 적중점수 아님)
         if (finishTotalScoreText != null)

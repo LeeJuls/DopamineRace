@@ -16,7 +16,7 @@ public static class BettingUIPrefabCreator
 {
     private const string PREFAB_DIR = "Assets/Prefabs/UI";
 
-    [MenuItem("DopamineRace/Create Betting UI Prefabs")]
+    [MenuItem("DopamineRace/프리팹 생성/Betting UI Prefabs")]
     public static void CreatePrefabs()
     {
         bool ok = UnityEditor.EditorUtility.DisplayDialog(

@@ -29,7 +29,7 @@ public static class GameOverUIPrefabCreator
     // ══════════════════════════════════════════════
     //  메뉴: Create (완전 재생성)
     // ══════════════════════════════════════════════
-    [MenuItem("DopamineRace/Create GameOver UI Prefabs")]
+    [MenuItem("DopamineRace/프리팹 생성/GameOver UI Prefabs")]
     public static void CreatePrefabs()
     {
         bool ok = EditorUtility.DisplayDialog(

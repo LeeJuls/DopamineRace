@@ -15,7 +15,7 @@ public static class OptionPanelPrefabCreator
     private const string PREFAB_DIR  = "Assets/Prefabs/UI";
     private const string PREFAB_PATH = "Assets/Prefabs/UI/OptionPanel.prefab";
 
-    [MenuItem("DopamineRace/Create Option Panel Prefab")]
+    [MenuItem("DopamineRace/프리팹 생성/Option Panel Prefab")]
     public static void CreateOptionPanelPrefab()
     {
         // 폰트 참조

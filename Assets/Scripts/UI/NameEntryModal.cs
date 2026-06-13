@@ -107,11 +107,6 @@ public class NameEntryModal : MonoBehaviour
 
         if (_rankResultText != null)
         {
-            var rt = _rankResultText.rectTransform;
-            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.46f);   // 패널 중앙으로
-            rt.anchoredPosition = Vector2.zero;
-            rt.sizeDelta = new Vector2(520, 140);
-            _rankResultText.fontSize = 28;
             _rankResultText.text = text;
             _rankResultText.color = color;
         }
