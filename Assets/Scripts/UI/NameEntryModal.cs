@@ -6,16 +6,17 @@ using System;
 /// 아케이드 스타일 이름 입력 모달 (3자리 이니셜).
 /// ↑↓: 글자 A-Z 순환 / ←→: 자리 이동(비순환) / Enter·확인: 저장. 취소 없음, 기본 AAA.
 /// Top100 자격 시에만 표시 (SceneBootstrapper.OnStateChanged에서 분기).
-/// 빌드: SceneBootstrapper.NameEntry.cs (코드 폴백) → SetReferences 주입.
+/// 빌드: 프리팹(Assets/Prefabs/UI/NameEntryModal.prefab) → SetReferences 코드 폴백 순.
 /// </summary>
 public class NameEntryModal : MonoBehaviour
 {
-    private GameObject _backdrop;
-    private Text _titleText, _scoreText, _guideText, _rankResultText;
-    private Text[] _slotTexts;
-    private Image[] _slotHighlights;
-    private Button[] _upButtons, _downButtons;
-    private Button _confirmButton;
+    [SerializeField] private GameObject _backdrop;
+    [SerializeField] private Text _titleText, _scoreText, _guideText, _rankResultText;
+    [SerializeField] private Text[] _slotTexts;
+    [SerializeField] private Image[] _slotHighlights;
+    [SerializeField] private Button[] _upButtons;
+    [SerializeField] private Button[] _downButtons;
+    [SerializeField] private Button _confirmButton;
 
     private readonly int[] _letters = new int[3];   // 0-25 (A-Z)
     private int _currentSlot;
@@ -31,9 +32,34 @@ public class NameEntryModal : MonoBehaviour
     /// <summary>현재 조합된 이름 (테스트/검증용).</summary>
     public string CurrentName => "" + (char)('A' + _letters[0]) + (char)('A' + _letters[1]) + (char)('A' + _letters[2]);
 
-    private void Awake() => gameObject.SetActive(false);
+    private void Awake()
+    {
+        // 프리팹 경로: 직렬화된 참조가 있으면 즉시 배선
+        if (_confirmButton != null) WireButtons();
+        gameObject.SetActive(false);
+    }
 
-    /// <summary>SceneBootstrapper 코드 빌드에서 UI 참조 주입 + 버튼 배선.</summary>
+    /// <summary>버튼 onClick 배선 — Awake(프리팹 경로) 또는 SetReferences(코드 폴백) 후 호출.</summary>
+    private void WireButtons()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            int idx = i;
+            if (_upButtons != null && i < _upButtons.Length && _upButtons[i] != null)
+            {
+                _upButtons[i].onClick.RemoveAllListeners();
+                _upButtons[i].onClick.AddListener(() => ChangeLetter(idx, +1));
+            }
+            if (_downButtons != null && i < _downButtons.Length && _downButtons[i] != null)
+            {
+                _downButtons[i].onClick.RemoveAllListeners();
+                _downButtons[i].onClick.AddListener(() => ChangeLetter(idx, -1));
+            }
+        }
+        if (_confirmButton != null) { _confirmButton.onClick.RemoveAllListeners(); _confirmButton.onClick.AddListener(Confirm); }
+    }
+
+    /// <summary>코드 폴백 경로에서 UI 참조 주입 + 버튼 배선.</summary>
     public void SetReferences(GameObject backdrop, Text title, Text score, Text guide, Text rankResult,
         Text[] slots, Image[] highlights, Button[] ups, Button[] downs, Button confirm)
     {
@@ -41,14 +67,7 @@ public class NameEntryModal : MonoBehaviour
         _rankResultText = rankResult;
         _slotTexts = slots; _slotHighlights = highlights; _confirmButton = confirm;
         _upButtons = ups; _downButtons = downs;
-
-        for (int i = 0; i < 3; i++)
-        {
-            int idx = i;   // 클로저 캡처
-            if (ups != null && ups[i] != null) { ups[i].onClick.RemoveAllListeners(); ups[i].onClick.AddListener(() => ChangeLetter(idx, +1)); }
-            if (downs != null && downs[i] != null) { downs[i].onClick.RemoveAllListeners(); downs[i].onClick.AddListener(() => ChangeLetter(idx, -1)); }
-        }
-        if (confirm != null) { confirm.onClick.RemoveAllListeners(); confirm.onClick.AddListener(Confirm); }
+        WireButtons();
     }
 
     /// <summary>점수 표시 + 콜백 등록 후 모달 표시. 초기값 AAA.</summary>
@@ -155,9 +174,9 @@ public class NameEntryModal : MonoBehaviour
     {
         for (int i = 0; i < 3; i++)
         {
-            if (_slotTexts != null && _slotTexts[i] != null)
+            if (_slotTexts != null && i < _slotTexts.Length && _slotTexts[i] != null)
                 _slotTexts[i].text = ((char)('A' + _letters[i])).ToString();
-            if (_slotHighlights != null && _slotHighlights[i] != null)
+            if (_slotHighlights != null && i < _slotHighlights.Length && _slotHighlights[i] != null)
                 _slotHighlights[i].enabled = (i == _currentSlot);   // 선택 슬롯 강조
         }
     }

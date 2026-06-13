@@ -7,10 +7,24 @@ using UnityEngine.UI;
 /// </summary>
 public partial class SceneBootstrapper
 {
+    [SerializeField] private NameEntryModal _nameEntryModalPrefab;
     private NameEntryModal _nameEntryModal;
 
     private void BuildNameEntryModal(Transform root)
     {
+        // 프리팹 우선 — Inspector에서 NameEntryModal.prefab 할당 시 사용
+        if (_nameEntryModalPrefab != null)
+        {
+            var go = Instantiate(_nameEntryModalPrefab.gameObject);
+            go.name = "NameEntryModal";
+            go.transform.SetParent(root, false);
+            var rt = go.GetComponent<RectTransform>();
+            if (rt != null) { rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero; }
+            _nameEntryModal = go.GetComponent<NameEntryModal>();
+            return;
+        }
+
+        // 코드 폴백 — 프리팹 미할당 시 기존 방식으로 생성
         GameObject modalRoot = new GameObject("NameEntryModal");
         modalRoot.transform.SetParent(root, false);
         AddFullRect(modalRoot);
