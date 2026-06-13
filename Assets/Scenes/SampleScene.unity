@@ -959,6 +959,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5189161adfbbf8749a54c6444ccd4c01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneBootstrapper
+  _nameEntryModalPrefab: {fileID: 2878514379125664600, guid: 519c534229a4ba14aba4a0e225997dba,
+    type: 3}
 --- !u!1 &2014592338
 GameObject:
   m_ObjectHideFlags: 0

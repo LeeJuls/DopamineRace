@@ -171,4 +171,4 @@ MonoBehaviour:
   enableRaceDebug: 0
   v4Settings: {fileID: 11400000, guid: 834170f72f494a6fa50c0bc9d7edfbe8, type: 2}
   catDecorationEnabled: 1
-  catScale: 3
+  catScale: 4

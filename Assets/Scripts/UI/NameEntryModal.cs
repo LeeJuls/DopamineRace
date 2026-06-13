@@ -17,6 +17,7 @@ public class NameEntryModal : MonoBehaviour
     [SerializeField] private Button[] _upButtons;
     [SerializeField] private Button[] _downButtons;
     [SerializeField] private Button _confirmButton;
+    [SerializeField] private Text _continueText;   // 결과 팝업 전용 "터치하여 계속"
 
     private readonly int[] _letters = new int[3];   // 0-25 (A-Z)
     private int _currentSlot;
@@ -90,6 +91,7 @@ public class NameEntryModal : MonoBehaviour
             if (ct != null) ct.text = Loc.Get("str.nameentry.confirm");
             _confirmButton.interactable = true;
         }
+        if (_continueText != null) _continueText.gameObject.SetActive(false);
         if (_backdrop != null) _backdrop.SetActive(true);
         gameObject.SetActive(true);
         RefreshSlots();
@@ -113,10 +115,10 @@ public class NameEntryModal : MonoBehaviour
             _rankResultText.text = text;
             _rankResultText.color = color;
         }
-        if (_guideText != null) _guideText.text = Loc.Get("str.nameentry.touch_continue");
+        if (_continueText != null) _continueText.text = Loc.Get("str.nameentry.touch_continue");
     }
 
-    /// <summary>입력 UI(슬롯·강조·▲▼·확인) 일괄 표시/숨김 — 결과 팝업 전환용.</summary>
+    /// <summary>입력 UI(슬롯·강조·▲▼·확인·안내) 일괄 표시/숨김 — 결과 팝업 전환용.</summary>
     private void SetInputActive(bool on)
     {
         if (_slotTexts != null)      foreach (var t in _slotTexts)      if (t != null) t.gameObject.SetActive(on);
@@ -124,6 +126,8 @@ public class NameEntryModal : MonoBehaviour
         if (_upButtons != null)      foreach (var b in _upButtons)      if (b != null) b.gameObject.SetActive(on);
         if (_downButtons != null)    foreach (var b in _downButtons)    if (b != null) b.gameObject.SetActive(on);
         if (_confirmButton != null)  _confirmButton.gameObject.SetActive(on);
+        if (_guideText != null)      _guideText.gameObject.SetActive(on);
+        if (_continueText != null)   _continueText.gameObject.SetActive(!on);  // 결과 시에만 표시
     }
 
     /// <summary>제출 완료 후 외부에서 명시적으로 닫기 (Confirm이 모달을 닫지 않으므로).</summary>

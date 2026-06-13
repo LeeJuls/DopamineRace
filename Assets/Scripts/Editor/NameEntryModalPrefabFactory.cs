@@ -19,12 +19,12 @@ public static class NameEntryModalPrefabFactory
         // 1. 계층 구조 생성
         var root = BuildHierarchy(
             out var backdrop,
-            out var titleText, out var scoreText, out var rankResultText, out var guideText,
+            out var titleText, out var scoreText, out var rankResultText, out var guideText, out var continueText,
             out var slots, out var highlights, out var ups, out var downs, out var confirmBtn);
 
         // 2. NameEntryModal 컴포넌트 추가 + SerializedObject로 참조 할당
         var modal = root.AddComponent<NameEntryModal>();
-        AssignReferences(modal, backdrop, titleText, scoreText, guideText, rankResultText,
+        AssignReferences(modal, backdrop, titleText, scoreText, guideText, rankResultText, continueText,
             slots, highlights, ups, downs, confirmBtn);
 
         // 3. 프리팹으로 저장 (기존 덮어쓰기)
@@ -66,7 +66,7 @@ public static class NameEntryModalPrefabFactory
 
     private static GameObject BuildHierarchy(
         out GameObject backdrop,
-        out Text titleText, out Text scoreText, out Text rankResultText, out Text guideText,
+        out Text titleText, out Text scoreText, out Text rankResultText, out Text guideText, out Text continueText,
         out Text[] slots, out Image[] highlights, out Button[] ups, out Button[] downs, out Button confirmBtn)
     {
         Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
@@ -100,9 +100,16 @@ public static class NameEntryModalPrefabFactory
             new Vector2(0.5f, 0.625f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(520, 40),
             18, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.4f), font);
 
+        // GuideText: 버튼 위로 올려 겹침 해소 (입력 중 키보드 안내)
         guideText = MkText(panel, "GuideText", "",
-            new Vector2(0.5f, 0.13f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(520, 36),
+            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -120), new Vector2(520, 36),
             20, TextAnchor.MiddleCenter, new Color(0.8f, 0.8f, 0.8f), font);
+
+        // ContinueText: 결과 팝업 전용 "터치하여 계속" (확인 버튼 자리, 기본 비활성)
+        continueText = MkText(panel, "ContinueText", "",
+            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -175), new Vector2(520, 48),
+            20, TextAnchor.MiddleCenter, new Color(0.8f, 0.8f, 0.8f), font);
+        continueText.gameObject.SetActive(false);
 
         // 3슬롯 (강조 Image + 글자 Text + ▲▼ 버튼)
         slots      = new Text[3];
@@ -137,7 +144,7 @@ public static class NameEntryModalPrefabFactory
     // ──────────────────────────────────────────────────────────────────────────
 
     private static void AssignReferences(NameEntryModal modal,
-        GameObject backdrop, Text titleText, Text scoreText, Text guideText, Text rankResultText,
+        GameObject backdrop, Text titleText, Text scoreText, Text guideText, Text rankResultText, Text continueText,
         Text[] slots, Image[] highlights, Button[] ups, Button[] downs, Button confirmBtn)
     {
         var so = new SerializedObject(modal);
@@ -147,6 +154,7 @@ public static class NameEntryModalPrefabFactory
         so.FindProperty("_guideText").objectReferenceValue      = guideText;
         so.FindProperty("_rankResultText").objectReferenceValue = rankResultText;
         so.FindProperty("_confirmButton").objectReferenceValue  = confirmBtn;
+        so.FindProperty("_continueText").objectReferenceValue   = continueText;
         SetSerializedArray(so.FindProperty("_slotTexts"),      slots);
         SetSerializedArray(so.FindProperty("_slotHighlights"), highlights);
         SetSerializedArray(so.FindProperty("_upButtons"),      ups);
