@@ -13,6 +13,21 @@ public class CatDecorationManager : MonoBehaviour
     private CatAreaData area;
     private readonly Dictionary<int, GameObject> pool = new Dictionary<int, GameObject>(); // catNumber → 인스턴스
     private bool warnedConfig, warnedArea;
+    private ExchangeModal _exchangeModal;
+
+    /// <summary>SceneBootstrapper가 ExchangeModal 생성 후 주입. 이미 스폰된 고양이에도 소급 구독.</summary>
+    public void SetExchangeModal(ExchangeModal modal)
+    {
+        _exchangeModal = modal;
+        foreach (var kv in pool)
+        {
+            if (kv.Value == null || !kv.Value.activeSelf) continue;
+            var cc = kv.Value.GetComponent<CatController>();
+            if (cc != null) { cc.OnClicked -= ShowExchangeModal; cc.OnClicked += ShowExchangeModal; }
+        }
+    }
+
+    private void ShowExchangeModal() => _exchangeModal?.Show();
 
     private void Awake()
     {
@@ -89,7 +104,11 @@ public class CatDecorationManager : MonoBehaviour
                 cc.SetArea(area);
             }
             go.SetActive(true);           // OnEnable → BeginWander(area)
-            if (cc != null) cc.BeginWander(area);
+            if (cc != null)
+            {
+                cc.BeginWander(area);
+                cc.OnClicked += ShowExchangeModal; // 고양이 클릭 → 환전 팝업
+            }
         }
     }
 
@@ -97,7 +116,12 @@ public class CatDecorationManager : MonoBehaviour
     private void DespawnCats()
     {
         foreach (var kv in pool)
-            if (kv.Value != null && kv.Value.activeSelf) kv.Value.SetActive(false);
+        {
+            if (kv.Value == null || !kv.Value.activeSelf) continue;
+            var cc = kv.Value.GetComponent<CatController>();
+            if (cc != null) cc.OnClicked -= ShowExchangeModal; // 구독 해제
+            kv.Value.SetActive(false);
+        }
     }
 
     private GameObject GetOrCreate(int n)

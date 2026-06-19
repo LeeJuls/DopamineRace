@@ -429,59 +429,16 @@ public partial class SceneBootstrapper : MonoBehaviour
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  Exchange Icon (Step 2.15) — BettingPanel 자식으로 통합됨
-    //  bettingUIRoot 하위에서 재귀 검색 → onClick 연결만 수행
-    //  (BettingPanel은 bettingUIRoot의 자식이고, ExchangeIcon은 그 자식)
+    //  Exchange Icon (Step 2.15) — 고양이 클릭으로 대체됨. 버튼 삭제.
     // ══════════════════════════════════════════════════════════════
     private void BuildExchangeIcon(Transform bettingUIRoot)
     {
-        Transform iconTr = null;
+        // ExchangeModal은 고양이 클릭으로 열림 (CatDecorationManager.ShowExchangeModal).
+        // 기존 ExchangeIcon 버튼이 프리팹에 남아 있으면 제거한다.
         var allChildren = bettingUIRoot.GetComponentsInChildren<Transform>(true);
         foreach (var t in allChildren)
         {
-            if (t.name == "ExchangeIcon") { iconTr = t; break; }
+            if (t.name == "ExchangeIcon") { Destroy(t.gameObject); break; }
         }
-
-        if (iconTr == null)
-        {
-            Debug.LogWarning("[ExchangeIcon] bettingUIRoot 하위에 ExchangeIcon 없음 — 동적 폴백");
-            BuildExchangeIconFallback(bettingUIRoot);
-            return;
-        }
-
-        _exchangeIconButton = iconTr.GetComponent<Button>();
-        if (_exchangeIconButton == null)
-        {
-            Debug.LogWarning("[ExchangeIcon] Button 컴포넌트 없음 — 추가");
-            _exchangeIconButton = iconTr.gameObject.AddComponent<Button>();
-            _exchangeIconButton.targetGraphic = iconTr.GetComponent<Image>();
-        }
-
-        _exchangeIconButton.onClick.RemoveAllListeners();
-        _exchangeIconButton.onClick.AddListener(() => _exchangeModal?.Show());
-    }
-
-    private void BuildExchangeIconFallback(Transform bettingUIRoot)
-    {
-        var btnGo = new GameObject("ExchangeIcon");
-        btnGo.transform.SetParent(bettingUIRoot, false);
-        var rt = btnGo.AddComponent<RectTransform>();
-        rt.anchorMin = new Vector2(1, 1);
-        rt.anchorMax = new Vector2(1, 1);
-        rt.pivot = new Vector2(1, 1);
-        rt.sizeDelta = new Vector2(56, 56);
-        rt.anchoredPosition = new Vector2(-30, -120);
-
-        var img = btnGo.AddComponent<Image>();
-        img.color = new Color(0.2f, 0.35f, 0.5f, 0.9f);
-
-        _exchangeIconButton = btnGo.AddComponent<Button>();
-        _exchangeIconButton.targetGraphic = img;
-        _exchangeIconButton.onClick.AddListener(() => _exchangeModal?.Show());
-
-        MkText(btnGo.transform, "💱",
-            new Vector2(0, 0), new Vector2(1, 1),
-            Vector2.zero, Vector2.zero,
-            32, TextAnchor.MiddleCenter, Color.white);
     }
 }

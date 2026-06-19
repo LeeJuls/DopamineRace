@@ -24,7 +24,22 @@ public class CatController : MonoBehaviour
     public void SetFrameInterval(float v) { frameInterval = Mathf.Max(0.02f, v); }
     public void SetArea(CatAreaData a) { area = a; }
 
-    private void Awake() { sr = GetComponent<SpriteRenderer>(); }
+    // 고양이 클릭 → ExchangeModal 열기 (CatDecorationManager가 구독)
+    public event System.Action OnClicked;
+
+    private void Awake()
+    {
+        sr = GetComponent<SpriteRenderer>();
+        // BoxCollider(3D) — OnMouseDown 수신용 (isTrigger, 물리 영향 없음)
+        if (GetComponent<Collider>() == null)
+        {
+            var col = gameObject.AddComponent<BoxCollider>();
+            col.isTrigger = true;
+            col.size = new Vector3(0.5f, 0.5f, 1f);
+        }
+    }
+
+    private void OnMouseDown() => OnClicked?.Invoke();
 
     /// <summary>SetActive(true) 시 area가 있으면 자동 배회 재개 (풀링 대응).</summary>
     private void OnEnable() { if (area != null) BeginWander(area); }

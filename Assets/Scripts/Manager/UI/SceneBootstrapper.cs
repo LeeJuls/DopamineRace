@@ -153,7 +153,6 @@ public partial class SceneBootstrapper : MonoBehaviour
     private CurrencyHeader _currencyHeader;
     private BetAmountModal _betAmountModal;
     private ExchangeModal _exchangeModal;
-    private Button _exchangeIconButton;
 
     // ══════════════════════════════════════
     //  초기화
@@ -368,6 +367,9 @@ public partial class SceneBootstrapper : MonoBehaviour
 
         // SPEC-028 Step 2.16: ExchangeModal 임시 레이아웃 생성
         BuildExchangeModal(root);
+        // 고양이 클릭 → 환전 팝업 연동 (CatDecorationManager가 OnClicked 구독)
+        if (CatDecorationManager.Instance != null && _exchangeModal != null)
+            CatDecorationManager.Instance.SetExchangeModal(_exchangeModal);
 
         // STEP8: 아케이드 이름 입력 모달 (Top100 자격 시 종료화면 전 표시)
         BuildNameEntryModal(root);
