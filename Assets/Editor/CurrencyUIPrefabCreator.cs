@@ -357,7 +357,8 @@ public static class CurrencyUIPrefabCreator
             Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         backdrop.AddComponent<Image>().color = new Color(0, 0, 0, 0.7f);
 
-        var panel = NewRectCenter("Modal", root.transform, new Vector2(560, 480));
+        // 패널 크기 560×480 → 672×576 (+20%)
+        var panel = NewRectCenter("Modal", root.transform, new Vector2(672, 576));
         Sprite bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
             "Assets/Resources/UI/Img_BG_ListSlot_BG_01.png");
         Image panelImg = panel.AddComponent<Image>();
@@ -375,19 +376,29 @@ public static class CurrencyUIPrefabCreator
             panelImg.color = new Color(0.12f, 0.10f, 0.18f, 0.95f);
         }
 
+        // 밝은 배경에서 잘 읽히는 어두운 색 팔레트
+        var darkNavy   = new Color(0.10f, 0.10f, 0.20f);  // 주요 텍스트
+        var darkGray   = new Color(0.35f, 0.35f, 0.45f);  // 보조 텍스트
+        var midGray    = new Color(0.40f, 0.40f, 0.50f);  // 구분선·노트
+        var darkGreen  = new Color(0.10f, 0.48f, 0.10f);  // 완료 메인
+        var midGreen   = new Color(0.20f, 0.42f, 0.20f);  // 완료 서브
+        var darkRed    = new Color(0.70f, 0.10f, 0.10f);  // 에러
+        var orange     = new Color(1.00f, 0.65f, 0.15f);  // 구제(경고)
+        var gold       = new Color(1.00f, 0.82f, 0.30f);  // 제목
+
         var title = MakeText(panel.transform, "💱 도파민 스톤 환전",
             new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -25), new Vector2(0, 75),
-            28, FontStyle.Bold, new Color(1f, 0.85f, 0.4f), TextAnchor.MiddleCenter);
+            new Vector2(0, -30), new Vector2(0, 90),
+            34, FontStyle.Bold, gold, TextAnchor.MiddleCenter);
 
         var rate = MakeText(panel.transform, "이번 라운드 환전율: 5:1",
             new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -125), new Vector2(0, -95),
-            22, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter);
+            new Vector2(0, -150), new Vector2(0, -114),
+            26, FontStyle.Bold, darkNavy, TextAnchor.MiddleCenter);
         var rateDesc = MakeText(panel.transform, "(스톤 5개 → 젤리 1개)",
             new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -158), new Vector2(0, -132),
-            18, FontStyle.Normal, new Color(0.7f, 0.7f, 0.8f), TextAnchor.MiddleCenter);
+            new Vector2(0, -190), new Vector2(0, -158),
+            22, FontStyle.Normal, darkGray, TextAnchor.MiddleCenter);
 
         // 현재 보유 행: 스톤 아이콘 + 소지 개수 텍스트
         var holdingRow = new GameObject("HoldingRow");
@@ -395,8 +406,8 @@ public static class CurrencyUIPrefabCreator
         var rowRt = holdingRow.AddComponent<RectTransform>();
         rowRt.anchorMin = new Vector2(0, 1);
         rowRt.anchorMax = new Vector2(1, 1);
-        rowRt.offsetMin = new Vector2(0, -215);
-        rowRt.offsetMax = new Vector2(0, -185);
+        rowRt.offsetMin = new Vector2(0, -258);
+        rowRt.offsetMax = new Vector2(0, -222);
         var hlg = holdingRow.AddComponent<HorizontalLayoutGroup>();
         hlg.childAlignment = TextAnchor.MiddleCenter;
         hlg.spacing = 6f;
@@ -408,7 +419,7 @@ public static class CurrencyUIPrefabCreator
         var iconGo = new GameObject("StoneIconImg");
         iconGo.transform.SetParent(holdingRow.transform, false);
         var iconRt = iconGo.AddComponent<RectTransform>();
-        iconRt.sizeDelta = new Vector2(28f, 28f);
+        iconRt.sizeDelta = new Vector2(34f, 34f);
         var iconImg = iconGo.AddComponent<Image>();
         iconImg.sprite = stoneSprite;
         iconImg.preserveAspect = true;
@@ -418,33 +429,33 @@ public static class CurrencyUIPrefabCreator
         var holdingTextGo = new GameObject("HoldingText");
         holdingTextGo.transform.SetParent(holdingRow.transform, false);
         var holdingTextRt = holdingTextGo.AddComponent<RectTransform>();
-        holdingTextRt.sizeDelta = new Vector2(180f, 30f);
+        holdingTextRt.sizeDelta = new Vector2(200f, 36f);
         var holding = holdingTextGo.AddComponent<Text>();
         holding.text = "현재 보유: 0개";
         holding.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        holding.fontSize = 20;
+        holding.fontSize = 24;
         holding.fontStyle = FontStyle.Bold;
-        holding.color = Color.white;
+        holding.color = darkNavy;
         holding.alignment = TextAnchor.MiddleLeft;
         holding.raycastTarget = false;
 
         var optionsTitle = MakeText(panel.transform, "─── 환전 옵션 ───",
             new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -274), new Vector2(0, -246),
-            18, FontStyle.Normal, new Color(0.6f, 0.6f, 0.7f), TextAnchor.MiddleCenter);
+            new Vector2(0, -329), new Vector2(0, -295),
+            22, FontStyle.Normal, midGray, TextAnchor.MiddleCenter);
 
         // 구제 라벨 컨테이너
         var rescueIndic = NewRect("RescueIndicator", panel.transform,
             new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -309), new Vector2(0, -281));
+            new Vector2(0, -371), new Vector2(0, -337));
         var rescueText = MakeText(rescueIndic.transform, "⚡ 구제 환전 (1회 한정)",
             Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
-            18, FontStyle.Bold, new Color(1f, 0.7f, 0.2f), TextAnchor.MiddleCenter);
+            22, FontStyle.Bold, orange, TextAnchor.MiddleCenter);
         rescueIndic.SetActive(false);
 
         // 환전 버튼
         var exchangeBtn = MakeButton(panel.transform, "환전: 💎0 → 🟦1",
-            new Vector2(0.15f, 0.30f), new Vector2(0.85f, 0.40f), new Color(0.3f, 0.5f, 0.7f));
+            new Vector2(0.15f, 0.30f), new Vector2(0.85f, 0.40f), new Color(0.3f, 0.5f, 0.7f), 26);
         var exchangeBtnText = exchangeBtn.GetComponentInChildren<Text>();
 
         // 완료 라벨 컨테이너
@@ -454,29 +465,29 @@ public static class CurrencyUIPrefabCreator
         var completedTxt = MakeText(completedIndic.transform, "✅ 이번 라운드 환전 완료",
             new Vector2(0, 0.5f), new Vector2(1, 1),
             Vector2.zero, Vector2.zero,
-            22, FontStyle.Bold, new Color(0.5f, 1f, 0.5f), TextAnchor.MiddleCenter);
+            26, FontStyle.Bold, darkGreen, TextAnchor.MiddleCenter);
         var completedNextTxt = MakeText(completedIndic.transform, "다음 라운드에 다시 가능",
             new Vector2(0, 0), new Vector2(1, 0.5f),
             Vector2.zero, Vector2.zero,
-            16, FontStyle.Normal, new Color(0.7f, 0.9f, 0.7f), TextAnchor.MiddleCenter);
+            19, FontStyle.Normal, midGreen, TextAnchor.MiddleCenter);
         completedIndic.SetActive(false);
 
         // 에러 텍스트
         var errorTxt = MakeText(panel.transform, "스톤이 부족합니다",
             new Vector2(0, 0.30f), new Vector2(1, 0.40f),
             Vector2.zero, Vector2.zero,
-            18, FontStyle.Normal, new Color(1f, 0.5f, 0.5f), TextAnchor.MiddleCenter);
+            22, FontStyle.Normal, darkRed, TextAnchor.MiddleCenter);
         errorTxt.gameObject.SetActive(false);
 
         // 노트
         var note = MakeText(panel.transform, "※ 라운드당 1회만 가능",
             new Vector2(0, 0.18f), new Vector2(1, 0.24f),
             Vector2.zero, Vector2.zero,
-            14, FontStyle.Italic, new Color(0.6f, 0.6f, 0.7f), TextAnchor.MiddleCenter);
+            17, FontStyle.Italic, midGray, TextAnchor.MiddleCenter);
 
         // 닫기 버튼
         var closeBtn = MakeButton(panel.transform, "닫기",
-            new Vector2(0.3f, 0.04f), new Vector2(0.7f, 0.13f), new Color(0.3f, 0.3f, 0.35f));
+            new Vector2(0.3f, 0.04f), new Vector2(0.7f, 0.13f), new Color(0.3f, 0.3f, 0.35f), 26);
 
         var modal = root.AddComponent<ExchangeModal>();
         modal.SetReferences(
@@ -548,7 +559,7 @@ public static class CurrencyUIPrefabCreator
     }
 
     private static Button MakeButton(Transform parent, string label,
-        Vector2 anchorMin, Vector2 anchorMax, Color color)
+        Vector2 anchorMin, Vector2 anchorMax, Color color, int fontSize = 22)
     {
         var go = NewRect(label + "Btn", parent, anchorMin, anchorMax, Vector2.zero, Vector2.zero);
         var img = go.AddComponent<Image>();
@@ -560,7 +571,7 @@ public static class CurrencyUIPrefabCreator
         var t = labelGo.AddComponent<Text>();
         t.text = label;
         t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        t.fontSize = 22;
+        t.fontSize = fontSize;
         t.fontStyle = FontStyle.Bold;
         t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
