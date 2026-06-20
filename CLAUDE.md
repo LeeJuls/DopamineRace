@@ -13,9 +13,12 @@
 
 ## 다국어
 - `Resources/Data/StringTable.csv` — 7개 언어 (ko·en·ja·zh_CN·de·es·br)
-- 하드코딩 금지 — `Loc.Get("키")` 사용
-- **별도 언급 없어도** 모든 UI 문자열(버튼·라벨·모달·에러·툴팁)은 StringTable.csv에 키 발급 후 `Loc.Get()` 사용. 키 미발급 상태 커밋 금지.
+- **모든 문자열 하드코딩 절대 금지** — UI·로그·에러·툴팁·버튼·모달 등 사용자에게 노출되는 문자열은 예외 없이 StringTable.csv에 키 발급 후 `Loc.Get("str.xxx")` 사용
+- **키 발급 규칙**: `str.{영역}.{기능}.{항목}` 형식 (예: `str.bet.modal.title`, `str.exchange.btn.close`)
+- **커밋 금지 조건**: 코드에 새 문자열 추가 시 StringTable.csv 키 미발급 상태로 커밋 불가
+- **검증**: `DopamineRace > Validate StringTable Keys` — 커밋 전 실행, 누락 키 0 확인 필수
 - 서수+접미사 라벨은 포맷 키 재활용 (예: `str.bet.label.rank_bet`="{0} 배팅" + 기존 `first`/`second`)
+- 간접 참조(동적 키 조합 `$"str.char.{id}.name"`) 사용 시 해당 범위 키 일괄 발급 확인
 
 ## 주요 클래스
 | 클래스 | 규칙 |

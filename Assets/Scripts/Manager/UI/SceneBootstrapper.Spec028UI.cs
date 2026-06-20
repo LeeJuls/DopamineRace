@@ -249,7 +249,7 @@ public partial class SceneBootstrapper : MonoBehaviour
             new Vector2(0, -145), new Vector2(0, 26),
             18, TextAnchor.MiddleCenter, new Color(0.7f, 0.7f, 0.8f));
 
-        var holding = MkText(panel.transform, "현재 보유: 🟦0  💎0",
+        var holding = MkText(panel.transform, "현재 보유: 0개",
             new Vector2(0, 1), new Vector2(1, 1),
             new Vector2(0, -200), new Vector2(0, 30),
             20, TextAnchor.MiddleCenter, Color.white);

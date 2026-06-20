@@ -363,7 +363,7 @@ str.exchange.icon.tooltip,스톤 환전,Exchange Stone,ストーン両替,兑换
 str.exchange.modal.title,💱 도파민 스톤 환전,💱 Dopamine Stone Exchange,💱 ドーパミンストーン両替,💱 多巴胺石兑换,💱 Dopamin-Stein-Tausch,💱 Cambio de Piedra,💱 Troca de Pedra
 str.exchange.modal.rate,이번 라운드 환전율: {0}:1,This round exchange rate: {0}:1,今ラウンドの両替レート: {0}:1,本回合兑换率：{0}:1,Wechselkurs diese Runde: {0}:1,Tasa de esta ronda: {0}:1,Taxa desta rodada: {0}:1
 str.exchange.modal.rate_desc,(스톤 {0}개 → 젤리 1개),({0} stones → 1 jelly),(ストーン{0}個 → ゼリー1個),({0}个石头 → 1个果冻),({0} Steine → 1 Gelee),({0} piedras → 1 gelatina),({0} pedras → 1 geleia)
-str.exchange.modal.holding,현재 보유: 🟦{0}  💎{1},Holdings: 🟦{0}  💎{1},現在所持: 🟦{0}  💎{1},当前持有：🟦{0}  💎{1},Bestand: 🟦{0}  💎{1},Tenencias: 🟦{0}  💎{1},Posses: 🟦{0}  💎{1}
+str.exchange.modal.holding,현재 보유: {0}개,Stone: {0},所持石: {0},持有: {0},Steine: {0},Piedras: {0},Pedras: {0}
 str.exchange.modal.options_title,─── 환전 옵션 ───,─── Exchange Options ───,─── 両替オプション ───,─── 兑换选项 ───,─── Tauschoptionen ───,─── Opciones de cambio ───,─── Opções de troca ───
 str.exchange.btn,환전: 💎{0} → 🟦1,Exchange: 💎{0} → 🟦1,両替: 💎{0} → 🟦1,兑换：💎{0} → 🟦1,Tausch: 💎{0} → 🟦1,Cambio: 💎{0} → 🟦1,Troca: 💎{0} → 🟦1
 str.exchange.btn.rescue,⚡ 구제 환전 (1회 한정),⚡ Rescue Exchange (Once Only),⚡ 救済両替 (1回限り),⚡ 救济兑换（仅限一次）,⚡ Rettungstausch (1x),⚡ Cambio de rescate (1 vez),⚡ Troca de resgate (1 vez)

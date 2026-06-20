@@ -41,7 +41,7 @@ public static class CurrencyUIPrefabCreator
         BuildCurrencyHeaderPrefab(jellySprite, stoneSprite);
         BuildExchangeIconPrefab(changeSprite);
         BuildBetAmountModalPrefab();
-        BuildExchangeModalPrefab();
+        BuildExchangeModalPrefab(stoneSprite);
 
         // CurrencyItem.asset의 icon 필드도 디자이너 sprite로 갱신
         UpdateCurrencyItemIcon("Assets/Resources/Items/DopamineJelly.asset", jellySprite);
@@ -347,7 +347,7 @@ public static class CurrencyUIPrefabCreator
     // ═══════════════════════════════════════════════════════
     //  ExchangeModalPrefab — 환전 팝업
     // ═══════════════════════════════════════════════════════
-    private static void BuildExchangeModalPrefab()
+    private static void BuildExchangeModalPrefab(Sprite stoneSprite)
     {
         var root = new GameObject("ExchangeModalRoot");
         var rootRt = root.AddComponent<RectTransform>();
@@ -389,10 +389,44 @@ public static class CurrencyUIPrefabCreator
             new Vector2(0, -158), new Vector2(0, -132),
             18, FontStyle.Normal, new Color(0.7f, 0.7f, 0.8f), TextAnchor.MiddleCenter);
 
-        var holding = MakeText(panel.transform, "현재 보유: 🟦0  💎0",
-            new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -215), new Vector2(0, -185),
-            20, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter);
+        // 현재 보유 행: 스톤 아이콘 + 소지 개수 텍스트
+        var holdingRow = new GameObject("HoldingRow");
+        holdingRow.transform.SetParent(panel.transform, false);
+        var rowRt = holdingRow.AddComponent<RectTransform>();
+        rowRt.anchorMin = new Vector2(0, 1);
+        rowRt.anchorMax = new Vector2(1, 1);
+        rowRt.offsetMin = new Vector2(0, -215);
+        rowRt.offsetMax = new Vector2(0, -185);
+        var hlg = holdingRow.AddComponent<HorizontalLayoutGroup>();
+        hlg.childAlignment = TextAnchor.MiddleCenter;
+        hlg.spacing = 6f;
+        hlg.childForceExpandWidth = false;
+        hlg.childForceExpandHeight = false;
+        hlg.childControlWidth = false;
+        hlg.childControlHeight = false;
+
+        var iconGo = new GameObject("StoneIconImg");
+        iconGo.transform.SetParent(holdingRow.transform, false);
+        var iconRt = iconGo.AddComponent<RectTransform>();
+        iconRt.sizeDelta = new Vector2(28f, 28f);
+        var iconImg = iconGo.AddComponent<Image>();
+        iconImg.sprite = stoneSprite;
+        iconImg.preserveAspect = true;
+        iconImg.raycastTarget = false;
+        iconImg.color = Color.white;
+
+        var holdingTextGo = new GameObject("HoldingText");
+        holdingTextGo.transform.SetParent(holdingRow.transform, false);
+        var holdingTextRt = holdingTextGo.AddComponent<RectTransform>();
+        holdingTextRt.sizeDelta = new Vector2(180f, 30f);
+        var holding = holdingTextGo.AddComponent<Text>();
+        holding.text = "현재 보유: 0개";
+        holding.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        holding.fontSize = 20;
+        holding.fontStyle = FontStyle.Bold;
+        holding.color = Color.white;
+        holding.alignment = TextAnchor.MiddleLeft;
+        holding.raycastTarget = false;
 
         var optionsTitle = MakeText(panel.transform, "─── 환전 옵션 ───",
             new Vector2(0, 1), new Vector2(1, 1),

@@ -107,7 +107,7 @@ public class ExchangeModal : MonoBehaviour
         if (rateDescText != null) rateDescText.text = SafeLoc("str.exchange.modal.rate_desc",
             "(스톤 {0}개 → 젤리 1개)", rate);
         if (holdingText != null) holdingText.text = SafeLoc("str.exchange.modal.holding",
-            "현재 보유: 🟦{0}  💎{1}", jelly, stone);
+            "현재 보유: {0}개", stone);
 
         // 4분기 — completed 우선, 그 다음 canExchange, rescue 표시
         bool showRescue = canExchange && isRescue;
