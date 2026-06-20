@@ -202,10 +202,10 @@ public partial class SceneBootstrapper
             foreach (var r in sm.RoundHistory)
             {
                 if (r.isWin)
-                    summaryArea += "<color=#66FF66>" + SafeLocFor("str.finish.round.hit",
+                    summaryArea += "<color=#1A7A1A>" + SafeLocFor("str.finish.round.hit",
                         "R{0}: ✓ 적중   (+{1} 💎)", r.round, r.stoneGain) + "</color>\n";
                 else
-                    summaryArea += "<color=#FF6666>" + SafeLocFor("str.finish.round.miss",
+                    summaryArea += "<color=#CC2222>" + SafeLocFor("str.finish.round.miss",
                         "R{0}: ✗ 빗나감", r.round) + "</color>\n";
             }
             finishRoundSummaryText.text = summaryArea.TrimEnd();
@@ -228,11 +228,11 @@ public partial class SceneBootstrapper
             {
                 string typeName = BettingCalculator.GetTypeName(r.betType);
                 string scoreStr = r.stoneGain > 0
-                    ? "<color=#FFD700>+" + r.stoneGain + " 💎</color>"
-                    : "<color=#888888>+0</color>";
+                    ? "<color=#8B6200>+" + r.stoneGain + " 💎</color>"
+                    : "<color=#666666>+0</color>";
                 string result = r.isWin
-                    ? "<color=#66FF66>적중</color>"
-                    : "<color=#FF6666>빗나감</color>";
+                    ? "<color=#1A7A1A>적중</color>"
+                    : "<color=#CC2222>빗나감</color>";
                 detailArea += "R" + r.round + " | " + typeName + " | " + result + " | " + scoreStr + "\n";
             }
             finishRoundDetailText.text = detailArea.TrimEnd();
