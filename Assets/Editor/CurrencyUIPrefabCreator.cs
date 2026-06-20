@@ -5,19 +5,21 @@ using System.IO;
 
 /// <summary>
 /// SPEC-028 Step 2.13 — CurrencyHeader / ExchangeIcon 프리팹 생성기.
-/// 메뉴: DopamineRace > Create Currency UI Prefabs
+/// 메뉴: DopamineRace > 프리팹 생성 > Currency UI Prefabs
 ///
 /// 생성 위치:
-///   Resources/Prefabs/UI/CurrencyHeaderPrefab.prefab
-///   Resources/Prefabs/UI/ExchangeIconPrefab.prefab
+///   Assets/Prefabs/UI/CurrencyHeaderPrefab.prefab
+///   Assets/Prefabs/UI/ExchangeIconPrefab.prefab
+///   Assets/Prefabs/UI/BetAmountModalPrefab.prefab
+///   Assets/Prefabs/UI/ExchangeModalPrefab.prefab
 /// </summary>
 public static class CurrencyUIPrefabCreator
 {
-    [MenuItem("DopamineRace/Create Currency UI Prefabs")]
+    [MenuItem("DopamineRace/프리팹 생성/Currency UI Prefabs")]
     public static void CreateAll()
     {
-        EnsureFolder("Assets/Resources/Prefabs");
-        EnsureFolder("Assets/Resources/Prefabs/UI");
+        EnsureFolder("Assets/Prefabs");
+        EnsureFolder("Assets/Prefabs/UI");
 
         // 디자이너 sprite 우선, 없으면 임시 procedural sprite fallback
         var jellySprite = LoadDesignerOrTempSprite(
@@ -153,7 +155,7 @@ public static class CurrencyUIPrefabCreator
         var header = root.AddComponent<CurrencyHeader>();
         header.SetReferences(jellyText, stoneText, jellyIcon, stoneIcon);
 
-        string path = "Assets/Resources/Prefabs/UI/CurrencyHeaderPrefab.prefab";
+        string path = "Assets/Prefabs/UI/CurrencyHeaderPrefab.prefab";
         PrefabUtility.SaveAsPrefabAsset(root, path);
         Object.DestroyImmediate(root);
         Debug.Log($"[Prefab] {path}");
@@ -198,7 +200,7 @@ public static class CurrencyUIPrefabCreator
             label.raycastTarget = false;
         }
 
-        string path = "Assets/Resources/Prefabs/UI/ExchangeIconPrefab.prefab";
+        string path = "Assets/Prefabs/UI/ExchangeIconPrefab.prefab";
         PrefabUtility.SaveAsPrefabAsset(root, path);
         Object.DestroyImmediate(root);
         Debug.Log($"[Prefab] {path} {(changeSprite != null ? "(디자이너 sprite)" : "(텍스트 💱)")}");
@@ -336,7 +338,7 @@ public static class CurrencyUIPrefabCreator
             btnCancel, btnConfirm, errorTxt,
             backdrop);
 
-        string path = "Assets/Resources/Prefabs/UI/BetAmountModalPrefab.prefab";
+        string path = "Assets/Prefabs/UI/BetAmountModalPrefab.prefab";
         PrefabUtility.SaveAsPrefabAsset(root, path);
         Object.DestroyImmediate(root);
         Debug.Log($"[Prefab] {path}");
@@ -356,7 +358,22 @@ public static class CurrencyUIPrefabCreator
         backdrop.AddComponent<Image>().color = new Color(0, 0, 0, 0.7f);
 
         var panel = NewRectCenter("Modal", root.transform, new Vector2(560, 480));
-        panel.AddComponent<Image>().color = new Color(0.12f, 0.10f, 0.18f, 0.95f);
+        Sprite bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
+            "Assets/Resources/UI/Img_BG_ListSlot_BG_01.png");
+        Image panelImg = panel.AddComponent<Image>();
+        panelImg.raycastTarget = false;
+        if (bgSprite != null)
+        {
+            panelImg.sprite     = bgSprite;
+            panelImg.type       = Image.Type.Sliced;
+            panelImg.fillCenter = true;
+            panelImg.color      = Color.white;
+        }
+        else
+        {
+            Debug.LogWarning("[ExchangeModal] Img_BG_ListSlot_BG_01 없음 — 단색 폴백");
+            panelImg.color = new Color(0.12f, 0.10f, 0.18f, 0.95f);
+        }
 
         var title = MakeText(panel.transform, "💱 도파민 스톤 환전",
             new Vector2(0, 1), new Vector2(1, 1),
@@ -436,7 +453,7 @@ public static class CurrencyUIPrefabCreator
             errorTxt, note,
             closeBtn, backdrop);
 
-        string path = "Assets/Resources/Prefabs/UI/ExchangeModalPrefab.prefab";
+        string path = "Assets/Prefabs/UI/ExchangeModalPrefab.prefab";
         PrefabUtility.SaveAsPrefabAsset(root, path);
         Object.DestroyImmediate(root);
         Debug.Log($"[Prefab] {path}");
