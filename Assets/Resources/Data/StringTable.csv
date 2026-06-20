@@ -332,8 +332,8 @@ str.skill.p.toprank6.drain.0_70.desc,6등 이내 유지 시 드레인 -30%,-30% 
 str.skill.p.lowhp25.hpheal.0_10.name,저체력 치유,Low HP Recovery,低HP回復,低HP恢复,Regeneration,Recuperación,Recuperação
 str.skill.p.lowhp25.hpheal.0_10.desc,HP 25% 이하일 때 HP +10% 회복 (20s 쿨),Heals 10% HP when below 25% HP (20s CD),HP25%以下でHP+10%回復(20秒CD),HP低于25%时回复10%HP(20秒CD),Heilt 10% HP wenn HP unter 25% (20s CD),Cura 10% HP si HP<25% (CD 20s),Cura 10% HP se HP<25% (CD 20s)
 str.ui.option.title,옵션,Options,オプション,选项,Optionen,Opciones,Opções
-str.ui.option.bgm_off,BGM 끄기,BGM OFF,BGM オフ,BGM 关,BGM AUS,BGM APG,BGM DES
-str.ui.option.sfx_off,SFX 끄기,SFX OFF,SFX オフ,SFX 关,SFX AUS,SFX APG,SFX DES
+str.ui.option.bgm_off,BGM 끄기,BGM OFF,BGM オフ,BGM 关,BGM AUS,BGM OFF,BGM DES
+str.ui.option.sfx_off,SFX 끄기,SFX OFF,SFX オフ,SFX 关,SFX AUS,SFX OFF,SFX DES
 str.ui.option.restart,재시작,Restart,リスタート,重新开始,Neustart,Reiniciar,Reiniciar
 str.ui.option.quit,게임 종료,Quit,終了,退出,Beenden,Salir,Sair
 str.ui.option.confirm_restart,모든 기록이 사라지고 처음부터\n도파니와 함께 모험을 떠날 수 있습니다.,All records will be erased.\nStart a new adventure with Dopani!,すべての記録が消え、最初から\nドーパニと冒険を始められます。,所有记录将被清除，\n与多帕尼一起重新开始冒险！,Alle Daten gehen verloren.\nStarte ein Abenteuer mit Dopani neu!,Se borrarán todos los registros.\n¡Comienza una aventura con Dopani!,Todos os registros serão apagados.\nComece uma aventura com Dopani!
