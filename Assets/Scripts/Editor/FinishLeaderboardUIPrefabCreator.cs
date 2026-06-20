@@ -168,7 +168,7 @@ public static class FinishLeaderboardUIPrefabCreator
         contentRt.anchoredPosition = Vector2.zero;
         contentRt.sizeDelta        = new Vector2(700f, 0f);  // width=ScrollView 700px 고정, height=CSF 자동
         VerticalLayoutGroup vlg = content.AddComponent<VerticalLayoutGroup>();
-        vlg.spacing                = 8f;
+        vlg.spacing                = 30f;
         vlg.childForceExpandWidth  = true;
         vlg.childForceExpandHeight = false;
         vlg.childAlignment         = TextAnchor.UpperLeft;
@@ -195,12 +195,6 @@ public static class FinishLeaderboardUIPrefabCreator
 
         // 프리팹 에디터 미리보기용: VLG 레이아웃 즉시 계산 → 텍스트 가로 표시
         LayoutRebuilder.ForceRebuildLayoutImmediate(contentRt);
-
-        // ── TotalScoreText (anchor y=0.18, 다크황갈 38pt) ──
-        MkText(root.transform, "TotalScoreText", "",
-            new Vector2(0.5f, 0.18f), new Vector2(0.5f, 0.18f),
-            Vector2.zero, new Vector2(500f, 60f),
-            38, TextAnchor.MiddleCenter, FP_DARK_YELLOW, font, false);
 
         // ── NewGameBtn (좌: anchor x=0.3, y=0.05) ──
         CreateButton(root.transform, "NewGameBtn", "새 게임",

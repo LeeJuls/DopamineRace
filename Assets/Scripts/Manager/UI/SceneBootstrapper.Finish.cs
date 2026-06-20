@@ -36,7 +36,6 @@ public partial class SceneBootstrapper
     private void CacheFinishUIReferences(Transform root)
     {
         finishTitleText      = FindText(root, "TitleText");
-        finishTotalScoreText = FindText(root, "TotalScoreText");
 
         // RoundScrollView 구조 (v3: 5-Text Content 분리)
         Transform scrollT = root.Find("RoundScrollView");
@@ -131,10 +130,6 @@ public partial class SceneBootstrapper
         finishFinalJellyText = MkText(parent, "",
             new Vector2(0.5f, 0.26f), new Vector2(0.5f, 0.26f),
             Vector2.zero, new Vector2(700, 40), 20, TextAnchor.UpperCenter, new Color(0.10f, 0.30f, 0.60f));
-
-        finishTotalScoreText = MkText(parent, "",
-            new Vector2(0.5f, 0.18f), new Vector2(0.5f, 0.18f),
-            Vector2.zero, new Vector2(500, 60), 38, TextAnchor.MiddleCenter, new Color(0.45f, 0.25f, 0.00f));
 
         // 새 게임 버튼
         GameObject newGameBtn = new GameObject("NewGameBtn");
@@ -249,18 +244,11 @@ public partial class SceneBootstrapper
             finishFinalJellyText.text = SafeLocFor("str.finish.final_jelly",
                 "최종 보유: 🟦 {0}", wallet.Jelly);
 
-        // totalScoreText: 획득 도파민 스톤 합계 (SPEC-028 — 적중점수 아님)
-        if (finishTotalScoreText != null)
-        {
-            int wins = 0;
-            foreach (var r in sm.RoundHistory)
-                if (r.isWin) wins++;
-            finishTotalScoreText.text = Loc.Get("str.finish.total", stoneTotal, wins, sm.RoundHistory.Count);
-        }
-
         // 스크롤 맨 위로 리셋 (Canvas 레이아웃 갱신 후)
         if (finishScrollRect != null)
         {
+            // ContentSizeFitter 자식들은 2패스 필요 — content 먼저 즉시 재빌드 후 Canvas 갱신
+            LayoutRebuilder.ForceRebuildLayoutImmediate(finishScrollRect.content);
             Canvas.ForceUpdateCanvases();
             finishScrollRect.normalizedPosition = new Vector2(0f, 1f);
         }

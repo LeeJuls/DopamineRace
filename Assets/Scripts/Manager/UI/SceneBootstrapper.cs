@@ -123,7 +123,6 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text       finishRoundSummaryText; // "R1: ✓ 적중 (+N)" 라운드별
     private Text       finishDetailHeaderText; // "── 라운드별 상세 ──"
     private Text       finishFinalJellyText;   // "최종 보유: N"
-    private Text       finishTotalScoreText;
     private Button     finishNewGameButton;
     private Text       finishNewGameBtnText;
     private Button     finishTop100Button;
