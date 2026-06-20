@@ -383,4 +383,4 @@ str.finish.stone_total,획득한 도파민 스톤: {0} 💎,Dopamine Stones earn
 str.finish.round.hit,R{0}: {1} | ✓ 적중 (+{2} 💎),R{0}: {1} | ✓ Hit (+{2} 💎),R{0}: {1} | ✓ 当たり (+{2} 💎),R{0}: {1} | ✓ 命中 (+{2} 💎),R{0}: {1} | ✓ Treffer (+{2} 💎),R{0}: {1} | ✓ Acierto (+{2} 💎),R{0}: {1} | ✓ Acerto (+{2} 💎)
 str.finish.round.miss,R{0}: {1} | ✗ 빗나감,R{0}: {1} | ✗ Miss,R{0}: {1} | ✗ はずれ,R{0}: {1} | ✗ 失败,R{0}: {1} | ✗ Verfehlt,R{0}: {1} | ✗ Fallo,R{0}: {1} | ✗ Erro
 str.finish.detail.section,라운드별 상세,Round details,ラウンド別詳細,各回合详情,Rundendetails,Detalles por ronda,Detalhes por rodada
-str.finish.final_jelly,최종 보유: 🟦 {0},Final: 🟦 {0},最終所持: 🟦 {0},最终持有：🟦 {0},Endbestand: 🟦 {0},Final: 🟦 {0},Final: 🟦 {0}
+str.finish.final_jelly,총 보유 도파민 스톤: 🟦 {0},Total Dopamine Stones: 🟦 {0},総所持ドーパミンストーン: 🟦 {0},总持有多巴胺石：🟦 {0},Dopaminsteine gesamt: 🟦 {0},Piedras de Dopamina totales: 🟦 {0},Pedras de Dopamina totais: 🟦 {0}
