@@ -190,6 +190,49 @@ public static class FinishLeaderboardUIPrefabCreator
         sr.viewport = vpRt;
         sr.content  = contentRt;
 
+        // ── Vertical Scrollbar (ScrollView 우측 14px 고정폭) ──
+        GameObject scrollbarGo = new GameObject("Scrollbar Vertical");
+        scrollbarGo.transform.SetParent(scrollView.transform, false);
+        RectTransform sbRt = scrollbarGo.AddComponent<RectTransform>();
+        sbRt.anchorMin        = new Vector2(1f, 0f);
+        sbRt.anchorMax        = new Vector2(1f, 1f);
+        sbRt.pivot            = new Vector2(1f, 0.5f);
+        sbRt.anchoredPosition = Vector2.zero;
+        sbRt.sizeDelta        = new Vector2(14f, 0f);
+
+        Image sbBg = scrollbarGo.AddComponent<Image>();
+        sbBg.color         = new Color(0.7f, 0.65f, 0.55f, 0.5f);
+        sbBg.raycastTarget = false;
+
+        Scrollbar sb = scrollbarGo.AddComponent<Scrollbar>();
+        sb.direction    = Scrollbar.Direction.BottomToTop;
+        sb.interactable = true;
+        sb.value        = 1f;
+
+        GameObject sliding = new GameObject("Sliding Area");
+        sliding.transform.SetParent(scrollbarGo.transform, false);
+        RectTransform slidingRt = sliding.AddComponent<RectTransform>();
+        slidingRt.anchorMin        = Vector2.zero;
+        slidingRt.anchorMax        = Vector2.one;
+        slidingRt.sizeDelta        = new Vector2(-10f, -10f);
+        slidingRt.anchoredPosition = Vector2.zero;
+
+        GameObject handle = new GameObject("Handle");
+        handle.transform.SetParent(sliding.transform, false);
+        RectTransform handleRt = handle.AddComponent<RectTransform>();
+        handleRt.anchorMin = Vector2.zero;
+        handleRt.anchorMax = Vector2.one;
+        handleRt.sizeDelta = new Vector2(10f, 10f);
+        Image handleImg = handle.AddComponent<Image>();
+        handleImg.color = new Color(0.35f, 0.25f, 0.10f, 1.0f);
+
+        sb.handleRect    = handleRt;
+        sb.targetGraphic = handleImg;
+
+        sr.verticalScrollbar           = sb;
+        sr.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+        sr.verticalScrollbarSpacing    = 0f;
+
         // 프리팹 에디터 미리보기용: VLG 레이아웃 즉시 계산 → 텍스트 가로 표시
         LayoutRebuilder.ForceRebuildLayoutImmediate(contentRt);
 
