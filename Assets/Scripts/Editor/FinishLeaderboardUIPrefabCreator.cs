@@ -186,15 +186,19 @@ public static class FinishLeaderboardUIPrefabCreator
             FP_MID_GRAY, font, true);     // 미드그레이 (0.40,0.40,0.50)
         MkTextInContent(content.transform, "RoundDetailText", "", 16,
             FP_DARK_NAVY, font, true);    // 다크네이비 + richText 인라인 태그
-        MkTextInContent(content.transform, "FinalJellyText", "", 20,
-            FP_DEEP_BLUE, font, false);   // 딥블루 (0.10,0.30,0.60)
-
         // ScrollRect 연결
         sr.viewport = vpRt;
         sr.content  = contentRt;
 
         // 프리팹 에디터 미리보기용: VLG 레이아웃 즉시 계산 → 텍스트 가로 표시
         LayoutRebuilder.ForceRebuildLayoutImmediate(contentRt);
+
+        // ── FinalJellyText — ScrollView 밖 고정 위치 (항상 보임) ──
+        // Content 안에 두면 spacing=30으로 Viewport 300px 초과 시 잘릴 수 있음
+        MkText(root.transform, "FinalJellyText", "",
+            new Vector2(0.5f, 0.18f), new Vector2(0.5f, 0.18f),
+            Vector2.zero, new Vector2(700f, 40f),
+            20, TextAnchor.MiddleCenter, FP_DEEP_BLUE, font, false);
 
         // ── NewGameBtn (좌: anchor x=0.3, y=0.05) ──
         CreateButton(root.transform, "NewGameBtn", "새 게임",

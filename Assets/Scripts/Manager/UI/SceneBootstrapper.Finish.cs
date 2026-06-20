@@ -50,7 +50,6 @@ public partial class SceneBootstrapper
                 finishRoundSummaryText = FindText(contentT, "RoundSummaryText");
                 finishDetailHeaderText = FindText(contentT, "DetailHeaderText");
                 finishRoundDetailText  = FindText(contentT, "RoundDetailText");
-                finishFinalJellyText   = FindText(contentT, "FinalJellyText");
             }
             else
             {
@@ -66,8 +65,9 @@ public partial class SceneBootstrapper
             finishRoundSummaryText = FindText(root, "RoundSummaryText");
             finishDetailHeaderText = FindText(root, "DetailHeaderText");
             finishRoundDetailText  = FindText(root, "RoundDetailText");
-            finishFinalJellyText   = FindText(root, "FinalJellyText");
         }
+        // 프리팹/레거시 공통: FinalJellyText는 항상 root 직계 자식 (ScrollView 외부 고정)
+        finishFinalJellyText = FindText(root, "FinalJellyText");
 
         // NewGameBtn — TitleScene 파편 전환 (SceneTransitionManager 블록 디졸브)
         Transform ngT = root.Find("NewGameBtn");
