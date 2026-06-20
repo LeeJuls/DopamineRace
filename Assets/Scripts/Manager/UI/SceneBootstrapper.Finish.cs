@@ -104,37 +104,37 @@ public partial class SceneBootstrapper
     private void BuildFinishUILegacy(Transform parent)
     {
         Image bg = parent.gameObject.AddComponent<Image>();
-        bg.color = new Color(0, 0, 0, 0.85f);
+        bg.color = new Color(0.12f, 0.10f, 0.18f, 0.95f);  // 런타임 폴백 — BG_01 불가
 
         finishTitleText = MkText(parent, Loc.Get("str.finish.title"),
             new Vector2(0.5f, 0.92f), new Vector2(0.5f, 0.92f),
-            Vector2.zero, new Vector2(500, 70), 55, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.2f));
+            Vector2.zero, new Vector2(500, 70), 55, TextAnchor.MiddleCenter, new Color(0.55f, 0.30f, 0.00f));
 
-        // 5개 Text 분리 — 각각 크기·위치 개별 제어 (Legacy 고정 앵커 버전)
+        // 5개 Text 분리 — BG_01 밝은 배경 기준 색상 (프리팹과 동일 팔레트)
         finishStoneHeaderText = MkText(parent, "",
             new Vector2(0.5f, 0.72f), new Vector2(0.5f, 0.72f),
-            Vector2.zero, new Vector2(700, 60), 42, TextAnchor.UpperCenter, new Color(0.3f, 0.87f, 0.87f));
+            Vector2.zero, new Vector2(700, 60), 42, TextAnchor.UpperCenter, new Color(0.00f, 0.42f, 0.52f));
         finishRoundSummaryText = MkText(parent, "",
             new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f),
-            Vector2.zero, new Vector2(700, 160), 24, TextAnchor.UpperCenter, Color.white);
+            Vector2.zero, new Vector2(700, 160), 24, TextAnchor.UpperCenter, new Color(0.10f, 0.10f, 0.20f));
         finishRoundSummaryText.verticalOverflow = VerticalWrapMode.Overflow;
         finishRoundSummaryText.supportRichText  = true;
         finishDetailHeaderText = MkText(parent, "",
             new Vector2(0.5f, 0.48f), new Vector2(0.5f, 0.48f),
-            Vector2.zero, new Vector2(700, 40), 18, TextAnchor.UpperCenter, new Color(0.53f, 0.53f, 0.53f));
+            Vector2.zero, new Vector2(700, 40), 18, TextAnchor.UpperCenter, new Color(0.40f, 0.40f, 0.50f));
         finishDetailHeaderText.supportRichText = true;
         finishRoundDetailText = MkText(parent, "",
             new Vector2(0.5f, 0.38f), new Vector2(0.5f, 0.38f),
-            Vector2.zero, new Vector2(700, 160), 16, TextAnchor.UpperCenter, Color.white);
+            Vector2.zero, new Vector2(700, 160), 16, TextAnchor.UpperCenter, new Color(0.10f, 0.10f, 0.20f));
         finishRoundDetailText.verticalOverflow = VerticalWrapMode.Overflow;
         finishRoundDetailText.supportRichText  = true;
         finishFinalJellyText = MkText(parent, "",
             new Vector2(0.5f, 0.26f), new Vector2(0.5f, 0.26f),
-            Vector2.zero, new Vector2(700, 40), 20, TextAnchor.UpperCenter, new Color(0.67f, 0.81f, 1f));
+            Vector2.zero, new Vector2(700, 40), 20, TextAnchor.UpperCenter, new Color(0.10f, 0.30f, 0.60f));
 
         finishTotalScoreText = MkText(parent, "",
             new Vector2(0.5f, 0.18f), new Vector2(0.5f, 0.18f),
-            Vector2.zero, new Vector2(500, 60), 38, TextAnchor.MiddleCenter, Color.yellow);
+            Vector2.zero, new Vector2(500, 60), 38, TextAnchor.MiddleCenter, new Color(0.45f, 0.25f, 0.00f));
 
         // 새 게임 버튼
         GameObject newGameBtn = new GameObject("NewGameBtn");

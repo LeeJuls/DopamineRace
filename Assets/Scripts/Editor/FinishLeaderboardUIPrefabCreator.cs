@@ -40,6 +40,14 @@ public static class FinishLeaderboardUIPrefabCreator
     private static readonly Color COLOR_BTN_PURPLE = new Color(0.5f,  0.3f,  0.6f,  1f);
     private static readonly Color COLOR_BTN_RED    = new Color(0.5f,  0.3f,  0.3f,  1f);
 
+    // BG_01(밝은 배경) 위 FinishPanel 전용 색상 팔레트
+    private static readonly Color FP_DARK_AMBER  = new Color(0.55f, 0.30f, 0.00f, 1f);  // TitleText
+    private static readonly Color FP_DARK_YELLOW = new Color(0.45f, 0.25f, 0.00f, 1f);  // TotalScoreText
+    private static readonly Color FP_DARK_NAVY   = new Color(0.10f, 0.10f, 0.20f, 1f);  // RoundSummary/Detail
+    private static readonly Color FP_MID_GRAY    = new Color(0.40f, 0.40f, 0.50f, 1f);  // DetailHeader
+    private static readonly Color FP_DARK_TEAL   = new Color(0.00f, 0.42f, 0.52f, 1f);  // StoneHeader
+    private static readonly Color FP_DEEP_BLUE   = new Color(0.10f, 0.30f, 0.60f, 1f);  // FinalJelly
+
     // ══════════════════════════════════════════════
     //  메뉴 항목
     // ══════════════════════════════════════════════
@@ -85,7 +93,7 @@ public static class FinishLeaderboardUIPrefabCreator
     // ══════════════════════════════════════════════
     //  FinishPanel 프리팹 구조 생성
     // ══════════════════════════════════════════════
-    internal static GameObject CreateFinishPanelPrefab(Font font)
+    public static GameObject CreateFinishPanelPrefab(UnityEngine.Font font)
     {
         // ── 루트 패널 (880×650, 중앙) ──
         GameObject root = new GameObject("FinishPanel");
@@ -95,13 +103,29 @@ public static class FinishLeaderboardUIPrefabCreator
         rootRt.pivot            = new Vector2(0.5f, 0.5f);
         rootRt.anchoredPosition = Vector2.zero;
         rootRt.sizeDelta        = new Vector2(880f, 650f);
-        root.AddComponent<Image>().color = COLOR_BG_DARK;
+        // BG_01 9-슬라이스 배경 (ExchangeModal 동일 패턴)
+        Sprite bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
+            "Assets/Resources/UI/Img_BG_ListSlot_BG_01.png");
+        Image panelImg = root.AddComponent<Image>();
+        panelImg.raycastTarget = false;
+        if (bgSprite != null)
+        {
+            panelImg.sprite     = bgSprite;
+            panelImg.type       = Image.Type.Sliced;
+            panelImg.fillCenter = true;
+            panelImg.color      = Color.white;
+        }
+        else
+        {
+            Debug.LogWarning("[FinishPanel] Img_BG_ListSlot_BG_01 없음 — 단색 폴백");
+            panelImg.color = new Color(0.12f, 0.10f, 0.18f, 0.95f);
+        }
 
-        // ── TitleText (anchor y=0.92, 금색 55pt) ──
+        // ── TitleText (anchor y=0.92, 다크앰버 55pt) ──
         MkText(root.transform, "TitleText", "Finish!!",
             new Vector2(0.5f, 0.92f), new Vector2(0.5f, 0.92f),
             Vector2.zero, new Vector2(500f, 70f),
-            55, TextAnchor.MiddleCenter, COLOR_GOLD, font, false);
+            55, TextAnchor.MiddleCenter, FP_DARK_AMBER, font, false);
 
         // ── RoundScrollView (anchor y=0.57, 700×300, ScrollRect) ──
         GameObject scrollView = new GameObject("RoundScrollView");
@@ -153,17 +177,17 @@ public static class FinishLeaderboardUIPrefabCreator
         contentCSF.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
         contentCSF.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
-        // 5개 Text 자식 — fontSize = prefab 기본값 (Inspector에서 직접 편집 가능)
+        // 5개 Text 자식 — BG_01 밝은 배경 위 가독성 색상
         MkTextInContent(content.transform, "StoneHeaderText", "", 42,
-            new Color(0.3f, 0.87f, 0.87f, 1f), font, false);   // #4DDDDD 청록
+            FP_DARK_TEAL, font, false);   // 다크틸 (0.00,0.42,0.52)
         MkTextInContent(content.transform, "RoundSummaryText", "", 24,
-            COLOR_WHITE, font, true);                           // color 태그 사용
+            FP_DARK_NAVY, font, true);    // 다크네이비 + richText 인라인 태그
         MkTextInContent(content.transform, "DetailHeaderText", "", 18,
-            new Color(0.53f, 0.53f, 0.53f, 1f), font, true);   // #888888 회색
+            FP_MID_GRAY, font, true);     // 미드그레이 (0.40,0.40,0.50)
         MkTextInContent(content.transform, "RoundDetailText", "", 16,
-            COLOR_WHITE, font, true);                           // color 태그 사용
+            FP_DARK_NAVY, font, true);    // 다크네이비 + richText 인라인 태그
         MkTextInContent(content.transform, "FinalJellyText", "", 20,
-            new Color(0.67f, 0.81f, 1f, 1f), font, false);     // #AACFFF 하늘색
+            FP_DEEP_BLUE, font, false);   // 딥블루 (0.10,0.30,0.60)
 
         // ScrollRect 연결
         sr.viewport = vpRt;
@@ -172,11 +196,11 @@ public static class FinishLeaderboardUIPrefabCreator
         // 프리팹 에디터 미리보기용: VLG 레이아웃 즉시 계산 → 텍스트 가로 표시
         LayoutRebuilder.ForceRebuildLayoutImmediate(contentRt);
 
-        // ── TotalScoreText (anchor y=0.18, 노랑 38pt) ──
+        // ── TotalScoreText (anchor y=0.18, 다크황갈 38pt) ──
         MkText(root.transform, "TotalScoreText", "",
             new Vector2(0.5f, 0.18f), new Vector2(0.5f, 0.18f),
             Vector2.zero, new Vector2(500f, 60f),
-            38, TextAnchor.MiddleCenter, COLOR_YELLOW, font, false);
+            38, TextAnchor.MiddleCenter, FP_DARK_YELLOW, font, false);
 
         // ── NewGameBtn (좌: anchor x=0.3, y=0.05) ──
         CreateButton(root.transform, "NewGameBtn", "새 게임",
