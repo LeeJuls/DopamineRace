@@ -380,7 +380,7 @@ str.gameover.no_ranking,랭킹에 등록되지 않았습니다,Not registered in
 str.gameover.btn.restart,다시 도전,Try Again,再挑戦,再次挑战,Erneut versuchen,Intentar de nuevo,Tentar novamente
 str.gameover.hint,화면을 클릭하면 타이틀로 돌아갑니다,Click anywhere to return to title,画面をクリックするとタイトルに戻ります,点击屏幕返回标题,Klicke zum Zurückkehren zum Titel,Haz clic para volver al título,Clique para voltar ao título
 str.finish.stone_total,획득한 도파민 스톤: {0} 💎,Dopamine Stones earned: {0} 💎,獲得したドーパミンストーン: {0} 💎,获得多巴胺石：{0} 💎,Verdiente Dopamin-Steine: {0} 💎,Piedras ganadas: {0} 💎,Pedras ganhas: {0} 💎
-str.finish.round.hit,R{0}: ✓ 적중   (+{1} 💎),R{0}: ✓ Hit   (+{1} 💎),R{0}: ✓ 当たり   (+{1} 💎),R{0}: ✓ 命中   (+{1} 💎),R{0}: ✓ Treffer   (+{1} 💎),R{0}: ✓ Acierto   (+{1} 💎),R{0}: ✓ Acerto   (+{1} 💎)
-str.finish.round.miss,R{0}: ✗ 빗나감,R{0}: ✗ Miss,R{0}: ✗ はずれ,R{0}: ✗ 失败,R{0}: ✗ Verfehlt,R{0}: ✗ Fallo,R{0}: ✗ Erro
+str.finish.round.hit,R{0}: {1} | ✓ 적중 (+{2} 💎),R{0}: {1} | ✓ Hit (+{2} 💎),R{0}: {1} | ✓ 当たり (+{2} 💎),R{0}: {1} | ✓ 命中 (+{2} 💎),R{0}: {1} | ✓ Treffer (+{2} 💎),R{0}: {1} | ✓ Acierto (+{2} 💎),R{0}: {1} | ✓ Acerto (+{2} 💎)
+str.finish.round.miss,R{0}: {1} | ✗ 빗나감,R{0}: {1} | ✗ Miss,R{0}: {1} | ✗ はずれ,R{0}: {1} | ✗ 失败,R{0}: {1} | ✗ Verfehlt,R{0}: {1} | ✗ Fallo,R{0}: {1} | ✗ Erro
 str.finish.detail.section,라운드별 상세,Round details,ラウンド別詳細,各回合详情,Rundendetails,Detalles por ronda,Detalhes por rodada
 str.finish.final_jelly,최종 보유: 🟦 {0},Final: 🟦 {0},最終所持: 🟦 {0},最终持有：🟦 {0},Endbestand: 🟦 {0},Final: 🟦 {0},Final: 🟦 {0}

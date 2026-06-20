@@ -177,15 +177,13 @@ public static class FinishLeaderboardUIPrefabCreator
         contentCSF.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
         contentCSF.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
-        // 5개 Text 자식 — BG_01 밝은 배경 위 가독성 색상
+        // 3개 Text 자식 — BG_01 밝은 배경 위 가독성 색상 (RoundSummaryText 제거 → RoundDetailText 통합)
         MkTextInContent(content.transform, "StoneHeaderText", "", 42,
             FP_DARK_TEAL, font, false);   // 다크틸 (0.00,0.42,0.52)
-        MkTextInContent(content.transform, "RoundSummaryText", "", 24,
-            FP_DARK_NAVY, font, true);    // 다크네이비 + richText 인라인 태그
         MkTextInContent(content.transform, "DetailHeaderText", "", 18,
             FP_MID_GRAY, font, true);     // 미드그레이 (0.40,0.40,0.50)
-        MkTextInContent(content.transform, "RoundDetailText", "", 16,
-            FP_DARK_NAVY, font, true);    // 다크네이비 + richText 인라인 태그
+        MkTextInContent(content.transform, "RoundDetailText", "", 24,
+            FP_DARK_NAVY, font, true);    // 다크네이비 + richText 인라인 태그 (타입+결과 통합)
         // ScrollRect 연결
         sr.viewport = vpRt;
         sr.content  = contentRt;

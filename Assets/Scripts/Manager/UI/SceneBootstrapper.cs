@@ -118,9 +118,8 @@ public partial class SceneBootstrapper : MonoBehaviour
     // ── Finish UI ──
     private Transform  finishPanelRoot;
     private Text       finishTitleText;
-    private Text       finishRoundDetailText;  // R1|type|result 상세 행 (신형: Content/RoundDetailText)
+    private Text       finishRoundDetailText;  // R1: 타입|✓/✗ 결과 통합 행 (신형: Content/RoundDetailText)
     private Text       finishStoneHeaderText;  // "획득한 도파민 스톤: N"
-    private Text       finishRoundSummaryText; // "R1: ✓ 적중 (+N)" 라운드별
     private Text       finishDetailHeaderText; // "── 라운드별 상세 ──"
     private Text       finishFinalJellyText;   // "최종 보유: N"
     private Button     finishNewGameButton;

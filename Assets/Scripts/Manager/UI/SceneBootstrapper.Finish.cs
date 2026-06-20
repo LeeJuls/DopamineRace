@@ -47,7 +47,6 @@ public partial class SceneBootstrapper
             if (contentT != null)
             {
                 finishStoneHeaderText  = FindText(contentT, "StoneHeaderText");
-                finishRoundSummaryText = FindText(contentT, "RoundSummaryText");
                 finishDetailHeaderText = FindText(contentT, "DetailHeaderText");
                 finishRoundDetailText  = FindText(contentT, "RoundDetailText");
             }
@@ -62,7 +61,6 @@ public partial class SceneBootstrapper
         {
             // 레거시 코드빌드: 직접 자식에서 찾기
             finishStoneHeaderText  = FindText(root, "StoneHeaderText");
-            finishRoundSummaryText = FindText(root, "RoundSummaryText");
             finishDetailHeaderText = FindText(root, "DetailHeaderText");
             finishRoundDetailText  = FindText(root, "RoundDetailText");
         }
@@ -113,18 +111,13 @@ public partial class SceneBootstrapper
         finishStoneHeaderText = MkText(parent, "",
             new Vector2(0.5f, 0.72f), new Vector2(0.5f, 0.72f),
             Vector2.zero, new Vector2(700, 60), 42, TextAnchor.UpperCenter, new Color(0.00f, 0.42f, 0.52f));
-        finishRoundSummaryText = MkText(parent, "",
-            new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f),
-            Vector2.zero, new Vector2(700, 160), 24, TextAnchor.UpperCenter, new Color(0.10f, 0.10f, 0.20f));
-        finishRoundSummaryText.verticalOverflow = VerticalWrapMode.Overflow;
-        finishRoundSummaryText.supportRichText  = true;
         finishDetailHeaderText = MkText(parent, "",
-            new Vector2(0.5f, 0.48f), new Vector2(0.5f, 0.48f),
+            new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f),
             Vector2.zero, new Vector2(700, 40), 18, TextAnchor.UpperCenter, new Color(0.40f, 0.40f, 0.50f));
         finishDetailHeaderText.supportRichText = true;
         finishRoundDetailText = MkText(parent, "",
-            new Vector2(0.5f, 0.38f), new Vector2(0.5f, 0.38f),
-            Vector2.zero, new Vector2(700, 160), 16, TextAnchor.UpperCenter, new Color(0.10f, 0.10f, 0.20f));
+            new Vector2(0.5f, 0.52f), new Vector2(0.5f, 0.52f),
+            Vector2.zero, new Vector2(700, 200), 24, TextAnchor.UpperCenter, new Color(0.10f, 0.10f, 0.20f));
         finishRoundDetailText.verticalOverflow = VerticalWrapMode.Overflow;
         finishRoundDetailText.supportRichText  = true;
         finishFinalJellyText = MkText(parent, "",
@@ -195,24 +188,7 @@ public partial class SceneBootstrapper
             finishStoneHeaderText.text = SafeLocFor("str.finish.stone_total",
                 "획득한 도파민 스톤: {0} 💎", stoneTotal);
 
-        // 2) 라운드별 ✓/✗ 결과 요약
-        if (finishRoundSummaryText != null)
-        {
-            string summaryArea = "";
-            foreach (var r in sm.RoundHistory)
-            {
-                if (r.isWin)
-                    summaryArea += "<color=#1A7A1A>" + SafeLocFor("str.finish.round.hit",
-                        "R{0}: ✓ 적중   (+{1} 💎)", r.round, r.stoneGain) + "</color>\n";
-                else
-                    summaryArea += "<color=#CC2222>" + SafeLocFor("str.finish.round.miss",
-                        "R{0}: ✗ 빗나감", r.round) + "</color>\n";
-            }
-            finishRoundSummaryText.text = summaryArea.TrimEnd();
-            finishRoundSummaryText.supportRichText = true;
-        }
-
-        // 3) 섹션 구분선
+        // 2) 섹션 구분선
         if (finishDetailHeaderText != null)
         {
             finishDetailHeaderText.text = "── " + SafeLocFor("str.finish.detail.section",
@@ -220,20 +196,19 @@ public partial class SceneBootstrapper
             finishDetailHeaderText.supportRichText = true;
         }
 
-        // 4) 라운드별 상세 행
+        // 3) 라운드별 통합 행 (타입 + 결과 + 스톤)
         if (finishRoundDetailText != null)
         {
             string detailArea = "";
             foreach (var r in sm.RoundHistory)
             {
                 string typeName = BettingCalculator.GetTypeName(r.betType);
-                string scoreStr = r.stoneGain > 0
-                    ? "<color=#8B6200>+" + r.stoneGain + " 💎</color>"
-                    : "<color=#666666>+0</color>";
-                string result = r.isWin
-                    ? "<color=#1A7A1A>적중</color>"
-                    : "<color=#CC2222>빗나감</color>";
-                detailArea += "R" + r.round + " | " + typeName + " | " + result + " | " + scoreStr + "\n";
+                string line = r.isWin
+                    ? "<color=#1A7A1A>" + SafeLocFor("str.finish.round.hit",
+                        "R{0}: {1} | ✓ 적중 (+{2} 💎)", r.round, typeName, r.stoneGain) + "</color>"
+                    : "<color=#CC2222>" + SafeLocFor("str.finish.round.miss",
+                        "R{0}: {1} | ✗ 빗나감", r.round, typeName) + "</color>";
+                detailArea += line + "\n";
             }
             finishRoundDetailText.text = detailArea.TrimEnd();
             finishRoundDetailText.supportRichText = true;
