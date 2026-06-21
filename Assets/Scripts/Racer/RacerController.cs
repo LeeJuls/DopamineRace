@@ -905,19 +905,24 @@ public partial class RacerController : MonoBehaviour
                 transform.localScale.y,
                 transform.localScale.z
             );
-
-            float parentSign = Mathf.Sign(transform.localScale.x);
-            foreach (Transform child in transform)
-            {
-                if (child.GetComponent<TextMesh>() != null)
-                {
-                    Vector3 ls = child.localScale;
-                    ls.x = Mathf.Abs(ls.x) * parentSign;
-                    child.localScale = ls;
-                }
-            }
+            CounterFlipLabels();
         }
         lastPosition = transform.position;
+    }
+
+    // 부모 scale.x 반전 후 TextMesh 자식의 localScale.x를 역보정해 월드 텍스트 방향을 유지
+    private void CounterFlipLabels()
+    {
+        float parentSign = Mathf.Sign(transform.localScale.x);
+        foreach (Transform child in transform)
+        {
+            if (child.GetComponent<TextMesh>() != null)
+            {
+                Vector3 ls = child.localScale;
+                ls.x = Mathf.Abs(ls.x) * parentSign;
+                child.localScale = ls;
+            }
+        }
     }
 
     private void ApplyLiveSettings()

@@ -154,6 +154,7 @@ public partial class RacerController : MonoBehaviour
                 float absScale = Mathf.Abs(transform.localScale.x);
                 transform.localScale = new Vector3(
                     lookSign * absScale, transform.localScale.y, transform.localScale.z);
+                CounterFlipLabels();
                 break;
 
             case WanderPhase.Pausing:
