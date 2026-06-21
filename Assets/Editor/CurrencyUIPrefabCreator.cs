@@ -312,15 +312,19 @@ public static class CurrencyUIPrefabCreator
         inputText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         input.textComponent = inputText;
 
-        // 빠른 버튼 4개 -10/-1/+1/+10 (fontSize 22→29)
+        // 빠른 버튼 4개 -10/-1/+1/+10 (Img_Multiple 스프라이트 배경)
+        Sprite multipleSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
+            "Assets/Resources/UI/Img_Multiple.png");
+        if (multipleSprite == null)
+            Debug.LogWarning("[BetAmountModal] Img_Multiple.png 없음 — 단색 폴백");
         var btnMinus10 = MakeButton(panel.transform, "-10",
-            new Vector2(0.1f, 0.35f), new Vector2(0.275f, 0.42f), new Color(0.4f, 0.4f, 0.5f), 29);
+            new Vector2(0.1f, 0.35f), new Vector2(0.275f, 0.42f), new Color(0.4f, 0.4f, 0.5f), 29, multipleSprite);
         var btnMinus1 = MakeButton(panel.transform, "-1",
-            new Vector2(0.295f, 0.35f), new Vector2(0.47f, 0.42f), new Color(0.4f, 0.4f, 0.5f), 29);
+            new Vector2(0.295f, 0.35f), new Vector2(0.47f, 0.42f), new Color(0.4f, 0.4f, 0.5f), 29, multipleSprite);
         var btnPlus1 = MakeButton(panel.transform, "+1",
-            new Vector2(0.49f, 0.35f), new Vector2(0.665f, 0.42f), new Color(0.4f, 0.4f, 0.5f), 29);
+            new Vector2(0.49f, 0.35f), new Vector2(0.665f, 0.42f), new Color(0.4f, 0.4f, 0.5f), 29, multipleSprite);
         var btnPlus10 = MakeButton(panel.transform, "+10",
-            new Vector2(0.685f, 0.35f), new Vector2(0.86f, 0.42f), new Color(0.4f, 0.4f, 0.5f), 29);
+            new Vector2(0.685f, 0.35f), new Vector2(0.86f, 0.42f), new Color(0.4f, 0.4f, 0.5f), 29, multipleSprite);
 
         // 미리보기 (fontSize 22→29, 밝은 색→다크 계열)
         var previewWin = MakeText(panel.transform, "적중 시: +0 🟦 (+0 💎)",
@@ -575,11 +579,20 @@ public static class CurrencyUIPrefabCreator
     }
 
     private static Button MakeButton(Transform parent, string label,
-        Vector2 anchorMin, Vector2 anchorMax, Color color, int fontSize = 22)
+        Vector2 anchorMin, Vector2 anchorMax, Color color, int fontSize = 22, Sprite bgSprite = null)
     {
         var go = NewRect(label + "Btn", parent, anchorMin, anchorMax, Vector2.zero, Vector2.zero);
         var img = go.AddComponent<Image>();
-        img.color = color;
+        if (bgSprite != null)
+        {
+            img.sprite = bgSprite;
+            img.type   = Image.Type.Simple;
+            img.color  = Color.white;
+        }
+        else
+        {
+            img.color = color;
+        }
         var btn = go.AddComponent<Button>();
         btn.targetGraphic = img;
 
