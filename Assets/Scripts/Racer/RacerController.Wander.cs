@@ -81,6 +81,7 @@ public partial class RacerController : MonoBehaviour
         }
         transform.position = target;
         lastPosition = target;
+        if (animator != null) animator.SetTrigger("Idle");
         onDone?.Invoke();
     }
 
