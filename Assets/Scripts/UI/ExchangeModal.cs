@@ -78,6 +78,9 @@ public class ExchangeModal : MonoBehaviour
 
         if (WalletManager.Instance != null)
             WalletManager.Instance.OnExchangeStateChanged -= RefreshUI;
+
+        // 모달 닫힘 시 진행 중 획득 연출 즉시 제거 (잔상 방지)
+        if (_activeBurst != null) { Destroy(_activeBurst.gameObject); _activeBurst = null; }
     }
 
     public void Show()
@@ -224,13 +227,16 @@ public class ExchangeModal : MonoBehaviour
     private GameObject _confirmRoot;
     private Text _confirmGainText;
     private Text _confirmUsesText;
-    private System.Action _pendingExchange;
+    private System.Func<bool> _pendingExchange;   // 실행 성공 여부 반환
+    private int _pendingGain;                      // 연출용 — 실행 전 캡처값
+    private RewardBurst _activeBurst;
 
     /// <summary>교환 전 확인 팝업 표시. Yes에서 onYes(실제 환전) 실행.</summary>
-    private void ShowConfirm(System.Action onYes, int jellyGain, bool showUses, int usesBefore, int usesAfter)
+    private void ShowConfirm(System.Func<bool> onYes, int jellyGain, bool showUses, int usesBefore, int usesAfter)
     {
         EnsureConfirmBuilt();
         _pendingExchange = onYes;
+        _pendingGain = jellyGain;
 
         if (_confirmGainText != null)
             _confirmGainText.text = SafeLoc("str.exchange.confirm.gain", "획득 도파민 젤리: {0}", jellyGain);
@@ -254,9 +260,19 @@ public class ExchangeModal : MonoBehaviour
     private void OnConfirmYes()
     {
         var act = _pendingExchange;
+        int gain = _pendingGain;
         HideConfirm();
-        act?.Invoke();
+
+        bool ok = act != null && act();
         RefreshUI();
+
+        if (ok)
+        {
+            // 획득 연출 — 모달과 수명 분리(부모=메인 캔버스). 재진입 시 기존 것 제거.
+            if (_activeBurst != null) Destroy(_activeBurst.gameObject);
+            Transform parent = (transform.parent != null) ? transform.parent : transform;
+            _activeBurst = RewardBurst.Spawn(parent, gain, titleText != null ? titleText.font : null);
+        }
     }
 
     private void EnsureConfirmBuilt()
