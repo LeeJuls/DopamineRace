@@ -1,6 +1,8 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 /// <summary>
 /// 배팅 화면 장식 고양이 1마리. Animator 미사용 — 코드로 스프라이트 시트 프레임 순환.
@@ -28,6 +30,11 @@ public class CatController : MonoBehaviour
     // 고양이 클릭 → ExchangeModal 열기 (CatDecorationManager가 구독)
     public event System.Action OnClicked;
 
+    // 모달 캔버스 규약: CurrencyUIPrefabCreator.AddOverlayCanvas = 1000, 베이스 배팅 UI = 100
+    private const int MODAL_SORTING = 1000;
+    private static readonly List<RaycastResult> _rcBuf = new List<RaycastResult>();
+    private PointerEventData _ped;   // 재사용 (per-click GC 회피)
+
     private void Awake()
     {
         sr = GetComponent<SpriteRenderer>();
@@ -42,16 +49,36 @@ public class CatController : MonoBehaviour
 
     private void OnMouseDown()
     {
-        // UI(모달 백드롭 등)가 포인터 위면 월드 클릭 무시 — UGUI를 뚫지 않도록
-        // (TitleSceneManager.IsPointerOverUI 와 동일 패턴: null 가드 + 마우스 + 터치)
-        var es = EventSystem.current;
-        if (es != null)
-        {
-            if (es.IsPointerOverGameObject()) return;                           // 마우스(pointerId=-1)
-            if (Input.touchCount > 0 &&
-                es.IsPointerOverGameObject(Input.GetTouch(0).fingerId)) return; // 터치
-        }
+        // 모달(sortingOrder≥1000)이 떠 있거나 인터랙티브 UI(버튼 등) 위면 월드 클릭 무시.
+        // 비-인터랙티브 투명 배경(ScrollArea α0.01 등) 위에서는 고양이 클릭 허용.
+        if (IsPointerOverBlockingUI()) return;
         OnClicked?.Invoke();
+    }
+
+    /// <summary>
+    /// 포인터 아래에 (a) 모달 레벨 캔버스(sortingOrder≥1000) 또는
+    /// (b) 인터랙티브 컨트롤(Selectable)이 있으면 true → 월드 클릭 차단.
+    /// 투명 스크롤 배경 같은 비-인터랙티브 그래픽은 통과시켜 고양이 클릭을 허용.
+    /// </summary>
+    private bool IsPointerOverBlockingUI()
+    {
+        var es = EventSystem.current;
+        if (es == null) return false;
+
+        if (_ped == null) _ped = new PointerEventData(es);
+        _ped.position = (Input.touchCount > 0) ? Input.GetTouch(0).position
+                                               : (Vector2)Input.mousePosition;
+        _rcBuf.Clear();
+        es.RaycastAll(_ped, _rcBuf);
+        for (int i = 0; i < _rcBuf.Count; i++)
+        {
+            // (a) 모달 레벨 캔버스 → 차단 (열린 모달 백드롭/패널)
+            if (_rcBuf[i].sortingOrder >= MODAL_SORTING) return true;
+            // (b) 인터랙티브 컨트롤(Button/Toggle 등) → 차단 (캐릭터 행 동시반응 방지)
+            var sel = _rcBuf[i].gameObject.GetComponentInParent<Selectable>();
+            if (sel != null && sel.isActiveAndEnabled && sel.interactable) return true;
+        }
+        return false;
     }
 
     /// <summary>SetActive(true) 시 area가 있으면 자동 배회 재개 (풀링 대응).</summary>
