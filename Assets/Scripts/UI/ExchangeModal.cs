@@ -45,6 +45,10 @@ public class ExchangeModal : MonoBehaviour
 
     private void OnEnable()
     {
+        // 환전 버튼 호버 팝 효과 (런타임 부착 — 프리팹 무변경, 중복 방지)
+        if (exchangeButton != null && exchangeButton.GetComponent<HoverScale>() == null)
+            exchangeButton.gameObject.AddComponent<HoverScale>();
+
         if (exchangeButton != null)
             exchangeButton.onClick.AddListener(OnExchangeClicked);
         if (closeButton != null)
@@ -80,6 +84,7 @@ public class ExchangeModal : MonoBehaviour
     {
         if (backdrop != null) backdrop.SetActive(true);
         gameObject.SetActive(true);
+        HideConfirm();   // 재진입 시 확인 팝업 잔상 제거
 
         // 진입 시 항상 최신 상태로 갱신
         if (titleText != null) titleText.text = SafeLoc("str.exchange.modal.title", "💱 도파민 스톤 환전");
@@ -118,8 +123,12 @@ public class ExchangeModal : MonoBehaviour
             "이번 라운드 환전율: {0}:1", rate);
         if (rateDescText != null) rateDescText.text = SafeLoc("str.exchange.modal.rate_desc",
             "(스톤 {0}개 → 젤리 1개)", rate);
-        if (holdingText != null) holdingText.text = SafeLoc("str.exchange.modal.holding",
-            "현재 보유: {0}개", stone);
+        if (holdingText != null)
+        {
+            // 픽셀폰트(size 38)로 넓어진 보유 숫자가 Wrap+Truncate로 잘리던 버그 방지 → 한 줄 유지
+            holdingText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            holdingText.text = SafeLoc("str.exchange.modal.holding", "현재 보유: {0}개", stone);
+        }
 
         // 인디케이터 초기화
         if (rescueIndicator != null) rescueIndicator.SetActive(showRescue);
@@ -191,19 +200,143 @@ public class ExchangeModal : MonoBehaviour
         var wallet = WalletManager.Instance;
         if (wallet == null) return;
 
-        bool ok;
+        // 즉시 실행하지 않고 확인 팝업 표시 → Yes에서 실제 실행
         switch (wallet.GetAvailableAction())
         {
-            case WalletManager.ExchangeAction.CatPower: ok = wallet.TryUseCatPower(); break;
-            case WalletManager.ExchangeAction.Rescue:   ok = wallet.TryRescue();      break;
+            case WalletManager.ExchangeAction.CatPower:
+            {
+                int gain = wallet.GetCatPowerJellyGain();
+                int left = wallet.CatPowerUsesLeft;
+                ShowConfirm(() => wallet.TryUseCatPower(), gain, true, left, Mathf.Max(0, left - 1));
+                break;
+            }
+            case WalletManager.ExchangeAction.Rescue:
+                ShowConfirm(() => wallet.TryRescue(), 1, false, 0, 0);
+                break;
             default:
                 Debug.LogWarning("[ExchangeModal] 사용 가능한 환전 액션 없음");
-                return;
+                break;
         }
-        if (!ok) Debug.LogWarning("[ExchangeModal] 환전 실행 실패");
+    }
 
-        // 즉시 갱신 (OnExchangeStateChanged 이벤트로도 갱신되지만 명시 호출)
+    // ───────── 교환 확인 팝업 (런타임 빌드 · 프리팹 무변경) ─────────
+
+    private GameObject _confirmRoot;
+    private Text _confirmGainText;
+    private Text _confirmUsesText;
+    private System.Action _pendingExchange;
+
+    /// <summary>교환 전 확인 팝업 표시. Yes에서 onYes(실제 환전) 실행.</summary>
+    private void ShowConfirm(System.Action onYes, int jellyGain, bool showUses, int usesBefore, int usesAfter)
+    {
+        EnsureConfirmBuilt();
+        _pendingExchange = onYes;
+
+        if (_confirmGainText != null)
+            _confirmGainText.text = SafeLoc("str.exchange.confirm.gain", "획득 도파민 젤리: {0}", jellyGain);
+        if (_confirmUsesText != null)
+        {
+            _confirmUsesText.gameObject.SetActive(showUses);
+            if (showUses)
+                _confirmUsesText.text = SafeLoc("str.exchange.confirm.uses", "남은 횟수 {0} → {1}", usesBefore, usesAfter);
+        }
+
+        _confirmRoot.SetActive(true);
+        _confirmRoot.transform.SetAsLastSibling();   // 모달 위 최상단
+    }
+
+    private void HideConfirm()
+    {
+        _pendingExchange = null;
+        if (_confirmRoot != null) _confirmRoot.SetActive(false);
+    }
+
+    private void OnConfirmYes()
+    {
+        var act = _pendingExchange;
+        HideConfirm();
+        act?.Invoke();
         RefreshUI();
+    }
+
+    private void EnsureConfirmBuilt()
+    {
+        if (_confirmRoot != null) return;
+        Font font = (titleText != null) ? titleText.font : null;
+
+        // 전체 딤 백드롭 (뒤 모달 클릭 차단)
+        _confirmRoot = NewUIChild("ExchangeConfirm", transform, Vector2.zero, Vector2.one, Vector2.zero);
+        var rrt = _confirmRoot.GetComponent<RectTransform>();
+        rrt.offsetMin = Vector2.zero; rrt.offsetMax = Vector2.zero;
+        var dim = _confirmRoot.AddComponent<Image>();
+        dim.color = new Color(0f, 0f, 0f, 0.55f);
+        dim.raycastTarget = true;
+
+        // 패널
+        var panel = NewUIChild("Panel", _confirmRoot.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(460, 300));
+        var pimg = panel.AddComponent<Image>();
+        pimg.color = Color.white;
+
+        var title = NewTextChild("Title", panel.transform, font, 30, new Color(0.15f, 0.15f, 0.2f),
+            new Vector2(0.5f, 1f), new Vector2(0, -52), new Vector2(420, 56));
+        title.text = SafeLoc("str.exchange.confirm.title", "진짜 교환하시겠습니까?");
+
+        _confirmGainText = NewTextChild("Gain", panel.transform, font, 26, new Color(0.1f, 0.2f, 0.45f),
+            new Vector2(0.5f, 0.5f), new Vector2(0, 28), new Vector2(420, 44));
+        _confirmUsesText = NewTextChild("Uses", panel.transform, font, 22, new Color(0.35f, 0.2f, 0.1f),
+            new Vector2(0.5f, 0.5f), new Vector2(0, -16), new Vector2(420, 38));
+
+        var yes = NewButtonChild("Yes", panel.transform, font, SafeLoc("str.ui.option.yes", "예"),
+            new Color(0.30f, 0.50f, 0.75f), new Vector2(-100, 50), new Vector2(170, 60));
+        yes.onClick.AddListener(OnConfirmYes);
+        var no = NewButtonChild("No", panel.transform, font, SafeLoc("str.ui.option.no", "아니오"),
+            new Color(0.45f, 0.45f, 0.5f), new Vector2(100, 50), new Vector2(170, 60));
+        no.onClick.AddListener(HideConfirm);
+
+        _confirmRoot.SetActive(false);
+    }
+
+    // ── UGUI 런타임 빌드 헬퍼 ──
+    private static GameObject NewUIChild(string name, Transform parent, Vector2 aMin, Vector2 aMax, Vector2 size)
+    {
+        var go = new GameObject(name);
+        var rt = go.AddComponent<RectTransform>();
+        rt.SetParent(parent, false);
+        rt.anchorMin = aMin; rt.anchorMax = aMax;
+        rt.sizeDelta = size;
+        rt.anchoredPosition = Vector2.zero;
+        return go;
+    }
+
+    private static Text NewTextChild(string name, Transform parent, Font font, int size, Color color,
+        Vector2 anchor, Vector2 pos, Vector2 sd)
+    {
+        var go = NewUIChild(name, parent, anchor, anchor, sd);
+        go.GetComponent<RectTransform>().anchoredPosition = pos;
+        var t = go.AddComponent<Text>();
+        if (font != null) t.font = font;
+        t.fontSize = size; t.fontStyle = FontStyle.Bold; t.color = color;
+        t.alignment = TextAnchor.MiddleCenter;
+        t.horizontalOverflow = HorizontalWrapMode.Overflow;
+        t.verticalOverflow = VerticalWrapMode.Overflow;
+        t.raycastTarget = false;
+        return t;
+    }
+
+    private static Button NewButtonChild(string name, Transform parent, Font font, string label, Color bg,
+        Vector2 pos, Vector2 sd)
+    {
+        var go = NewUIChild(name, parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), sd);
+        go.GetComponent<RectTransform>().anchoredPosition = pos;
+        var img = go.AddComponent<Image>();
+        img.color = bg;
+        var btn = go.AddComponent<Button>();
+        btn.targetGraphic = img;
+        var t = NewTextChild("Text", go.transform, font, 26, Color.white, new Vector2(0.5f, 0.5f), Vector2.zero, sd);
+        var trt = t.GetComponent<RectTransform>();
+        trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one; trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
+        t.text = label;
+        return btn;
     }
 
     // ───── 유틸 ─────

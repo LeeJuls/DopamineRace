@@ -375,6 +375,9 @@ str.exchange.catpower.btn,🐾 전부 환전: 💎{0} → 🟦{1},🐾 Exchange 
 str.exchange.catpower.remain,🐾 고양이의 힘 · 남은 {0}회,🐾 Cat's Power · {0} left,🐾 猫の力 · 残り{0}回,🐾 猫之力 · 剩余{0}次,🐾 Katzenkraft · {0} übrig,🐾 Poder del gato · quedan {0},🐾 Poder do gato · {0} restantes
 str.exchange.catpower.used,🐾 고양이의 힘 사용 완료 (이번 게임),🐾 Cat's Power used (this game),🐾 猫の力 使用済み (今ゲーム),🐾 猫之力 已使用（本局）,🐾 Katzenkraft verbraucht (dieses Spiel),🐾 Poder del gato usado (esta partida),🐾 Poder do gato usado (este jogo)
 str.exchange.catpower.next_game,다음 게임에 다시 가능,Available next game,次のゲームで再度可能,下一局可再次使用,Nächstes Spiel verfügbar,Disponible la próxima partida,Disponível no próximo jogo
+str.exchange.confirm.title,진짜 교환하시겠습니까?,Exchange for real?,本当に両替しますか？,确定要兑换吗？,Wirklich tauschen?,¿Cambiar de verdad?,Trocar mesmo?
+str.exchange.confirm.gain,획득 도파민 젤리: {0},Jelly to gain: {0},獲得ゼリー: {0},获得果冻: {0},Gelee-Gewinn: {0},Gelatina a ganar: {0},Geleia a ganhar: {0}
+str.exchange.confirm.uses,남은 횟수 {0} → {1},Uses {0} → {1},残り回数 {0} → {1},剩余次数 {0} → {1},Nutzungen {0} → {1},Usos {0} → {1},Usos {0} → {1}
 str.gameover.headline,💔 GAME OVER,💔 GAME OVER,💔 GAME OVER,💔 游戏结束,💔 SPIEL VORBEI,💔 GAME OVER,💔 FIM DE JOGO
 str.gameover.desc,도파민 젤리가 모두 소진됐습니다,All Dopamine Jelly is gone,ドーパミンゼリーが尽きました,多巴胺果冻已耗尽,Dopamin-Gelee aufgebraucht,Toda la gelatina se acabó,Toda a geleia acabou
 str.gameover.progress,{0} / {1} 라운드에서 종료,Ended at round {0} / {1},{0} / {1} ラウンドで終了,在第{0} / {1}回合结束,Beendet in Runde {0} / {1},Terminó en ronda {0} / {1},Terminou na rodada {0} / {1}
