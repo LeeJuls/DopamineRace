@@ -194,6 +194,16 @@ public partial class GameSettings : ScriptableObject
     [Range(0f, 30f)]
     public float trackBarLerpSpeed = 12f;
 
+    [Header("═══ 통화 초기값 (테스트용) ═══")]
+    [Tooltip("게임 시작 시 기본 보유 도파민 스톤.\n0 = 정상(보유 없음). 0보다 크면 매 게임 시작 시 해당 수량을 보유 → 환전 테스트 편의용.")]
+    [Min(0)]
+    public int startingStone = 0;
+
+    [Header("═══ 고양이의 힘 (전부환전) ═══")]
+    [Tooltip("'고양이의 힘'(가진 스톤 전부를 한 번에 젤리로) 게임당 사용 횟수.\n기본 1. 0 = 비활성(구제만). 늘리면 게임당 여러 번 전부환전 가능.")]
+    [Min(0)]
+    public int catPowerUsesPerGame = 1;
+
     [Header("═══ 세이브 ═══")]
     [Tooltip("true면 마지막 플레이 라운드를 기억하여 복귀\nfalse면 항상 1라운드부터 시작")]
     public bool enableRoundResume = true;

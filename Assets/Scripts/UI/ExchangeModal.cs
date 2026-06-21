@@ -84,7 +84,6 @@ public class ExchangeModal : MonoBehaviour
         // 진입 시 항상 최신 상태로 갱신
         if (titleText != null) titleText.text = SafeLoc("str.exchange.modal.title", "💱 도파민 스톤 환전");
         if (optionsTitleText != null) optionsTitleText.text = SafeLoc("str.exchange.modal.options_title", "─── 환전 옵션 ───");
-        if (noteText != null) noteText.text = SafeLoc("str.exchange.note.once_per_round", "※ 라운드당 1회만 가능");
         SetButtonLabel(closeButton, SafeLoc("str.exchange.btn.close", "닫기"));
 
         RefreshUI();
@@ -97,7 +96,7 @@ public class ExchangeModal : MonoBehaviour
     }
 
     /// <summary>
-    /// 4가지 분기에 따라 UI 상태 갱신.
+    /// 상태 갱신 — GetAvailableAction() 우선순위(고양이의 힘 &gt; 구제 &gt; 없음) 기반.
     /// WalletManager.OnExchangeStateChanged 이벤트로 자동 호출 + 외부에서 직접 호출 가능.
     /// </summary>
     public void RefreshUI()
@@ -105,12 +104,14 @@ public class ExchangeModal : MonoBehaviour
         var wallet = WalletManager.Instance;
         if (wallet == null) return;
 
-        int rate = wallet.CurrentExchangeRate;
-        int jelly = wallet.Jelly;
-        int stone = wallet.Stone;
-        bool exchanged = wallet.ExchangedThisRound;
-        bool canExchange = wallet.CanExchange();
-        bool isRescue = (jelly == 0 && stone >= 1 && stone < rate);
+        int rate     = wallet.CurrentExchangeRate;
+        int stone    = wallet.Stone;
+        int usesLeft = wallet.CatPowerUsesLeft;
+        var action   = wallet.GetAvailableAction();
+
+        bool showCat    = (action == WalletManager.ExchangeAction.CatPower);
+        bool showRescue = (action == WalletManager.ExchangeAction.Rescue);
+        bool blocked    = (action == WalletManager.ExchangeAction.None);
 
         // 비율·보유량 표시
         if (rateText != null) rateText.text = SafeLoc("str.exchange.modal.rate",
@@ -120,53 +121,68 @@ public class ExchangeModal : MonoBehaviour
         if (holdingText != null) holdingText.text = SafeLoc("str.exchange.modal.holding",
             "현재 보유: {0}개", stone);
 
-        // 4분기 — completed 우선, 그 다음 canExchange, rescue 표시
-        bool showRescue = canExchange && isRescue;
-        bool showCompleted = exchanged;
-        bool showError = !canExchange && !exchanged;
-
+        // 인디케이터 초기화
         if (rescueIndicator != null) rescueIndicator.SetActive(showRescue);
-        if (completedIndicator != null) completedIndicator.SetActive(showCompleted);
-        if (errorText != null) errorText.gameObject.SetActive(showError);
+        if (completedIndicator != null) completedIndicator.SetActive(false);
+        if (errorText != null) errorText.gameObject.SetActive(false);
 
-        // 환전 버튼
+        // 액션 버튼
         if (exchangeButton != null && exchangeButtonText != null)
         {
-            exchangeButton.interactable = canExchange;
-            int stoneCost = wallet.GetExchangeStoneCost();
+            exchangeButton.interactable = (showCat || showRescue);
 
-            if (showRescue)
+            if (showCat)
+            {
+                exchangeButtonText.text = SafeLoc("str.exchange.catpower.btn",
+                    "🐾 전부 환전: 💎{0} → 🟦{1}", wallet.GetCatPowerStoneCost(), wallet.GetCatPowerJellyGain());
+            }
+            else if (showRescue)
             {
                 exchangeButtonText.text = SafeLoc("str.exchange.btn.rescue_action",
-                    "환전: 💎{0} → 🟦1 (구제)", stoneCost);
+                    "환전: 💎{0} → 🟦1 (구제)", Mathf.Min(stone, rate));
                 if (rescueIndicatorText != null)
-                    rescueIndicatorText.text = SafeLoc("str.exchange.btn.rescue", "⚡ 구제 환전 (1회 한정)");
-            }
-            else if (canExchange)
-            {
-                exchangeButtonText.text = SafeLoc("str.exchange.btn",
-                    "환전: 💎{0} → 🟦1", stoneCost);
+                    rescueIndicatorText.text = SafeLoc("str.exchange.btn.rescue", "⚡ 구제 (라운드당 1회)");
             }
             else
             {
-                exchangeButtonText.text = ""; // 비활성 상태
+                exchangeButtonText.text = ""; // 비활성
             }
         }
 
-        // 완료 표시
-        if (showCompleted)
-        {
-            if (completedText != null)
-                completedText.text = SafeLoc("str.exchange.completed", "✅ 이번 라운드 환전 완료");
-            if (completedNextText != null)
-                completedNextText.text = SafeLoc("str.exchange.completed_next", "다음 라운드에 다시 가능");
-        }
+        // 하단 안내 — 고양이의 힘 남은 횟수 / 소진
+        if (noteText != null)
+            noteText.text = (usesLeft > 0)
+                ? SafeLoc("str.exchange.catpower.remain", "🐾 고양이의 힘 · 남은 {0}회", usesLeft)
+                : SafeLoc("str.exchange.catpower.used", "🐾 고양이의 힘 사용 완료 (이번 게임)");
 
-        // 에러 표시
-        if (showError && errorText != null)
+        // 비활성 사유 표시
+        if (blocked)
         {
-            errorText.text = SafeLoc("str.exchange.error.insufficient",
-                "스톤이 부족합니다 ({0}개 필요)", rate);
+            bool rescueUsed   = (wallet.Jelly == 0 && wallet.RescuedThisRound);
+            bool catExhausted = (usesLeft <= 0 && stone >= rate);
+
+            if (rescueUsed)
+            {
+                if (completedIndicator != null) completedIndicator.SetActive(true);
+                if (completedText != null)
+                    completedText.text = SafeLoc("str.exchange.completed", "이번 라운드 구제 완료");
+                if (completedNextText != null)
+                    completedNextText.text = SafeLoc("str.exchange.completed_next", "다음 라운드에 다시 가능");
+            }
+            else if (catExhausted)
+            {
+                if (completedIndicator != null) completedIndicator.SetActive(true);
+                if (completedText != null)
+                    completedText.text = SafeLoc("str.exchange.catpower.used", "🐾 고양이의 힘 사용 완료 (이번 게임)");
+                if (completedNextText != null)
+                    completedNextText.text = SafeLoc("str.exchange.catpower.next_game", "다음 게임에 다시 가능");
+            }
+            else if (errorText != null)
+            {
+                errorText.gameObject.SetActive(true);
+                errorText.text = SafeLoc("str.exchange.error.insufficient",
+                    "스톤이 부족합니다 ({0}개 필요)", rate);
+            }
         }
     }
 
@@ -175,11 +191,16 @@ public class ExchangeModal : MonoBehaviour
         var wallet = WalletManager.Instance;
         if (wallet == null) return;
 
-        if (!wallet.TryExchange())
+        bool ok;
+        switch (wallet.GetAvailableAction())
         {
-            Debug.LogWarning("[ExchangeModal] TryExchange 실패");
-            return;
+            case WalletManager.ExchangeAction.CatPower: ok = wallet.TryUseCatPower(); break;
+            case WalletManager.ExchangeAction.Rescue:   ok = wallet.TryRescue();      break;
+            default:
+                Debug.LogWarning("[ExchangeModal] 사용 가능한 환전 액션 없음");
+                return;
         }
+        if (!ok) Debug.LogWarning("[ExchangeModal] 환전 실행 실패");
 
         // 즉시 갱신 (OnExchangeStateChanged 이벤트로도 갱신되지만 명시 호출)
         RefreshUI();

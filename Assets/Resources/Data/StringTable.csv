@@ -365,14 +365,16 @@ str.exchange.modal.rate,이번 라운드 환전율: {0}:1,This round exchange ra
 str.exchange.modal.rate_desc,(스톤 {0}개 → 젤리 1개),({0} stones → 1 jelly),(ストーン{0}個 → ゼリー1個),({0}个石头 → 1个果冻),({0} Steine → 1 Gelee),({0} piedras → 1 gelatina),({0} pedras → 1 geleia)
 str.exchange.modal.holding,현재 보유: {0}개,Stone: {0},所持石: {0},持有: {0},Steine: {0},Piedras: {0},Pedras: {0}
 str.exchange.modal.options_title,─── 환전 옵션 ───,─── Exchange Options ───,─── 両替オプション ───,─── 兑换选项 ───,─── Tauschoptionen ───,─── Opciones de cambio ───,─── Opções de troca ───
-str.exchange.btn,환전: 💎{0} → 🟦1,Exchange: 💎{0} → 🟦1,両替: 💎{0} → 🟦1,兑换：💎{0} → 🟦1,Tausch: 💎{0} → 🟦1,Cambio: 💎{0} → 🟦1,Troca: 💎{0} → 🟦1
-str.exchange.btn.rescue,⚡ 구제 환전 (1회 한정),⚡ Rescue Exchange (Once Only),⚡ 救済両替 (1回限り),⚡ 救济兑换（仅限一次）,⚡ Rettungstausch (1x),⚡ Cambio de rescate (1 vez),⚡ Troca de resgate (1 vez)
+str.exchange.btn.rescue,⚡ 구제 (라운드당 1회),⚡ Rescue (once per round),⚡ 救済 (1ラウンド1回),⚡ 救济（每回合一次）,⚡ Rettung (1x pro Runde),⚡ Rescate (1 vez por ronda),⚡ Resgate (1x por rodada)
 str.exchange.btn.rescue_action,환전: 💎{0} → 🟦1 (구제),Exchange: 💎{0} → 🟦1 (Rescue),両替: 💎{0} → 🟦1 (救済),兑换：💎{0} → 🟦1（救济）,Tausch: 💎{0} → 🟦1 (Rettung),Cambio: 💎{0} → 🟦1 (Rescate),Troca: 💎{0} → 🟦1 (Resgate)
-str.exchange.completed,✅ 이번 라운드 환전 완료,✅ Exchange completed this round,✅ 今ラウンド両替完了,✅ 本回合兑换完成,✅ Tausch in dieser Runde abgeschlossen,✅ Cambio completado esta ronda,✅ Troca concluída nesta rodada
+str.exchange.completed,이번 라운드 구제 완료,Rescue used this round,今ラウンド救済済み,本回合救济已用,Rettung diese Runde genutzt,Rescate usado esta ronda,Resgate usado nesta rodada
 str.exchange.completed_next,다음 라운드에 다시 가능,Available next round,次のラウンドで再度可能,下回合可再次兑换,Nächste Runde verfügbar,Disponible próxima ronda,Disponível próxima rodada
 str.exchange.btn.close,닫기,Close,閉じる,关闭,Schließen,Cerrar,Fechar
-str.exchange.note.once_per_round,※ 라운드당 1회만 가능,※ Once per round only,※ 1ラウンドに1回のみ,※ 每回合仅限一次,※ Nur 1x pro Runde,※ Solo 1 vez por ronda,※ Apenas 1 vez por rodada
 str.exchange.error.insufficient,스톤이 부족합니다 ({0}개 필요),Insufficient stones ({0} needed),ストーン不足 ({0}個必要),石头不足（需要{0}个）,Steine fehlen ({0} nötig),Piedras insuficientes ({0} necesarias),Pedras insuficientes ({0} necessárias)
+str.exchange.catpower.btn,🐾 전부 환전: 💎{0} → 🟦{1},🐾 Exchange All: 💎{0} → 🟦{1},🐾 全部両替: 💎{0} → 🟦{1},🐾 全部兑换：💎{0} → 🟦{1},🐾 Alles tauschen: 💎{0} → 🟦{1},🐾 Cambiar todo: 💎{0} → 🟦{1},🐾 Trocar tudo: 💎{0} → 🟦{1}
+str.exchange.catpower.remain,🐾 고양이의 힘 · 남은 {0}회,🐾 Cat's Power · {0} left,🐾 猫の力 · 残り{0}回,🐾 猫之力 · 剩余{0}次,🐾 Katzenkraft · {0} übrig,🐾 Poder del gato · quedan {0},🐾 Poder do gato · {0} restantes
+str.exchange.catpower.used,🐾 고양이의 힘 사용 완료 (이번 게임),🐾 Cat's Power used (this game),🐾 猫の力 使用済み (今ゲーム),🐾 猫之力 已使用（本局）,🐾 Katzenkraft verbraucht (dieses Spiel),🐾 Poder del gato usado (esta partida),🐾 Poder do gato usado (este jogo)
+str.exchange.catpower.next_game,다음 게임에 다시 가능,Available next game,次のゲームで再度可能,下一局可再次使用,Nächstes Spiel verfügbar,Disponible la próxima partida,Disponível no próximo jogo
 str.gameover.headline,💔 GAME OVER,💔 GAME OVER,💔 GAME OVER,💔 游戏结束,💔 SPIEL VORBEI,💔 GAME OVER,💔 FIM DE JOGO
 str.gameover.desc,도파민 젤리가 모두 소진됐습니다,All Dopamine Jelly is gone,ドーパミンゼリーが尽きました,多巴胺果冻已耗尽,Dopamin-Gelee aufgebraucht,Toda la gelatina se acabó,Toda a geleia acabou
 str.gameover.progress,{0} / {1} 라운드에서 종료,Ended at round {0} / {1},{0} / {1} ラウンドで終了,在第{0} / {1}回合结束,Beendet in Runde {0} / {1},Terminó en ronda {0} / {1},Terminou na rodada {0} / {1}
