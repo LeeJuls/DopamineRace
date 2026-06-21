@@ -8,6 +8,12 @@
 - 커밋: `[C]`=Claude `[L]`=오너 `[UI]`=디자이너 (병기 가능: `[C][DOC]`)
 - push는 명시 요청 시에만
 
+## 위키
+- 경로: `D:/Project/Dopamine/DopamineProject/`
+- **세션 시작 시** SCHEMA.md → Index.md → log.md(최근 20줄) 순서로 읽어 현재 위키 상태 파악
+- SPEC/히스토리 완료 후 `/wiki-ingest` 실행하여 위키 반영
+- 재활용 가치 있는 Q&A는 `queries/` 에 저장
+
 ## 에이전트
 `.claude/agents/` — leader(PM) · balance(수치) · client(Unity) · qa(검증) · design(UX/UI) · marketing(Steam)
 
