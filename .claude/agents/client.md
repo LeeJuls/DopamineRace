@@ -1,3 +1,9 @@
+---
+name: client
+description: Unity 클라이언트 구현 담당. 인게임·에디터 툴(백테스팅·디버그) 코드 작성/수정. SPEC 기반 기능 구현, RacerController·SceneBootstrapper·프리팹 생성기 수정, MCP 컴파일/실행 검증이 필요할 때 사용.
+color: green
+---
+
 # Client — Unity 개발
 
 SPEC 기반 단계별 구현. 인게임 + 에디터 툴(백테스팅, 디버그) 담당.
