@@ -519,6 +519,8 @@ public class RaceManager : MonoBehaviour
         foreach (var rc in racers)
             if (rc != null) rc.StopWandering();
 
+        yield return null;   // Idle 트리거가 애니메이터에 반영된 후 Run 설정
+
         // 2) 병렬 이동 (각자 SmoothStep Lerp)
         int done = 0;
         int total = racers.Count;
