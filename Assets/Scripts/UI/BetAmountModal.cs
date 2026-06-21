@@ -72,6 +72,12 @@ public class BetAmountModal : MonoBehaviour
         if (btnPlus10 != null) btnPlus10.onClick.AddListener(() => ApplyDelta(+10));
         if (confirmButton != null) confirmButton.onClick.AddListener(OnConfirm);
         if (cancelButton != null) cancelButton.onClick.AddListener(OnCancel);
+        // 백드롭 클릭 = 취소 (모달 밖 영역 클릭 시 닫기)
+        if (backdrop != null)
+        {
+            var bdBtn = backdrop.GetComponent<Button>() ?? backdrop.AddComponent<Button>();
+            bdBtn.onClick.AddListener(OnCancel);
+        }
     }
 
     private void OnDisable()
@@ -87,6 +93,11 @@ public class BetAmountModal : MonoBehaviour
         if (btnPlus10 != null) btnPlus10.onClick.RemoveAllListeners();
         if (confirmButton != null) confirmButton.onClick.RemoveAllListeners();
         if (cancelButton != null) cancelButton.onClick.RemoveAllListeners();
+        if (backdrop != null)
+        {
+            var bdBtn = backdrop.GetComponent<Button>();
+            if (bdBtn != null) bdBtn.onClick.RemoveAllListeners();
+        }
     }
 
     /// <summary>
