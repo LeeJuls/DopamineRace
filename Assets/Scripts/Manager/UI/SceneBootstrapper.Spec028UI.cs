@@ -41,6 +41,12 @@ public partial class SceneBootstrapper : MonoBehaviour
         modalRoot.transform.SetParent(root, false);
         AddFullRect(modalRoot);
 
+        // 메인 캔버스(100)보다 위로 — 뒤 UGUI 입력 차단 (런타임이라 직접 프로퍼티 OK)
+        var ovCanvas = modalRoot.AddComponent<Canvas>();
+        ovCanvas.overrideSorting = true;
+        ovCanvas.sortingOrder = 1000;
+        modalRoot.AddComponent<GraphicRaycaster>();
+
         // 백드롭 (어두운 반투명, 외부 클릭 차단)
         var backdrop = new GameObject("Backdrop");
         backdrop.transform.SetParent(modalRoot.transform, false);
@@ -220,11 +226,19 @@ public partial class SceneBootstrapper : MonoBehaviour
         modalRoot.transform.SetParent(root, false);
         AddFullRect(modalRoot);
 
+        // 메인 캔버스(100)보다 위로 — 뒤 UGUI 입력 차단 (런타임이라 직접 프로퍼티 OK)
+        var ovCanvas = modalRoot.AddComponent<Canvas>();
+        ovCanvas.overrideSorting = true;
+        ovCanvas.sortingOrder = 1000;
+        modalRoot.AddComponent<GraphicRaycaster>();
+
         var backdrop = new GameObject("Backdrop");
         backdrop.transform.SetParent(modalRoot.transform, false);
         var brt = backdrop.AddComponent<RectTransform>();
         SetFullRect(brt);
-        backdrop.AddComponent<Image>().color = new Color(0, 0, 0, 0.7f);
+        var bImg = backdrop.AddComponent<Image>();
+        bImg.color = new Color(0, 0, 0, 0.7f);
+        bImg.raycastTarget = true;   // 뒤 UGUI 입력 차단 (명시)
 
         var panel = new GameObject("Modal");
         panel.transform.SetParent(modalRoot.transform, false);

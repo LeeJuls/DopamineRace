@@ -215,19 +215,15 @@ public static class CurrencyUIPrefabCreator
         var rootRt = root.AddComponent<RectTransform>();
         SetFullStretch(rootRt);
 
-        // 다른 UI보다 항상 위에 그려지도록 정렬 오버라이드
-        var rootCanvas = root.AddComponent<Canvas>();
-        var canvasSO = new SerializedObject(rootCanvas);
-        canvasSO.FindProperty("m_OverrideSorting").boolValue = true;
-        canvasSO.FindProperty("m_SortingOrder").intValue = 100;
-        canvasSO.ApplyModifiedProperties();
-        root.AddComponent<GraphicRaycaster>();
+        // 다른 UI보다 항상 위에 그려지도록 정렬 오버라이드 (sortingOrder=1000 > 메인 캔버스 100)
+        AddOverlayCanvas(root, 1000);
 
         // 백드롭
         var backdrop = NewRect("Backdrop", root.transform,
             Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var bdImg = backdrop.AddComponent<Image>();
         bdImg.color = new Color(0, 0, 0, 0.7f);
+        bdImg.raycastTarget = true;   // 뒤 UGUI 입력 차단 (명시)
 
         // 모달 패널 (640×580 → 832×754, +30%)
         var panel = NewRectCenter("Modal", root.transform, new Vector2(832, 754));
@@ -381,9 +377,14 @@ public static class CurrencyUIPrefabCreator
         var rootRt = root.AddComponent<RectTransform>();
         SetFullStretch(rootRt);
 
+        // 다른 UI보다 항상 위에 그려지도록 정렬 오버라이드 (sortingOrder=1000 > 메인 캔버스 100)
+        AddOverlayCanvas(root, 1000);
+
         var backdrop = NewRect("Backdrop", root.transform,
             Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        backdrop.AddComponent<Image>().color = new Color(0, 0, 0, 0.7f);
+        var bdImg = backdrop.AddComponent<Image>();
+        bdImg.color = new Color(0, 0, 0, 0.7f);
+        bdImg.raycastTarget = true;   // 뒤 UGUI 입력 차단 (명시)
 
         // 패널 크기 560×480 → 672×576 (+20%)
         var panel = NewRectCenter("Modal", root.transform, new Vector2(672, 576));
@@ -567,6 +568,22 @@ public static class CurrencyUIPrefabCreator
         rt.anchorMax = Vector2.one;
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
+    }
+
+    /// <summary>
+    /// 모달 root에 정렬 오버라이드 Canvas + GraphicRaycaster 추가.
+    /// 메인 캔버스(100)보다 높은 sortingOrder로 뒤 UI 입력을 백드롭이 확실히 차단.
+    /// ⚠️ overrideSorting은 SerializedObject로 설정 — 직접 프로퍼티(canvas.overrideSorting=true)는
+    ///    SaveAsPrefabAsset 후 false로 저장되는 Unity 직렬화 quirk 있음(실증됨).
+    /// </summary>
+    private static void AddOverlayCanvas(GameObject root, int sortingOrder)
+    {
+        var canvas = root.AddComponent<Canvas>();
+        var so = new SerializedObject(canvas);
+        so.FindProperty("m_OverrideSorting").boolValue = true;
+        so.FindProperty("m_SortingOrder").intValue = sortingOrder;
+        so.ApplyModifiedProperties();
+        root.AddComponent<GraphicRaycaster>();
     }
 
     private static Text MakeText(Transform parent, string text,

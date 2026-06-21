@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// 배팅 화면 장식 고양이 1마리. Animator 미사용 — 코드로 스프라이트 시트 프레임 순환.
@@ -39,7 +40,19 @@ public class CatController : MonoBehaviour
         }
     }
 
-    private void OnMouseDown() => OnClicked?.Invoke();
+    private void OnMouseDown()
+    {
+        // UI(모달 백드롭 등)가 포인터 위면 월드 클릭 무시 — UGUI를 뚫지 않도록
+        // (TitleSceneManager.IsPointerOverUI 와 동일 패턴: null 가드 + 마우스 + 터치)
+        var es = EventSystem.current;
+        if (es != null)
+        {
+            if (es.IsPointerOverGameObject()) return;                           // 마우스(pointerId=-1)
+            if (Input.touchCount > 0 &&
+                es.IsPointerOverGameObject(Input.GetTouch(0).fingerId)) return; // 터치
+        }
+        OnClicked?.Invoke();
+    }
 
     /// <summary>SetActive(true) 시 area가 있으면 자동 배회 재개 (풀링 대응).</summary>
     private void OnEnable() { if (area != null) BeginWander(area); }
