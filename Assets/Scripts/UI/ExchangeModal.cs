@@ -49,6 +49,12 @@ public class ExchangeModal : MonoBehaviour
             exchangeButton.onClick.AddListener(OnExchangeClicked);
         if (closeButton != null)
             closeButton.onClick.AddListener(Hide);
+        // 백드롭 클릭 = 닫기 (모달 밖 영역 클릭 시 닫기)
+        if (backdrop != null)
+        {
+            var bdBtn = backdrop.GetComponent<Button>() ?? backdrop.AddComponent<Button>();
+            bdBtn.onClick.AddListener(Hide);
+        }
 
         if (WalletManager.Instance != null)
             WalletManager.Instance.OnExchangeStateChanged += RefreshUI;
@@ -60,6 +66,11 @@ public class ExchangeModal : MonoBehaviour
             exchangeButton.onClick.RemoveAllListeners();
         if (closeButton != null)
             closeButton.onClick.RemoveAllListeners();
+        if (backdrop != null)
+        {
+            var bdBtn = backdrop.GetComponent<Button>();
+            if (bdBtn != null) bdBtn.onClick.RemoveAllListeners();
+        }
 
         if (WalletManager.Instance != null)
             WalletManager.Instance.OnExchangeStateChanged -= RefreshUI;
