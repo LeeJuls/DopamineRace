@@ -112,6 +112,10 @@ public class WaterDropDecor : MonoBehaviour
         containerRT.offsetMin       = Vector2.zero;
         containerRT.offsetMax       = Vector2.zero;
 
+        // HorizontalLayoutGroup / VerticalLayoutGroup 부모에서 레이아웃 대상에서 제외
+        LayoutElement le = container.AddComponent<LayoutElement>();
+        le.ignoreLayout = true;
+
         // 방울 생성
         for (int i = 0; i < count; i++)
         {
