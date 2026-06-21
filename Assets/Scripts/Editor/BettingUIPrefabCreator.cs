@@ -223,7 +223,7 @@ public static class BettingUIPrefabCreator
             ttRt.offsetMax = Vector2.zero;
             Text tabText = tabTextObj.AddComponent<Text>();
             tabText.text = tabName.Replace("Tab_", "");
-            tabText.fontSize = 35;
+            tabText.fontSize = 13;
             tabText.alignment = TextAnchor.MiddleCenter;
             tabText.color = Color.white;
             if (font != null) tabText.font = font;
@@ -327,7 +327,7 @@ public static class BettingUIPrefabCreator
         GameObject trackInfoPanel = MkChild(root, "TrackInfoPanel",
             0.01f, 0.01f, 0.75f, 0.11f, Vector2.zero, Vector2.zero);
         Image trackBg = trackInfoPanel.AddComponent<Image>();
-        trackBg.color = Color.white;
+        trackBg.color = new Color(0.1f, 0.1f, 0.15f, 0.85f);
 
         HorizontalLayoutGroup trackLayout = trackInfoPanel.AddComponent<HorizontalLayoutGroup>();
         trackLayout.spacing = 15;
@@ -357,35 +357,27 @@ public static class BettingUIPrefabCreator
         toggleText.text = "◀ 닫기";
         toggleText.fontSize = 12;
         toggleText.alignment = TextAnchor.MiddleCenter;
-        toggleText.color = new Color(0.2f, 0.3f, 0.55f);
+        toggleText.color = new Color(0.5f, 0.6f, 0.8f);
         if (font != null) toggleText.font = font;
 
         MkTextObjLayout(trackInfoPanel, "TotalRoundLabel", font, 14,
-            new Color(0.15f, 0.15f, 0.2f), 160);
+            new Color(0.9f, 0.9f, 0.9f), 160);
         MkTextObjLayout(trackInfoPanel, "TrackNameLabel", font, 14,
-            new Color(0.1f, 0.2f, 0.45f), 120);
+            new Color(0.8f, 0.9f, 1f), 120);
         MkTextObjLayout(trackInfoPanel, "DistanceLabel", font, 14,
-            new Color(0.15f, 0.3f, 0.15f), 130);
+            new Color(0.7f, 0.8f, 0.7f), 130);
         MkTextObjLayout(trackInfoPanel, "TrackTypeLabel", font, 14,
-            new Color(0.35f, 0.2f, 0.1f), 80);
+            new Color(0.8f, 0.7f, 0.6f), 80);
 
         // Phase 2: 트랙 설명 라벨 — 맨 오른쪽 (flexibleWidth로 남은 공간 차지)
         GameObject trackDescObj = MkTextObjLayout(trackInfoPanel, "TrackDescLabel", font, 13,
-            new Color(0.15f, 0.25f, 0.35f), 0);
+            new Color(0.7f, 0.8f, 0.9f), 0);
         LayoutElement descLE = trackDescObj.GetComponent<LayoutElement>();
         descLE.flexibleWidth = 1; // 남은 공간 전부 사용
         Text descText = trackDescObj.GetComponent<Text>();
         descText.horizontalOverflow = HorizontalWrapMode.Wrap;    // 너비 초과 시 줄바꿈
         descText.verticalOverflow   = VerticalWrapMode.Overflow;  // 줄바꿈된 내용 잘리지 않도록
         descText.alignment          = TextAnchor.MiddleLeft;
-
-        // 물방울 장식 — TrackDescLabel 우측 영역에 은은하게 깔림
-        WaterDropDecor trackDropDecor = trackInfoPanel.AddComponent<WaterDropDecor>();
-        var soWd = new UnityEditor.SerializedObject(trackDropDecor);
-        soWd.FindProperty("dropCount").intValue     = 8;
-        soWd.FindProperty("sizeMin").floatValue     = 5f;
-        soWd.FindProperty("sizeMax").floatValue     = 12f;
-        soWd.ApplyModifiedProperties();
 
         // ════════════════════════════
         //  CharacterInfoPopup (기본 비활성, 4개 레이아웃)
