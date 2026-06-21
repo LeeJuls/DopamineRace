@@ -67,6 +67,7 @@ public partial class RacerController : MonoBehaviour
     public IEnumerator MoveToPosition(Vector3 target, float duration, System.Action onDone)
     {
         Vector3 start = transform.position;
+        if (animator != null) animator.SetTrigger("Run");
         for (float t = 0f; t < duration; t += Time.deltaTime)
         {
             if (duration <= 0f) break;
