@@ -221,35 +221,51 @@ public static class CurrencyUIPrefabCreator
         var bdImg = backdrop.AddComponent<Image>();
         bdImg.color = new Color(0, 0, 0, 0.7f);
 
-        // 모달 패널
-        var panel = NewRectCenter("Modal", root.transform, new Vector2(640, 580));
-        var panelImg = panel.AddComponent<Image>();
-        panelImg.color = new Color(0.12f, 0.10f, 0.18f, 0.95f);
+        // 모달 패널 (640×580 → 832×754, +30%)
+        var panel = NewRectCenter("Modal", root.transform, new Vector2(832, 754));
 
-        // 제목
+        // 배경 이미지 (BG_01 가이드 패턴)
+        Sprite bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
+            "Assets/Resources/UI/Img_BG_ListSlot_BG_01.png");
+        var panelImg = panel.AddComponent<Image>();
+        panelImg.raycastTarget = false;
+        if (bgSprite != null)
+        {
+            panelImg.sprite     = bgSprite;
+            panelImg.type       = Image.Type.Sliced;
+            panelImg.fillCenter = true;
+            panelImg.color      = Color.white;
+        }
+        else
+        {
+            Debug.LogWarning("[BetAmountModal] Img_BG_ListSlot_BG_01 없음 — 단색 폴백");
+            panelImg.color = new Color(0.12f, 0.10f, 0.18f, 0.95f);
+        }
+
+        // 제목 (fontSize 32→42, offsets ×1.3)
         var title = MakeText(panel.transform, "🎰 배팅액을 정하세요",
             new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -25), new Vector2(0, 75),
-            32, FontStyle.Bold, new Color(1f, 0.85f, 0.4f), TextAnchor.MiddleCenter);
+            new Vector2(0, -33), new Vector2(0, 98),
+            42, FontStyle.Bold, new Color(0.55f, 0.30f, 0.00f), TextAnchor.MiddleCenter);
 
-        // 정보
+        // 정보 (fontSize 22→29, offsets ×1.3, 흰색→다크 계열)
         var betType = MakeText(panel.transform, "종목: 단승",
             new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -125), new Vector2(0, -95),
-            22, FontStyle.Normal, Color.white, TextAnchor.MiddleCenter);
+            new Vector2(0, -163), new Vector2(0, -124),
+            29, FontStyle.Normal, new Color(0.10f, 0.10f, 0.20f), TextAnchor.MiddleCenter);
         var selection = MakeText(panel.transform, "선택: -",
             new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -160), new Vector2(0, -130),
-            22, FontStyle.Normal, Color.white, TextAnchor.MiddleCenter);
+            new Vector2(0, -208), new Vector2(0, -169),
+            29, FontStyle.Normal, new Color(0.10f, 0.10f, 0.20f), TextAnchor.MiddleCenter);
         var odds = MakeText(panel.transform, "배당: 1.1x",
             new Vector2(0, 1), new Vector2(1, 1),
-            new Vector2(0, -195), new Vector2(0, -165),
-            22, FontStyle.Bold, new Color(1f, 0.7f, 0.2f), TextAnchor.MiddleCenter);
+            new Vector2(0, -254), new Vector2(0, -215),
+            29, FontStyle.Bold, new Color(0.55f, 0.30f, 0.00f), TextAnchor.MiddleCenter);
 
-        // 슬라이더
+        // 슬라이더 (offsets ×1.3)
         var sliderObj = NewRect("AmountSlider", panel.transform,
             new Vector2(0.1f, 0.5f), new Vector2(0.6f, 0.5f),
-            new Vector2(0, 15), new Vector2(0, 45));
+            new Vector2(0, 20), new Vector2(0, 59));
         var slider = sliderObj.AddComponent<Slider>();
         slider.minValue = 1; slider.maxValue = 100; slider.wholeNumbers = true; slider.value = 25;
 
@@ -259,7 +275,7 @@ public static class CurrencyUIPrefabCreator
 
         var fillArea = NewRect("FillArea", sliderObj.transform,
             new Vector2(0, 0), new Vector2(1, 1),
-            new Vector2(5, 5), new Vector2(-5, -5));
+            new Vector2(7, 7), new Vector2(-7, -7));
         var fillObj = NewRect("Fill", fillArea.transform,
             Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var fillImg = fillObj.AddComponent<Image>();
@@ -268,65 +284,65 @@ public static class CurrencyUIPrefabCreator
 
         var handleArea = NewRect("HandleArea", sliderObj.transform,
             new Vector2(0, 0), new Vector2(1, 1),
-            new Vector2(10, 0), new Vector2(-10, 0));
+            new Vector2(13, 0), new Vector2(-13, 0));
         var handleObj = new GameObject("Handle");
         handleObj.transform.SetParent(handleArea.transform, false);
         var handleRt = handleObj.AddComponent<RectTransform>();
-        handleRt.sizeDelta = new Vector2(20, 30);
+        handleRt.sizeDelta = new Vector2(26, 39);
         var handleImg = handleObj.AddComponent<Image>();
-        handleImg.color = new Color(1f, 0.85f, 0.4f);
+        handleImg.color = new Color(0.55f, 0.30f, 0.00f);
         slider.handleRect = handleRt;
         slider.targetGraphic = handleImg;
 
-        // InputField
+        // InputField (offsets ×1.3)
         var inputObj = NewRect("AmountInput", panel.transform,
             new Vector2(0.65f, 0.5f), new Vector2(0.9f, 0.5f),
-            new Vector2(0, 10), new Vector2(0, 50));
+            new Vector2(0, 13), new Vector2(0, 65));
         inputObj.AddComponent<Image>().color = new Color(0.2f, 0.2f, 0.25f);
         var input = inputObj.AddComponent<InputField>();
         input.contentType = InputField.ContentType.IntegerNumber;
 
         var inputTextObj = NewRect("Text", inputObj.transform,
-            Vector2.zero, Vector2.one, new Vector2(10, 5), new Vector2(-10, -5));
+            Vector2.zero, Vector2.one, new Vector2(13, 7), new Vector2(-13, -7));
         var inputText = inputTextObj.AddComponent<Text>();
         inputText.text = "25";
-        inputText.color = Color.white;
+        inputText.color = Color.white;   // InputField 배경이 어두우므로 흰색 유지
         inputText.alignment = TextAnchor.MiddleCenter;
-        inputText.fontSize = 24;
+        inputText.fontSize = 31;
         inputText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         input.textComponent = inputText;
 
-        // 빠른 버튼 4개 (-10/-1/+1/+10)
+        // 빠른 버튼 4개 -10/-1/+1/+10 (fontSize 22→29)
         var btnMinus10 = MakeButton(panel.transform, "-10",
-            new Vector2(0.1f, 0.35f), new Vector2(0.275f, 0.42f), new Color(0.4f, 0.4f, 0.5f));
+            new Vector2(0.1f, 0.35f), new Vector2(0.275f, 0.42f), new Color(0.4f, 0.4f, 0.5f), 29);
         var btnMinus1 = MakeButton(panel.transform, "-1",
-            new Vector2(0.295f, 0.35f), new Vector2(0.47f, 0.42f), new Color(0.4f, 0.4f, 0.5f));
+            new Vector2(0.295f, 0.35f), new Vector2(0.47f, 0.42f), new Color(0.4f, 0.4f, 0.5f), 29);
         var btnPlus1 = MakeButton(panel.transform, "+1",
-            new Vector2(0.49f, 0.35f), new Vector2(0.665f, 0.42f), new Color(0.4f, 0.4f, 0.5f));
+            new Vector2(0.49f, 0.35f), new Vector2(0.665f, 0.42f), new Color(0.4f, 0.4f, 0.5f), 29);
         var btnPlus10 = MakeButton(panel.transform, "+10",
-            new Vector2(0.685f, 0.35f), new Vector2(0.86f, 0.42f), new Color(0.4f, 0.4f, 0.5f));
+            new Vector2(0.685f, 0.35f), new Vector2(0.86f, 0.42f), new Color(0.4f, 0.4f, 0.5f), 29);
 
-        // 미리보기
+        // 미리보기 (fontSize 22→29, 밝은 색→다크 계열)
         var previewWin = MakeText(panel.transform, "적중 시: +0 🟦 (+0 💎)",
             new Vector2(0, 0.22f), new Vector2(1, 0.28f),
             Vector2.zero, Vector2.zero,
-            22, FontStyle.Bold, new Color(0.4f, 1f, 0.4f), TextAnchor.MiddleCenter);
+            29, FontStyle.Bold, new Color(0.00f, 0.45f, 0.00f), TextAnchor.MiddleCenter);
         var previewLose = MakeText(panel.transform, "실패 시: -0 🟦",
             new Vector2(0, 0.16f), new Vector2(1, 0.22f),
             Vector2.zero, Vector2.zero,
-            22, FontStyle.Normal, new Color(1f, 0.5f, 0.5f), TextAnchor.MiddleCenter);
+            29, FontStyle.Normal, new Color(0.65f, 0.00f, 0.00f), TextAnchor.MiddleCenter);
 
-        // 에러 텍스트
+        // 에러 텍스트 (fontSize 18→23)
         var errorTxt = MakeText(panel.transform, "",
             new Vector2(0, 0.10f), new Vector2(1, 0.15f),
             Vector2.zero, Vector2.zero,
-            18, FontStyle.Normal, new Color(1f, 0.4f, 0.4f), TextAnchor.MiddleCenter);
+            23, FontStyle.Normal, new Color(0.70f, 0.00f, 0.00f), TextAnchor.MiddleCenter);
 
-        // 취소·확정 버튼
+        // 취소·확정 버튼 (fontSize 22→29)
         var btnCancel = MakeButton(panel.transform, "취소",
-            new Vector2(0.1f, 0.03f), new Vector2(0.45f, 0.10f), new Color(0.3f, 0.3f, 0.35f));
+            new Vector2(0.1f, 0.03f), new Vector2(0.45f, 0.10f), new Color(0.3f, 0.3f, 0.35f), 29);
         var btnConfirm = MakeButton(panel.transform, "배팅 확정 →",
-            new Vector2(0.55f, 0.03f), new Vector2(0.9f, 0.10f), new Color(0.3f, 0.6f, 0.3f));
+            new Vector2(0.55f, 0.03f), new Vector2(0.9f, 0.10f), new Color(0.3f, 0.6f, 0.3f), 29);
 
         // 컴포넌트 연결
         var modal = root.AddComponent<BetAmountModal>();
