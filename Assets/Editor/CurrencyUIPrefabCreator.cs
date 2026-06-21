@@ -215,6 +215,14 @@ public static class CurrencyUIPrefabCreator
         var rootRt = root.AddComponent<RectTransform>();
         SetFullStretch(rootRt);
 
+        // 다른 UI보다 항상 위에 그려지도록 정렬 오버라이드
+        var rootCanvas = root.AddComponent<Canvas>();
+        var canvasSO = new SerializedObject(rootCanvas);
+        canvasSO.FindProperty("m_OverrideSorting").boolValue = true;
+        canvasSO.FindProperty("m_SortingOrder").intValue = 100;
+        canvasSO.ApplyModifiedProperties();
+        root.AddComponent<GraphicRaycaster>();
+
         // 백드롭
         var backdrop = NewRect("Backdrop", root.transform,
             Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
