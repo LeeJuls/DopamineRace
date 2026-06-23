@@ -91,7 +91,8 @@ public static class DopamineBuilder
         foreach (string src in Directory.GetFiles(buildDir, "*", SearchOption.AllDirectories))
         {
             string rel = src.Substring(buildDir.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            if (rel.IndexOf("BurstDebugInformation_DoNotShip", StringComparison.OrdinalIgnoreCase) >= 0) continue;
+            if (rel.IndexOf("DoNotShip", StringComparison.OrdinalIgnoreCase) >= 0) continue;              // *_BurstDebugInformation_DoNotShip
+            if (rel.IndexOf("DontShipItWithYourGame", StringComparison.OrdinalIgnoreCase) >= 0) continue;  // *_BackUpThisFolder_ButDontShipItWithYourGame (IL2CPP 심볼)
             if (rel.EndsWith(".mac", StringComparison.OrdinalIgnoreCase)) continue;
             if (rel.EndsWith(".pdb", StringComparison.OrdinalIgnoreCase)) continue;
             string dst = Path.Combine(steamContent, rel);
