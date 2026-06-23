@@ -71,10 +71,11 @@ crashlytics-build.properties
 /[Rr]ecordings/
 # Screenshots (로컬 캡처, 불필요)
 /[Aa]ssets/[Ss]creenshots/
-# Claude Code 설정 (로컬 전용, agents/·skills/는 공유)
+# Claude Code 설정 (로컬 전용, agents/·skills/·settings.json(공유 deny)는 공유)
 .claude/*
 !.claude/agents/
 !.claude/skills/
+!.claude/settings.json
 # Scripts 폴더 안에 생성된 Claude Code 설정도 무시
 Assets/Scripts/.claude/
 

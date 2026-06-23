@@ -77,6 +77,22 @@ public class ScoreManager : MonoBehaviour
         TotalRounds = PlayerPrefs.GetInt("DopamineRace_TotalRounds", 0);
         TotalWins = PlayerPrefs.GetInt("DopamineRace_TotalWins", 0);
 
+        // 누적 통계 무결성 검증 (SPEC-044 Phase E). MAC 없으면 fresh/legacy → grace.
+        string savedStatsMac = PlayerPrefs.GetString("DopamineRace_StatsMAC", "");
+        if (!string.IsNullOrEmpty(savedStatsMac))
+        {
+            if (!CryptoSign.ConstantTimeEquals(StatsMac(TotalScore, TotalRounds, TotalWins), savedStatsMac))
+            {
+                Debug.LogWarning("[ScoreManager] 누적 통계 무결성 실패 — 변조 의심, 0으로 리셋");
+                TotalScore = 0; TotalRounds = 0; TotalWins = 0;
+                SaveCumulativeStats();
+            }
+        }
+        else if (TotalScore != 0 || TotalRounds != 0 || TotalWins != 0)
+        {
+            SaveCumulativeStats(); // 레거시(MAC 없는 기존 통계) 보존 + MAC 부여(grace)
+        }
+
         // ★ 세이브 버전 체크 (v3→v4: 거리별 최근순위 독립 저장)
         const int SAVE_VERSION = 4;
         int savedVersion = PlayerPrefs.GetInt("DopamineRace_SaveVersion", 1);
@@ -402,7 +418,16 @@ public class ScoreManager : MonoBehaviour
         PlayerPrefs.SetInt("DopamineRace_TotalScore", TotalScore);
         PlayerPrefs.SetInt("DopamineRace_TotalRounds", TotalRounds);
         PlayerPrefs.SetInt("DopamineRace_TotalWins", TotalWins);
+        PlayerPrefs.SetString("DopamineRace_StatsMAC", StatsMac(TotalScore, TotalRounds, TotalWins)); // SPEC-044 Phase E
         PlayerPrefs.Save();
+    }
+
+    /// <summary>누적 통계 무결성 MAC (localKey 기반). 정준결합: score|rounds|wins (InvariantCulture).</summary>
+    private static string StatsMac(int score, int rounds, int wins)
+    {
+        var ic = System.Globalization.CultureInfo.InvariantCulture;
+        string canonical = score.ToString(ic) + "|" + rounds.ToString(ic) + "|" + wins.ToString(ic);
+        return CryptoSign.HmacHex(canonical, CryptoSign.LocalKey);
     }
 
     private void SaveCharRecords()

@@ -16,9 +16,16 @@ public class WalletManager : MonoBehaviour
 
     private const int INITIAL_JELLY = 100;
 
+    // 젤리·스톤: 메모리 난독화(SecureInt) — Cheat Engine 평문 스캔 방어 (SPEC-044 Phase D).
+    // 직렬화 안 됨(런타임 휘발). WalletManager는 런타임 AddComponent라 씬 직렬값 없음.
+    private SecureInt _jelly;
+    private SecureInt _stone;
+
     [Header("디버그 표시 (런타임 전용)")]
-    [SerializeField] private int _jelly;
-    [SerializeField] private int _stone;
+#if UNITY_EDITOR
+    [SerializeField] private int _jellyDisplay;   // _jelly 미러 (권위값 아님 — 표시 전용)
+    [SerializeField] private int _stoneDisplay;   // _stone 미러 (권위값 아님 — 표시 전용)
+#endif
     [SerializeField] private int _currentExchangeRate;
     [SerializeField] private bool _rescuedThisRound;       // 구제: 라운드당 1회
     [SerializeField] private int  _catPowerUsesThisGame;   // 고양이의 힘: 게임당 N회 카운터
@@ -75,7 +82,23 @@ public class WalletManager : MonoBehaviour
         _currentExchangeRate = EXCHANGE_RATE_MIN;
         _rescuedThisRound = false;
         _catPowerUsesThisGame = 0;
+#if UNITY_EDITOR
+        SyncDisplay();
+#endif
     }
+
+    /// <summary>OnChanged 발생 + (에디터) 인스펙터 미러 동기화 단일화. 빌드에선 OnChanged만 남음.</summary>
+    private void RaiseChanged()
+    {
+#if UNITY_EDITOR
+        SyncDisplay();
+#endif
+        OnChanged?.Invoke();
+    }
+
+#if UNITY_EDITOR
+    private void SyncDisplay() { _jellyDisplay = _jelly; _stoneDisplay = _stone; }
+#endif
 
     /// <summary>
     /// 새 게임 시작 시 호출 — 젤리 100 / 스톤은 GameSettings.startingStone(기본 0)로 리셋.
@@ -88,7 +111,7 @@ public class WalletManager : MonoBehaviour
         _rescuedThisRound = false;
         _catPowerUsesThisGame = 0;          // 게임 단위 — 고양이의 힘 횟수 리셋
         Debug.Log($"[Wallet] ResetForNewGame → Jelly={_jelly} Stone={_stone}");
-        OnChanged?.Invoke();
+        RaiseChanged();
         OnExchangeStateChanged?.Invoke();
     }
 
@@ -159,7 +182,7 @@ public class WalletManager : MonoBehaviour
         _catPowerUsesThisGame++;
 
         Debug.Log($"[Wallet] 고양이의 힘 [전부] -{stoneCost}💎 → +{jellyGain}🟦 (Jelly={_jelly} Stone={_stone}, {_catPowerUsesThisGame}/{MaxCatPowerUses})");
-        OnChanged?.Invoke();
+        RaiseChanged();
         OnExchangeStateChanged?.Invoke();
         return true;
     }
@@ -190,7 +213,7 @@ public class WalletManager : MonoBehaviour
         _rescuedThisRound = true;
 
         Debug.Log($"[Wallet] 구제 -{stoneCost}💎 → +1🟦 (Jelly={_jelly} Stone={_stone})");
-        OnChanged?.Invoke();
+        RaiseChanged();
         OnExchangeStateChanged?.Invoke();
         return true;
     }
@@ -222,7 +245,7 @@ public class WalletManager : MonoBehaviour
     {
         _stone = 0;
         Debug.Log($"[Wallet] ResetStoneOnly → Stone={_stone}");
-        OnChanged?.Invoke();
+        RaiseChanged();
     }
 
     /// <summary>
@@ -244,7 +267,7 @@ public class WalletManager : MonoBehaviour
 
         _jelly -= amount;
         Debug.Log($"[Wallet] Bet {amount} → Jelly={_jelly}");
-        OnChanged?.Invoke();
+        RaiseChanged();
         return true;
     }
 
@@ -264,7 +287,7 @@ public class WalletManager : MonoBehaviour
         _jelly += jellyGain;
         _stone += stoneGain;
         Debug.Log($"[Wallet] Reward +{jellyGain}J +{stoneGain}S → Jelly={_jelly} Stone={_stone}");
-        OnChanged?.Invoke();
+        RaiseChanged();
     }
 
     /// <summary>
@@ -276,7 +299,7 @@ public class WalletManager : MonoBehaviour
         _jelly = Mathf.Max(0, jelly);
         _stone = Mathf.Max(0, stone);
         Debug.Log($"[Wallet] DebugSet → Jelly={_jelly} Stone={_stone}");
-        OnChanged?.Invoke();
+        RaiseChanged();
     }
 
     /// <summary>디버그용 — 환전 비율/플래그 강제 설정 (테스트 시나리오용)</summary>

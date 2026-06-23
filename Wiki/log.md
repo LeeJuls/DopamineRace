@@ -39,3 +39,5 @@
 - **[UPDATE]** SPEC 인덱스 — spec044 보안 그룹 추가
 - **[UPDATE]** 개발 타임라인 — his048 보안 운영화 마일스톤
 - **[UPDATE]** 주요 결정사항 — 치팅 방어 전략 + 시크릿 git 금지 결정 추가
+- **[INGEST]** 보안 하드닝 구현 (`시스템/보안_치팅방어.md` 방어 레이어 구현현황 갱신) ← his049 (SecureInt·저장HMAC·.claude deny)
+- **[UPDATE]** 개발 타임라인 — his049 보안 하드닝 구현 마일스톤

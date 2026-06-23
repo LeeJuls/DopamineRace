@@ -38,6 +38,19 @@ public static class LeaderboardData
         get { return Path.Combine(Application.persistentDataPath, FILE_NAME); }
     }
 
+    // 무결성 MAC 사이드카 (SPEC-044 Phase E) — 스키마/서버계약 불변 위해 JSON 외부 파일로 분리.
+    private static string MacPath
+    {
+        get { return FilePath + ".mac"; }
+    }
+
+    /// <summary>json을 쓰고 localKey HMAC 사이드카(.mac)도 함께 기록.</summary>
+    private static void WriteWithMac(string json)
+    {
+        File.WriteAllText(FilePath, json);
+        File.WriteAllText(MacPath, CryptoSign.HmacHex(json, CryptoSign.LocalKey));
+    }
+
     /// <summary>
     /// 게임 결과 저장 (점수 높은 순 정렬, 100개 초과 시 최하위 삭제)
     /// </summary>
@@ -64,7 +77,7 @@ public static class LeaderboardData
             data.entries.RemoveRange(MAX_ENTRIES, data.entries.Count - MAX_ENTRIES);
 
         string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(FilePath, json);
+        WriteWithMac(json);
 
         Debug.Log("[리더보드] 저장 완료! " + score + "점 (총 " + data.entries.Count + "개 기록)");
     }
@@ -80,6 +93,25 @@ public static class LeaderboardData
         try
         {
             string json = File.ReadAllText(FilePath);
+
+            // 무결성 검증 (MAC 사이드카). 변조 시 캐시 무시 — 단, 서버 제출 점수와 무관(로컬 표시 전용).
+            if (File.Exists(MacPath))
+            {
+                string actual = File.ReadAllText(MacPath);
+                string expected = CryptoSign.HmacHex(json, CryptoSign.LocalKey);
+                if (!CryptoSign.ConstantTimeEquals(expected, actual))
+                {
+                    Debug.LogWarning("[리더보드] 무결성 검증 실패 — 변조 의심, 로컬 캐시 무시");
+                    return new LeaderboardSaveData();
+                }
+            }
+            else
+            {
+                // 레거시(MAC 없음): 기존 기록 보존 — 1회 수용 후 MAC 부여(grace).
+                WriteWithMac(json);
+                Debug.Log("[리더보드] 레거시 캐시 → MAC 부여 (grace)");
+            }
+
             var data = JsonUtility.FromJson<LeaderboardSaveData>(json);
             return data ?? new LeaderboardSaveData();
         }
@@ -138,7 +170,7 @@ public static class LeaderboardData
 
         try
         {
-            File.WriteAllText(FilePath, JsonUtility.ToJson(data, true));
+            WriteWithMac(JsonUtility.ToJson(data, true));
         }
         catch (Exception e)
         {
@@ -153,6 +185,8 @@ public static class LeaderboardData
     {
         if (File.Exists(FilePath))
             File.Delete(FilePath);
+        if (File.Exists(MacPath))
+            File.Delete(MacPath);
         Debug.Log("[리더보드] 전체 삭제");
     }
 }

@@ -1,0 +1,22 @@
+{
+  "//": "공유 보안 정책 (전 PC 상속). deny > allow 우선 — allow 재누적 방어막. SPEC-044 Phase A.",
+  "//2": "프롬프트로 충분한 것(git push·node·unity execute·PowerShell 툴)은 deny 제외 — 정당 사용 보존.",
+  "permissions": {
+    "deny": [
+      "Bash(powershell:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(pwsh:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(reg delete:*)",
+      "Bash(reg add:*)",
+      "mcp__Windows-MCP__PowerShell",
+      "mcp__Desktop_Commander__start_process",
+      "mcp__Desktop_Commander__interact_with_process",
+      "mcp__Desktop_Commander__kill_process",
+      "mcp__Desktop_Commander__force_terminate"
+    ]
+  }
+}
