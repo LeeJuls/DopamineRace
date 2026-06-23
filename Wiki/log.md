@@ -39,5 +39,11 @@
 - **[UPDATE]** SPEC 인덱스 — spec044 보안 그룹 추가
 - **[UPDATE]** 개발 타임라인 — his048 보안 운영화 마일스톤
 - **[UPDATE]** 주요 결정사항 — 치팅 방어 전략 + 시크릿 git 금지 결정 추가
+- **[INGEST]** 빌드 & 배포 페이지 생성 (`도파민 프로젝트/워크플로우/빌드_배포.md`) ← SPEC-045, his050 (IL2CPP·[MenuItem]·Steam)
+- **[UPDATE]** SCHEMA §4 태그분류법 워크플로우에 `빌드`·`배포` 추가
+- **[UPDATE]** Index.md 워크플로우 — 빌드_배포 링크
+- **[UPDATE]** 에이전트 가이드 — `director`·`build` 추가 (10→12개)
+- **[UPDATE]** SPEC 인덱스 — spec045 빌드/배포 그룹 + spec023
+- **[UPDATE]** 개발 타임라인 — his050 빌드 자동화 마일스톤
 - **[INGEST]** 보안 하드닝 구현 (`시스템/보안_치팅방어.md` 방어 레이어 구현현황 갱신) ← his049 (SecureInt·저장HMAC·.claude deny)
 - **[UPDATE]** 개발 타임라인 — his049 보안 하드닝 구현 마일스톤

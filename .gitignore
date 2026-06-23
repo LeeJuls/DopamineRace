@@ -9,6 +9,9 @@
 # (*.txt 로도 제외되지만 명시적 이중화)
 *.local.txt
 server/leaderboard-worker/SECRETS.local.txt
+# Steam 배포 (로컬 전용 — App ID 노출/무결성 사이드카 누수 방지. Builds/ 는 위 Unity 폴더 규칙으로 이미 제외)
+steam_appid.txt
+*.mac
 # wrangler 로컬 캐시/상태
 .wrangler/
 node_modules/
