@@ -182,6 +182,7 @@ public class WalletManager : MonoBehaviour
         _catPowerUsesThisGame++;
 
         Debug.Log($"[Wallet] 고양이의 힘 [전부] -{stoneCost}💎 → +{jellyGain}🟦 (Jelly={_jelly} Stone={_stone}, {_catPowerUsesThisGame}/{MaxCatPowerUses})");
+        SteamAchievements.Unlock(SteamAchievements.CatPower);   // [Steam] 고양이의 힘 첫 사용
         RaiseChanged();
         OnExchangeStateChanged?.Invoke();
         return true;
@@ -213,6 +214,7 @@ public class WalletManager : MonoBehaviour
         _rescuedThisRound = true;
 
         Debug.Log($"[Wallet] 구제 -{stoneCost}💎 → +1🟦 (Jelly={_jelly} Stone={_stone})");
+        SteamAchievements.Unlock(SteamAchievements.Rescue);   // [Steam] 구제(파산 직전 생존)
         RaiseChanged();
         OnExchangeStateChanged?.Invoke();
         return true;
@@ -287,6 +289,7 @@ public class WalletManager : MonoBehaviour
         _jelly += jellyGain;
         _stone += stoneGain;
         Debug.Log($"[Wallet] Reward +{jellyGain}J +{stoneGain}S → Jelly={_jelly} Stone={_stone}");
+        if (_jelly >= 1000) SteamAchievements.Unlock(SteamAchievements.Rich);   // [Steam] 젤리 1000+ 보유 도달
         RaiseChanged();
     }
 

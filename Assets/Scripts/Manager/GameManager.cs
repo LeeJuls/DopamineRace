@@ -208,6 +208,14 @@ public class GameManager : MonoBehaviour
             PlayerPrefs.DeleteKey(PREF_LAST_ROUND);
             PlayerPrefs.DeleteKey(PREF_LAST_TRACK);
             PlayerPrefs.Save();
+
+            // [Steam] 전 라운드 완주
+            SteamAchievements.Unlock(SteamAchievements.FullClear);
+        }
+        if (s == GameState.GameOver)
+        {
+            // [Steam] 첫 파산 경험
+            SteamAchievements.Unlock(SteamAchievements.GameOver);
         }
         // STEP8: GameOver 저장도 SceneBootstrapper 이름 입력 흐름으로 이관 (자동저장 제거)
         OnStateChanged?.Invoke(s);
@@ -245,6 +253,10 @@ public class GameManager : MonoBehaviour
         Debug.Log("═══ Round " + CurrentRound + "/" + TotalRounds
             + " | " + CurrentRoundLaps + "바퀴 | 트랙: " + trackName
             + " | " + BettingCalculator.GetTypeName(CurrentBet.type) + " 배팅 ═══");
+
+        // [Steam] 첫 배팅으로 레이스 시작
+        SteamAchievements.Unlock(SteamAchievements.FirstBet);
+
         ChangeState(GameState.Countdown);
     }
 
@@ -272,6 +284,12 @@ public class GameManager : MonoBehaviour
                 WalletManager.Instance.Reward(reward.jelly, reward.stone);
                 LastRoundStoneGain = reward.stone;  // SPEC-035: 결과 화면 표시용
                 Debug.Log($"[Wallet] 적중 보상: +{reward.jelly}🟦 +{reward.stone}💎 (베팅 {CurrentBet.betAmount} × 배당)");
+
+                // [Steam] 적중 관련 도전과제
+                SteamAchievements.Unlock(SteamAchievements.FirstWin);
+                if (CurrentBet.type == BetType.Exacta) SteamAchievements.Unlock(SteamAchievements.ExactaHit);
+                if (CurrentBet.type == BetType.Trio)   SteamAchievements.Unlock(SteamAchievements.TrioHit);
+                if (reward.jelly >= 500)               SteamAchievements.Unlock(SteamAchievements.BigWin);
             }
             else
             {
