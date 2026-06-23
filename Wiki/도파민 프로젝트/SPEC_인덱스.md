@@ -1,10 +1,10 @@
 ---
-title: SPEC 인덱스 (spec001~040)
+title: SPEC 인덱스 (spec001~044)
 created: 2026-06-21
-updated: 2026-06-21
+updated: 2026-06-24
 type: summary
 tags: [SPEC, 인덱스]
-related: [[히스토리/개발_타임라인]]
+related: [[히스토리/개발_타임라인]], [[시스템/보안_치팅방어]]
 sources: [Docs/specs/]
 confidence: high
 ---
@@ -103,9 +103,18 @@ confidence: high
 
 ---
 
+## 보안 (spec044)
+
+| SPEC | 제목 | 상태 |
+|------|------|------|
+| **spec044** | 보안 방어 설계 (안티치트·시크릿·설정 위생) | 🔧 설계 완료 / 구현 DEFERRED |
+
+---
+
 ## 관련 위키 페이지
 
 - [[시스템/V4_레이스_시스템]] ← spec012
 - [[시스템/통화_시스템]] ← spec028
 - [[시스템/글로벌_랭킹]] ← spec028 step04~05
 - [[캐릭터/캐릭터_개요]] ← spec013
+- [[시스템/보안_치팅방어]] ← spec044

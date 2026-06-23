@@ -27,3 +27,15 @@
 - **[INGEST]** SPEC 인덱스 페이지 생성 (`도파민 프로젝트/SPEC_인덱스.md`) ← spec001~040
 - **[LINT]** Nous Research 공식 스펙(v2.1.0) 기준 보완 — `log.md` 추가, 프론트매터 `type`·`confidence`·`sources`·`created` 필드 추가, SCHEMA.md 태그 분류법 보강
 - **[UPDATE]** AutoSci 패턴 도입 — `/wiki-ingest` 스킬 생성 (`.claude/skills/wiki-ingest.md`), `queries/` 폴더 + `_index.md` 추가, SCHEMA Query 규칙 보강
+
+---
+
+## 2026-06-24
+
+- **[INGEST]** 보안 & 치팅 방어 페이지 생성 (`도파민 프로젝트/시스템/보안_치팅방어.md`) ← SPEC-044, his048
+- **[UPDATE]** SCHEMA.md §4 태그 분류법에 `보안` 그룹 추가 (`보안·치팅방어·HMAC·시크릿·무결성`)
+- **[UPDATE]** Index.md — 🔒 보안 섹션 추가
+- **[UPDATE]** 에이전트 가이드 — `security` 에이전트 추가 (`.claude/agents/security.md`)
+- **[UPDATE]** SPEC 인덱스 — spec044 보안 그룹 추가
+- **[UPDATE]** 개발 타임라인 — his048 보안 운영화 마일스톤
+- **[UPDATE]** 주요 결정사항 — 치팅 방어 전략 + 시크릿 git 금지 결정 추가
