@@ -1258,7 +1258,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 12800000, guid: f01374fe9a328e141b1814503b716cef, type: 3}
+    m_Font: {fileID: 12800000, guid: 967a67b8c17c46b4295390c687d1c8a1, type: 3}
     m_FontSize: 24
     m_FontStyle: 0
     m_BestFit: 0
@@ -2472,6 +2472,7 @@ GameObject:
   - component: {fileID: 2996463759901646135}
   - component: {fileID: 32817574289277449}
   - component: {fileID: 7775337222996302711}
+  - component: {fileID: 4253327764785341622}
   m_Layer: 0
   m_Name: Illustration
   m_TagString: Untagged
@@ -2550,6 +2551,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.AspectRatioFitter
   m_AspectMode: 2
   m_AspectRatio: 1
+--- !u!114 &4253327764785341622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4140503627875648552}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0c685089589bb245b8950b4a5a662d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IllustrationFloatAnim
+  floatAmplitude: 6
+  floatPeriod: 3.2
+  breathAmplitude: 0.018
+  breathPeriod: 4
 --- !u!1 &4147548842914283619
 GameObject:
   m_ObjectHideFlags: 0

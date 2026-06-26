@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: GameSettings
   m_EditorClassIdentifier: Assembly-CSharp::GameSettings
   racerCount: 9
-  roundLaps: 02000000
-  roundTracks: 04000000000000000000000000000000
+  roundLaps: 020000000300000004000000050000000600000007000000
+  roundTracks: 010000000200000003000000050000000400000000000000
   payoutWin: 8
   payoutPlace: 3
   payoutQuinella: 31
@@ -107,6 +107,8 @@ MonoBehaviour:
   exchangeModalPrefab: {fileID: 1364091916340533889, guid: b67c5d2d9c4edc046a7f4194c4f11786,
     type: 3}
   trackBarLerpSpeed: 12
+  startingStone: 0
+  catPowerUsesPerGame: 1
   enableRoundResume: 0
   pathDeviation: 0.3
   characterScale: 1.2
