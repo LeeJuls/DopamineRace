@@ -8,24 +8,23 @@
 - 커밋: `[C]`=Claude `[L]`=오너 `[UI]`=디자이너 (병기 가능: `[C][DOC]`)
 - push는 명시 요청 시에만
 
-## 위키
-- 경로: `D:/Project/Dopamine/DopamineProject/`
+## 위키 (메인 저장소)
+- 경로: `Wiki/` (레포 내)
 - **세션 시작 시** SCHEMA.md → Index.md → log.md(최근 20줄) 순서로 읽어 현재 위키 상태 파악
 - SPEC/히스토리 완료 후 `/wiki-ingest` 실행하여 위키 반영
 - 재활용 가치 있는 Q&A는 `queries/` 에 저장
 
 ## 에이전트
-`.claude/agents/` — leader(PM) · balance(수치) · client(Unity) · qa(검증) · design(UX/UI) · marketing(Steam)
+`.claude/agents/` — leader(PM) · balance(수치) · client(Unity) · qa(검증) · design(UX/UI) · marketing(Steam) · security(보안) · build(빌드) · director(오케스트레이션) · setting(세계관) · scenario(시나리오)
 
 ## 다국어
-- `Resources/Data/StringTable.csv` — 8개 언어 (ko·en·jp·cn·de·es·br·tw) — cn=간체, tw=번체(繁體, SPEC-048)
-- 중국어 폰트: `Resources/Fonts/fusion-pixel-*-zh_hans/hant.ttf` (Fusion Pixel, OFL). `GameSettings.chineseSimplifiedFont`(cn)·`chineseTraditionalFont`(tw)로 지정, `FontHelper`가 라우팅. 그 외 언어는 PFstardust
-- **모든 문자열 하드코딩 절대 금지** — UI·로그·에러·툴팁·버튼·모달 등 사용자에게 노출되는 문자열은 예외 없이 StringTable.csv에 키 발급 후 `Loc.Get("str.xxx")` 사용
-- **키 발급 규칙**: `str.{영역}.{기능}.{항목}` 형식 (예: `str.bet.modal.title`, `str.exchange.btn.close`)
+- `Resources/Data/StringTable.csv` — 8개 언어 (ko·en·jp·cn·de·es·br·tw) — cn=간체, tw=번체(SPEC-048)
+- **모든 문자열 하드코딩 절대 금지** — 사용자에게 노출되는 문자열은 예외 없이 StringTable.csv에 키 발급 후 `Loc.Get("str.xxx")` 사용
+- **키 발급 규칙**: `str.{영역}.{기능}.{항목}` 형식 (예: `str.bet.modal.title`)
 - **커밋 금지 조건**: 코드에 새 문자열 추가 시 StringTable.csv 키 미발급 상태로 커밋 불가
 - **검증**: `DopamineRace > Validate StringTable Keys` — 커밋 전 실행, 누락 키 0 확인 필수
-- 서수+접미사 라벨은 포맷 키 재활용 (예: `str.bet.label.rank_bet`="{0} 배팅" + 기존 `first`/`second`)
-- 간접 참조(동적 키 조합 `$"str.char.{id}.name"`) 사용 시 해당 범위 키 일괄 발급 확인
+- 서수+접미사 라벨은 포맷 키 재활용 | 간접 참조(`$"str.char.{id}.name"`) 시 해당 범위 키 일괄 발급 확인
+- 폰트 상세(CJK 라우팅·FontHelper): `Wiki/도파민 프로젝트/시스템/다국어_시스템.md`
 
 ## 주요 클래스
 | 클래스 | 규칙 |
@@ -44,8 +43,7 @@
 - 히스토리: `Docs/history/제목_히스토리_YYYYMMDD.md`
 
 ## MCP
-- Play/Recompile 중 사용 자제 (좀비 프로세스)
-- 새 세션 전: `Get-Process unity-code-mcp-stdio | Stop-Process -Force`
+- Play/Recompile 중 사용 자제 (좀비 프로세스) | 새 세션 전: `Get-Process unity-code-mcp-stdio | Stop-Process -Force`
 - 프리팹 재생성: `DopamineRace > Create Betting UI Prefabs`
 
 ## 디자인 파일
