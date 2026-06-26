@@ -169,6 +169,10 @@ MonoBehaviour:
   attackAnimCooldown: 0.6
   mainFont: {fileID: 12800000, guid: f01374fe9a328e141b1814503b716cef, type: 3}
   koreanFont: {fileID: 12800000, guid: 967a67b8c17c46b4295390c687d1c8a1, type: 3}
+  chineseSimplifiedFont: {fileID: 12800000, guid: 923198ca463ead04abad54380aa085c7,
+    type: 3}
+  chineseTraditionalFont: {fileID: 12800000, guid: d7c6771370b5e334ab8b250156095881,
+    type: 3}
   uiFontScale: 1
   enableRaceDebug: 0
   v4Settings: {fileID: 11400000, guid: 834170f72f494a6fa50c0bc9d7edfbe8, type: 2}

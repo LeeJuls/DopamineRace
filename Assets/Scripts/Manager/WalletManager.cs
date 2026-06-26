@@ -67,6 +67,10 @@ public class WalletManager : MonoBehaviour
     private const int EXCHANGE_RATE_MIN = 2;
     private const int EXCHANGE_RATE_MAX = 10;
 
+    // SPEC-047: ACH_RICH 해금 임계값 — 누적 보유 스톤 기준.
+    // 신경제(젤리 소멸)에서 스톤이 더 빨리 쌓이므로 기존 젤리 1000 → 스톤 3000으로 재조정.
+    private const int RICH_STONE_THRESHOLD = 3000;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -274,22 +278,21 @@ public class WalletManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 적중 보상 — 젤리·스톤 동시 가산.
+    /// 적중 보상 — 스톤만 가산 (SPEC-047: 젤리는 배팅 시 소멸, 적중해도 반환 안 함).
     /// 0 또는 음수 입력은 무시.
     /// </summary>
-    public void Reward(int jellyGain, int stoneGain)
+    public void Reward(int stoneGain)
     {
-        if (jellyGain < 0 || stoneGain < 0)
+        if (stoneGain < 0)
         {
-            Debug.LogWarning($"[Wallet] Reward 음수 무시: jelly={jellyGain} stone={stoneGain}");
+            Debug.LogWarning($"[Wallet] Reward 음수 무시: stone={stoneGain}");
             return;
         }
-        if (jellyGain == 0 && stoneGain == 0) return;
+        if (stoneGain == 0) return;
 
-        _jelly += jellyGain;
         _stone += stoneGain;
-        Debug.Log($"[Wallet] Reward +{jellyGain}J +{stoneGain}S → Jelly={_jelly} Stone={_stone}");
-        if (_jelly >= 1000) SteamAchievements.Unlock(SteamAchievements.Rich);   // [Steam] 젤리 1000+ 보유 도달
+        Debug.Log($"[Wallet] Reward +{stoneGain}S → Jelly={_jelly} Stone={_stone}");
+        if (_stone >= RICH_STONE_THRESHOLD) SteamAchievements.Unlock(SteamAchievements.Rich);   // [Steam] 누적 스톤 도달 (SPEC-047)
         RaiseChanged();
     }
 

@@ -25,8 +25,8 @@ public static class SteamAchievements
     public const string FirstWin  = "ACH_FIRST_WIN";   // 첫 적중
     public const string ExactaHit = "ACH_EXACTA_HIT";  // 쌍승 적중
     public const string TrioHit   = "ACH_TRIO_HIT";    // 삼복승 적중
-    public const string BigWin    = "ACH_BIG_WIN";     // 한 라운드 젤리 500+ 획득
-    public const string Rich      = "ACH_RICH";        // 젤리 1000+ 보유 도달
+    public const string BigWin    = "ACH_BIG_WIN";     // 한 라운드 스톤 500+ 획득 (SPEC-047)
+    public const string Rich      = "ACH_RICH";        // 누적 스톤 3000+ 보유 도달 (SPEC-047)
     public const string CatPower  = "ACH_CAT_POWER";   // 고양이의 힘 첫 사용
     public const string Rescue    = "ACH_RESCUE";      // 구제(파산 직전 생존)
     public const string FullClear = "ACH_FULL_CLEAR";  // 전 라운드 완주

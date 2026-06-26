@@ -18,7 +18,8 @@
 `.claude/agents/` — leader(PM) · balance(수치) · client(Unity) · qa(검증) · design(UX/UI) · marketing(Steam)
 
 ## 다국어
-- `Resources/Data/StringTable.csv` — 7개 언어 (ko·en·ja·zh_CN·de·es·br)
+- `Resources/Data/StringTable.csv` — 8개 언어 (ko·en·jp·cn·de·es·br·tw) — cn=간체, tw=번체(繁體, SPEC-048)
+- 중국어 폰트: `Resources/Fonts/fusion-pixel-*-zh_hans/hant.ttf` (Fusion Pixel, OFL). `GameSettings.chineseSimplifiedFont`(cn)·`chineseTraditionalFont`(tw)로 지정, `FontHelper`가 라우팅. 그 외 언어는 PFstardust
 - **모든 문자열 하드코딩 절대 금지** — UI·로그·에러·툴팁·버튼·모달 등 사용자에게 노출되는 문자열은 예외 없이 StringTable.csv에 키 발급 후 `Loc.Get("str.xxx")` 사용
 - **키 발급 규칙**: `str.{영역}.{기능}.{항목}` 형식 (예: `str.bet.modal.title`, `str.exchange.btn.close`)
 - **커밋 금지 조건**: 코드에 새 문자열 추가 시 StringTable.csv 키 미발급 상태로 커밋 불가

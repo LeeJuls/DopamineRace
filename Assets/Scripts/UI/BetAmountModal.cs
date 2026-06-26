@@ -224,19 +224,18 @@ public class BetAmountModal : MonoBehaviour
         UpdateConfirmButtonState();
     }
 
-    // Step 2.9: 미리보기 — 적중·실패 시 결과 (Mathf.CeilToInt)
+    // Step 2.9 → SPEC-047: 미리보기. 젤리는 배팅 시 소멸 → 적중 보상은 스톤만.
     private void RefreshPreview()
     {
         if (_currentBet == null) return;
 
-        // 적중 시: 받는 젤리 = ceil(amount × odds), 받는 스톤 = amount
-        int jellyGain = Mathf.CeilToInt(_amount * Mathf.Max(1.1f, _currentOdds));
-        int netJelly = jellyGain - _amount;   // 순이익 표시
-        int stoneGain = _amount;
+        // 적중 시 받는 스톤 = ceil(amount × odds) — 실제 보상(CalculateReward)과 동일.
+        // 젤리는 배팅 시 차감되어 적중해도 반환되지 않으므로 젤리 순이익 표시 제거.
+        int stoneGain = Mathf.CeilToInt(_amount * Mathf.Max(1.1f, _currentOdds));
 
         if (previewWinText != null)
             previewWinText.text = SafeLoc("str.bet.modal.preview.win",
-                "적중 시: +{0} 🟦 (+{1} 💎)", netJelly, stoneGain);
+                "적중 시: +{0} 💎", stoneGain);
 
         if (previewLoseText != null)
             previewLoseText.text = SafeLoc("str.bet.modal.preview.lose",

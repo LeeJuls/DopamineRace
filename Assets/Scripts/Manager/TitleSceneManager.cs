@@ -29,9 +29,9 @@ public class TitleSceneManager : MonoBehaviour
     private float blinkTimer = 0f;
     private TitleCharacterRunner characterRunner;
 
-    // 언어 드롭다운
-    private string[] langCodes = { "br", "es", "de", "cn", "en", "jp", "ko" };
-    private string[] langDisplayCodes = { "BR", "ES", "DE", "CN", "EN", "JP", "KR" };
+    // 언어 드롭다운 (cn=간체, tw=번체 인접 배치 — SPEC-048)
+    private string[] langCodes = { "br", "es", "de", "cn", "tw", "en", "jp", "ko" };
+    private string[] langDisplayCodes = { "BR", "ES", "DE", "CN", "TW", "EN", "JP", "KR" };
     private GameObject langOverlay;
     private GameObject langDropdownPanel;
     private Text langMainText;

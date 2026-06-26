@@ -15,16 +15,16 @@ public enum BetType
 }
 
 /// <summary>
-/// 적중 보상 결과 (SPEC-028 Step 1.4).
-/// hit=true면 jelly·stone 둘 다 양수, hit=false면 둘 다 0.
+/// 적중 보상 결과 (SPEC-028 Step 1.4 → SPEC-047 개정).
+/// SPEC-047: 젤리는 배팅 시점(TryBet)에 소모되고 적중해도 반환되지 않음 → 보상은 스톤만.
+/// hit=true면 stone 양수, hit=false면 stone=0.
 /// </summary>
 public struct BetReward
 {
-    public int jelly;   // 적중 시 받는 젤리 = Mathf.CeilToInt(betAmount × 배당)
-    public int stone;   // 적중 시 받는 스톤 = betAmount × 1
+    public int stone;   // 적중 시 받는 스톤 = Mathf.CeilToInt(betAmount × 배당)  (SPEC-047)
     public bool hit;    // 적중 여부
 
-    public static BetReward Miss => new BetReward { jelly = 0, stone = 0, hit = false };
+    public static BetReward Miss => new BetReward { stone = 0, hit = false };
 }
 
 /// <summary>
@@ -177,9 +177,9 @@ public static class BettingCalculator
     }
 
     /// <summary>
-    /// SPEC-028 통화 시스템 보상 계산 (Step 1.4).
-    /// 적중 시: 젤리 = Mathf.CeilToInt(betAmount × 배당), 스톤 = betAmount × 1
-    /// 빗나감 시: 젤리/스톤 모두 0
+    /// 통화 시스템 보상 계산 (SPEC-028 Step 1.4 → SPEC-047 개정).
+    /// 적중 시: 스톤 = Mathf.CeilToInt(betAmount × 배당). 젤리는 보상으로 반환하지 않음(배팅 시 이미 소멸).
+    /// 빗나감 시: 스톤 0 (젤리는 TryBet 시점에 베팅액만 차감됨 — 여기선 추가 차감 없음).
     ///
     /// 배당 최소값 1.1 보장은 OddsCalculator.CalcComboOdds 내부 클램프에 의존 (Step 1.6).
     /// 실제 배당은 OddsCalculator.CalcPayout(bet, rankings, racers)을 통해 계산.
@@ -206,13 +206,12 @@ public static class BettingCalculator
         odds = Mathf.Max(1.1f, odds);
 
         // Mathf.CeilToInt: 소수점이 있으면 정수로 올림 (33×1.1=36.3 → 37)
-        int jellyGain = Mathf.CeilToInt(betAmount * odds);
-        // SPEC-035: 스톤 = 배율 보상 (베팅젤리 × 배당). odds는 캐릭터 인기도+베팅타입 난이도 포함.
-        int stoneGain = jellyGain;
+        // SPEC-047: 스톤 = 배율 보상 (베팅젤리 × 배당). odds는 캐릭터 인기도+베팅타입 난이도 포함.
+        // 젤리는 배팅 시 소멸 → 보상 반환 없음.
+        int stoneGain = Mathf.CeilToInt(betAmount * odds);
 
         return new BetReward
         {
-            jelly = jellyGain,
             stone = stoneGain,
             hit = true
         };

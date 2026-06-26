@@ -15,16 +15,17 @@ public static class Loc
     private static bool isLoaded = false;
 
     // 언어 컬럼 인덱스 매핑
-    // CSV 헤더: UID(0), ko(1), en(2), jp(3), cn(4), de(5), es(6), br(7)
+    // CSV 헤더: UID(0), ko(1), en(2), jp(3), cn(4), de(5), es(6), br(7), tw(8)
+    // cn=간체(简体), tw=번체(繁體, 대만) — SPEC-048
     private static readonly Dictionary<string, int> langIndex = new Dictionary<string, int>
     {
         { "ko", 1 }, { "en", 2 }, { "jp", 3 },
-        { "cn", 4 }, { "de", 5 }, { "es", 6 }, { "br", 7 }
+        { "cn", 4 }, { "de", 5 }, { "es", 6 }, { "br", 7 }, { "tw", 8 }
     };
 
     /// <summary>
     /// 언어 설정 + CSV 로드. 런타임에서 언어 전환 시 호출.
-    /// lang: "ko" | "en" | "jp" | "cn" | "de" | "es" | "br"
+    /// lang: "ko" | "en" | "jp" | "cn" | "de" | "es" | "br" | "tw"
     /// </summary>
     public static void SetLang(string lang)
     {
@@ -64,8 +65,9 @@ public static class Loc
                 return "jp";
             case SystemLanguage.Chinese:
             case SystemLanguage.ChineseSimplified:
+                return "cn";   // 간체
             case SystemLanguage.ChineseTraditional:
-                return "cn";
+                return "tw";   // 번체(대만) — SPEC-048
             case SystemLanguage.German:
                 return "de";
             case SystemLanguage.Spanish:

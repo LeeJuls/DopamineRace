@@ -30,7 +30,7 @@ public class GameManager : MonoBehaviour
     // ═══ 배팅 시스템 ═══
     public BetInfo CurrentBet { get; private set; }
 
-    /// <summary>이번 라운드 도파민 스톤 획득량 (적중=betAmount, 미적중·비통화=0). 결과 화면 표시용 (SPEC-035)</summary>
+    /// <summary>이번 라운드 도파민 스톤 획득량 (적중=ceil(betAmount×배당), 미적중·비통화=0). 결과 화면 표시용 (SPEC-047)</summary>
     public int LastRoundStoneGain { get; private set; }
 
     private void Awake()
@@ -281,15 +281,15 @@ public class GameManager : MonoBehaviour
             BetReward reward = BettingCalculator.CalculateReward(CurrentBet, rankingIndices, CurrentBet.betAmount);
             if (reward.hit)
             {
-                WalletManager.Instance.Reward(reward.jelly, reward.stone);
-                LastRoundStoneGain = reward.stone;  // SPEC-035: 결과 화면 표시용
-                Debug.Log($"[Wallet] 적중 보상: +{reward.jelly}🟦 +{reward.stone}💎 (베팅 {CurrentBet.betAmount} × 배당)");
+                WalletManager.Instance.Reward(reward.stone);   // SPEC-047: 스톤만 지급 (젤리는 배팅 시 소멸)
+                LastRoundStoneGain = reward.stone;  // 결과 화면 표시용
+                Debug.Log($"[Wallet] 적중 보상: +{reward.stone}💎 (베팅 {CurrentBet.betAmount}🟦 소멸, × 배당)");
 
                 // [Steam] 적중 관련 도전과제
                 SteamAchievements.Unlock(SteamAchievements.FirstWin);
                 if (CurrentBet.type == BetType.Exacta) SteamAchievements.Unlock(SteamAchievements.ExactaHit);
                 if (CurrentBet.type == BetType.Trio)   SteamAchievements.Unlock(SteamAchievements.TrioHit);
-                if (reward.jelly >= 500)               SteamAchievements.Unlock(SteamAchievements.BigWin);
+                if (reward.stone >= 500)               SteamAchievements.Unlock(SteamAchievements.BigWin);  // SPEC-047: 한 라운드 스톤 500+
             }
             else
             {

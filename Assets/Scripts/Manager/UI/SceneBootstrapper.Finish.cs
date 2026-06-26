@@ -214,10 +214,10 @@ public partial class SceneBootstrapper
             finishRoundDetailText.supportRichText = true;
         }
 
-        // 5) 최종 보유 젤리
+        // 5) 총 보유 도파민 스톤 (SPEC-047: 젤리는 소멸성 연료라 최종 표시는 스톤으로 통일)
         if (finishFinalJellyText != null && wallet != null)
             finishFinalJellyText.text = SafeLocFor("str.finish.final_jelly",
-                "최종 보유: 🟦 {0}", wallet.Jelly);
+                "총 보유 도파민 스톤: 💎 {0}", wallet.Stone);
 
         // 스크롤 맨 위로 리셋 (Canvas 레이아웃 갱신 후)
         if (finishScrollRect != null)

@@ -475,6 +475,12 @@ public partial class GameSettings : ScriptableObject
     [Tooltip("한글 전용 폰트 (메인 폰트에 한글이 없을 경우)\n비워두면 메인 폰트 사용")]
     public Font koreanFont;
 
+    [Tooltip("중국어 간체(cn) 전용 폰트 (메인 폰트에 중국어 글리프 없음)\n비워두면 메인 폰트 사용 (SPEC-048)")]
+    public Font chineseSimplifiedFont;
+
+    [Tooltip("중국어 번체(tw) 전용 폰트\n비워두면 메인 폰트 사용 (SPEC-048)")]
+    public Font chineseTraditionalFont;
+
     [Tooltip("UI 폰트 크기 배율\n도트 폰트가 기존보다 넓을 때 줄이기 (Neo둥근모: 0.65 권장)")]
     [Range(0.3f, 2.0f)]
     public float uiFontScale = 1.0f;

@@ -57,13 +57,40 @@ public static class FontHelper
     //  폰트 조회
     // ═══════════════════════════════════════
 
+    // SPEC-048: 중국어 전용 CJK 폰트. 1순위 GameSettings 지정 폰트, 2순위 Resources 기본(Fusion Pixel), 없으면 mainFont.
+    private static Font _cnFallback, _twFallback;
+    private const string CN_FONT_PATH = "Fonts/fusion-pixel-12px-proportional-zh_hans";
+    private const string TW_FONT_PATH = "Fonts/fusion-pixel-12px-proportional-zh_hant";
+
+    /// <summary>중국어(cn=간체, tw=번체) 폰트: GameSettings 지정값 우선, 없으면 Resources 기본 폰트. 둘 다 없으면 null.</summary>
+    private static Font GetChineseFont(GameSettings gs, bool traditional)
+    {
+        Font assigned = traditional ? gs.chineseTraditionalFont : gs.chineseSimplifiedFont;
+        if (assigned != null) return assigned;
+
+        // GameSettings 미지정 시 Resources 기본 폰트로 폴백 (캐시)
+        if (traditional)
+        {
+            if (_twFallback == null) _twFallback = Resources.Load<Font>(TW_FONT_PATH);
+            return _twFallback;
+        }
+        if (_cnFallback == null) _cnFallback = Resources.Load<Font>(CN_FONT_PATH);
+        return _cnFallback;
+    }
+
     /// <summary>
-    /// GameSettings.mainFont 반환. null이면 null (호출자가 fallback 처리).
+    /// 현재 언어 기준 메인 폰트 반환. null이면 null (호출자가 fallback 처리).
+    /// SPEC-048: cn/tw는 전용 CJK 폰트(GameSettings 지정 우선), 그 외는 GameSettings.mainFont.
     /// </summary>
     public static Font GetMainFont()
     {
         var gs = GameSettings.Instance;
-        return (gs != null) ? gs.mainFont : null;
+        if (gs == null) return null;
+
+        string lang = Loc.CurrentLang;
+        if (lang == "cn") { var f = GetChineseFont(gs, false); if (f != null) return f; }
+        if (lang == "tw") { var f = GetChineseFont(gs, true);  if (f != null) return f; }
+        return gs.mainFont;
     }
 
     /// <summary>
@@ -78,7 +105,7 @@ public static class FontHelper
         if (gs.koreanFont != null && !string.IsNullOrEmpty(text) && ContainsKorean(text))
             return gs.koreanFont;
 
-        return gs.mainFont;
+        return GetMainFont();   // SPEC-048: cn/tw CJK 폰트 라우팅
     }
 
     /// <summary>
@@ -94,7 +121,7 @@ public static class FontHelper
         if (Loc.CurrentLang == "ko" && gs.koreanFont != null)
             return gs.koreanFont;
 
-        return gs.mainFont;
+        return GetMainFont();   // SPEC-048: cn/tw CJK 폰트 라우팅
     }
 
     /// <summary>
