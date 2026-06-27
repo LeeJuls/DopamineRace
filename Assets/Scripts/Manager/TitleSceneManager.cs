@@ -457,7 +457,9 @@ public class TitleSceneManager : MonoBehaviour
 
         float scale = Mathf.Max(camW / sprW, camH / sprH);
         go.transform.localScale = new Vector3(scale, scale, 1f);
-        go.transform.position = Vector3.zero;
+        // 하단 정렬: 스프라이트 하단을 카메라 하단에 맞춰 상단(하늘)이 잘리게 → 바닥/나무·캐릭터 보존
+        float spriteH = sprH * scale;
+        go.transform.position = new Vector3(0f, (spriteH - camH) * 0.5f, 0f);
     }
 
     // ══════════════════════════════════════
