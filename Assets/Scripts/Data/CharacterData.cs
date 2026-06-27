@@ -70,6 +70,11 @@ public class CharacterData
 
     public SkillData skillData;                    // 파싱된 스킬 데이터
 
+    // ─── 런타임 캐시 (직렬화 제외) ───
+    // LoadIllustration()의 Sprite.Create 결과를 charId(=인스턴스) 단위로 1회만 생성.
+    // 반복 호출 시 동일 Sprite 재사용 → Sprite 누수 방지.
+    [System.NonSerialized] private Sprite _illustrationCache;
+
     public GameObject LoadPrefab()
     {
         if (string.IsNullOrEmpty(charResourcePrefabs)) return null;
@@ -96,10 +101,16 @@ public class CharacterData
     }
 
     /// <summary>
-    /// 일러스트 스프라이트 로드 (charIllustration 경로 사용, 없으면 LoadIcon() 대체)
+    /// 일러스트 스프라이트 로드 (charIllustration 경로 사용, 없으면 LoadIcon() 대체). 메인 스레드 전용.
+    /// Sprite.Create 결과를 인스턴스(=charId) 단위로 1회만 생성 → 반복 호출 시 동일 Sprite 재사용(누수 방지).
     /// </summary>
     public Sprite LoadIllustration()
     {
+        // 캐시 히트 — Sprite와 underlying texture 둘 다 살아있어야 유효.
+        // (Unity 오버로드 !=: 언로드/도메인리로드로 파괴되면 null 취급 → 자동 재생성, texture 좀비 NRE 차단)
+        if (_illustrationCache != null && _illustrationCache.texture != null)
+            return _illustrationCache;
+
         if (!string.IsNullOrEmpty(charIllustration))
         {
             string path = charIllustration.Replace('\\', '/');
@@ -108,10 +119,13 @@ public class CharacterData
             // Texture2D로 로드 → 전체 이미지를 Sprite로 생성 (spriteMode=Multiple 대응)
             Texture2D tex = Resources.Load<Texture2D>(path);
             if (tex != null)
-                return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+            {
+                _illustrationCache = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
                     new Vector2(0.5f, 0.5f));
+                return _illustrationCache;
+            }
         }
-        return LoadIcon();
+        return LoadIcon(); // Resources.Load<Sprite> — 엔진 캐시, 메모이즈 불필요(폴백 캐시 시 stale 위험만 증가)
     }
 
     public bool HasIconFile()
