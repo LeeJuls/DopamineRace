@@ -43,6 +43,10 @@ public class CharacterDataV4
     public string charPassive;          // 원본 문자열 (예: "P_LastRank:HpHeal:0.10:30")
     public PassiveSkillData passiveData; // 파싱 결과
 
+    // ─── 런타임 캐시 (직렬화 제외) ───
+    // LoadIllustration() Sprite.Create 메모이즈 — CharacterData와 동일 정책(누수 방지).
+    [System.NonSerialized] private Sprite _illustrationCache;
+
     // ─── Computed Properties ───
 
     /// <summary>표시 이름 (로컬라이즈)</summary>
@@ -167,15 +171,25 @@ public class CharacterDataV4
         return null;
     }
 
+    /// <summary>
+    /// 일러스트 스프라이트 로드 (메모이즈, 메인 스레드 전용). CharacterData.LoadIllustration()과 동일 정책.
+    /// </summary>
     public Sprite LoadIllustration()
     {
+        // 캐시 히트 — Sprite·underlying texture 둘 다 살아있어야 유효(texture 좀비 NRE 차단)
+        if (_illustrationCache != null && _illustrationCache.texture != null)
+            return _illustrationCache;
+
         if (!string.IsNullOrEmpty(charIllustration))
         {
             string path = charIllustration.Replace('\\', '/');
             if (path.EndsWith(".png")) path = path.Substring(0, path.Length - 4);
             Texture2D tex = Resources.Load<Texture2D>(path);
             if (tex != null)
-                return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+            {
+                _illustrationCache = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+                return _illustrationCache;
+            }
         }
         return LoadIcon();
     }
