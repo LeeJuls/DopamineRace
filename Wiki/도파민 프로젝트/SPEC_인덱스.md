@@ -124,7 +124,7 @@ confidence: high
 
 | SPEC | 제목 | 상태 |
 |------|------|------|
-| **spec046** | 스팀 도전과제 기본 10종 스캐폴드 + 다국어 VDF | ✅ 완료 — 10개 언어 VDF Steamworks Publish (2026-06-27) |
+| **spec046** | 스팀 도전과제 기본 10종 스캐폴드 + 다국어 VDF | ✅ **연동 완성** — Steamworks.NET 2025.163.0 임포트 + DR_STEAM(Standalone) + `ACH_FIRST_BET` 실증 (2026-06-27) |
 
 ---
 
@@ -145,3 +145,4 @@ confidence: high
 - [[캐릭터/캐릭터_개요]] ← spec013
 - [[시스템/보안_치팅방어]] ← spec044
 - [[시스템/다국어_시스템]] ← SPEC-048
+- [[시스템/스팀_도전과제]] ← spec046
