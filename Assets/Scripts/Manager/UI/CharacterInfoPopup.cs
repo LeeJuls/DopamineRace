@@ -48,6 +48,11 @@ public class CharacterInfoPopup : MonoBehaviour
     private Coroutine showCoroutine;
     private Vector2 targetPosition;
 
+    // ═══ 라이브 포트레이트 (SPEC-049) ═══
+    private CharacterVideoController videoController;   // SPEC-049 라이브 포트레이트
+    private Coroutine _pngFadeCo;                        // PNG 크로스페이드아웃 핸들
+    private const float PNG_FADE_SEC = 0.18f;            // CharacterVideoController.FADE_SEC와 일치
+
     // 코루틴 전달용 (Show → ShowSequence)
     private CharacterData pendingData;
     private CharacterRecord pendingRecord;
@@ -123,6 +128,17 @@ public class CharacterInfoPopup : MonoBehaviour
             {
                 illustration = illustObj.GetComponent<Image>();
                 illustrationFitter = illustObj.GetComponent<AspectRatioFitter>();
+            }
+
+            // IllustrationVideo (SPEC-049) — RawImage 노드에 비디오 컨트롤러 부착
+            Transform videoObj = layout2Left.Find("IllustrationMask/IllustrationVideo");
+            if (videoObj != null)
+            {
+                videoController = videoObj.GetComponent<CharacterVideoController>();
+                if (videoController == null)
+                    videoController = videoObj.gameObject.AddComponent<CharacterVideoController>();
+                videoController.OnPrepared += HandleVideoPrepared;
+                videoController.OnFallback += HandleVideoFallback;
             }
 
             Transform storyObj = layout2Left.Find("StoryIconBtn");
@@ -203,14 +219,16 @@ public class CharacterInfoPopup : MonoBehaviour
             charTypeLabel.color = data.GetTypeColor();
         }
 
-        // 2) 일러스트
+        // 2) 일러스트 (PNG) — 비디오 prepare 동안 항상 먼저 노출
+        StopPngFade();
         if (illustration != null)
         {
+            illustration.enabled = true;            // 이전 페이드아웃 복구
             Sprite spr = data.LoadIllustration();
             if (spr != null)
             {
                 illustration.sprite = spr;
-                illustration.color = Color.white;
+                illustration.color = Color.white;   // alpha=1 복구
                 // 원본 비율로 AspectRatioFitter 갱신 → 높이에 맞춰 가로 자동 결정
                 if (illustrationFitter != null)
                     illustrationFitter.aspectRatio = spr.texture.width / (float)spr.texture.height;
@@ -219,6 +237,13 @@ public class CharacterInfoPopup : MonoBehaviour
             {
                 illustration.color = new Color(0.3f, 0.3f, 0.3f);
             }
+        }
+
+        // 2-b) 라이브 비디오 시도 (SPEC-049). 성공 시 OnPrepared에서 PNG 크로스페이드아웃.
+        if (videoController != null)
+        {
+            videoController.StopAndRelease();         // 이전 캐릭터 비디오 정리(charId 전환 가드)
+            videoController.TryPlayForCharacter(data); // false면 비디오 없음 → PNG 유지
         }
 
         // 3) 승률
@@ -325,8 +350,76 @@ public class CharacterInfoPopup : MonoBehaviour
             StopCoroutine(showCoroutine);
             showCoroutine = null;
         }
+        StopPngFade();
+        if (videoController != null) videoController.StopAndRelease();
+        RestorePngVisible();           // 다음 Show 위해 PNG 가시 복구
         currentCharId = null;
         gameObject.SetActive(false);
+    }
+
+    // ═══ 라이브 포트레이트 콜백 (SPEC-049) ═══
+
+    // 비디오 prepare 완료 → PNG 크로스페이드아웃 (비디오는 컨트롤러가 페이드인)
+    private void HandleVideoPrepared(float aspect)
+    {
+        StopPngFade();
+        if (isActiveAndEnabled && illustration != null)
+            _pngFadeCo = StartCoroutine(FadePngOut());
+        else if (illustration != null)
+            illustration.enabled = false;   // 비활성 상태면 즉시 숨김
+    }
+
+    // 비디오 실패/타임아웃 → PNG 유지(복구)
+    private void HandleVideoFallback()
+    {
+        StopPngFade();
+        RestorePngVisible();
+    }
+
+    private IEnumerator FadePngOut()
+    {
+        if (illustration == null) { _pngFadeCo = null; yield break; }
+        Color c = illustration.color;
+        float t = 0f;
+        while (t < PNG_FADE_SEC)
+        {
+            t += Time.unscaledDeltaTime;
+            c.a = Mathf.Lerp(1f, 0f, t / PNG_FADE_SEC);
+            illustration.color = c;
+            yield return null;
+        }
+        c.a = 0f; illustration.color = c;
+        illustration.enabled = false;   // 페이드 끝 → 완전 숨김(렌더 비용 절감)
+        _pngFadeCo = null;
+    }
+
+    private void StopPngFade()
+    {
+        if (_pngFadeCo != null) { StopCoroutine(_pngFadeCo); _pngFadeCo = null; }
+    }
+
+    private void RestorePngVisible()
+    {
+        if (illustration == null) return;
+        illustration.enabled = true;
+        var c = illustration.color; c.a = 1f; illustration.color = c;
+    }
+
+    // ═══ 누수 가드 (SPEC-049) ═══
+
+    private void OnDisable()
+    {
+        StopPngFade();
+        if (videoController != null) videoController.StopAndRelease();
+    }
+
+    private void OnDestroy()
+    {
+        if (videoController != null)
+        {
+            videoController.OnPrepared -= HandleVideoPrepared;
+            videoController.OnFallback -= HandleVideoFallback;
+        }
     }
 
     /// <summary>
