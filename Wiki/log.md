@@ -13,6 +13,7 @@
 - **[UPDATE]** Index.md — 게임 시스템에 라이브 포트레이트 링크(🔄) 추가
 - **[UPDATE]** 라이브 포트레이트 (`시스템/라이브_포트레이트.md`) — 단계 E ✅ 반영(트랜스코드 H264·무음). **알려진 이슈 정정**: `Color primaries 0` 경고는 트랜스코드로 제거 안 됨(Unity 변환본도 메타 없음)→무해 수용, 근본 제거는 ffmpeg bt709 주입 필요 ← SPEC-049 단계 E
 - **[INGEST]** 라이브포트레이트_히스토리_20260628 → 라이브_포트레이트(A~G 완료·F 검증·히스토리 source 추가)·SPEC인덱스(SPEC-049 ✅)·개발타임라인(완성 마일스톤·다음예정 정리) 갱신. SPEC-049 구현 완료(빌드 스모크만 owner 잔여) ← Docs/history/라이브포트레이트_히스토리_20260628.md
+- **[UPDATE]** 라이브_포트레이트 "알려진 이슈" — **Color primaries 경고 근본 해소(후속)** 반영: 6개 mp4 SPS VUI bt709 무손실 주입(ffmpeg h264_metadata bsf) + 트랜스코드 OFF. WMF는 SPS VUI만 읽음(colr atom 무시). owner Play 경고 0 검증 ← Docs/plans/colorprimaries_fps_재인코딩_20260628.md
 
 ---
 

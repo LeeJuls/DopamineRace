@@ -69,4 +69,60 @@ public static class CharacterVideoTranscoder
         AssetDatabase.Refresh();
         Debug.Log($"[Transcode] 완료: 성공 {success}/{total} (멱등 skip {skipped})");
     }
+
+    /// <summary>
+    /// SPEC-049 후속 — 트랜스코드 OFF. 8개 mp4를 원본(색공간 메타 수정본) 직접 재생 모드로 전환.
+    /// 근거: Unity 트랜스코드 출력은 H264 SPS VUI에 color primaries를 넣지 않아
+    /// "Color primaries 0" 경고가 잔존한다. 원본 SPS VUI가 bt709이므로(ffmpeg h264_metadata 주입)
+    /// 트랜스코드를 끄고 원본을 직접 재생하면 WMF가 bt709를 읽어 경고가 사라진다.
+    /// importAudio=false(무음)는 유지. 멱등.
+    /// </summary>
+    [MenuItem("DopamineRace/Disable Transcode (SPEC-049 후속)")]
+    public static void DisableTranscode()
+    {
+        int total = CharIds.Length;
+        int done = 0;
+        int skipped = 0;
+
+        for (int i = 0; i < total; i++)
+        {
+            string path = $"{VideoDir}Character_{CharIds[i]}.mp4";
+
+            if (AssetDatabase.LoadAssetAtPath<VideoClip>(path) == null)
+            {
+                Debug.LogWarning($"[Transcode-OFF] 파일 없음 → skip: {path}");
+                continue;
+            }
+
+            var imp = AssetImporter.GetAtPath(path) as VideoClipImporter;
+            if (imp == null)
+            {
+                Debug.LogWarning($"[Transcode-OFF] VideoClipImporter 취득 실패 → skip: {path}");
+                continue;
+            }
+
+            var s = imp.defaultTargetSettings;
+
+            // 멱등 가드: 이미 트랜스코드 OFF·무음이면 skip.
+            if (!s.enableTranscoding && !imp.importAudio)
+            {
+                Debug.Log($"[Transcode-OFF] 이미 OFF → skip: Character_{CharIds[i]} ({i + 1}/{total})");
+                skipped++;
+                done++;
+                continue;
+            }
+
+            s.enableTranscoding = false;
+            imp.defaultTargetSettings = s;   // struct 재대입 필수
+            imp.importAudio = false;
+
+            imp.SaveAndReimport();
+
+            done++;
+            Debug.Log($"[Transcode-OFF] Character_{CharIds[i]} OFF ({i + 1}/{total})");
+        }
+
+        AssetDatabase.Refresh();
+        Debug.Log($"[Transcode-OFF] 완료: {done}/{total} (멱등 skip {skipped})");
+    }
 }

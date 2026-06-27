@@ -1,7 +1,7 @@
 ---
 plan: SPEC-049 후속 — Color primaries 경고 근본 제거
 date: 2026-06-28
-status: 확정 (owner 결정 잠금) — 코딩 전 실행 계획
+status: ✅ 실행 완료 (2026-06-28) — owner Play 검증 경고 0
 scope: A (색 메타만·무손실·fps 유지)
 owner_decision: locked
 rollback_tag: pre-color-fix
