@@ -25,9 +25,9 @@ description: 새 SPEC 또는 히스토리 파일을 Obsidian 위키에 자동으
 
 ### Step 0 — 컨텍스트 로딩
 
-1. `D:/Project/Dopamine/DopamineProject/SCHEMA.md` 읽기 — 규칙 파악
-2. `D:/Project/Dopamine/DopamineProject/Index.md` 읽기 — 존재 페이지 확인
-3. `D:/Project/Dopamine/DopamineProject/log.md` 마지막 20줄 읽기 — 최근 작업 확인
+1. `D:/Unity_Project/DopamineRace/Wiki/SCHEMA.md` 읽기 — 규칙 파악
+2. `D:/Unity_Project/DopamineRace/Wiki/Index.md` 읽기 — 존재 페이지 확인
+3. `D:/Unity_Project/DopamineRace/Wiki/log.md` 마지막 20줄 읽기 — 최근 작업 확인
 
 ### Step 1 — 대상 파일 결정
 
@@ -60,7 +60,7 @@ description: 새 SPEC 또는 히스토리 파일을 Obsidian 위키에 자동으
 
 ### Step 4 — SPEC 인덱스 업데이트
 
-`D:/Project/Dopamine/DopamineProject/도파민 프로젝트/SPEC_인덱스.md`
+`D:/Unity_Project/DopamineRace/Wiki/도파민 프로젝트/SPEC_인덱스.md`
 
 SPEC 파일이면: 해당 섹션에 행 추가
 ```
@@ -71,7 +71,7 @@ SPEC 파일이면: 해당 섹션에 행 추가
 
 ### Step 5 — log.md 기록
 
-`D:/Project/Dopamine/DopamineProject/log.md` 맨 위 최신 날짜 섹션에 추가:
+`D:/Unity_Project/DopamineRace/Wiki/log.md` 맨 위 최신 날짜 섹션에 추가:
 
 ```
 - **[INGEST]** spec/his 파일명 → 업데이트된 위키 페이지 목록 ← 출처
