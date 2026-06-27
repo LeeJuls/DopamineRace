@@ -302,7 +302,7 @@ public partial class SceneBootstrapper : MonoBehaviour
         CanvasScaler sc = canvasObj.AddComponent<CanvasScaler>();
         sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         sc.referenceResolution = new Vector2(1920, 1080);
-        sc.matchWidthOrHeight = 0.5f;
+        sc.matchWidthOrHeight = 1.0f;
 
         canvasObj.AddComponent<GraphicRaycaster>();
 

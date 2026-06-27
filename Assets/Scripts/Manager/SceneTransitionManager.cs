@@ -57,16 +57,12 @@ public class SceneTransitionManager : MonoBehaviour
         CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
-        scaler.matchWidthOrHeight = 0.5f;
+        scaler.matchWidthOrHeight = 1.0f;
     }
 
     private void CreateGrid()
     {
         blocks = new Image[TOTAL_BLOCKS];
-
-        // ceil 처리: 빈틈 없이 화면 커버
-        float blockW = Mathf.Ceil(1920f / GRID_COLS);
-        float blockH = Mathf.Ceil(1080f / GRID_ROWS);
 
         for (int i = 0; i < TOTAL_BLOCKS; i++)
         {
@@ -80,11 +76,10 @@ public class SceneTransitionManager : MonoBehaviour
             img.color = Color.black;
 
             RectTransform rt = img.rectTransform;
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.zero;
-            rt.pivot = Vector2.zero;
-            rt.anchoredPosition = new Vector2(col * blockW, row * blockH);
-            rt.sizeDelta = new Vector2(blockW, blockH);
+            rt.anchorMin = new Vector2((float)col / GRID_COLS, (float)row / GRID_ROWS);
+            rt.anchorMax = new Vector2((float)(col + 1) / GRID_COLS, (float)(row + 1) / GRID_ROWS);
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
 
             blocks[i] = img;
         }
