@@ -27,6 +27,13 @@ public class TrackVisualizer : MonoBehaviour
     private const int BG_SORTING_ORDER = -100;
     private static readonly Vector3 BG_POSITION = new Vector3(2.5f, 0f, 0f);
 
+    // 와이드 배경 (trackbg 뒤 풀스크린 — 울트라와이드 측면 파란색 제거)
+    private const int WIDE_BG_SORTING_ORDER = -101;
+    private const string WIDE_BG_RESOURCE = "BG/wide_bg";
+    private GameObject _wideBG;
+    private float _wideBGSprW, _wideBGSprH;
+    private float _lastAspect = -1f;
+
     private void Awake()
     {
         if (Instance != null) { return; }
@@ -35,11 +42,54 @@ public class TrackVisualizer : MonoBehaviour
 
     private void Start()
     {
+        LoadWideBG();
+
         // 아직 트랙이 로드 안 됐으면 fallback 배경 표시
         if (currentBG == null)
         {
             LoadFallbackBackground();
         }
+    }
+
+    private void Update()
+    {
+        ApplyWideBGScale();
+    }
+
+    // 와이드 배경 초기 생성 (씬 진입 1회)
+    private void LoadWideBG()
+    {
+        Texture2D tex = Resources.Load<Texture2D>(WIDE_BG_RESOURCE);
+        if (tex == null) return;
+
+        tex.filterMode = FilterMode.Bilinear;
+        _wideBG = new GameObject("BG_Wide");
+        _wideBG.transform.SetParent(transform);
+        _wideBG.transform.position = BG_POSITION;
+
+        SpriteRenderer sr = _wideBG.AddComponent<SpriteRenderer>();
+        sr.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+            new Vector2(0.5f, 0.5f), BG_PPU);
+        sr.sortingOrder = WIDE_BG_SORTING_ORDER;
+
+        _wideBGSprW = tex.width / BG_PPU;
+        _wideBGSprH = tex.height / BG_PPU;
+        ApplyWideBGScale();
+    }
+
+    // 화면비 변화 시(창 크기 조절 포함) 커버-핏 재계산
+    private void ApplyWideBGScale()
+    {
+        if (_wideBG == null) return;
+        Camera cam = Camera.main;
+        if (cam == null) return;
+        if (Mathf.Approximately(cam.aspect, _lastAspect)) return;
+        _lastAspect = cam.aspect;
+
+        float camH = cam.orthographicSize * 2f;
+        float camW = camH * cam.aspect;
+        float scale = Mathf.Max(camW / _wideBGSprW, camH / _wideBGSprH);
+        _wideBG.transform.localScale = new Vector3(scale, scale, 1f);
     }
 
     // ══════════════════════════════════════
