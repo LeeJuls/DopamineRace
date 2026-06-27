@@ -493,6 +493,20 @@ public static class BettingUIPrefabCreator
         fitter.aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
         fitter.aspectRatio = 1.0f; // 기본값, 런타임에 실제 이미지 비율로 갱신됨
 
+        // IllustrationVideo (SPEC-049 단계C — IllustrationMask 자식, Illustration 위에 렌더)
+        // 전체 재생성 시 비디오 노드 유실 방지. 비디오 재생/컨트롤러 부착은 단계 D 소관.
+        // 주의: 여기 앵커는 생성기 디자이너 조정 전 기본값(Illustration과 동일).
+        //       라이브 프리팹의 실제 레이아웃은 CharacterVideoPrefabPatcher 가 형제 복사로 맞춘다.
+        GameObject illustVideoObj = MkChild(illustMask, "IllustrationVideo",
+            0.5f, 0f, 0.5f, 1f, Vector2.zero, Vector2.zero);
+        RawImage illustVideoRaw = illustVideoObj.AddComponent<RawImage>();
+        illustVideoRaw.enabled = false;       // 프리팹 단계부터 비활성(플래시 방지)
+        illustVideoRaw.raycastTarget = false;
+        illustVideoRaw.color = Color.white;
+        AspectRatioFitter videoFitter = illustVideoObj.AddComponent<AspectRatioFitter>();
+        videoFitter.aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
+        videoFitter.aspectRatio = 1.0f;
+
         // WinRateBg (승률 배경 — 검정 50% 반투명)
         GameObject winRateBg = MkChild(layout2Left, "WinRateBg",
             0.5f, 0.06f, 0.5f, 0.06f, Vector2.zero, new Vector2(160, 28));
