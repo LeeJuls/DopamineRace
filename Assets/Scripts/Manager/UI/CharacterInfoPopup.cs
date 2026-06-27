@@ -239,13 +239,6 @@ public class CharacterInfoPopup : MonoBehaviour
             }
         }
 
-        // 2-b) 라이브 비디오 시도 (SPEC-049). 성공 시 OnPrepared에서 PNG 크로스페이드아웃.
-        if (videoController != null)
-        {
-            videoController.StopAndRelease();         // 이전 캐릭터 비디오 정리(charId 전환 가드)
-            videoController.TryPlayForCharacter(data); // false면 비디오 없음 → PNG 유지
-        }
-
         // 3) 승률
         if (winRateLabel != null)
         {
@@ -332,6 +325,15 @@ public class CharacterInfoPopup : MonoBehaviour
         // 6) 활성화 + 레이아웃 강제 갱신
         gameObject.SetActive(true);
         Canvas.ForceUpdateCanvases();
+
+        // 6-b) 라이브 비디오 시도 (SPEC-049) — 반드시 SetActive(true) 이후.
+        //     VideoPlayer는 비활성 GameObject에서 Prepare 불가("Cannot Prepare a disabled VideoPlayer").
+        //     성공 시 OnPrepared에서 PNG 크로스페이드아웃. false면 비디오 없음 → PNG 유지.
+        if (videoController != null)
+        {
+            videoController.StopAndRelease();         // 이전 캐릭터 비디오 정리(charId 전환 가드)
+            videoController.TryPlayForCharacter(data);
+        }
 
         // 7) 차트 초기화 + 데이터 갱신 + 슬라이드를 코루틴으로 통합
         //    1프레임 대기하여 중첩 stretch RectTransform 크기 확정 보장
