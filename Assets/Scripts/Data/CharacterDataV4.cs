@@ -37,6 +37,7 @@ public class CharacterDataV4
     public WeaponHand charWeapon;
     public string charSkillDesc;
     public string charIllustration;
+    public string charVideo;                       // 비디오 Resources 경로 (SPEC-049, 없으면 PNG 폴백)
     public SkillData skillData;
 
     // ─── 패시브 스킬 (col 19) ───
@@ -96,6 +97,8 @@ public class CharacterDataV4
         // col 18 = char_appearance_rate (기존 위치 유지, CharacterDatabase에서 파싱)
         // col 19 = char_passive (신규, 없으면 None으로 폴백)
         d.charPassive  = cols.Length > 19 ? cols[19].Trim() : "";
+        // char_video (20번) — SPEC-049. 없으면 빈 문자열 → VideoResourcePath null → PNG 폴백
+        d.charVideo    = cols.Length > 20 ? cols[20].Trim() : "";
 
         d.skillData   = ResolveSkill(d.charAbility, d.charAbilityTimeSec);
         d.passiveData = ResolvePassive(d.charPassive);
@@ -169,6 +172,18 @@ public class CharacterDataV4
             if (icon != null) return icon;
         }
         return null;
+    }
+
+    /// <summary>비디오 Resources 경로 (char_video, 확장자 제거). 없으면 null → PNG 폴백. — SPEC-049</summary>
+    public string VideoResourcePath
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(charVideo)) return null;
+            string path = charVideo.Replace('\\', '/');
+            if (path.EndsWith(".mp4")) path = path.Substring(0, path.Length - 4);
+            return path;
+        }
     }
 
     /// <summary>

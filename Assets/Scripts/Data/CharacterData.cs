@@ -60,6 +60,7 @@ public class CharacterData
     public WeaponHand charWeapon;                  // 무기 위치 (L/R/N)
     public string charSkillDesc;                   // 스킬 설명 StringUID
     public string charIllustration;                // 일러스트 Resources 경로
+    public string charVideo;                       // 비디오 Resources 경로 (SPEC-049, 없으면 PNG 폴백)
 
     /// <summary>
     /// 레이스 등장 확률 가중치 (같은 타입 풀 내에서 상대적 비율)
@@ -98,6 +99,18 @@ public class CharacterData
         if (path.EndsWith(".prefab"))
             path = path.Substring(0, path.Length - 7);
         return Resources.Load<GameObject>(path);
+    }
+
+    /// <summary>비디오 Resources 경로 (char_video, 확장자 제거). 없으면 null → PNG(LoadIllustration) 폴백. — SPEC-049</summary>
+    public string VideoResourcePath
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(charVideo)) return null;
+            string path = charVideo.Replace('\\', '/');
+            if (path.EndsWith(".mp4")) path = path.Substring(0, path.Length - 4);
+            return path;
+        }
     }
 
     /// <summary>
@@ -217,6 +230,9 @@ public class CharacterData
         if (cols.Length > 18)
             float.TryParse(cols[18].Trim(), out d.charAppearanceRate);
         if (d.charAppearanceRate <= 0f) d.charAppearanceRate = 10f; // 0 이하 방어
+
+        // char_video (20번) — SPEC-049. 없으면 빈 문자열 → VideoResourcePath null → PNG 폴백
+        d.charVideo = cols.Length > 20 ? cols[20].Trim() : "";
 
         // ★ 스킬 데이터 파싱 (skillKey 또는 인라인 모두 지원)
         d.skillData = ResolveSkill(d.charAbility, d.charAbilityTimeSec);
