@@ -10,7 +10,7 @@
 //       Steamworks.NET .unitypackage 임포트
 //    2. 프로젝트 루트 steam_appid.txt 에 AppID(4532310) 확인 (이미 존재)
 //    3. Player Settings > Scripting Define Symbols 에 `DR_STEAM` 추가
-//    4. 씬에 빈 GameObject 하나 만들고 이 컴포넌트 부착 (또는 부트스트랩에서 보장)
+//    4. 씬 배치 불필요 — RuntimeInitializeOnLoadMethod(Bootstrap)로 자동 생성됨
 // ─────────────────────────────────────────────────────────────────────────────
 
 using UnityEngine;

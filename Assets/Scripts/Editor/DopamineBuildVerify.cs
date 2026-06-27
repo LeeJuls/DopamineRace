@@ -38,6 +38,12 @@ public static class DopamineBuildVerify
         foreach (string p in must)
             if (!File.Exists(p) && !Directory.Exists(p)) { reason = $"필수 누락(IL2CPP 빌드 아님?): {p}"; return false; }
 
+#if DR_STEAM
+        // DR_STEAM 활성 빌드: steam_api64.dll 반드시 포함 (없으면 런타임 DllNotFoundException)
+        string steamDll = Path.Combine(buildDir, "steam_api64.dll");
+        if (!File.Exists(steamDll)) { reason = $"Steam DLL 누락 (DR_STEAM 빌드): {steamDll}"; return false; }
+#endif
+
         // 블랙리스트 — Mono 잔재(있으면 전환 실패 → 보안 L2 무효)
         string[] forbid =
         {

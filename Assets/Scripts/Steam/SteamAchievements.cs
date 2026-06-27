@@ -14,6 +14,9 @@ using UnityEngine;
 #if DR_STEAM
 using Steamworks;
 #endif
+#if DR_STEAM && UNITY_EDITOR
+using UnityEditor;
+#endif
 
 /// <summary>
 /// Steam 도전과제 해금 진입점. 모든 호출은 멱등(이미 해금 시 중복 전송 안 함).
@@ -67,6 +70,7 @@ public static class SteamAchievements
 
 #if DR_STEAM && UNITY_EDITOR
     /// <summary>[에디터/테스트] 모든 도전과제·스탯 초기화. Steam 콘솔 reset_all_stats 대용.</summary>
+    [MenuItem("DopamineRace/Debug/Reset All Steam Achievements")]
     public static void DebugResetAll()
     {
         if (!SteamManager.Initialized) { Debug.LogWarning("[SteamAchievements] Steam 미초기화 — Reset 불가"); return; }
