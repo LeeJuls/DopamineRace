@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-06-28
+
+- **[INGEST]** SPEC-049 라이브 포트레이트 단계 A~D → 신규 `시스템/라이브_포트레이트.md` 생성 (PNG→mp4 비디오, §0 측정·아키텍처·단계표·알려진이슈) ← Docs/specs/SPEC-049_*
+- **[UPDATE]** 주요 클래스 (`아키텍처/주요_클래스.md`) — CharacterVideoController·CharacterInfoPopup(비디오 규칙) 섹션 + CharacterVideoPrefabPatcher 에디터 도구 행 추가
+- **[UPDATE]** SPEC 인덱스 — 라이브 포트레이트(spec049) 섹션 추가, 제목 spec001~049 갱신, 관련 페이지 링크
+- **[UPDATE]** 개발 타임라인 — SPEC-049 단계 A~D 마일스톤(2026-06-28) + Play 버그수정 기록, 다음예정에 E~G 추가
+- **[UPDATE]** Index.md — 게임 시스템에 라이브 포트레이트 링크(🔄) 추가
+
+---
+
 ## 2026-06-21
 
 - **[INIT]** 위키 초기화 — Karpathy LLM Wiki 패턴 기반, Nous Research Hermes Agent 스펙 v2.1.0 적용
