@@ -18,6 +18,9 @@ public partial class SceneBootstrapper
             // ── 프리팹 기반 ──
             GameObject panel = Instantiate(gs.bettingPanelPrefab, parent);
             bettingPanelRoot = panel.transform;
+            // 와이드/울트라와이드 레터박스: 부모(BettingUI, 풀스크린)가 16:9보다 넓으면 좌우 인셋 →
+            // 모든 자식이 1920×1080 기준 그대로 렌더(겹침/잘림 방지). 16:9 이하는 무동작.
+            if (panel.GetComponent<MaxAspectClamp>() == null) panel.AddComponent<MaxAspectClamp>();
             CacheBettingUIReferences(bettingPanelRoot);
             InitBetTypeTabs();
             InitCharacterList();
