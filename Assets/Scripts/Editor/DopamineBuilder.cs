@@ -67,6 +67,18 @@ public static class DopamineBuilder
         }
         Debug.Log("[Build] 산출물 검증 통과 (IL2CPP 마커 OK)");
 
+        // Dev 빌드: 로컬 실행용 steam_appid.txt 동봉 → SteamManager.RestartAppIfNecessary 우회
+        //   (Steam 거치지 않고 exe 직접 실행, -106 회피). Release/Steam 빌드엔 넣지 않음
+        //   — Steam이 소유권/DRM 컨텍스트를 제공하므로 동봉은 비권장.
+        if (dev)
+        {
+            string appIdDst = Path.Combine(outDir, "steam_appid.txt");
+            const string rootAppId = "steam_appid.txt";   // 프로젝트 루트(단일 출처)
+            if (File.Exists(rootAppId)) File.Copy(rootAppId, appIdDst, true);
+            else File.WriteAllText(appIdDst, "4532310");   // 폴백: SteamManager.AppId
+            Debug.Log($"[Build] (Dev) steam_appid.txt 동봉 → {appIdDst} (로컬 스모크용, Release 미포함)");
+        }
+
         if (copyToSteam)
             CopyToSteamContent(outDir, EditorPrefs.GetString(STEAM_CONTENT_KEY, STEAM_CONTENT_DEFAULT));
     }
