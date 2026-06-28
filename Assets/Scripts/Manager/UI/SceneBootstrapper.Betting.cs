@@ -740,8 +740,8 @@ public partial class SceneBootstrapper
 
     private void ProceedRoundStart()
     {
-        // ★ Round 1: 배회 중이면 출발선 정렬 연출 후 레이스 시작 (SPEC-025)
-        if (GameManager.Instance?.CurrentRound == 1 && RaceManager.Instance != null)
+        // ★ 배회 중이면 출발선 정렬 연출 후 레이스 시작 (SPEC-025 전 라운드 확장 — 상태기반 분기)
+        if (RaceManager.Instance != null && RaceManager.Instance.IsWandering)
         {
             startButton.interactable = false;   // 더블클릭 방지
             RaceManager.Instance.LineUpAndStart(() =>

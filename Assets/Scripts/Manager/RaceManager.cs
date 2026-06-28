@@ -99,10 +99,9 @@ public class RaceManager : MonoBehaviour
         }
 
         // ★ GameManager.Start()가 먼저 실행돼 ChangeState(Betting)이 이미 발생한 경우 보정
-        // Round 1 + Betting 상태이고 레이서가 스폰됐으면 즉시 배회 시작
+        // Betting 상태이고 레이서가 스폰됐으면 즉시 배회 시작 (전 라운드 — SPEC-025 확장)
         if (GameManager.Instance != null
             && GameManager.Instance.CurrentState == GameManager.GameState.Betting
-            && GameManager.Instance.CurrentRound == 1
             && racers.Count > 0)
         {
             ScatterAndWander();
@@ -436,17 +435,37 @@ public class RaceManager : MonoBehaviour
     {
         if (state == GameManager.GameState.Betting)
         {
-            // 새 게임 시작 시 디버그 로그 초기화
+            // 새 게임 시작(1R)만 디버그 로그 초기화
             if (GameManager.Instance != null && GameManager.Instance.CurrentRound == 1)
             {
                 if (debugOverlay != null)
                     debugOverlay.ClearAllLogs();
-
-                // ★ Round 1 진입: 캐릭터 배회 연출 시작 (SPEC-025)
-                ScatterAndWander();
             }
+
+            // ★ 모든 라운드 Betting 진입: 캐릭터 배회 연출 시작 (SPEC-025 전 라운드 확장)
+            ScatterAndWander();
+        }
+        else
+        {
+            // E1: GameOver/Finish/Result 등 Betting 이탈 시 배회 잔류 방지
+            StopAllWandering();
         }
     }
+
+    /// <summary>
+    /// 모든 레이서 배회 정지 (E1). 이미 비배회면 StopWandering 내부 가드가 즉시 return → no-op.
+    /// </summary>
+    private void StopAllWandering()
+    {
+        if (racers == null) return;
+        foreach (var rc in racers)
+            rc?.StopWandering();
+    }
+
+    /// <summary>
+    /// 현재 배회 중인 레이서가 하나라도 있는지 (상태기반 분기용).
+    /// </summary>
+    public bool IsWandering => racers != null && racers.Exists(r => r != null && r.IsWandering);
 
     // ══════════════════════════════════════
     //  ★ 배회 연출 (SPEC-025)

@@ -307,9 +307,8 @@ public class AutoRaceRunnerWindow : EditorWindow
         gm.SelectBetType(BetType.Win);
         gm.AddSelection(0);
 
-        // Round 1: LineUpAndStart 콜백 후 StartRace (SPEC-025 배회→정렬 연출 연동)
-        // StartNewGame()이 항상 Round=1에서 시작하므로 rm != null이면 항상 이 경로
-        if (gm.CurrentRound == 1 && rm != null)
+        // 배회 중이면 LineUpAndStart 콜백 후 StartRace (SPEC-025 전 라운드 확장 — 상태기반 분기)
+        if (rm != null && rm.IsWandering)
         {
             rm.LineUpAndStart(() =>
             {
