@@ -28,6 +28,10 @@ public class ItemInfoTrigger : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        // 버튼과 동일한 클릭 효과음 (SFXManager는 Button만 자동 등록하므로 수동 호출)
+        if (SFXManager.Instance != null)
+            SFXManager.Instance.PlayClick();
+
         var popup = ItemInfoPopup.Instance;
         if (popup == null)
         {
