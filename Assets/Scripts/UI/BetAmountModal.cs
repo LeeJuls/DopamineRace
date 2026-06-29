@@ -22,6 +22,10 @@ public class BetAmountModal : MonoBehaviour
     [SerializeField] private Text selectionText;
     [SerializeField] private Text oddsText;
 
+    [Header("─── 배팅가능 표시 ───")]
+    [SerializeField] private Text bettableLabel;    // "배팅가능:" 라벨 (Best Fit)
+    [SerializeField] private Text jellyCountText;   // 보유 젤리 개수 (= 배팅 가능 최대치)
+
     [Header("─── 입력 ───")]
     [SerializeField] private Slider amountSlider;
     [SerializeField] private InputField amountInput;
@@ -140,6 +144,10 @@ public class BetAmountModal : MonoBehaviour
             amountSlider.wholeNumbers = true;
         }
 
+        // 배팅가능 표시 (라벨 + 보유 젤리 = 배팅 가능 최대치)
+        if (bettableLabel != null) bettableLabel.text = SafeLoc("str.bet.modal.bettable", "배팅가능:");
+        if (jellyCountText != null) jellyCountText.text = maxBet.ToString();
+
         // 정보 표시
         if (titleText != null) titleText.text = SafeLoc("str.bet.modal.title", "🎰 배팅액을 정하세요");
         if (betTypeText != null) betTypeText.text = SafeLoc("str.bet.modal.bet_type", "종목: {0}",
@@ -170,6 +178,8 @@ public class BetAmountModal : MonoBehaviour
 
     public void Hide()
     {
+        // 모달 위에 떠 있던 젤리 설명 팝업도 함께 닫기 (잔류 방지)
+        if (ItemInfoPopup.Instance != null) ItemInfoPopup.Instance.Hide();
         if (backdrop != null) backdrop.SetActive(false);
         gameObject.SetActive(false);
     }

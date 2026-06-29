@@ -363,6 +363,7 @@ str.bet.modal.cancel,취소,Cancel,キャンセル,取消,Abbrechen,Cancelar,Can
 str.bet.modal.confirm,배팅 확정 →,Confirm Bet →,賭け確定 →,确认投注 →,Wette bestätigen →,Confirmar apuesta →,Confirmar aposta →,確認下注 →
 str.bet.modal.error.too_high,보유 젤리보다 많이 베팅할 수 없습니다,Cannot bet more than your jelly,所持ゼリー以上は賭けられません,投注金额不能超过所持果冻,Du kannst nicht mehr als dein Jelly setzen,No puedes apostar más que tu gelatina,Você não pode apostar mais do que sua geleia,下注金額不可超過持有的果凍
 str.bet.modal.error.too_low,최소 1 베팅 필요,Minimum bet is 1,最低1賭ける必要があります,最低投注为1,Mindesteinsatz ist 1,Apuesta mínima es 1,Aposta mínima é 1,最低下注為 1
+str.bet.modal.bettable,배팅가능:,Bettable:,賭け可能:,可投注:,Einsetzbar:,Apostable:,Apostável:,可投注:
 str.exchange.icon.tooltip,스톤 환전,Exchange Stone,ストーン両替,兑换石头,Stein tauschen,Cambiar piedra,Trocar pedra,兌換石頭
 str.exchange.modal.title,💱 도파민 스톤 환전,💱 Dopamine Stone Exchange,💱 ドーパミンストーン両替,💱 多巴胺石兑换,💱 Dopamin-Stein-Tausch,💱 Cambio de Piedra,💱 Troca de Pedra,💱 多巴胺石兌換
 str.exchange.modal.rate,이번 라운드 환전율: {0}:1,This round exchange rate: {0}:1,今ラウンドの両替レート: {0}:1,本回合兑换率：{0}:1,Wechselkurs diese Runde: {0}:1,Tasa de esta ronda: {0}:1,Taxa desta rodada: {0}:1,本回合兌換率：{0}:1
