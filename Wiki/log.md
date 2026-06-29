@@ -6,6 +6,9 @@
 
 ## 2026-06-30
 
+- **[UPDATE]** `시스템/배팅_시스템.md` — BetAmountModal 배팅가능 표시 섹션 추가 (BettableInfo 구조·BettableClickOverlay 클릭 패턴·StringTable 키)
+- **[UPDATE]** `시스템/통화_시스템.md` — ItemInfoPopup sortingOrder=2000 반영, BetAmountModal 재사용 패턴 추가
+- **[UPDATE]** `히스토리/개발_타임라인.md` — 2026-06-30 배팅가능 표시 마일스톤 추가
 - **[INGEST]** `EnterPlayMode_DomainReload_히스토리_20260630.md` → 신규 `워크플로우/에디터_최적화.md` 생성 (Domain Reload OFF 패턴, SubsystemRegistration 리셋, 싱글턴 OnDestroy, DestroyImmediate 규칙) ← Docs/history/EnterPlayMode_DomainReload_히스토리_20260630.md
 - **[UPDATE]** `워크플로우/에이전트_가이드.md` — `performance` 에이전트 추가 (13번째), 위임 기준에 에디터 최적화 항목 추가
 - **[UPDATE]** `히스토리/개발_타임라인.md` — 영상 재인코딩(82MB→23MB) + Domain Reload 안전화 마일스톤(2026-06-30) 추가, 다음 예정에 DisableSceneReload 감사 항목 추가
