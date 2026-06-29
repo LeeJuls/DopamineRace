@@ -43,6 +43,12 @@
 
 ---
 
+## 2026-06-29
+
+- **[INGEST]** 아이템 정보 팝업 (SPEC-050) → `시스템/통화_시스템.md`에 "아이템 정보 팝업" 섹션 추가(ItemInfoPopup/Trigger 모듈, 키 규칙), `시스템/다국어_시스템.md`에 `str.dopamine.item.*` 키 규칙 추가, SPEC 인덱스·개발 타임라인 갱신 ← SPEC-050 명세서·히스토리
+
+---
+
 ## 2026-06-27
 
 - **[UPDATE]** SPEC 인덱스 — SPEC-046 상태 갱신 (Steam Publish 완료)
