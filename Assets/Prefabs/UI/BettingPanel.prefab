@@ -4111,7 +4111,7 @@ RectTransform:
   - {fileID: 3798223548297945551}
   - {fileID: 7475582019126440620}
   - {fileID: 6508414240378612162}
-  - {fileID: 5654849487576697187}
+  - {fileID: 194209162373225099}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -6882,7 +6882,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 2
   m_VerticalFit: 0
---- !u!1001 &4067036485017117004
+--- !u!1001 &8411303204793447076
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -7000,9 +7000,9 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bf7ebc337d10499448fc46d96de36aee, type: 3}
---- !u!224 &5654849487576697187 stripped
+--- !u!224 &194209162373225099 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8505904997357103151, guid: bf7ebc337d10499448fc46d96de36aee,
     type: 3}
-  m_PrefabInstance: {fileID: 4067036485017117004}
+  m_PrefabInstance: {fileID: 8411303204793447076}
   m_PrefabAsset: {fileID: 0}

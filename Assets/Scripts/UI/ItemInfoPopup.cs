@@ -6,6 +6,9 @@ using UnityEngine.UI;
 /// <see cref="ItemInfoTrigger"/>가 아이템 클릭 시 <see cref="Show"/>를 호출한다.
 /// 씬당 1개 인스턴스를 <see cref="Instance"/>로 노출 → 어느 화면의 아이템이든 재사용.
 ///
+/// ※ 보이기/숨기기는 자식 <c>box</c>를 토글한다(루트는 항상 활성).
+///   루트를 SetActive(false) 하면 <c>Awake</c>가 다시 실행되지 않아 Instance 등록이 깨지므로.
+///
 /// 프리팹: Assets/Prefabs/UI/ItemInfoPopup.prefab
 /// 이름/설명은 StringTable 키 (str.dopamine.item.name/desc.xxx).
 /// SPEC-050
@@ -16,23 +19,25 @@ public class ItemInfoPopup : MonoBehaviour
     public static ItemInfoPopup Instance { get; private set; }
 
     [Header("UI 참조")]
+    [SerializeField] private GameObject box;       // 보이기/숨기기 대상 (루트 아님)
     [SerializeField] private Text nameLabel;
     [SerializeField] private Text descLabel;
-    [SerializeField] private Button backdropBtn;   // 박스 바깥 클릭 시 닫기
+    [SerializeField] private Button backdropBtn;   // (선택) 바깥 클릭 시 닫기 — 없어도 됨
 
     /// <summary>현재 표시 중인 아이템의 이름 키 (토글 판정용)</summary>
     public string CurrentNameKey { get; private set; }
 
     /// <summary>팝업이 열려있는지</summary>
-    public bool IsShowing => gameObject.activeSelf;
+    public bool IsShowing => box != null && box.activeSelf;
 
     private void Awake()
     {
-        // 프리팹은 활성 상태로 Instantiate → Awake에서 등록 후 스스로 숨김.
+        // 루트는 항상 활성 → Awake가 반드시 실행되어 Instance 등록.
         Instance = this;
         if (backdropBtn != null)
             backdropBtn.onClick.AddListener(Hide);
-        gameObject.SetActive(false);
+        if (box != null)
+            box.SetActive(false);   // 시작은 숨김 (루트는 그대로 활성)
     }
 
     private void OnDestroy()
@@ -49,7 +54,7 @@ public class ItemInfoPopup : MonoBehaviour
         if (nameLabel != null) nameLabel.text = Loc.Get(nameKey);
         if (descLabel != null) descLabel.text = Loc.Get(descKey);
 
-        gameObject.SetActive(true);
+        if (box != null) box.SetActive(true);
         ApplyFont();
     }
 
@@ -57,7 +62,7 @@ public class ItemInfoPopup : MonoBehaviour
     public void Hide()
     {
         CurrentNameKey = null;
-        gameObject.SetActive(false);
+        if (box != null) box.SetActive(false);
     }
 
     /// <summary>현재 언어 폰트 일괄 적용 (CJK·한글 라우팅).</summary>
