@@ -216,4 +216,9 @@ public class SceneTransitionManager : MonoBehaviour
 
         return indices;
     }
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
 }

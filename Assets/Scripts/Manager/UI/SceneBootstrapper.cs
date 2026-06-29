@@ -152,6 +152,20 @@ public partial class SceneBootstrapper : MonoBehaviour
     private BetAmountModal _betAmountModal;
     private ExchangeModal _exchangeModal;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStaticState()
+    {
+        trackPanelOpen = true;
+#if UNITY_EDITOR
+        if (_circleSprite != null)
+        {
+            UnityEngine.Object.DestroyImmediate(_circleSprite.texture);
+            UnityEngine.Object.DestroyImmediate(_circleSprite);
+        }
+#endif
+        _circleSprite = null;
+    }
+
     // ══════════════════════════════════════
     //  초기화
     // ══════════════════════════════════════

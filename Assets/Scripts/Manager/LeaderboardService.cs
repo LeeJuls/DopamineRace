@@ -183,4 +183,11 @@ public class LeaderboardService : MonoBehaviour
         list.Sort((a, b) => b.score.CompareTo(a.score));
         if (count > 0 && list.Count > count) list.RemoveRange(count, list.Count - count);
     }
+
+    private void OnDestroy()
+    {
+        StopAllCoroutines();
+        _fetchInFlight = false;
+        if (Instance == this) Instance = null;
+    }
 }

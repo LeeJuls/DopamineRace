@@ -155,4 +155,10 @@ public class BGMManager : MonoBehaviour
         fadeCoroutine = null;
         onComplete?.Invoke();
     }
+
+    private void OnDestroy()
+    {
+        StopBGM();
+        if (Instance == this) Instance = null;
+    }
 }
