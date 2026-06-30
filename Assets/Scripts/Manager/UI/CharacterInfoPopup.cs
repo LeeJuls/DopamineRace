@@ -186,7 +186,7 @@ public class CharacterInfoPopup : MonoBehaviour
             skillDescLabel = FindText(layout3, "SkillDescLabel");
             if (skillDescLabel != null)
             {
-                skillDescLabel.verticalOverflow   = VerticalOverflow.Overflow;
+                skillDescLabel.verticalOverflow   = VerticalWrapMode.Overflow;
                 skillDescLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
             }
         }
