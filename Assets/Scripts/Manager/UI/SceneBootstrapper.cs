@@ -406,10 +406,12 @@ public partial class SceneBootstrapper : MonoBehaviour
                 {
                     // 2라운드부터: 새 트랙 잠깐 보여준 후 배팅 UI 표시
                     StartCoroutine(DelayedBettingUI());
+                    // bgm_exciting(결과 화면 포함) → BGM 복귀
+                    BGMManager.Instance?.CrossFade("Audio/BGM", 1.5f);
                 }
                 else
                 {
-                    // 1라운드: 즉시 표시
+                    // 1라운드: 즉시 표시 (BGM은 SceneTransitionManager에서 이미 시작)
                     bettingUI.SetActive(true);
                     ResetBetting();
                     UpdateRoundInfo();
@@ -419,6 +421,7 @@ public partial class SceneBootstrapper : MonoBehaviour
             case GameManager.GameState.Countdown:
                 countdownUI.SetActive(true);
                 HideAllRaceLabels();
+                BGMManager.Instance?.CrossFade("Audio/bgm_exciting", 1.5f);
                 break;
             case GameManager.GameState.Racing:
                 racingUI.SetActive(true);
@@ -433,6 +436,7 @@ public partial class SceneBootstrapper : MonoBehaviour
                 ShowAllRaceLabels();
                 resultUI.SetActive(true);
                 ShowResult();
+                // bgm_exciting 계속 재생 — 다음 라운드 Betting 진입 시 BGM으로 전환
                 break;
             case GameManager.GameState.Finish:
                 DestroyArrows();
@@ -441,6 +445,7 @@ public partial class SceneBootstrapper : MonoBehaviour
                 finishUI.SetActive(true);
                 ShowFinish(isGameOver: false);                       // 내부 RefreshMyRankBadge(0)로 로컬등수 1차 표시
                 TryNameEntryThen(rank => RefreshMyRankBadge(rank));   // 등록·제출 응답 후 배지 글로벌등수로 교체
+                BGMManager.Instance?.CrossFade("Audio/bgm_ending", 1.5f);
                 break;
             case GameManager.GameState.GameOver:
                 // S5: 게임오버를 Finish 화면으로 통일 — 요약 먼저 → 등록 시퀀스(전용 GameOver UI 폐기)
@@ -449,6 +454,7 @@ public partial class SceneBootstrapper : MonoBehaviour
                 finishUI.SetActive(true);
                 ShowFinish(isGameOver: true);                         // 사유 헤더 + RefreshMyRankBadge(0) 로컬등수 1차 표시
                 TryNameEntryThen(rank => RefreshMyRankBadge(rank));   // 등록·제출 응답 후 배지 글로벌등수로 교체
+                BGMManager.Instance?.CrossFade("Audio/bgm_ending", 1.5f);
                 break;
         }
     }
