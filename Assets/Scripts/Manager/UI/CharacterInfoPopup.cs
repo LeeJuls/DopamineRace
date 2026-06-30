@@ -192,6 +192,7 @@ public class CharacterInfoPopup : MonoBehaviour
                 srt.anchorMax        = new Vector2(0.98f, 0.95f);
                 srt.offsetMin        = Vector2.zero;
                 srt.offsetMax        = Vector2.zero;
+                srt.anchoredPosition = new Vector2(0f, 5f);
 
                 skillDescLabel.horizontalOverflow   = HorizontalWrapMode.Overflow;
                 skillDescLabel.verticalOverflow     = VerticalWrapMode.Overflow;
@@ -281,8 +282,8 @@ public class CharacterInfoPopup : MonoBehaviour
                 string aDesc = SkillRegistry.GetDescription(data.charAbility);
                 if (!string.IsNullOrEmpty(aName) && aName != data.charAbility)
                 {
-                    sb.Append("<size=28><color=#FFC000>⚔ ").Append(aName).Append("</color></size>");
-                    if (!string.IsNullOrEmpty(aDesc)) sb.Append("\n<size=24><color=#FFFFFF>").Append(aDesc).Append("</color></size>");
+                    sb.Append("<size=30><color=#FFC000>⚔ ").Append(aName).Append("</color></size>");
+                    if (!string.IsNullOrEmpty(aDesc)) sb.Append("\n<size=26><color=#FFFFFF>").Append(aDesc).Append("</color></size>");
                 }
             }
 
@@ -295,8 +296,8 @@ public class CharacterInfoPopup : MonoBehaviour
                 if (!string.IsNullOrEmpty(pName) && pName != v4.charPassive)
                 {
                     if (sb.Length > 0) sb.Append("\n\n");
-                    sb.Append("<size=28><color=#FFC000>✨ ").Append(pName).Append("</color></size>");
-                    if (!string.IsNullOrEmpty(pDesc)) sb.Append("\n<size=24><color=#FFFFFF>").Append(pDesc).Append("</color></size>");
+                    sb.Append("<size=30><color=#FFC000>✨ ").Append(pName).Append("</color></size>");
+                    if (!string.IsNullOrEmpty(pDesc)) sb.Append("\n<size=26><color=#FFFFFF>").Append(pDesc).Append("</color></size>");
                 }
             }
 
