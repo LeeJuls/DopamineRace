@@ -186,8 +186,18 @@ public class CharacterInfoPopup : MonoBehaviour
             skillDescLabel = FindText(layout3, "SkillDescLabel");
             if (skillDescLabel != null)
             {
-                skillDescLabel.verticalOverflow   = VerticalWrapMode.Overflow;
-                skillDescLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
+                // 단일 라인: 아이콘 우측부터 팝업 끝까지 스트레치, 높이 22px(1줄)
+                RectTransform srt = skillDescLabel.rectTransform;
+                srt.anchorMin        = new Vector2(0.12f, 0.5f);
+                srt.anchorMax        = new Vector2(0.98f, 0.5f);
+                srt.sizeDelta        = new Vector2(0f, 22f);
+                srt.anchoredPosition = Vector2.zero;
+
+                skillDescLabel.horizontalOverflow   = HorizontalWrapMode.Wrap;
+                skillDescLabel.verticalOverflow     = VerticalWrapMode.Truncate;
+                skillDescLabel.resizeTextForBestFit = true;
+                skillDescLabel.resizeTextMinSize    = 8;
+                skillDescLabel.resizeTextMaxSize    = 14;
             }
         }
 
@@ -273,7 +283,7 @@ public class CharacterInfoPopup : MonoBehaviour
                 if (!string.IsNullOrEmpty(aName) && aName != data.charAbility)
                 {
                     sb.Append("<color=#FFC000>⚔ ").Append(aName).Append("</color>");
-                    if (!string.IsNullOrEmpty(aDesc)) sb.Append("\n<color=#FFFFFF>").Append(aDesc).Append("</color>");
+                    if (!string.IsNullOrEmpty(aDesc)) sb.Append(" <color=#FFFFFF>").Append(aDesc).Append("</color>");
                 }
             }
 
@@ -285,9 +295,9 @@ public class CharacterInfoPopup : MonoBehaviour
                 string pDesc = SkillRegistry.GetDescription(v4.charPassive);
                 if (!string.IsNullOrEmpty(pName) && pName != v4.charPassive)
                 {
-                    if (sb.Length > 0) sb.Append("\n\n");
+                    if (sb.Length > 0) sb.Append("  <color=#888888>|</color>  ");
                     sb.Append("<color=#FFC000>✨ ").Append(pName).Append("</color>");
-                    if (!string.IsNullOrEmpty(pDesc)) sb.Append("\n<color=#FFFFFF>").Append(pDesc).Append("</color>");
+                    if (!string.IsNullOrEmpty(pDesc)) sb.Append(" <color=#FFFFFF>").Append(pDesc).Append("</color>");
                 }
             }
 
