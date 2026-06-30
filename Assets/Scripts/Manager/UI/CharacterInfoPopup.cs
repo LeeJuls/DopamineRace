@@ -192,7 +192,7 @@ public class CharacterInfoPopup : MonoBehaviour
                 srt.anchorMax        = new Vector2(0.98f, 0.95f);
                 srt.offsetMin        = Vector2.zero;
                 srt.offsetMax        = Vector2.zero;
-                srt.anchoredPosition = new Vector2(0f, 5f);
+                srt.anchoredPosition = new Vector2(0f, 0f);
 
                 skillDescLabel.horizontalOverflow   = HorizontalWrapMode.Overflow;
                 skillDescLabel.verticalOverflow     = VerticalWrapMode.Overflow;
