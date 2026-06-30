@@ -910,6 +910,22 @@ public partial class RacerController : MonoBehaviour
         lastPosition = transform.position;
     }
 
+    /// <summary>
+    /// 스프라이트를 레이스 방향(왼쪽=true) 또는 대기(오른쪽=false)로 즉시 회전.
+    /// 카운트다운 줄별 회전 연출용. 라벨 역보정 포함.
+    /// </summary>
+    public void FaceLeft(bool faceLeft)
+    {
+        float absX = Mathf.Abs(transform.localScale.x);
+        transform.localScale = new Vector3(
+            faceLeft ? absX : -absX,
+            transform.localScale.y,
+            transform.localScale.z
+        );
+        CounterFlipLabels();
+        lastPosition = transform.position;   // GO 직후 FlipSprite 오감지 방지 — 반드시 유지
+    }
+
     // 부모 scale.x 반전 후 TextMesh 자식의 localScale.x를 역보정해 월드 텍스트 방향을 유지
     private void CounterFlipLabels()
     {

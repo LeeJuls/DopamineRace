@@ -96,6 +96,7 @@ public class RaceManager : MonoBehaviour
         {
             GameManager.Instance.OnRaceStart += OnRaceStart;
             GameManager.Instance.OnStateChanged += OnGameStateChanged;
+            GameManager.Instance.OnCountdownTick += OnCountdownTick;
         }
 
         // ★ GameManager.Start()가 먼저 실행돼 ChangeState(Betting)이 이미 발생한 경우 보정
@@ -116,6 +117,7 @@ public class RaceManager : MonoBehaviour
         {
             GameManager.Instance.OnRaceStart -= OnRaceStart;
             GameManager.Instance.OnStateChanged -= OnGameStateChanged;
+            GameManager.Instance.OnCountdownTick -= OnCountdownTick;
         }
 
         // ★ 레이서 이벤트 일괄 해제 (비정상 종료 시 누수 방지)
@@ -360,6 +362,9 @@ public class RaceManager : MonoBehaviour
         if (collisionSystem != null)
             collisionSystem.ClearAll();
 
+        // 저프레임에서 특정 카운트다운 틱이 누락돼도 GO 시점 전원 좌향 보장 (안전망)
+        foreach (var racer in racers) racer?.FaceLeft(true);
+
         // 모든 레이서 레이싱 시작
         foreach (var racer in racers)
         {
@@ -449,7 +454,40 @@ public class RaceManager : MonoBehaviour
         {
             // E1: GameOver/Finish/Result 등 Betting 이탈 시 배회 잔류 방지
             StopAllWandering();
+
+            // 카운트다운 진입: 선택 캐릭터=좌향 유지, 나머지=대기(우향). 줄별 회전 상태 리셋.
+            if (state == GameManager.GameState.Countdown)
+            {
+                for (int i = 0; i < racers.Count; i++)
+                    racers[i]?.FaceLeft(IsPlayerPick(i));
+                _lastCountdownTick = 99;
+            }
         }
+    }
+
+    private int _lastCountdownTick = 99;
+
+    /// <summary>플레이어가 베팅한 캐릭터(racer 인덱스)인지. 카운트다운 전 구간 좌향 유지 대상.</summary>
+    private bool IsPlayerPick(int i)
+        => GameManager.Instance?.CurrentBet?.selections?.Contains(i) ?? false;
+
+    /// <summary>
+    /// 카운트다운 틱(3→2→1)마다 줄 단위로 레이스 방향(왼쪽) 회전.
+    /// 출발선에서 먼 순서로 회전 — 3=맨 왼쪽 줄(idx 6~8, 출발선 먼), 2=중간 줄(3~5), 1=맨 오른쪽 줄(0~2, 출발선 가까움). 선택 캐릭터는 제외(이미 좌향).
+    /// GO(t&lt;=0)는 OnRaceStart 안전망에서 마무리.
+    /// </summary>
+    private void OnCountdownTick(int t)
+    {
+        if (t == _lastCountdownTick) return;   // 같은 숫자 반복 발행 무시
+        _lastCountdownTick = t;
+
+        int row;
+        switch (t) { case 3: row = 2; break; case 2: row = 1; break; case 1: row = 0; break; default: return; }
+
+        int n = racers.Count; if (n == 0) return;
+        int per = Mathf.CeilToInt(n / 3f);     // 9명→3·3·3 (가변 racerCount는 마지막 줄만 얇아짐)
+        for (int i = row * per; i < Mathf.Min(row * per + per, n); i++)
+            if (!IsPlayerPick(i)) racers[i]?.FaceLeft(true);
     }
 
     /// <summary>
