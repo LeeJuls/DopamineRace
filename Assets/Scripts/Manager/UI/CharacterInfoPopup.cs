@@ -283,7 +283,7 @@ public class CharacterInfoPopup : MonoBehaviour
                 if (!string.IsNullOrEmpty(aName) && aName != data.charAbility)
                 {
                     sb.Append("<size=30><color=#FFC000>⚔ ").Append(aName).Append("</color></size>");
-                    if (!string.IsNullOrEmpty(aDesc)) sb.Append("\n<size=26><color=#FFFFFF>").Append(aDesc).Append("</color></size>");
+                    if (!string.IsNullOrEmpty(aDesc)) sb.Append("\n<size=10> </size>\n<size=26><color=#FFFFFF>").Append(aDesc).Append("</color></size>");
                 }
             }
 
@@ -297,7 +297,7 @@ public class CharacterInfoPopup : MonoBehaviour
                 {
                     if (sb.Length > 0) sb.Append("\n\n");
                     sb.Append("<size=30><color=#FFC000>✨ ").Append(pName).Append("</color></size>");
-                    if (!string.IsNullOrEmpty(pDesc)) sb.Append("\n<size=26><color=#FFFFFF>").Append(pDesc).Append("</color></size>");
+                    if (!string.IsNullOrEmpty(pDesc)) sb.Append("\n<size=10> </size>\n<size=26><color=#FFFFFF>").Append(pDesc).Append("</color></size>");
                 }
             }
 
