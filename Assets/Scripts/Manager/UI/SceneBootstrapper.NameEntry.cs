@@ -88,7 +88,8 @@ public partial class SceneBootstrapper
         bool qualified = rank <= 100;
         string key   = qualified ? "str.nameentry.rank_qualified" : "str.nameentry.rank_disqualified";
         string text  = Loc.Get(key, rank);
-        Color  color = qualified ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.7f, 0.2f);
+        // 흰 BG_01 배경 가독성 — 다크 앰버 계열 (프리팹 패밀리 통일, NameEntryModalDecorator 참조)
+        Color  color = qualified ? new Color(0.55f, 0.30f, 0f) : new Color(0.70f, 0.35f, 0f);
         _nameEntryModal.ShowResult(text, color, onClosed);   // 팝업 → 터치 시 onClosed
         Debug.Log($"[Leaderboard] rank={rank} ({(qualified ? "등재" : "미등재")}) — {text}");
     }

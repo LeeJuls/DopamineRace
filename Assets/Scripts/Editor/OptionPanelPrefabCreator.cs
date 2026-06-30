@@ -15,6 +15,17 @@ public static class OptionPanelPrefabCreator
     private const string PREFAB_DIR  = "Assets/Prefabs/UI";
     private const string PREFAB_PATH = "Assets/Prefabs/UI/OptionPanel.prefab";
 
+    // 흰 배경 팔레트 (ExchangeModal/BetAmountModal 표준)
+    static readonly Color darkNavy   = new Color(0.10f, 0.10f, 0.20f, 1f); // 주요 텍스트
+    static readonly Color darkAmber  = new Color(0.55f, 0.30f, 0.00f, 1f); // 제목
+    static readonly Color accentBlue = new Color(0.25f, 0.45f, 0.70f, 0.95f); // 액션 버튼
+    static readonly Color dangerRed  = new Color(0.65f, 0.15f, 0.15f, 0.95f); // 위험 버튼
+    static readonly Color neutralGray= new Color(0.40f, 0.40f, 0.45f, 0.95f); // 취소 버튼
+    static readonly Color toggleBg   = new Color(0.88f, 0.90f, 0.95f, 1.00f); // 토글 행 배경
+    static readonly Color checkBg    = new Color(0.70f, 0.75f, 0.85f, 1.00f); // 체크박스 배경
+    static readonly Color checkMark  = new Color(0.15f, 0.65f, 0.15f, 1.00f); // 체크마크
+    static readonly Color divider    = new Color(0.70f, 0.70f, 0.75f, 0.80f); // 구분선
+
     [MenuItem("DopamineRace/프리팹 생성/Option Panel Prefab")]
     public static void CreateOptionPanelPrefab()
     {
@@ -22,6 +33,10 @@ public static class OptionPanelPrefabCreator
         var gs = AssetDatabase.LoadAssetAtPath<GameSettings>(
             "Assets/Resources/GameSettings.asset");
         Font font = gs != null ? gs.mainFont : null;
+
+        // BG_01 스프라이트 (가이드 패턴)
+        Sprite bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
+            "Assets/Resources/UI/Img_BG_ListSlot_BG_01.png");
 
         // ── 루트 (OptionPanel.cs) ──
         GameObject root = new GameObject("OptionPanel");
@@ -42,15 +57,26 @@ public static class OptionPanelPrefabCreator
         GameObject panelBg = MkChild(root, "PanelBg",
             0.5f, 0.5f, 0.5f, 0.5f, Vector2.zero, new Vector2(425f, 500f));
         Image panelImg = panelBg.AddComponent<Image>();
-        panelImg.color = new Color(0.08f, 0.08f, 0.15f, 0.97f);
+        panelImg.raycastTarget = false;
+        if (bgSprite != null)
+        {
+            panelImg.sprite     = bgSprite;
+            panelImg.type       = Image.Type.Sliced;
+            panelImg.fillCenter = true;
+            panelImg.color      = Color.white;
+        }
+        else
+        {
+            Debug.LogWarning("[OptionPanelPrefabCreator] Img_BG_ListSlot_BG_01 없음 — 단색 폴백");
+            panelImg.color = new Color(0.12f, 0.10f, 0.18f, 0.95f);
+        }
 
         // TitleLabel
         GameObject titleObj = MkTextObj(panelBg, "TitleLabel", font,
             0.5f, 1f, 0.5f, 1f, new Vector2(0, -40), new Vector2(375, 50),
-            28, TextAnchor.MiddleCenter, new Color(1f, 0.85f, 0.2f));
+            28, TextAnchor.MiddleCenter, darkAmber);
         Text titleText = titleObj.GetComponent<Text>();
 
-        // 간격 y 기준 (패널 상단 0 → 아래로 진행)
         // BGMToggle
         GameObject bgmToggle = MkToggle(panelBg, "BGMToggle", "BGMLabel", "BGM 끄기", font,
             new Vector2(0, -125));
@@ -59,18 +85,18 @@ public static class OptionPanelPrefabCreator
         GameObject sfxToggle = MkToggle(panelBg, "SFXToggle", "SFXLabel", "SFX 끄기", font,
             new Vector2(0, -200));
 
-        // Divider (시각적 구분선)
-        GameObject divider = MkChild(panelBg, "Divider",
+        // Divider
+        GameObject dividerObj = MkChild(panelBg, "Divider",
             0.1f, 0.5f, 0.9f, 0.5f, new Vector2(0, -256), new Vector2(0, 2));
-        divider.AddComponent<Image>().color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+        dividerObj.AddComponent<Image>().color = divider;
 
         // RestartButton
         GameObject restartBtn = MkButton(panelBg, "RestartButton", "RestartLabel", "재시작", font,
-            new Vector2(0, -319));
+            new Vector2(0, -319), default, accentBlue);
 
         // QuitButton
         GameObject quitBtn = MkButton(panelBg, "QuitButton", "QuitLabel", "게임 종료", font,
-            new Vector2(0, -400));
+            new Vector2(0, -400), default, dangerRed);
 
         // CloseButton (우상단 X)
         GameObject closeBtn = MkChild(panelBg, "CloseButton",
@@ -101,21 +127,32 @@ public static class OptionPanelPrefabCreator
         GameObject popupBg = MkChild(confirmRoot, "PopupBg",
             0.5f, 0.5f, 0.5f, 0.5f, Vector2.zero, new Vector2(375f, 225f));
         Image popupImg = popupBg.AddComponent<Image>();
-        popupImg.color = new Color(0.1f, 0.1f, 0.18f, 0.98f);
+        popupImg.raycastTarget = false;
+        if (bgSprite != null)
+        {
+            popupImg.sprite     = bgSprite;
+            popupImg.type       = Image.Type.Sliced;
+            popupImg.fillCenter = true;
+            popupImg.color      = Color.white;
+        }
+        else
+        {
+            popupImg.color = new Color(0.12f, 0.10f, 0.18f, 0.98f);
+        }
 
         // MessageLabel
         GameObject msgObj = MkTextObj(popupBg, "MessageLabel", font,
             0.5f, 1f, 0.5f, 1f, new Vector2(0, -62), new Vector2(325, 75),
-            20, TextAnchor.MiddleCenter, Color.white);
+            20, TextAnchor.MiddleCenter, darkNavy);
         Text msgText = msgObj.GetComponent<Text>();
 
         // YesButton
         GameObject yesBtn = MkButton(popupBg, "YesButton", "YesLabel", "예", font,
-            new Vector2(-87.5f, -162.5f), new Vector2(137.5f, 45f));
+            new Vector2(-87.5f, -162.5f), new Vector2(137.5f, 45f), dangerRed);
 
         // NoButton
         GameObject noBtn = MkButton(popupBg, "NoButton", "NoLabel", "아니오", font,
-            new Vector2(87.5f, -162.5f), new Vector2(137.5f, 45f));
+            new Vector2(87.5f, -162.5f), new Vector2(137.5f, 45f), neutralGray);
 
         confirmRoot.SetActive(false);
 
@@ -225,7 +262,7 @@ public static class OptionPanelPrefabCreator
             0.5f, 1f, 0.5f, 1f, anchoredPos, new Vector2(350f, 50f));
 
         Image bg = obj.AddComponent<Image>();
-        bg.color = new Color(0.15f, 0.15f, 0.25f, 0.9f);
+        bg.color = toggleBg;
 
         Toggle toggle = obj.AddComponent<Toggle>();
         toggle.targetGraphic = bg;
@@ -234,14 +271,14 @@ public static class OptionPanelPrefabCreator
         var bgObj = MkChild(obj, "Background",
             0f, 0.5f, 0f, 0.5f, new Vector2(25, 0), new Vector2(35, 35));
         Image bgImg = bgObj.AddComponent<Image>();
-        bgImg.color = new Color(0.25f, 0.25f, 0.4f, 1f);
-        toggle.graphic = bgImg; // 체크마크 대용 (ON시 색 변경)
+        bgImg.color = checkBg;
+        toggle.graphic = bgImg;
 
         // Checkmark
         var checkObj = MkChild(bgObj, "Checkmark",
             0.5f, 0.5f, 0.5f, 0.5f, Vector2.zero, new Vector2(25, 25));
         Image checkImg = checkObj.AddComponent<Image>();
-        checkImg.color = new Color(0.3f, 0.9f, 0.3f, 1f);
+        checkImg.color = checkMark;
         toggle.graphic = checkImg;
 
         // Label
@@ -254,7 +291,7 @@ public static class OptionPanelPrefabCreator
         labelT.text = labelText;
         labelT.fontSize = 20;
         labelT.alignment = TextAnchor.MiddleLeft;
-        labelT.color = Color.white;
+        labelT.color = darkNavy;
         if (font != null) labelT.font = font;
 
         return obj;
@@ -263,14 +300,16 @@ public static class OptionPanelPrefabCreator
     /// <summary>Button 생성 (Image + Button + Label Text)</summary>
     private static GameObject MkButton(GameObject parent, string name, string labelName,
         string labelText, Font font, Vector2 anchoredPos,
-        Vector2 size = default)
+        Vector2 size = default, Color bgColor = default)
     {
         if (size == default) size = new Vector2(300f, 55f);
+        if (bgColor == default) bgColor = accentBlue;
+
         var obj = MkChild(parent, name,
             0.5f, 1f, 0.5f, 1f, anchoredPos, size);
 
         Image bg = obj.AddComponent<Image>();
-        bg.color = new Color(0.2f, 0.2f, 0.35f, 0.95f);
+        bg.color = bgColor;
 
         Button btn = obj.AddComponent<Button>();
         btn.targetGraphic = bg;
