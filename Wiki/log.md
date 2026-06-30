@@ -9,6 +9,7 @@
 - **[INGEST]** BGM 크로스페이드 시스템 → 신규 `시스템/사운드_시스템.md` 생성 (BGMManager 듀얼 AudioSource·API·상태 전환 흐름·주의사항)
 - **[UPDATE]** `히스토리/개발_타임라인.md` — 2026-07-01 BGM 크로스페이드 마일스톤 추가
 - **[UPDATE]** `Index.md` — 사운드 시스템 링크 추가
+- **[UPDATE]** `히스토리/개발_타임라인.md` — CharacterInfoPopup UI 폴리싱 마일스톤 추가 (제목 단순화·타입 영어명·BestFit·스킬 2줄 레이아웃)
 
 ---
 
