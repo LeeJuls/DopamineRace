@@ -86,9 +86,7 @@ public class GameManager : MonoBehaviour
 
         // SPEC-028 Step 1.8: WalletManager 리셋 — 젤리 100 / 스톤 0
         WalletManager.Instance?.ResetForNewGame();
-
-        // SPEC-028 Step 3.10: 1라운드 환전 비율 초기화 (R17·R18)
-        WalletManager.Instance?.RollExchangeRate();
+        // SPEC-051: 환전 비율 개념 폐기 — 잭팟은 모달 클릭 시점에 배수 N을 1회 굴림 (라운드별 비율 갱신 없음).
 
         // ★ 트랙 히스토리 리셋
         if (TrackDatabase.Instance != null)
@@ -383,8 +381,7 @@ public class GameManager : MonoBehaviour
 
         CurrentRound++;
 
-        // SPEC-028 Step 3.10: 다음 라운드 진입 시 환전 비율 갱신 + 카운터 리셋 (R17·R18)
-        WalletManager.Instance?.RollExchangeRate();
+        // SPEC-051: 라운드별 환전 비율 갱신 폐기 — 잭팟 카운터는 게임당 단위(ResetForNewGame에서만 리셋).
         ApplyRoundLaps();
         RaceManager.Instance?.ResetRace();
 

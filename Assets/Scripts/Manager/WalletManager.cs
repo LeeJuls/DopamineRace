@@ -5,10 +5,10 @@ using System;
 /// 도파민 젤리·스톤 보유 관리 (게임 단위 휘발성).
 /// - 매 게임 시작 시 ResetForNewGame() → 젤리 100, 스톤 0
 /// - 베팅 시 TryBet(amount) — 잔액 부족 시 false 반환
-/// - 적중 시 Reward(jelly, stone) — 둘 다 가산
+/// - 적중 시 Reward(stone) — 스톤만 가산
 /// - 마지막 라운드 완주 후 ResetStoneOnly() — 랭킹 제출 후 호출
 ///
-/// SPEC-028 Step 1.3
+/// SPEC-028 Step 1.3 · SPEC-051 럭키 잭팟 재설계
 /// </summary>
 public class WalletManager : MonoBehaviour
 {
@@ -26,9 +26,10 @@ public class WalletManager : MonoBehaviour
     [SerializeField] private int _jellyDisplay;   // _jelly 미러 (권위값 아님 — 표시 전용)
     [SerializeField] private int _stoneDisplay;   // _stone 미러 (권위값 아님 — 표시 전용)
 #endif
-    [SerializeField] private int _currentExchangeRate;
-    [SerializeField] private bool _rescuedThisRound;       // 구제: 라운드당 1회
-    [SerializeField] private int  _catPowerUsesThisGame;   // 고양이의 힘: 게임당 N회 카운터
+    // SPEC-051: 럭키 잭팟 게임당 사용 횟수 카운터.
+    // (구 _catPowerUsesThisGame를 잭팟 공유 카운터로 재활용 — 자발 고양이클릭 + 0젤리 자동이 1회를 공유)
+    [SerializeField] private int _jackpotUsesThisGame;
+    [SerializeField] private int _lastJackpotGain;   // SPEC-051: 마지막 잭팟 획득 젤리 (사용 후 결과 지속 표시용)
 
     /// <summary>현재 보유 젤리</summary>
     public int Jelly => _jelly;
@@ -36,40 +37,38 @@ public class WalletManager : MonoBehaviour
     /// <summary>현재 보유 스톤 (게임 종료 시 리셋)</summary>
     public int Stone => _stone;
 
-    /// <summary>
-    /// 이번 라운드 스톤 → 젤리 환전 비율 (스톤 N → 젤리 1).
-    /// SPEC-028 Step 2.14 / R17. 매 라운드 시작 시 RollExchangeRate()로 갱신.
-    /// </summary>
-    public int CurrentExchangeRate => _currentExchangeRate;
+    // ══════════════════════════════════════════════════════════════
+    //  럭키 잭팟 (SPEC-051) — 스톤 전부 × N 젤리, 게임당 1회
+    // ══════════════════════════════════════════════════════════════
 
-    /// <summary>이번 라운드 구제 사용 여부 (라운드당 1회).</summary>
-    public bool RescuedThisRound => _rescuedThisRound;
+    /// <summary>이번 게임 잭팟 사용 횟수.</summary>
+    public int JackpotUsesThisGame => _jackpotUsesThisGame;
 
-    /// <summary>이번 게임 고양이의 힘 사용 횟수.</summary>
-    public int CatPowerUsesThisGame => _catPowerUsesThisGame;
+    /// <summary>마지막 잭팟으로 획득한 젤리 (게임당 1회라 사용 후 계속 표시).</summary>
+    public int LastJackpotJellyGain => _lastJackpotGain;
 
-    /// <summary>게임당 고양이의 힘 최대 횟수 (GameSettings.catPowerUsesPerGame, 기본 1, 0=비활성).</summary>
-    public int MaxCatPowerUses => (GameSettings.Instance != null)
-        ? Mathf.Max(0, GameSettings.Instance.catPowerUsesPerGame) : 1;
+    /// <summary>게임당 잭팟 최대 횟수 (GameSettings.jackpotUsesPerGame, 기본 1, 0=비활성).</summary>
+    public int MaxJackpotUses => (GameSettings.Instance != null)
+        ? Mathf.Max(0, GameSettings.Instance.jackpotUsesPerGame) : 1;
 
-    /// <summary>남은 고양이의 힘 사용 횟수.</summary>
-    public int CatPowerUsesLeft => Mathf.Max(0, MaxCatPowerUses - _catPowerUsesThisGame);
+    /// <summary>남은 잭팟 사용 횟수.</summary>
+    public int JackpotUsesLeft => Mathf.Max(0, MaxJackpotUses - _jackpotUsesThisGame);
 
-    /// <summary>모달 표시용 환전 액션.</summary>
-    public enum ExchangeAction { None, CatPower, Rescue }
+    /// <summary>잭팟 가능: 남은 횟수 있음 && 스톤 ≥ 1(최소 입력).</summary>
+    public bool CanJackpot() => JackpotUsesLeft > 0 && _stone >= 1;
 
-    /// <summary>젤리 또는 스톤 변경 시 발생 (UI 구독용)</summary>
-    public event Action OnChanged;
-
-    /// <summary>환전 비율 또는 환전 가능 여부 변경 시 발생 (Exchange UI 구독용)</summary>
-    public event Action OnExchangeStateChanged;
-
-    private const int EXCHANGE_RATE_MIN = 2;
-    private const int EXCHANGE_RATE_MAX = 10;
+    /// <summary>잭팟 1회 결과.</summary>
+    public struct JackpotResult { public bool success; public int n; public int jellyGain; public int stoneSpent; }
 
     // SPEC-047: ACH_RICH 해금 임계값 — 누적 보유 스톤 기준.
     // 신경제(젤리 소멸)에서 스톤이 더 빨리 쌓이므로 기존 젤리 1000 → 스톤 3000으로 재조정.
     private const int RICH_STONE_THRESHOLD = 3000;
+
+    /// <summary>젤리 또는 스톤 변경 시 발생 (UI 구독용)</summary>
+    public event Action OnChanged;
+
+    /// <summary>잭팟 가능 여부/횟수 변경 시 발생 (Exchange UI 구독용)</summary>
+    public event Action OnExchangeStateChanged;
 
     private void Awake()
     {
@@ -83,9 +82,8 @@ public class WalletManager : MonoBehaviour
         // 초기값 (Awake 시점에 자동 리셋)
         _jelly = INITIAL_JELLY;
         _stone = StartingStone();
-        _currentExchangeRate = EXCHANGE_RATE_MIN;
-        _rescuedThisRound = false;
-        _catPowerUsesThisGame = 0;
+        _jackpotUsesThisGame = 0;
+        _lastJackpotGain = 0;
 #if UNITY_EDITOR
         SyncDisplay();
 #endif
@@ -112,8 +110,8 @@ public class WalletManager : MonoBehaviour
     {
         _jelly = INITIAL_JELLY;
         _stone = StartingStone();
-        _rescuedThisRound = false;
-        _catPowerUsesThisGame = 0;          // 게임 단위 — 고양이의 힘 횟수 리셋
+        _jackpotUsesThisGame = 0;          // 게임 단위 — 잭팟 횟수 리셋
+        _lastJackpotGain = 0;
         Debug.Log($"[Wallet] ResetForNewGame → Jelly={_jelly} Stone={_stone}");
         RaiseChanged();
         OnExchangeStateChanged?.Invoke();
@@ -130,116 +128,93 @@ public class WalletManager : MonoBehaviour
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  환전 시스템 (SPEC-028 Step 2.14 — R16~R20)
+    //  럭키 잭팟 산식 (SPEC-051)
     // ══════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// 라운드 시작 시 호출 — 환전 비율 2~10 자연수 랜덤 + 라운드당 1회 카운터 리셋.
-    /// GameManager.StartNewGame()·NextRound()에서 호출.
+    /// 잭팟 배수 N 가중 랜덤 (GameSettings.jackpotMultiplierMin..Max).
+    /// jackpotWeights 길이가 (Max-Min+1)과 다르거나 합&lt;=0이면 균등 폴백.
     /// </summary>
-    public void RollExchangeRate()
+    public int RollJackpotN()
     {
-        // Random.Range(int min, int max)는 max exclusive → +1
-        _currentExchangeRate = UnityEngine.Random.Range(EXCHANGE_RATE_MIN, EXCHANGE_RATE_MAX + 1);
-        _rescuedThisRound = false;            // 라운드 단위만 리셋 (게임 카운터 보존)
-        Debug.Log($"[Wallet] RollExchangeRate → 비율 {_currentExchangeRate}:1");
-        OnExchangeStateChanged?.Invoke();
+        var gs = GameSettings.Instance;
+        int min = (gs != null) ? Mathf.Max(1, gs.jackpotMultiplierMin) : 2;
+        int max = (gs != null) ? Mathf.Max(min, gs.jackpotMultiplierMax) : 8;
+        int span = max - min + 1;
+
+        int[] w = (gs != null) ? gs.jackpotWeights : null;
+        if (w == null || w.Length != span)
+        {
+            if (w != null && w.Length != span)
+                Debug.LogWarning($"[Wallet] jackpotWeights 길이 불일치 ({w.Length} != {span}) → 균등 폴백");
+            return UnityEngine.Random.Range(min, max + 1);   // max exclusive → +1
+        }
+
+        int sum = 0;
+        for (int i = 0; i < w.Length; i++) sum += Mathf.Max(0, w[i]);
+        if (sum <= 0)
+        {
+            Debug.LogWarning("[Wallet] jackpotWeights 합<=0 → 균등 폴백");
+            return UnityEngine.Random.Range(min, max + 1);
+        }
+
+        int roll = UnityEngine.Random.Range(0, sum);   // [0, sum)
+        int acc = 0;
+        for (int i = 0; i < w.Length; i++)
+        {
+            acc += Mathf.Max(0, w[i]);
+            if (roll < acc) return min + i;
+        }
+        return max;   // 부동소수 없는 정수합이라 도달 불가지만 안전 폴백
     }
-
-    // ───────── 능력 1: 고양이의 힘 (게임당 N회, 전부환전) ─────────
-
-    /// <summary>고양이의 힘 사용 가능: 남은 횟수 있고 스톤 ≥ 비율.</summary>
-    public bool CanUseCatPower()
-    {
-        if (_catPowerUsesThisGame >= MaxCatPowerUses) return false;
-        if (_currentExchangeRate <= 0) return false;
-        return _stone >= _currentExchangeRate;
-    }
-
-    /// <summary>전부환전 시 획득 젤리 = floor(스톤 / 비율).</summary>
-    public int GetCatPowerJellyGain()
-    {
-        if (_currentExchangeRate <= 0) return 0;
-        return _stone / _currentExchangeRate;
-    }
-
-    /// <summary>전부환전 시 차감 스톤 = floor(스톤/비율) × 비율 (나머지 보존).</summary>
-    public int GetCatPowerStoneCost() => GetCatPowerJellyGain() * _currentExchangeRate;
 
     /// <summary>
-    /// 고양이의 힘 — 가진 스톤 전부를 최대 젤리로 변환. 게임당 N회.
-    /// 변환량(≥1)·사용가능 둘 다 충족해야 카운터 소모 (무효 소비 방지).
+    /// 럭키 잭팟 — 보유 스톤 전부를 (스톤 × N) 젤리로. 게임당 1회.
+    /// autoFloor(0젤리 자동 진입): 산출 젤리에 jackpotRescueFloorJelly 바닥 보장 — max(stone×N, floor).
+    /// !CanJackpot()이면 카운터 미차감(막판 안전망 보존, 무효 소비 방지).
     /// </summary>
-    public bool TryUseCatPower()
+    public JackpotResult TryJackpot(bool autoFloor)
     {
-        if (!CanUseCatPower())
+        if (!CanJackpot())
         {
-            Debug.LogWarning($"[Wallet] 고양이의 힘 실패 (stone={_stone} rate={_currentExchangeRate} uses={_catPowerUsesThisGame}/{MaxCatPowerUses})");
-            return false;
+            Debug.LogWarning($"[Wallet] 잭팟 실패 (stone={_stone} usesLeft={JackpotUsesLeft})");
+            return new JackpotResult { success = false };   // E14: 카운터 미차감
         }
-        int jellyGain = GetCatPowerJellyGain();
-        if (jellyGain < 1) return false;            // 변환량 0 → 카운터 미소모 방어
-        int stoneCost = jellyGain * _currentExchangeRate;
 
-        _stone -= stoneCost;
+        int stoneSpent = _stone;            // 스톤 전부 (SecureInt → 평문 int)
+        int n = RollJackpotN();
+        int jellyGain = stoneSpent * n;     // 무캡 — 평문 int 연산 (실측 max~1만 스톤, 오버플로 불가)
+
+        if (autoFloor)
+        {
+            int floor = (GameSettings.Instance != null)
+                ? Mathf.Max(1, GameSettings.Instance.jackpotRescueFloorJelly) : 5;
+            jellyGain = Mathf.Max(jellyGain, floor);   // max 방향 (큰 산출을 깎지 않음)
+        }
+
+        _stone = 0;                         // E16: 전부 변환 → 잔여 0
         _jelly += jellyGain;
-        _catPowerUsesThisGame++;
+        _jackpotUsesThisGame++;             // autoFloor라도 1회만 차감 (원자성)
+        _lastJackpotGain = jellyGain;       // SPEC-051: 결과 지속 표시용
 
-        Debug.Log($"[Wallet] 고양이의 힘 [전부] -{stoneCost}💎 → +{jellyGain}🟦 (Jelly={_jelly} Stone={_stone}, {_catPowerUsesThisGame}/{MaxCatPowerUses})");
-        SteamAchievements.Unlock(SteamAchievements.CatPower);   // [Steam] 고양이의 힘 첫 사용
+        Debug.Log($"[Wallet] 럭키 잭팟 {(autoFloor ? "[자동]" : "[자발]")} -{stoneSpent}💎 ×{n} → +{jellyGain}🟦 (Jelly={_jelly} Stone={_stone}, {_jackpotUsesThisGame}/{MaxJackpotUses})");
+
+        // Steam 도전과제 재배선 (상수 유지): 자발=CatPower, 0젤리 자동(구제 성격)=Rescue
+        SteamAchievements.Unlock(autoFloor ? SteamAchievements.Rescue : SteamAchievements.CatPower);
+
         RaiseChanged();
         OnExchangeStateChanged?.Invoke();
-        return true;
-    }
-
-    // ───────── 능력 2: 구제 (라운드당 1회, 파산 안전망) ─────────
-
-    /// <summary>구제 가능: 이번 라운드 미사용 + 파산(젤리0) + 스톤 ≥1.</summary>
-    public bool CanRescue()
-    {
-        if (_rescuedThisRound) return false;
-        return _jelly == 0 && _stone >= 1;
+        return new JackpotResult { success = true, n = n, jellyGain = jellyGain, stoneSpent = stoneSpent };
     }
 
     /// <summary>
-    /// 구제 — 파산 직전 스톤을 젤리 1개로. 라운드당 1회 안전망.
-    /// 스톤은 min(보유, 비율)만큼만 차감.
-    /// </summary>
-    public bool TryRescue()
-    {
-        if (!CanRescue())
-        {
-            Debug.LogWarning($"[Wallet] 구제 실패 (jelly={_jelly} stone={_stone} rescued={_rescuedThisRound})");
-            return false;
-        }
-        int stoneCost = Mathf.Min(_stone, _currentExchangeRate);
-        _stone -= stoneCost;
-        _jelly += 1;
-        _rescuedThisRound = true;
-
-        Debug.Log($"[Wallet] 구제 -{stoneCost}💎 → +1🟦 (Jelly={_jelly} Stone={_stone})");
-        SteamAchievements.Unlock(SteamAchievements.Rescue);   // [Steam] 구제(파산 직전 생존)
-        RaiseChanged();
-        OnExchangeStateChanged?.Invoke();
-        return true;
-    }
-
-    /// <summary>모달이 표시할 환전 액션 (우선순위: 고양이의 힘 &gt; 구제 &gt; 없음).</summary>
-    public ExchangeAction GetAvailableAction()
-    {
-        if (CanUseCatPower()) return ExchangeAction.CatPower;
-        if (CanRescue())      return ExchangeAction.Rescue;
-        return ExchangeAction.None;
-    }
-
-    /// <summary>
-    /// Game Over — 젤리 0 AND 스톤 0일 때만.
-    /// 구제가 매 라운드 리셋되므로 스톤이 1개라도 있으면 다음 라운드 구제로 생존 가능.
+    /// Game Over — 0젤리이고 잭팟으로도 못 살아날 때만 (SSOT).
+    /// 스톤 ≥1 && 잭팟 횟수 남으면 생존(잭팟 모달 제시).
     /// (GameManager.NextRound 진입 시 호출 — 플래그 비의존이라 리셋 순서 무관)
     /// </summary>
     public bool ShouldGameOver()
     {
-        return _jelly == 0 && _stone == 0;
+        return _jelly == 0 && !CanJackpot();
     }
 
     /// <summary>
@@ -294,6 +269,7 @@ public class WalletManager : MonoBehaviour
         Debug.Log($"[Wallet] Reward +{stoneGain}S → Jelly={_jelly} Stone={_stone}");
         if (_stone >= RICH_STONE_THRESHOLD) SteamAchievements.Unlock(SteamAchievements.Rich);   // [Steam] 누적 스톤 도달 (SPEC-047)
         RaiseChanged();
+        OnExchangeStateChanged?.Invoke();   // 스톤 변동 → 잭팟 가능 여부 갱신
     }
 
     /// <summary>
@@ -306,15 +282,14 @@ public class WalletManager : MonoBehaviour
         _stone = Mathf.Max(0, stone);
         Debug.Log($"[Wallet] DebugSet → Jelly={_jelly} Stone={_stone}");
         RaiseChanged();
+        OnExchangeStateChanged?.Invoke();
     }
 
-    /// <summary>디버그용 — 환전 비율/플래그 강제 설정 (테스트 시나리오용)</summary>
-    public void DebugSetExchangeRate(int rate, bool rescuedThisRound = false, int catPowerUses = 0)
+    /// <summary>디버그용 — 잭팟 사용 횟수 강제 설정 (테스트 시나리오용).</summary>
+    public void DebugSetJackpot(int usesThisGame)
     {
-        _currentExchangeRate = Mathf.Clamp(rate, EXCHANGE_RATE_MIN, EXCHANGE_RATE_MAX);
-        _rescuedThisRound = rescuedThisRound;
-        _catPowerUsesThisGame = Mathf.Max(0, catPowerUses);
-        Debug.Log($"[Wallet] DebugSetExchangeRate → 비율={_currentExchangeRate} rescued={_rescuedThisRound} catUses={_catPowerUsesThisGame}");
+        _jackpotUsesThisGame = Mathf.Max(0, usesThisGame);
+        Debug.Log($"[Wallet] DebugSetJackpot → jackpotUses={_jackpotUsesThisGame}");
         OnExchangeStateChanged?.Invoke();
     }
 #endif

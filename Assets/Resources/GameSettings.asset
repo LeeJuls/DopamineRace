@@ -107,8 +107,13 @@ MonoBehaviour:
   exchangeModalPrefab: {fileID: 1364091916340533889, guid: b67c5d2d9c4edc046a7f4194c4f11786,
     type: 3}
   trackBarLerpSpeed: 12
-  startingStone: 0
+  startingStone: 100
   catPowerUsesPerGame: 1
+  jackpotMultiplierMin: 2
+  jackpotMultiplierMax: 8
+  jackpotWeights: 120000001200000012000000100000000e0000000a00000006000000
+  jackpotRescueFloorJelly: 5
+  jackpotUsesPerGame: 1
   enableRoundResume: 0
   pathDeviation: 0.3
   characterScale: 1.2
@@ -167,7 +172,7 @@ MonoBehaviour:
   waypointArrivalDist: 0.25
   initialSpeedMultiplier: 0.5
   attackAnimCooldown: 0.6
-  mainFont: {fileID: 12800000, guid: f01374fe9a328e141b1814503b716cef, type: 3}
+  mainFont: {fileID: 12800000, guid: 967a67b8c17c46b4295390c687d1c8a1, type: 3}
   koreanFont: {fileID: 12800000, guid: 967a67b8c17c46b4295390c687d1c8a1, type: 3}
   chineseSimplifiedFont: {fileID: 12800000, guid: 923198ca463ead04abad54380aa085c7,
     type: 3}

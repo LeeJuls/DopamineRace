@@ -17,6 +17,7 @@ public class RewardBurst : MonoBehaviour
 
     private Image _flash;
     private Text  _gainText;
+    private CanvasGroup _gainGroup;   // "+N [아이콘]" 그룹 — 스케일/페이드 단위
     private readonly List<Star> _stars = new List<Star>();
 
     /// <summary>획득 연출 1회 생성. uiParent는 모달의 부모(메인 캔버스) 권장(모달과 수명 분리).</summary>
@@ -64,19 +65,39 @@ public class RewardBurst : MonoBehaviour
             }
         }
 
-        // "+N 🟦" 텍스트 (중앙, 바운스 → 떠오름·페이드)
-        var trt = NewRect("GainText", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(420, 90));
-        _gainText = trt.gameObject.AddComponent<Text>();
+        // "+N [젤리아이콘]" 그룹 (HLG 중앙, CanvasGroup 페이드) — 이모지 미렌더 회피, 실제 스프라이트
+        var grt = NewRect("GainGroup", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(820, 200));
+        _gainGroup = grt.gameObject.AddComponent<CanvasGroup>();
+        var hlg = grt.gameObject.AddComponent<HorizontalLayoutGroup>();
+        hlg.childAlignment = TextAnchor.MiddleCenter;
+        hlg.spacing = 6;
+        hlg.childControlWidth = true;  hlg.childControlHeight = true;
+        hlg.childForceExpandWidth = false; hlg.childForceExpandHeight = false;
+
+        var numGo = new GameObject("Num", typeof(RectTransform));
+        numGo.transform.SetParent(grt, false);
+        _gainText = numGo.AddComponent<Text>();
         if (font != null) _gainText.font = font;
-        _gainText.fontSize  = 48;
+        _gainText.fontSize  = 120;   // SPEC-051: 최종 결과 임팩트
         _gainText.fontStyle = FontStyle.Bold;
         _gainText.alignment = TextAnchor.MiddleCenter;
         _gainText.color = new Color(1f, 0.82f, 0.18f, 1f);
         _gainText.horizontalOverflow = HorizontalWrapMode.Overflow;
         _gainText.verticalOverflow   = VerticalWrapMode.Overflow;
         _gainText.raycastTarget = false;
-        _gainText.text = SafeLoc("str.exchange.reward.gain", "+{0} 🟦", gain);
-        trt.localScale = Vector3.zero;
+        _gainText.text = "+" + gain;
+
+        var jelly = LoadJellyIcon();
+        if (jelly != null)
+        {
+            var iconGo = new GameObject("JellyIcon", typeof(RectTransform));
+            iconGo.transform.SetParent(grt, false);
+            var iimg = iconGo.AddComponent<Image>();
+            iimg.sprite = jelly; iimg.preserveAspect = true; iimg.raycastTarget = false;
+            var le = iconGo.AddComponent<LayoutElement>();
+            le.preferredWidth = 130; le.preferredHeight = 130;   // +30%
+        }
+        grt.localScale = Vector3.zero;
 
         StartCoroutine(Run());
     }
@@ -85,7 +106,7 @@ public class RewardBurst : MonoBehaviour
     {
         const float DUR = 1.0f;
         float t = 0f;
-        var grt = _gainText != null ? _gainText.rectTransform : null;
+        var grt = (_gainGroup != null) ? _gainGroup.transform as RectTransform : null;
 
         while (t < DUR)
         {
@@ -123,7 +144,7 @@ public class RewardBurst : MonoBehaviour
                 {
                     float u = Mathf.Clamp01((t - 0.55f) / 0.45f);
                     grt.anchoredPosition = new Vector2(0f, Mathf.Lerp(0f, 60f, u));
-                    var col = _gainText.color; col.a = 1f - u; _gainText.color = col;
+                    if (_gainGroup != null) _gainGroup.alpha = 1f - u;
                 }
             }
             yield return null;
@@ -149,6 +170,12 @@ public class RewardBurst : MonoBehaviour
         var img = rt.gameObject.AddComponent<Image>();
         img.raycastTarget = false;     // 연출은 입력 가로채지 않음
         return img;
+    }
+
+    private static Sprite LoadJellyIcon()
+    {
+        var item = Resources.Load<CurrencyItem>("Items/DopamineJelly");
+        return (item != null) ? item.icon : null;
     }
 
     private static Sprite[] LoadStarSprites()

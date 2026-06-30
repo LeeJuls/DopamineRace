@@ -1,42 +1,46 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System;
+using System.Collections;
 
 /// <summary>
-/// 도파민 스톤 → 젤리 환전 팝업.
-/// 베팅 화면 헤더 우측 환전 아이콘(💱) 클릭 시 표시.
+/// 럭키 잭팟 모달 (SPEC-051) — 스톤 전부를 (스톤 × N) 젤리로. 게임당 1회.
+/// 두 진입:
+///   - Show()     : 자발 (고양이 클릭) — 닫기 허용.
+///   - ShowAuto() : 0젤리 자동 — 강제(닫기 버튼·backdrop 비활성), 당겨야 진행.
+/// 연출: [잭팟 당기기] → N 가중 랜덤 → "1 스톤 → N 젤리!" 카운트업.
 ///
-/// 4가지 분기:
-///   1. 일반 환전 가능 (Stone ≥ 비율) → "환전: 💎N → 🟦1" 버튼
-///   2. 구제 환전 (Jelly=0 + Stone<비율, R19 확장) → "환전: 💎{보유} → 🟦1 (구제)" 버튼
-///   3. 환전 완료 (이번 라운드 사용) → 비활성 + "이번 라운드 환전 완료"
-///   4. 환전 불가 (스톤 부족 + 구제 X) → 비활성 + "스톤 N개 필요"
-///
-/// SPEC-028 Steps 2.15, 2.16 (R16~R20)
+/// SerializeField 필드·SetReferences 16인자 시그니처는 프리팹/폴백빌더 호환을 위해 유지.
+/// (구 구제/완료 라벨 필드는 잭팟 의미로 재활용 또는 미사용)
+/// SPEC-028 Steps 2.15-2.16 → SPEC-051 잭팟 재설계
 /// </summary>
 public class ExchangeModal : MonoBehaviour
 {
     [Header("─── 정보 표시 ───")]
     [SerializeField] private Text titleText;
-    [SerializeField] private Text rateText;             // "이번 라운드 환전율: N:1"
-    [SerializeField] private Text rateDescText;         // "(스톤 N개 → 젤리 1개)"
-    [SerializeField] private Text holdingText;          // "현재 보유: 🟦X 💎Y"
+    [SerializeField] private Text rateText;             // 잭팟: 헤더/프롬프트 ("1 스톤 → ? 젤리")
+    [SerializeField] private Text rateDescText;         // 잭팟: 결과 ("1 스톤 → N 젤리!")
+    [SerializeField] private Text holdingText;          // "현재 보유: 💎X"
 
-    [Header("─── 환전 옵션 ───")]
-    [SerializeField] private Text optionsTitleText;     // "─── 환전 옵션 ───"
-    [SerializeField] private Button exchangeButton;
+    [Header("─── 잭팟 옵션 ───")]
+    [SerializeField] private Text optionsTitleText;
+    [SerializeField] private Button exchangeButton;     // 잭팟: [잭팟 당기기]
     [SerializeField] private Text exchangeButtonText;
-    [SerializeField] private GameObject rescueIndicator;   // "⚡ 구제 환전" 라벨 컨테이너
+    [SerializeField] private GameObject rescueIndicator;   // (미사용 — 시그니처 유지)
     [SerializeField] private Text rescueIndicatorText;
-    [SerializeField] private GameObject completedIndicator;  // "✅ 환전 완료" 라벨 컨테이너
+    [SerializeField] private GameObject completedIndicator;  // 잭팟: 사용 완료 라벨 컨테이너
     [SerializeField] private Text completedText;
     [SerializeField] private Text completedNextText;
-    [SerializeField] private Text errorText;            // "스톤 N개 필요" 등
-    [SerializeField] private Text noteText;             // "※ 라운드당 1회"
+    [SerializeField] private Text errorText;            // (미사용 — 시그니처 유지)
+    [SerializeField] private Text noteText;             // "🐾 럭키 잭팟 · 게임당 1회"
 
     [Header("─── 닫기 ───")]
     [SerializeField] private Button closeButton;
     [SerializeField] private GameObject backdrop;
+
+    private bool _isAutoMode;        // ShowAuto 진입 = 강제(닫기 차단)
+    private bool _isRolling;         // 연출 중 (중복 클릭 차단)
+    private RewardBurst _activeBurst;
+    private GameObject _rollOverlay; // 연출 중 글씨 뒤 반투명 검정 판 (끝나면 제거)
 
     private void Awake()
     {
@@ -45,19 +49,19 @@ public class ExchangeModal : MonoBehaviour
 
     private void OnEnable()
     {
-        // 환전 버튼 호버 팝 효과 (런타임 부착 — 프리팹 무변경, 중복 방지)
+        // 당기기 버튼 호버 팝 효과 (런타임 부착 — 프리팹 무변경, 중복 방지)
         if (exchangeButton != null && exchangeButton.GetComponent<HoverScale>() == null)
             exchangeButton.gameObject.AddComponent<HoverScale>();
 
         if (exchangeButton != null)
-            exchangeButton.onClick.AddListener(OnExchangeClicked);
+            exchangeButton.onClick.AddListener(OnPullClicked);
         if (closeButton != null)
             closeButton.onClick.AddListener(Hide);
-        // 백드롭 클릭 = 닫기 (모달 밖 영역 클릭 시 닫기)
+        // 백드롭 클릭 = 닫기 (자발 모드에서만 — ShowAuto는 ApplyMode에서 비활성)
         if (backdrop != null)
         {
             var bdBtn = backdrop.GetComponent<Button>() ?? backdrop.AddComponent<Button>();
-            bdBtn.onClick.AddListener(Hide);
+            bdBtn.onClick.AddListener(OnBackdropClicked);
         }
 
         if (WalletManager.Instance != null)
@@ -79,280 +83,246 @@ public class ExchangeModal : MonoBehaviour
         if (WalletManager.Instance != null)
             WalletManager.Instance.OnExchangeStateChanged -= RefreshUI;
 
-        // 모달 닫힘 시 진행 중 획득 연출 즉시 제거 (잔상 방지)
+        // 모달 닫힘 시 진행 중 연출 즉시 제거 (잔상·누수 방지)
         if (_activeBurst != null) { Destroy(_activeBurst.gameObject); _activeBurst = null; }
+        if (_rollOverlay != null) { Destroy(_rollOverlay); _rollOverlay = null; }
+        _isRolling = false;
     }
 
+    /// <summary>자발 진입 (고양이 클릭) — 닫기 허용.</summary>
     public void Show()
+    {
+        _isAutoMode = false;
+        OpenInternal();
+    }
+
+    /// <summary>
+    /// 0젤리 자동 진입 — 강제 모드(닫기 버튼·backdrop 비활성). 당겨야 진행.
+    /// SPEC-051: TryShowBetAmountModal 0젤리 분기에서 호출.
+    /// </summary>
+    public void ShowAuto()
+    {
+        _isAutoMode = true;
+        OpenInternal();
+    }
+
+    private void OpenInternal()
     {
         if (backdrop != null) backdrop.SetActive(true);
         gameObject.SetActive(true);
-        HideConfirm();   // 재진입 시 확인 팝업 잔상 제거
+        _isRolling = false;
 
         // 진입 시 항상 최신 상태로 갱신
-        if (titleText != null) titleText.text = SafeLoc("str.exchange.modal.title", "💱 도파민 스톤 환전");
-        if (optionsTitleText != null) optionsTitleText.text = SafeLoc("str.exchange.modal.options_title", "─── 환전 옵션 ───");
+        if (titleText != null)
+            titleText.text = SafeLoc("str.jackpot.modal.title", "🐾 마네키네코");
+        if (optionsTitleText != null)
+            optionsTitleText.text = SafeLoc("str.jackpot.desc", "스톤 전부를 젤리로! 게임당 1회");
         SetButtonLabel(closeButton, SafeLoc("str.exchange.btn.close", "닫기"));
 
+        // 텍스트 중앙 정렬 통일 (SPEC-051 폴리싱) + desc 잘림 방지 wrap
+        AlignCenter(titleText); AlignCenter(rateText); AlignCenter(rateDescText);
+        AlignCenter(holdingText); AlignCenter(optionsTitleText); AlignCenter(noteText);
+        if (optionsTitleText != null)
+        {
+            optionsTitleText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            optionsTitleText.verticalOverflow   = VerticalWrapMode.Overflow;
+        }
+
+        ApplyMode();
         RefreshUI();
+    }
+
+    /// <summary>자동/자발 모드별 닫기 경로 제어.</summary>
+    private void ApplyMode()
+    {
+        bool canClose = !_isAutoMode;
+        if (closeButton != null) closeButton.gameObject.SetActive(canClose);
+
+        // 강제 모드: backdrop 클릭으로 우회 닫기 차단
+        if (backdrop != null)
+        {
+            var bdBtn = backdrop.GetComponent<Button>();
+            if (bdBtn != null) bdBtn.interactable = canClose;
+        }
     }
 
     public void Hide()
     {
+        if (_isRolling) return;   // 연출 중에는 닫기 무시 (입력 잠금)
+        // 강제 모드에서는 당기기 전까지 닫힘 무시 (backdrop·닫기 모두)
+        if (_isAutoMode) return;
         if (backdrop != null) backdrop.SetActive(false);
         gameObject.SetActive(false);
     }
 
+    private void OnBackdropClicked()
+    {
+        if (_isAutoMode) return;   // 강제 모드 우회 차단
+        Hide();
+    }
+
     /// <summary>
-    /// 상태 갱신 — GetAvailableAction() 우선순위(고양이의 힘 &gt; 구제 &gt; 없음) 기반.
-    /// WalletManager.OnExchangeStateChanged 이벤트로 자동 호출 + 외부에서 직접 호출 가능.
+    /// 잭팟 가능 여부에 따른 UI 갱신.
+    /// WalletManager.OnExchangeStateChanged 이벤트로 자동 호출 + 외부 직접 호출 가능.
     /// </summary>
     public void RefreshUI()
     {
         var wallet = WalletManager.Instance;
         if (wallet == null) return;
+        if (_isRolling) return;   // 연출 중에는 덮어쓰지 않음
 
-        int rate     = wallet.CurrentExchangeRate;
-        int stone    = wallet.Stone;
-        int usesLeft = wallet.CatPowerUsesLeft;
-        var action   = wallet.GetAvailableAction();
+        int stone     = wallet.Stone;
+        int usesLeft  = wallet.JackpotUsesLeft;
+        bool canPull  = wallet.CanJackpot();
 
-        bool showCat    = (action == WalletManager.ExchangeAction.CatPower);
-        bool showRescue = (action == WalletManager.ExchangeAction.Rescue);
-        bool blocked    = (action == WalletManager.ExchangeAction.None);
+        // 프롬프트 (자동/자발 헤더)
+        if (rateText != null)
+        {
+            rateText.text = _isAutoMode
+                ? SafeLoc("str.jackpot.auto.header", "젤리가 떨어졌어요! 마지막 기회")
+                : SafeLoc("str.jackpot.modal.prompt", "1 스톤 → ? 젤리");
+        }
+        if (rateDescText != null) rateDescText.text = "";   // 결과 표시 전 비움
 
-        // 비율·보유량 표시
-        if (rateText != null) rateText.text = SafeLoc("str.exchange.modal.rate",
-            "이번 라운드 환전율: {0}:1", rate);
-        if (rateDescText != null) rateDescText.text = SafeLoc("str.exchange.modal.rate_desc",
-            "(스톤 {0}개 → 젤리 1개)", rate);
         if (holdingText != null)
         {
-            // 픽셀폰트(size 38)로 넓어진 보유 숫자가 Wrap+Truncate로 잘리던 버그 방지 → 한 줄 유지
             holdingText.horizontalOverflow = HorizontalWrapMode.Overflow;
             holdingText.text = SafeLoc("str.exchange.modal.holding", "현재 보유: {0}개", stone);
         }
 
-        // 인디케이터 초기화
-        if (rescueIndicator != null) rescueIndicator.SetActive(showRescue);
-        if (completedIndicator != null) completedIndicator.SetActive(false);
-        if (errorText != null) errorText.gameObject.SetActive(false);
+        // 미사용 인디케이터 숨김 (시그니처 유지 필드)
+        if (rescueIndicator != null) rescueIndicator.SetActive(false);
 
-        // 액션 버튼
-        if (exchangeButton != null && exchangeButtonText != null)
+        // 당기기 버튼 — 못 당길 때(스톤0/소진)는 빈 회색 버튼 노출 대신 숨김 (SPEC-051 폴리싱 #3)
+        if (exchangeButton != null)
         {
-            exchangeButton.interactable = (showCat || showRescue);
-
-            if (showCat)
+            exchangeButton.gameObject.SetActive(canPull);
+            if (canPull)
             {
-                exchangeButtonText.text = SafeLoc("str.exchange.catpower.btn",
-                    "🐾 전부 환전: 💎{0} → 🟦{1}", wallet.GetCatPowerStoneCost(), wallet.GetCatPowerJellyGain());
-            }
-            else if (showRescue)
-            {
-                exchangeButtonText.text = SafeLoc("str.exchange.btn.rescue_action",
-                    "환전: 💎{0} → 🟦1 (구제)", Mathf.Min(stone, rate));
-                if (rescueIndicatorText != null)
-                    rescueIndicatorText.text = SafeLoc("str.exchange.btn.rescue", "⚡ 구제 (라운드당 1회)");
-            }
-            else
-            {
-                exchangeButtonText.text = ""; // 비활성
+                exchangeButton.interactable = true;
+                if (exchangeButtonText != null)
+                    exchangeButtonText.text = SafeLoc("str.jackpot.btn.pull", "🐾 고양이의 보은");
             }
         }
 
-        // 하단 안내 — 고양이의 힘 남은 횟수 / 소진
+        // 스톤 부족 사유 (횟수는 남았는데 스톤이 없음 — 소진은 completedIndicator가 안내)
+        if (errorText != null)
+        {
+            bool showNoStone = !canPull && usesLeft > 0;
+            errorText.gameObject.SetActive(showNoStone);
+            if (showNoStone)
+            {
+                AlignCenter(errorText);
+                errorText.text = SafeLoc("str.jackpot.no_stone", "스톤이 없어요");
+            }
+        }
+
+        // 잭팟 소진 시 — "사용 완료/다음 라운드" 대신 획득 젤리 표시 (게임당 1회라 결과 지속, SPEC-051)
+        bool used = (usesLeft <= 0);
+        if (completedIndicator != null) completedIndicator.SetActive(used);
+        if (used)
+        {
+            if (completedText != null)
+            {
+                AlignCenter(completedText);
+                completedText.text = SafeLoc("str.jackpot.gained", "{0} 도파민 젤리 획득!!!", wallet.LastJackpotJellyGain);
+            }
+            if (completedNextText != null) completedNextText.gameObject.SetActive(false);  // "다음 라운드" 라벨 제거
+        }
+
+        // 하단 안내 (항상 "게임당 1회")
         if (noteText != null)
-            noteText.text = (usesLeft > 0)
-                ? SafeLoc("str.exchange.catpower.remain", "🐾 고양이의 힘 · 남은 {0}회", usesLeft)
-                : SafeLoc("str.exchange.catpower.used", "🐾 고양이의 힘 사용 완료 (이번 게임)");
-
-        // 비활성 사유 표시
-        if (blocked)
-        {
-            bool rescueUsed   = (wallet.Jelly == 0 && wallet.RescuedThisRound);
-            bool catExhausted = (usesLeft <= 0 && stone >= rate);
-
-            if (rescueUsed)
-            {
-                if (completedIndicator != null) completedIndicator.SetActive(true);
-                if (completedText != null)
-                    completedText.text = SafeLoc("str.exchange.completed", "이번 라운드 구제 완료");
-                if (completedNextText != null)
-                    completedNextText.text = SafeLoc("str.exchange.completed_next", "다음 라운드에 다시 가능");
-            }
-            else if (catExhausted)
-            {
-                if (completedIndicator != null) completedIndicator.SetActive(true);
-                if (completedText != null)
-                    completedText.text = SafeLoc("str.exchange.catpower.used", "🐾 고양이의 힘 사용 완료 (이번 게임)");
-                if (completedNextText != null)
-                    completedNextText.text = SafeLoc("str.exchange.catpower.next_game", "다음 게임에 다시 가능");
-            }
-            else if (errorText != null)
-            {
-                errorText.gameObject.SetActive(true);
-                errorText.text = SafeLoc("str.exchange.error.insufficient",
-                    "스톤이 부족합니다 ({0}개 필요)", rate);
-            }
-        }
+            noteText.text = SafeLoc("str.jackpot.remain", "게임당 1회");
     }
 
-    private void OnExchangeClicked()
+    private void OnPullClicked()
     {
         var wallet = WalletManager.Instance;
         if (wallet == null) return;
-
-        // 즉시 실행하지 않고 확인 팝업 표시 → Yes에서 실제 실행
-        switch (wallet.GetAvailableAction())
+        if (_isRolling) return;
+        if (!wallet.CanJackpot())
         {
-            case WalletManager.ExchangeAction.CatPower:
+            Debug.LogWarning("[ExchangeModal] 잭팟 불가 (당기기 무시)");
+            return;
+        }
+
+        // 연출 중 재입력 차단
+        _isRolling = true;
+        if (exchangeButton != null) exchangeButton.interactable = false;
+
+        // 실제 잭팟 (autoFloor = 0젤리 자동 진입일 때만 바닥 보장)
+        var result = wallet.TryJackpot(_isAutoMode);
+        if (!result.success)
+        {
+            _isRolling = false;
+            RefreshUI();
+            return;
+        }
+
+        StartCoroutine(PlayRollThenResult(result.n, result.jellyGain));
+    }
+
+    /// <summary>N 굴림 연출(간단 스크롤) → 결과 표시 → 획득 버스트.</summary>
+    private IEnumerator PlayRollThenResult(int finalN, int jellyGain)
+    {
+        // 연출 강화 (SPEC-051): 글씨 뒤 반투명 검정 판 + 진노랑 글씨. 입력은 _isRolling가 차단.
+        int origSibling = -1;
+        if (rateDescText != null)
+        {
+            rateDescText.color = new Color(1f, 0.95f, 0.2f);   // 밝은 노란색 (검정 판 위 대비)
+            Transform modalT = rateDescText.transform.parent;
+            if (modalT != null)
             {
-                int gain = wallet.GetCatPowerJellyGain();
-                int left = wallet.CatPowerUsesLeft;
-                ShowConfirm(() => wallet.TryUseCatPower(), gain, true, left, Mathf.Max(0, left - 1));
-                break;
+                _rollOverlay = new GameObject("RollOverlay", typeof(RectTransform), typeof(Image));
+                _rollOverlay.transform.SetParent(modalT, false);
+                var ort = _rollOverlay.GetComponent<RectTransform>();
+                ort.anchorMin = Vector2.zero; ort.anchorMax = Vector2.one;
+                ort.offsetMin = Vector2.zero; ort.offsetMax = Vector2.zero;
+                var oimg = _rollOverlay.GetComponent<Image>();
+                oimg.color = new Color(0f, 0f, 0f, 0.6f);
+                oimg.raycastTarget = true;                  // 모달 영역 클릭 흡수
+                _rollOverlay.transform.SetAsLastSibling();
+                origSibling = rateDescText.transform.GetSiblingIndex();
+                rateDescText.transform.SetAsLastSibling();  // 글씨를 판 위로
             }
-            case WalletManager.ExchangeAction.Rescue:
-                ShowConfirm(() => wallet.TryRescue(), 1, false, 0, 0);
-                break;
-            default:
-                Debug.LogWarning("[ExchangeModal] 사용 가능한 환전 액션 없음");
-                break;
         }
-    }
 
-    // ───────── 교환 확인 팝업 (런타임 빌드 · 프리팹 무변경) ─────────
-
-    private GameObject _confirmRoot;
-    private Text _confirmGainText;
-    private Text _confirmUsesText;
-    private System.Func<bool> _pendingExchange;   // 실행 성공 여부 반환
-    private int _pendingGain;                      // 연출용 — 실행 전 캡처값
-    private RewardBurst _activeBurst;
-
-    /// <summary>교환 전 확인 팝업 표시. Yes에서 onYes(실제 환전) 실행.</summary>
-    private void ShowConfirm(System.Func<bool> onYes, int jellyGain, bool showUses, int usesBefore, int usesAfter)
-    {
-        EnsureConfirmBuilt();
-        _pendingExchange = onYes;
-        _pendingGain = jellyGain;
-
-        if (_confirmGainText != null)
-            _confirmGainText.text = SafeLoc("str.exchange.confirm.gain", "획득 도파민 젤리: {0}", jellyGain);
-        if (_confirmUsesText != null)
+        // 1) 빠른 스크롤 연출 (N 후보를 짧게 훑음)
+        if (rateDescText != null)
         {
-            _confirmUsesText.gameObject.SetActive(showUses);
-            if (showUses)
-                _confirmUsesText.text = SafeLoc("str.exchange.confirm.uses", "남은 횟수 {0} → {1}", usesBefore, usesAfter);
+            const int spins = 12;
+            for (int i = 0; i < spins; i++)
+            {
+                int fake = WalletManager.Instance != null ? WalletManager.Instance.RollJackpotN() : finalN;
+                rateDescText.text = SafeLoc("str.jackpot.result", "1 스톤 → {0} 젤리!", fake);
+                yield return new WaitForSeconds(0.04f + i * 0.006f);   // 점점 느려짐
+            }
+            // 2) 확정 N
+            rateDescText.text = SafeLoc("str.jackpot.result", "1 스톤 → {0} 젤리!", finalN);
         }
 
-        _confirmRoot.SetActive(true);
-        _confirmRoot.transform.SetAsLastSibling();   // 모달 위 최상단
-    }
+        // 결과 음미 (검정 판 위 확정 N 0.5s 유지) → 판 제거 + sibling 복원
+        yield return new WaitForSeconds(0.5f);
+        if (_rollOverlay != null) { Destroy(_rollOverlay); _rollOverlay = null; }
+        if (rateDescText != null && origSibling >= 0) rateDescText.transform.SetSiblingIndex(origSibling);
 
-    private void HideConfirm()
-    {
-        _pendingExchange = null;
-        if (_confirmRoot != null) _confirmRoot.SetActive(false);
-    }
+        if (rateText != null) rateText.text = SafeLoc("str.jackpot.modal.title", "🐾 마네키네코");
 
-    private void OnConfirmYes()
-    {
-        var act = _pendingExchange;
-        int gain = _pendingGain;
-        HideConfirm();
+        // 3) 획득 연출 — 모달과 수명 분리(부모=메인 캔버스). 재진입 시 기존 것 제거.
+        if (_activeBurst != null) Destroy(_activeBurst.gameObject);
+        Transform parent = (transform.parent != null) ? transform.parent : transform;
+        _activeBurst = RewardBurst.Spawn(parent, jellyGain, titleText != null ? titleText.font : null);
 
-        bool ok = act != null && act();
-        RefreshUI();
+        _isRolling = false;
+        RefreshUI();   // 사용 완료 라벨 + 닫기 안내 (자동 모드는 ApplyMode가 닫기 차단 유지)
 
-        if (ok)
+        // 자동 모드: 잭팟 사용 후엔 닫기 허용(충전 완료 → 재START 유도). 모달은 열어둠.
+        if (_isAutoMode)
         {
-            // 획득 연출 — 모달과 수명 분리(부모=메인 캔버스). 재진입 시 기존 것 제거.
-            if (_activeBurst != null) Destroy(_activeBurst.gameObject);
-            Transform parent = (transform.parent != null) ? transform.parent : transform;
-            _activeBurst = RewardBurst.Spawn(parent, gain, titleText != null ? titleText.font : null);
+            _isAutoMode = false;
+            ApplyMode();
+            if (closeButton != null) SetButtonLabel(closeButton, SafeLoc("str.exchange.btn.close", "닫기"));
         }
-    }
-
-    private void EnsureConfirmBuilt()
-    {
-        if (_confirmRoot != null) return;
-        Font font = (titleText != null) ? titleText.font : null;
-
-        // 전체 딤 백드롭 (뒤 모달 클릭 차단)
-        _confirmRoot = NewUIChild("ExchangeConfirm", transform, Vector2.zero, Vector2.one, Vector2.zero);
-        var rrt = _confirmRoot.GetComponent<RectTransform>();
-        rrt.offsetMin = Vector2.zero; rrt.offsetMax = Vector2.zero;
-        var dim = _confirmRoot.AddComponent<Image>();
-        dim.color = new Color(0f, 0f, 0f, 0.55f);
-        dim.raycastTarget = true;
-
-        // 패널
-        var panel = NewUIChild("Panel", _confirmRoot.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(460, 300));
-        var pimg = panel.AddComponent<Image>();
-        pimg.color = Color.white;
-
-        var title = NewTextChild("Title", panel.transform, font, 30, new Color(0.15f, 0.15f, 0.2f),
-            new Vector2(0.5f, 1f), new Vector2(0, -52), new Vector2(420, 56));
-        title.text = SafeLoc("str.exchange.confirm.title", "진짜 교환하시겠습니까?");
-
-        _confirmGainText = NewTextChild("Gain", panel.transform, font, 26, new Color(0.1f, 0.2f, 0.45f),
-            new Vector2(0.5f, 0.5f), new Vector2(0, 28), new Vector2(420, 44));
-        _confirmUsesText = NewTextChild("Uses", panel.transform, font, 22, new Color(0.35f, 0.2f, 0.1f),
-            new Vector2(0.5f, 0.5f), new Vector2(0, -16), new Vector2(420, 38));
-
-        var yes = NewButtonChild("Yes", panel.transform, font, SafeLoc("str.ui.option.yes", "예"),
-            new Color(0.30f, 0.50f, 0.75f), new Vector2(-100, 50), new Vector2(170, 60));
-        yes.onClick.AddListener(OnConfirmYes);
-        var no = NewButtonChild("No", panel.transform, font, SafeLoc("str.ui.option.no", "아니오"),
-            new Color(0.45f, 0.45f, 0.5f), new Vector2(100, 50), new Vector2(170, 60));
-        no.onClick.AddListener(HideConfirm);
-
-        _confirmRoot.SetActive(false);
-    }
-
-    // ── UGUI 런타임 빌드 헬퍼 ──
-    private static GameObject NewUIChild(string name, Transform parent, Vector2 aMin, Vector2 aMax, Vector2 size)
-    {
-        var go = new GameObject(name);
-        var rt = go.AddComponent<RectTransform>();
-        rt.SetParent(parent, false);
-        rt.anchorMin = aMin; rt.anchorMax = aMax;
-        rt.sizeDelta = size;
-        rt.anchoredPosition = Vector2.zero;
-        return go;
-    }
-
-    private static Text NewTextChild(string name, Transform parent, Font font, int size, Color color,
-        Vector2 anchor, Vector2 pos, Vector2 sd)
-    {
-        var go = NewUIChild(name, parent, anchor, anchor, sd);
-        go.GetComponent<RectTransform>().anchoredPosition = pos;
-        var t = go.AddComponent<Text>();
-        if (font != null) t.font = font;
-        t.fontSize = size; t.fontStyle = FontStyle.Bold; t.color = color;
-        t.alignment = TextAnchor.MiddleCenter;
-        t.horizontalOverflow = HorizontalWrapMode.Overflow;
-        t.verticalOverflow = VerticalWrapMode.Overflow;
-        t.raycastTarget = false;
-        return t;
-    }
-
-    private static Button NewButtonChild(string name, Transform parent, Font font, string label, Color bg,
-        Vector2 pos, Vector2 sd)
-    {
-        var go = NewUIChild(name, parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), sd);
-        go.GetComponent<RectTransform>().anchoredPosition = pos;
-        var img = go.AddComponent<Image>();
-        img.color = bg;
-        var btn = go.AddComponent<Button>();
-        btn.targetGraphic = img;
-        var t = NewTextChild("Text", go.transform, font, 26, Color.white, new Vector2(0.5f, 0.5f), Vector2.zero, sd);
-        var trt = t.GetComponent<RectTransform>();
-        trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one; trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
-        t.text = label;
-        return btn;
     }
 
     // ───── 유틸 ─────
@@ -376,8 +346,14 @@ public class ExchangeModal : MonoBehaviour
         if (t != null) t.text = text;
     }
 
+    private static void AlignCenter(Text t)
+    {
+        if (t != null) t.alignment = TextAnchor.MiddleCenter;
+    }
+
     /// <summary>
-    /// SceneBootstrapper가 임시 레이아웃 만든 후 참조 주입.
+    /// SceneBootstrapper/프리팹 생성기가 임시 레이아웃 만든 후 참조 주입.
+    /// 시그니처 유지 (Spec028UI.cs·CurrencyUIPrefabCreator.cs·ExchangeModalPrefab.prefab 호환).
     /// </summary>
     public void SetReferences(
         Text title, Text rate, Text rateDesc, Text holding, Text optionsTitle,

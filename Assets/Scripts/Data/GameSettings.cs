@@ -202,7 +202,23 @@ public partial class GameSettings : ScriptableObject
     [Header("═══ 고양이의 힘 (전부환전) ═══")]
     [Tooltip("'고양이의 힘'(가진 스톤 전부를 한 번에 젤리로) 게임당 사용 횟수.\n기본 1. 0 = 비활성(구제만). 늘리면 게임당 여러 번 전부환전 가능.")]
     [Min(0)]
-    public int catPowerUsesPerGame = 1;
+    public int catPowerUsesPerGame = 1;   // [DEPRECATED SPEC-051] jackpotUsesPerGame로 대체 — 잔존 호환용
+
+    [Header("═══ 럭키 잭팟 (SPEC-051) ═══")]
+    [Tooltip("잭팟 배수 N 하한 (스톤 1개당 최소 젤리). 2 이상 = 항상 이득.")]
+    [Min(1)]
+    public int jackpotMultiplierMin = 2;
+    [Tooltip("잭팟 배수 N 상한 (대박). 기본 8.")]
+    [Min(1)]
+    public int jackpotMultiplierMax = 8;
+    [Tooltip("N 가중치 (index 0 = Min..Max). 길이가 (Max-Min+1)과 다르거나 비면 균등 폴백.")]
+    public int[] jackpotWeights = new int[] { 18, 18, 18, 16, 14, 10, 6 };
+    [Tooltip("0젤리 자동(구제) 잭팟 시 최소 보장 젤리 (컴백 버퍼). 기본 5.")]
+    [Min(1)]
+    public int jackpotRescueFloorJelly = 5;
+    [Tooltip("럭키 잭팟 게임당 사용 횟수 (자발 고양이클릭 + 0젤리 자동, 1회 공유). 기본 1. 0=비활성.")]
+    [Min(0)]
+    public int jackpotUsesPerGame = 1;
 
     [Header("═══ 세이브 ═══")]
     [Tooltip("true면 마지막 플레이 라운드를 기억하여 복귀\nfalse면 항상 1라운드부터 시작")]

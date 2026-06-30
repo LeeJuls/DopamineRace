@@ -701,8 +701,15 @@ public partial class SceneBootstrapper
         if (WalletManager.Instance == null) return false;
         if (WalletManager.Instance.Jelly < 1)
         {
-            // 보유 젤리 0 — 정상 흐름이면 GameOver가 이미 진입했어야 함
-            Debug.LogWarning("[Betting] 보유 젤리 0 → GameOver 진입");
+            // SPEC-051: 0젤리 + 잭팟 가능(스톤≥1 && 횟수 남음) → 자동 잭팟 모달로 충전 유도.
+            // 잭팟 불가(스톤0 또는 횟수 소진)거나 모달 부재면 → GameOver. (E18: 단일 ChangeState 경로)
+            if (WalletManager.Instance.CanJackpot() && _exchangeModal != null)
+            {
+                Debug.Log("[Betting] 보유 젤리 0 → 럭키 잭팟 자동 모달");
+                _exchangeModal.ShowAuto();
+                return true;   // 베팅 화면 유지, 모달이 흐름 인계
+            }
+            Debug.LogWarning("[Betting] 보유 젤리 0 + 잭팟 불가 → GameOver 진입");
             GameManager.Instance?.ChangeState(GameManager.GameState.GameOver);
             return true;   // 호출처에서 추가 동작 X
         }
