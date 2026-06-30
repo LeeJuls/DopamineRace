@@ -186,18 +186,17 @@ public class CharacterInfoPopup : MonoBehaviour
             skillDescLabel = FindText(layout3, "SkillDescLabel");
             if (skillDescLabel != null)
             {
-                // 단일 라인: 아이콘 우측부터 팝업 끝까지 스트레치, 높이 22px(1줄)
+                // 2줄 표시: 아이콘 우측~팝업 끝 스트레치, <size> 태그로 폰트 개별 지정
                 RectTransform srt = skillDescLabel.rectTransform;
-                srt.anchorMin        = new Vector2(0.12f, 0.5f);
-                srt.anchorMax        = new Vector2(0.98f, 0.5f);
-                srt.sizeDelta        = new Vector2(0f, 22f);
-                srt.anchoredPosition = Vector2.zero;
+                srt.anchorMin        = new Vector2(0.12f, 0.05f);
+                srt.anchorMax        = new Vector2(0.98f, 0.95f);
+                srt.offsetMin        = Vector2.zero;
+                srt.offsetMax        = Vector2.zero;
 
-                skillDescLabel.horizontalOverflow   = HorizontalWrapMode.Wrap;
-                skillDescLabel.verticalOverflow     = VerticalWrapMode.Truncate;
-                skillDescLabel.resizeTextForBestFit = true;
-                skillDescLabel.resizeTextMinSize    = 8;
-                skillDescLabel.resizeTextMaxSize    = 14;
+                skillDescLabel.horizontalOverflow   = HorizontalWrapMode.Overflow;
+                skillDescLabel.verticalOverflow     = VerticalWrapMode.Overflow;
+                skillDescLabel.resizeTextForBestFit = false;
+                skillDescLabel.fontSize             = 14;
             }
         }
 
@@ -282,8 +281,8 @@ public class CharacterInfoPopup : MonoBehaviour
                 string aDesc = SkillRegistry.GetDescription(data.charAbility);
                 if (!string.IsNullOrEmpty(aName) && aName != data.charAbility)
                 {
-                    sb.Append("<color=#FFC000>⚔ ").Append(aName).Append("</color>");
-                    if (!string.IsNullOrEmpty(aDesc)) sb.Append(" <color=#FFFFFF>").Append(aDesc).Append("</color>");
+                    sb.Append("<size=28><color=#FFC000>⚔ ").Append(aName).Append("</color></size>");
+                    if (!string.IsNullOrEmpty(aDesc)) sb.Append("\n<size=24><color=#FFFFFF>").Append(aDesc).Append("</color></size>");
                 }
             }
 
@@ -295,9 +294,9 @@ public class CharacterInfoPopup : MonoBehaviour
                 string pDesc = SkillRegistry.GetDescription(v4.charPassive);
                 if (!string.IsNullOrEmpty(pName) && pName != v4.charPassive)
                 {
-                    if (sb.Length > 0) sb.Append("  <color=#888888>|</color>  ");
-                    sb.Append("<color=#FFC000>✨ ").Append(pName).Append("</color>");
-                    if (!string.IsNullOrEmpty(pDesc)) sb.Append(" <color=#FFFFFF>").Append(pDesc).Append("</color>");
+                    if (sb.Length > 0) sb.Append("\n\n");
+                    sb.Append("<size=28><color=#FFC000>✨ ").Append(pName).Append("</color></size>");
+                    if (!string.IsNullOrEmpty(pDesc)) sb.Append("\n<size=24><color=#FFFFFF>").Append(pDesc).Append("</color></size>");
                 }
             }
 
