@@ -196,6 +196,15 @@ public class CharacterInfoPopup : MonoBehaviour
         // 폰트 일괄 적용 (모든 Text 컴포넌트에 GameSettings 한글 픽셀폰트)
         ApplyFontAll();
 
+        // 타입 배지 BestFit: 긴 타입명(de "Nachzügler", es/br "Perseguidor") 오버플로 방지
+        if (charTypeLabel != null)
+        {
+            charTypeLabel.resizeTextForBestFit = true;
+            charTypeLabel.resizeTextMinSize    = 10;
+            charTypeLabel.resizeTextMaxSize    = 20;
+            charTypeLabel.horizontalOverflow   = HorizontalWrapMode.Wrap;
+        }
+
         isInitialized = true;
         gameObject.SetActive(false);
     }

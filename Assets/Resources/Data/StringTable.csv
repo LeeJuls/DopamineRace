@@ -64,9 +64,9 @@ str.char.030.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint
 str.char.031.name,천리풍,Gale Runner,ゲイルランナー,千里风,Sturmläufer,Corredor del Viento,Corredor do Vento,千里風
 str.char.031.ability,전력질주,Sprint,全力疾走,全力冲刺,Sprint,Sprint,Sprint,全力衝刺
 str.chartype.runner,도주,Runner,逃げ,逃跑,Sprinter,Escapista,Escapista,逃跑
-str.chartype.leader,선행,Leader,先行,领先,Anführer,Líder,Líder,領先
-str.chartype.chaser,선입,Chaser,差し,追赶,Verfolger,Perseguidor,Perseguidor,追趕
-str.chartype.reckoner,추입,Reckoner,追込,后追,Nachzügler,Remontador,Remontador,後追
+str.chartype.leader,선행,Stalker,先行,领先,Anführer,Líder,Líder,領先
+str.chartype.chaser,선입,Tweener,差し,追赶,Verfolger,Perseguidor,Perseguidor,追趕
+str.chartype.reckoner,추입,Closer,追込,后追,Nachzügler,Remontador,Remontador,後追
 str.track.normal.name,일반,Normal,通常,普通,Normal,Normal,Normal,普通
 str.track.normal.desc,표준 트랙. 순수 스탯 경쟁!,Standard track. Pure stat competition!,標準トラック,标准赛道。纯属性竞争！,Standardstrecke. Reiner Stat-Wettbewerb!,Pista estándar. ¡Competencia de stats!,Pista padrão. Competição de stats!,標準賽道。純屬性競爭！
 str.track.rainy.name,비,Rainy,雨,雨天,Regen,Lluvioso,Chuvoso,雨天
