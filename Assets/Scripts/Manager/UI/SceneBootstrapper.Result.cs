@@ -14,7 +14,7 @@ public partial class SceneBootstrapper
 {
     private static readonly Color COLOR_RESULT_WIN  = new Color(1f, 0.85f, 0.2f, 1f);
     private static readonly Color COLOR_RESULT_LOSE = new Color(0.55f, 0.55f, 0.55f, 1f);
-    private static readonly Color COLOR_PICK_HIT    = new Color(0.4f, 1f,  0.4f,  1f);
+    private static readonly Color COLOR_PICK_HIT    = new Color(0.13f, 0.60f, 0.18f, 1f);
     private static readonly Color COLOR_PICK_MISS   = new Color(1f,  0.4f, 0.4f,  1f);
 
     // 배지 색상
@@ -248,6 +248,10 @@ public partial class SceneBootstrapper
                     arrowText.gameObject.SetActive(true);
                     arrowText.text  = "← " + BuildPickArrowLabel(bet, si, actualRank);
                     arrowText.color = isHit ? COLOR_PICK_HIT : COLOR_PICK_MISS;
+                    string _lang = Loc.CurrentLang;
+                    bool _boldSafe = _lang != "jp" && _lang != "cn"
+                                  && _lang != "tw" && _lang != "br";
+                    arrowText.fontStyle = _boldSafe ? FontStyle.Bold : FontStyle.Normal;
                 }
             }
         }
