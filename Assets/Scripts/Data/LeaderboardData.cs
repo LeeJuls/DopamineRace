@@ -148,6 +148,28 @@ public static class LeaderboardData
     }
 
     /// <summary>
+    /// 이 점수가 로컬 리더보드에서 몇 위로 들어가는지(1-based). 순위권 밖이면 0.
+    /// rank = (저장된 entries 중 score 이상(>=) 항목 수) + 1.
+    /// 동점은 ">="로 카운트 → 신규 점수는 동점자 **아래**(Save 안정정렬 실배치와 일치).
+    /// 빈 목록 → 1. 포화(MAX_ENTRIES)에서 최하 이하·동점최하 → 진입 불가 → 0(Qualifies "동점 미자격"과 일치).
+    /// </summary>
+    public static int GetRank(int score)
+    {
+        var data = Load();
+        int atOrAbove = 0;
+        int lowest = int.MaxValue;
+        foreach (var e in data.entries)
+        {
+            if (e.score >= score) atOrAbove++;    // ">=" 카운트(신규는 동점자 아래 → Save 실배치 일치)
+            if (e.score < lowest) lowest = e.score;
+        }
+        // 포화(100개) 상태에선 Qualifies(score > lowest)와 동일하게 동점·이하는 진입 불가 → 순위권 밖
+        if (data.entries.Count >= MAX_ENTRIES && score <= lowest) return 0;
+        int rank = atOrAbove + 1;
+        return rank <= MAX_ENTRIES ? rank : 0;
+    }
+
+    /// <summary>
     /// 전체 기록 수
     /// </summary>
     public static int Count

@@ -81,16 +81,36 @@ public partial class SceneBootstrapper
         modalRoot.SetActive(false);
     }
 
-    /// <summary>제출 후 rank 결과를 팝업으로 표시 — 터치 시 onClosed(종료화면 진입).</summary>
+    /// <summary>
+    /// 제출 후 rank 결과를 모달 팝업으로 표시(선택적) — 터치 시 onClosed.
+    /// S5: 등수의 1차 표시 수단은 요약 화면의 배지(RefreshMyRankBadge). 이 팝업은 보조.
+    /// rank=0(원격없음/실패)이면 로컬 폴백 등수를 계산해 표기(배지와 동일 정직 표기).
+    /// </summary>
     private void ShowRankResultInModal(int rank, System.Action onClosed)
     {
         if (_nameEntryModal == null) { onClosed?.Invoke(); return; }
-        bool qualified = rank <= 100;
-        string key   = qualified ? "str.nameentry.rank_qualified" : "str.nameentry.rank_disqualified";
-        string text  = Loc.Get(key, rank);
-        Color  color = qualified ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.7f, 0.2f);
+
+        string text;
+        Color  color;
+        if (rank > 0)
+        {
+            bool qualified = rank <= 100;
+            string key = qualified ? "str.nameentry.rank_qualified" : "str.nameentry.rank_disqualified";
+            text  = Loc.Get(key, rank);
+            color = qualified ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.7f, 0.2f);
+            Debug.Log($"[Leaderboard] rank={rank} ({(qualified ? "등재" : "미등재")}) — {text}");
+        }
+        else
+        {
+            // 원격 rank 없음 → 로컬 폴백 등수 (배지의 RefreshMyRankBadge(0) 경로와 일치)
+            int score     = ScoreManager.Instance != null ? ScoreManager.Instance.LeaderboardScore : 0;
+            int localRank = LeaderboardData.GetRank(score);
+            text  = localRank > 0 ? Loc.Get("str.summary.local_rank", localRank)
+                                  : Loc.Get("str.summary.rank_out");
+            color = new Color(1f, 0.7f, 0.2f);
+            Debug.Log($"[Leaderboard] 원격 rank 없음 → 로컬 폴백 등수={localRank} — {text}");
+        }
         _nameEntryModal.ShowResult(text, color, onClosed);   // 팝업 → 터치 시 onClosed
-        Debug.Log($"[Leaderboard] rank={rank} ({(qualified ? "등재" : "미등재")}) — {text}");
     }
 
     /// <summary>중앙 기준 픽셀 위치·크기 버튼 (MkSimpleButton은 offset=0이라 rt 후처리).</summary>
@@ -104,58 +124,62 @@ public partial class SceneBootstrapper
     }
 
     /// <summary>
-    /// 종료(Finish/GameOver) 시 점수가 Top100 자격이면 이름 입력 모달 → 저장 → 종료화면.
-    /// 미자격/기록없음이면 바로 종료화면(미저장). 모달 비동기 → 종료화면 진입을 콜백까지 지연.
+    /// S5: 요약(Finish) 화면이 이미 떠 있는 상태에서 호출됨.
+    /// 자격(Top100 && 기록존재 && 모달존재)이면 이름 입력 모달을 요약 위에 띄워 등록 → 확정 후
+    /// onRankResolved(rank)로 요약의 순위 배지를 글로벌등수로 갱신.
+    /// 미자격/기록없음/오프라인/제출실패 4분기 모두 onRankResolved(rank) 1회 보장
+    /// (rank=0이면 RefreshMyRankBadge가 GetRank 로컬 폴백으로 등수 표시 — 핵심 버그 해소).
     /// </summary>
-    private void TryNameEntryThen(System.Action showEndScreen)
+    private void TryNameEntryThen(System.Action<int> onRankResolved)
     {
         var sm = ScoreManager.Instance;
         int score = sm != null ? sm.LeaderboardScore : 0;   // 리더보드 = 누적 스톤 (SPEC-028 R5)
         bool hasRecord = sm != null && sm.RoundHistory.Count > 0;
-        if (hasRecord && LeaderboardData.Qualifies(score) && _nameEntryModal != null)
+
+        // ── 미자격/기록없음/모달없음 → 모달 생략. 요약은 이미 RefreshMyRankBadge(0)로 로컬등수 표시 중.
+        if (!(hasRecord && LeaderboardData.Qualifies(score) && _nameEntryModal != null))
         {
-            _nameEntryModal.Show(score, (name) =>
+            onRankResolved?.Invoke(0);   // 로컬 폴백 등수로 배지 확정(멱등)
+            return;
+        }
+
+        // ── 자격: 요약 위에 등록 모달 → 확정 콜백
+        _nameEntryModal.Show(score, (name) =>
+        {
+            var sm2 = ScoreManager.Instance;
+            sm2?.SaveToLeaderboard(name);   // 로컬 캐시(멱등) — 항상 성공·즉시
+
+            var svc = LeaderboardService.Instance;
+
+            // 모달 닫고 배지 갱신(요약은 이미 떠 있으므로 여기서는 등수만 확정)
+            System.Action<int> resolve = (rank) => {
+                _nameEntryModal?.ForceClose();
+                onRankResolved?.Invoke(rank);   // rank>0 글로벌 / 0이면 배지가 로컬 폴백
+            };
+
+            if (sm2 != null && svc != null && svc.RemoteEnabled)
             {
-                var sm2 = ScoreManager.Instance;
-                sm2?.SaveToLeaderboard(name);   // 로컬 캐시(멱등) — 항상 성공·즉시
-
-                // 원격 제출 — 응답 rank 기준 결과 메시지 + ForceRefetch 후 종료화면 진입.
-                // 실패/rank=0 시에도 showEndScreen 보장(블로킹 없음).
-                var svc = LeaderboardService.Instance;
-
-                // 모달 닫고 종료화면 진입 (항상 이 경로로 종료)
-                System.Action finishEntry = () => {
-                    _nameEntryModal?.ForceClose();
-                    showEndScreen();
-                };
-
-                if (sm2 != null && svc != null && svc.RemoteEnabled)
+                var entry = sm2.BuildLeaderboardEntry(name);
+                svc.SubmitScore(entry, sm2.GameNonce, (ok, rank) =>
                 {
-                    var entry = sm2.BuildLeaderboardEntry(name);
-                    svc.SubmitScore(entry, sm2.GameNonce, (ok, rank) =>
+                    if (!ok)
                     {
-                        if (!ok)
-                        {
-                            Debug.LogWarning("[Leaderboard] " + Loc.Get("str.leaderboard.submit_failed"));
-                            finishEntry();
-                            return;
-                        }
-                        // 캐시 갱신은 백그라운드로 — 종료화면 진입을 막지 않음
-                        svc.ForceRefetch(100, _ => { }, _ => { });
-                        // rank 팝업 → 사용자가 터치하면 종료화면 진입. rank 없으면 바로 종료.
-                        if (rank > 0) ShowRankResultInModal(rank, showEndScreen);
-                        else          finishEntry();
-                    });
-                }
-                else
-                {
-                    finishEntry();
-                }
-            });
-        }
-        else
-        {
-            showEndScreen();   // 자격 미달/기록 없음 → 바로 종료화면 (미저장)
-        }
+                        // ── 제출 실패 → 로컬 폴백 등수로 배지 채움(요약 항상 노출)
+                        Debug.LogWarning("[Leaderboard] " + Loc.Get("str.leaderboard.submit_failed"));
+                        resolve(0);
+                        return;
+                    }
+                    // 캐시 갱신은 백그라운드 — 배지 갱신을 막지 않음
+                    svc.ForceRefetch(100, _ => { }, _ => { });
+                    // 보조 rank 팝업(선택) → 터치 시 배지 갱신. rank=0이어도 폴백 표기.
+                    ShowRankResultInModal(rank, () => resolve(rank));
+                });
+            }
+            else
+            {
+                // ── 오프라인(원격 비활성) → 로컬 폴백 등수로 배지 채움
+                resolve(0);
+            }
+        });
     }
 }

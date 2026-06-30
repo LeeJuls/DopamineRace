@@ -241,6 +241,14 @@ public static class FinishLeaderboardUIPrefabCreator
             Vector2.zero, new Vector2(700f, 40f),
             20, TextAnchor.MiddleCenter, FP_DEEP_BLUE, font, false);
 
+        // ── MyRankText (게임오버 S3 — 내 점수·등수 1줄, FinalJelly 아래 y=0.12) ──
+        // 런타임 ShowFinish/RefreshMyRankBadge(S4)가 채움 — 초기 빈값.
+        // 국소 패처(FinishMyRankBadgePatcher)와 동일 노드 — 전체 재생성 시 유실 방지.
+        MkText(root.transform, "MyRankText", "",
+            new Vector2(0.5f, 0.12f), new Vector2(0.5f, 0.12f),
+            Vector2.zero, new Vector2(700f, 40f),
+            20, TextAnchor.MiddleCenter, FP_DEEP_BLUE, font, false);
+
         // ── NewGameBtn (좌: anchor x=0.3, y=0.05) ──
         CreateButton(root.transform, "NewGameBtn", "새 게임",
             new Vector2(0.3f, 0.05f), new Vector2(220f, 55f),
