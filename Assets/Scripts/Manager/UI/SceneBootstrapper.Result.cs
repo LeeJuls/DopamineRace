@@ -248,10 +248,15 @@ public partial class SceneBootstrapper
                     arrowText.gameObject.SetActive(true);
                     arrowText.text  = "← " + BuildPickArrowLabel(bet, si, actualRank);
                     arrowText.color = isHit ? COLOR_PICK_HIT : COLOR_PICK_MISS;
+
+                    // Bold: CJK(jp/cn/tw)·br은 Synthetic Bold 번짐·너비 초과 위험 → Normal 유지
                     string _lang = Loc.CurrentLang;
                     bool _boldSafe = _lang != "jp" && _lang != "cn"
                                   && _lang != "tw" && _lang != "br";
                     arrowText.fontStyle = _boldSafe ? FontStyle.Bold : FontStyle.Normal;
+
+                    // 화살표를 이름 끝 바로 뒤에 동적 배치 (이름 길이 비례 → 긴 이름 겹침 방지)
+                    PositionPickArrow(arrowText, resultRankNames[actualRank]);
                 }
             }
         }
@@ -292,6 +297,24 @@ public partial class SceneBootstrapper
                 ? Loc.Get("str.ui.btn.check_result")
                 : Loc.Get("str.ui.btn.next_round");
         }
+    }
+
+    /// <summary>
+    /// 픽 화살표를 캐릭터 이름의 실제 렌더 폭 끝 바로 뒤에 배치한다.
+    /// 프리팹 고정 x(=410)는 짧은 이름에만 맞아 긴 이름("Power Blade" 등)과 겹쳤음.
+    /// BestFit 렌더 폭 ≈ min(preferredWidth, 박스폭) — 최대크기로 들어가면 preferredWidth가 곧 렌더폭,
+    /// 박스를 넘치면 BestFit이 박스폭으로 축소하므로 박스폭으로 클램프.
+    /// </summary>
+    private void PositionPickArrow(Text arrowText, Text nameText)
+    {
+        if (arrowText == null || nameText == null) return;
+        RectTransform nameRT  = nameText.rectTransform;
+        RectTransform arrowRT = arrowText.rectTransform;
+
+        float nameW = Mathf.Min(nameText.preferredWidth, nameRT.sizeDelta.x);
+        Vector2 ap = arrowRT.anchoredPosition;
+        ap.x = nameRT.anchoredPosition.x + nameW + 20f;  // 이름 끝 + 20px 여백
+        arrowRT.anchoredPosition = ap;
     }
 
     /// <summary>
