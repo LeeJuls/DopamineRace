@@ -171,4 +171,9 @@ public class CharacterDatabase : MonoBehaviour
     {
         return allCharacters.FindAll(c => c.charType == type);
     }
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
 }

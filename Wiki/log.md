@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-06-30
+
+- **[UPDATE]** `시스템/배팅_시스템.md` — BetAmountModal 배팅가능 표시 섹션 추가 (BettableInfo 구조·BettableClickOverlay 클릭 패턴·StringTable 키)
+- **[UPDATE]** `시스템/통화_시스템.md` — ItemInfoPopup sortingOrder=2000 반영, BetAmountModal 재사용 패턴 추가
+- **[UPDATE]** `히스토리/개발_타임라인.md` — 2026-06-30 배팅가능 표시 마일스톤 추가
+- **[INGEST]** `EnterPlayMode_DomainReload_히스토리_20260630.md` → 신규 `워크플로우/에디터_최적화.md` 생성 (Domain Reload OFF 패턴, SubsystemRegistration 리셋, 싱글턴 OnDestroy, DestroyImmediate 규칙) ← Docs/history/EnterPlayMode_DomainReload_히스토리_20260630.md
+- **[UPDATE]** `워크플로우/에이전트_가이드.md` — `performance` 에이전트 추가 (13번째), 위임 기준에 에디터 최적화 항목 추가
+- **[UPDATE]** `히스토리/개발_타임라인.md` — 영상 재인코딩(82MB→23MB) + Domain Reload 안전화 마일스톤(2026-06-30) 추가, 다음 예정에 DisableSceneReload 감사 항목 추가
+- **[UPDATE]** `Index.md` — 에디터 최적화 링크 추가 (워크플로우 섹션), 에이전트 가이드 12→13개 갱신
+
+---
+
 ## 2026-06-28
 
 - **[INGEST]** SPEC-049 라이브 포트레이트 단계 A~D → 신규 `시스템/라이브_포트레이트.md` 생성 (PNG→mp4 비디오, §0 측정·아키텍처·단계표·알려진이슈) ← Docs/specs/SPEC-049_*
@@ -40,6 +52,12 @@
 - **[INGEST]** SPEC 인덱스 페이지 생성 (`도파민 프로젝트/SPEC_인덱스.md`) ← spec001~040
 - **[LINT]** Nous Research 공식 스펙(v2.1.0) 기준 보완 — `log.md` 추가, 프론트매터 `type`·`confidence`·`sources`·`created` 필드 추가, SCHEMA.md 태그 분류법 보강
 - **[UPDATE]** AutoSci 패턴 도입 — `/wiki-ingest` 스킬 생성 (`.claude/skills/wiki-ingest.md`), `queries/` 폴더 + `_index.md` 추가, SCHEMA Query 규칙 보강
+
+---
+
+## 2026-06-29
+
+- **[INGEST]** 아이템 정보 팝업 (SPEC-050) → `시스템/통화_시스템.md`에 "아이템 정보 팝업" 섹션 추가(ItemInfoPopup/Trigger 모듈, 키 규칙), `시스템/다국어_시스템.md`에 `str.dopamine.item.*` 키 규칙 추가, SPEC 인덱스·개발 타임라인 갱신 ← SPEC-050 명세서·히스토리
 
 ---
 

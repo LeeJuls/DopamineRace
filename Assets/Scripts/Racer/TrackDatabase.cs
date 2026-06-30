@@ -301,4 +301,9 @@ public class TrackDatabase : MonoBehaviour
         GameSettings.Instance.currentTrack = null;
         Debug.Log("[TrackDB] 트랙 히스토리 리셋");
     }
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
 }

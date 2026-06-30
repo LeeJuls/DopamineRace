@@ -39,6 +39,13 @@ public class SteamManager : MonoBehaviour
     /// <summary>Steam API가 정상 초기화되었는가. 도전과제/스탯 호출 전 반드시 확인.</summary>
     public static bool Initialized => s_instance != null && s_instance.m_initialized;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetForDomainReloadOff()
+    {
+        // BeforeSceneLoad의 Bootstrap()보다 먼저 실행 → s_instance 파괴 후 s_everInitialized 리셋
+        if (s_instance == null) s_everInitialized = false;
+    }
+
     /// <summary>씬 배치 없이 게임 로드 시 1회 자동 생성 (DontDestroyOnLoad).</summary>
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Bootstrap()

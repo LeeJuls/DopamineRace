@@ -30,6 +30,9 @@ public static class HiddenStatWeights
         Load();
     }
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetLoaded() => _loaded = false;
+
     private static void Load()
     {
         _loaded = true;

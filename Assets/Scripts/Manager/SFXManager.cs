@@ -74,6 +74,7 @@ public class SFXManager : MonoBehaviour
     {
         // EventSystem의 InputModule에서 모든 PointerClick을 감지할 수 없으므로
         // Update에서 씬의 버튼을 주기적으로 스캔하여 리스너 등록
+        CancelInvoke(nameof(ScanAndAttachButtons));
         InvokeRepeating(nameof(ScanAndAttachButtons), 0.5f, 2.0f);
     }
 
@@ -88,6 +89,12 @@ public class SFXManager : MonoBehaviour
             btn.gameObject.AddComponent<SFXClickTag>();
             btn.onClick.AddListener(PlayClick);
         }
+    }
+
+    private void OnDestroy()
+    {
+        CancelInvoke();
+        if (Instance == this) Instance = null;
     }
 }
 
