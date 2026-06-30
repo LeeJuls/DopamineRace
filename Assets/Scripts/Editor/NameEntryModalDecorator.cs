@@ -84,6 +84,32 @@ public static class NameEntryModalDecorator
             Debug.Log("[NameEntryModalDecorator] WaterDropDecor 이미 존재 — 스킵");
         }
 
+        // ── 4. 오버레이 격리 (sortingOrder=1000 캔버스 + 불투명 백드롭) ──
+        // 종료 후 Finish 요약 위에 모달이 단독으로 뜨도록 — 모달 패밀리(BetAmount/Exchange) 통일
+        if (prefabRoot.GetComponent<Canvas>() == null)
+        {
+            Canvas ovCanvas = prefabRoot.AddComponent<Canvas>();
+            // overrideSorting 직접 대입은 SaveAsPrefabAsset 후 0으로 저장되는 quirk → SerializedObject 필수
+            var cso = new SerializedObject(ovCanvas);
+            cso.FindProperty("m_OverrideSorting").boolValue = true;
+            cso.FindProperty("m_SortingOrder").intValue = 1000;
+            cso.ApplyModifiedProperties();
+            prefabRoot.AddComponent<GraphicRaycaster>();
+            Debug.Log("[NameEntryModalDecorator] 오버레이 Canvas(override/1000)+GraphicRaycaster 추가");
+        }
+        else
+        {
+            Debug.Log("[NameEntryModalDecorator] Canvas 이미 존재 — 스킵");
+        }
+
+        // 백드롭 불투명화 (0.7 → 0.92) — 뒤 Finish 가림
+        Transform backdrop = FindDeep(prefabRoot.transform, "Backdrop");
+        if (backdrop != null)
+        {
+            Image bdImg = backdrop.GetComponent<Image>();
+            if (bdImg != null) bdImg.color = new Color(0f, 0f, 0f, 0.92f);
+        }
+
         PrefabUtility.SaveAsPrefabAsset(prefabRoot, PrefabPath);
         PrefabUtility.UnloadPrefabContents(prefabRoot);
         Debug.Log("[NameEntryModalDecorator] NameEntryModal.prefab 저장 완료 ✓");

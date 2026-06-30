@@ -29,9 +29,15 @@ public partial class SceneBootstrapper
         modalRoot.transform.SetParent(root, false);
         AddFullRect(modalRoot);
 
-        // 백드롭 — 전체화면, raycastTarget=true로 뒤 클릭(GameOver 전체버튼) 차단
+        // 오버레이 격리 — 메인캔버스(100) 위로 (Finish 요약 위에 단독 표시). 모달 패밀리(Spec028UI) 통일.
+        var ovCanvas = modalRoot.AddComponent<Canvas>();
+        ovCanvas.overrideSorting = true;
+        ovCanvas.sortingOrder = 1000;
+        modalRoot.AddComponent<GraphicRaycaster>();
+
+        // 백드롭 — 전체화면, raycastTarget=true로 뒤 클릭(GameOver 전체버튼) 차단. 불투명 0.92로 뒤 Finish 가림.
         var backdrop = MkImage(modalRoot.transform, "Backdrop",
-            Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0f, 0f, 0f, 0.7f));
+            Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0f, 0f, 0f, 0.92f));
         backdrop.raycastTarget = true;
 
         // 중앙 패널
