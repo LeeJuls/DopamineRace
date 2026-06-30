@@ -201,7 +201,7 @@ public class CharacterInfoPopup : MonoBehaviour
         {
             charTypeLabel.resizeTextForBestFit = true;
             charTypeLabel.resizeTextMinSize    = 10;
-            charTypeLabel.resizeTextMaxSize    = 20;
+            charTypeLabel.resizeTextMaxSize    = 26;
             charTypeLabel.horizontalOverflow   = HorizontalWrapMode.Wrap;
         }
 
