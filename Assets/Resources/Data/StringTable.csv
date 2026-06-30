@@ -155,7 +155,7 @@ str.finish.score_plus,+{0}점,+{0}pt,+{0}点,+{0}分,+{0} Pkt,+{0} pts,+{0} pts,
 str.finish.score_zero,+0점,+0pt,+0点,+0分,+0 Pkt,+0 pts,+0 pts,+0分
 str.finish.total,"{0} 💎\n({1}/{2} 적중)","{0} 💎\n({1}/{2} hits)","{0} 💎\n({1}/{2}的中)","{0} 💎\n({1}/{2}命中)","{0} 💎\n({1}/{2} Treffer)","{0} 💎\n({1}/{2} aciertos)","{0} 💎\n({1}/{2} acertos)",{0} 💎\n（{1}/{2}命中）
 str.leaderboard.row,"{0}  {1}점  {2}","{0}  {1}pt  {2}","{0}  {1}点  {2}","{0}  {1}分  {2}","{0}  {1}Pkt  {2}","{0}  {1}pts  {2}","{0}  {1}pts  {2}",{0}  {1}分  {2}
-str.nameentry.title,신기록!,NEW RECORD!,新記録！,新纪录！,Neuer Rekord!,¡Nuevo Récord!,Novo Recorde!,新紀錄！
+str.nameentry.title,TOP 100 진입!,TOP 100!,TOP 100入り！,跻身 TOP 100！,TOP 100!,¡TOP 100!,TOP 100!,躋身 TOP 100！
 str.nameentry.prompt,이름을 입력하세요,Enter your name,名前を入力,输入你的名字,Gib deinen Namen ein,Ingresa tu nombre,Digite seu nome,輸入你的名字
 str.nameentry.guide,↑↓ 글자  ←→ 이동,↑↓ Letter  ←→ Move,↑↓ 文字  ←→ 移動,↑↓ 字母  ←→ 移动,↑↓ Buchstabe  ←→ Bewegen,↑↓ Letra  ←→ Mover,↑↓ Letra  ←→ Mover,↑↓ 字母  ←→ 移動
 str.nameentry.confirm,확인,Confirm,確認,确认,Bestätigen,Confirmar,Confirmar,確認
@@ -390,6 +390,11 @@ str.gameover.progress,{0} / {1} 라운드에서 종료,Ended at round {0} / {1},
 str.gameover.no_ranking,랭킹에 등록되지 않았습니다,Not registered in rankings,ランキングに登録されません,未登记到排行榜,Nicht im Ranking eingetragen,No registrado en el ranking,Não registrado no ranking,未登錄至排行榜
 str.gameover.btn.restart,다시 도전,Try Again,再挑戦,再次挑战,Erneut versuchen,Intentar de nuevo,Tentar novamente,再次挑戰
 str.gameover.hint,화면을 클릭하면 타이틀로 돌아갑니다,Click anywhere to return to title,画面をクリックするとタイトルに戻ります,点击屏幕返回标题,Klicke zum Zurückkehren zum Titel,Haz clic para volver al título,Clique para voltar ao título,點擊螢幕返回標題
+str.gameover.reason.nojelly,젤리가 모두 떨어졌습니다,You ran out of jelly,ゼリーがすべて尽きました,果冻全部用光了,Dein Gelee ist aufgebraucht,Te quedaste sin gelatina,Você ficou sem geleia,果凍全部用光了
+str.summary.myscore,내 점수: {0},Your score: {0},あなたのスコア: {0},我的得分：{0},Dein Punktestand: {0},Tu puntuación: {0},Sua pontuação: {0},我的得分：{0}
+str.summary.myrank,글로벌 {0}위,Global #{0},グローバル {0}位,全球第 {0} 名,Global #{0},Global #{0},Global #{0},全球第 {0} 名
+str.summary.local_rank,이 기기 {0}위,This device #{0},この端末 {0}位,本机第 {0} 名,Dieses Gerät #{0},Este dispositivo #{0},Neste aparelho #{0},本機第 {0} 名
+str.summary.rank_out,순위권 밖,Unranked,ランク外,未上榜,Ohne Rang,Sin clasificar,Fora do ranking,未上榜
 str.finish.stone_total,획득한 도파민 스톤: {0} 💎,Dopamine Stones earned: {0} 💎,獲得したドーパミンストーン: {0} 💎,获得多巴胺石：{0} 💎,Verdiente Dopamin-Steine: {0} 💎,Piedras ganadas: {0} 💎,Pedras ganhas: {0} 💎,獲得多巴胺石：{0} 💎
 str.finish.round.hit,R{0}: {1} | ✓ 적중 (+{2} 💎),R{0}: {1} | ✓ Hit (+{2} 💎),R{0}: {1} | ✓ 当たり (+{2} 💎),R{0}: {1} | ✓ 命中 (+{2} 💎),R{0}: {1} | ✓ Treffer (+{2} 💎),R{0}: {1} | ✓ Acierto (+{2} 💎),R{0}: {1} | ✓ Acerto (+{2} 💎),R{0}: {1} | ✓ 命中 (+{2} 💎)
 str.finish.round.miss,R{0}: {1} | ✗ 빗나감,R{0}: {1} | ✗ Miss,R{0}: {1} | ✗ はずれ,R{0}: {1} | ✗ 失败,R{0}: {1} | ✗ Verfehlt,R{0}: {1} | ✗ Fallo,R{0}: {1} | ✗ Erro,R{0}: {1} | ✗ 落空

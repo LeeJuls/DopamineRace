@@ -67,6 +67,9 @@ public partial class SceneBootstrapper
         // 프리팹/레거시 공통: FinalJellyText는 항상 root 직계 자식 (ScrollView 외부 고정)
         finishFinalJellyText = FindText(root, "FinalJellyText");
 
+        // S3/S4: 순위 배지 (점수 + 등수 1줄) — FinalJelly 아래 root 직계 자식
+        finishMyRankText = FindText(root, "MyRankText");
+
         // NewGameBtn — TitleScene 파편 전환 (SceneTransitionManager 블록 디졸브)
         Transform ngT = root.Find("NewGameBtn");
         if (ngT != null)
@@ -124,6 +127,12 @@ public partial class SceneBootstrapper
             new Vector2(0.5f, 0.26f), new Vector2(0.5f, 0.26f),
             Vector2.zero, new Vector2(700, 40), 20, TextAnchor.UpperCenter, new Color(0.10f, 0.30f, 0.60f));
 
+        // S4: 순위 배지 (점수 + 등수 1줄) — FinalJelly 아래, 런타임 빌드 폴백 정합
+        finishMyRankText = MkText(parent, "",
+            new Vector2(0.5f, 0.20f), new Vector2(0.5f, 0.20f),
+            Vector2.zero, new Vector2(700, 40), 22, TextAnchor.UpperCenter, new Color(0.10f, 0.10f, 0.20f));
+        finishMyRankText.name = "MyRankText";   // FindText 캐싱 일관 (프리팹 노드명과 동일)
+
         // 새 게임 버튼
         GameObject newGameBtn = new GameObject("NewGameBtn");
         newGameBtn.transform.SetParent(parent, false);
@@ -166,7 +175,7 @@ public partial class SceneBootstrapper
     // ══════════════════════════════════════
     //  ShowFinish — 데이터 채우기
     // ══════════════════════════════════════
-    private void ShowFinish()
+    private void ShowFinish(bool isGameOver = false)
     {
         var sm = ScoreManager.Instance;
         if (sm == null) return;
@@ -174,7 +183,25 @@ public partial class SceneBootstrapper
         // 버튼 텍스트 Loc 갱신 (프리팹 기본값이 한국어 고정이므로 런타임 갱신)
         if (finishNewGameBtnText != null) finishNewGameBtnText.text = Loc.Get("str.ui.btn.new_game");
         if (finishTop100BtnText  != null) finishTop100BtnText.text  = Loc.Get("str.ui.btn.top100");
-        if (finishTitleText      != null) finishTitleText.text      = Loc.Get("str.finish.title");
+
+        // 헤더만 분기 — 본문(스톤/라운드/배지)은 정상완료·게임오버 100% 공유
+        if (finishTitleText != null)
+        {
+            if (isGameOver)
+            {
+                // 색약 대비: 적색 톤 + 사유 텍스트 병기(색 단독 의존 금지).
+                // 별도 사유 노드가 없어 타이틀 노드에 인라인(헤드라인 적색 / 사유 회색 1줄).
+                finishTitleText.supportRichText = true;
+                string headline = "<color=#CC2222>" + Loc.Get("str.gameover.headline") + "</color>";
+                string reason   = "<size=24><color=#555555>"
+                    + Loc.Get("str.gameover.reason.nojelly") + "</color></size>";
+                finishTitleText.text = headline + "\n" + reason;
+            }
+            else
+            {
+                finishTitleText.text = Loc.Get("str.finish.title");
+            }
+        }
 
         // SPEC-028 Step 3.5·3.6: 메인/부수 분리 — 메인 영역 (큰 글씨 강조)
         // "획득한 도파민 스톤: N💎" + 라운드별 ✓/✗ 결과
@@ -219,6 +246,9 @@ public partial class SceneBootstrapper
             finishFinalJellyText.text = SafeLocFor("str.finish.final_jelly",
                 "총 보유 도파민 스톤: 💎 {0}", wallet.Stone);
 
+        // S4: 순위 배지 — 요약 표시 시 로컬 등수로 초기 표시(원격 rank 갱신은 S5에서 연결)
+        RefreshMyRankBadge(0);
+
         // 스크롤 맨 위로 리셋 (Canvas 레이아웃 갱신 후)
         if (finishScrollRect != null)
         {
@@ -236,6 +266,26 @@ public partial class SceneBootstrapper
             cg.alpha = 0f;
             StartCoroutine(FadeInFinishPanel(cg));
         }
+    }
+
+    // ══════════════════════════════════════
+    //  순위 배지 갱신 (점수 + 등수 1줄)
+    //  remoteRank>0 → 글로벌 / 폴백 로컬 등수 / 0 → 순위권 밖 (R4 정직 표기)
+    //  S5에서 등록 확정 후 원격 rank로 재호출하여 글로벌 표기로 갱신.
+    // ══════════════════════════════════════
+    private void RefreshMyRankBadge(int remoteRank)
+    {
+        if (finishMyRankText == null) return;
+
+        int score = ScoreManager.Instance != null ? ScoreManager.Instance.LeaderboardScore : 0;
+        int rank  = remoteRank > 0 ? remoteRank : LeaderboardData.GetRank(score);
+
+        string scoreLine = Loc.Get("str.summary.myscore", score);
+        string rankLine  = remoteRank > 0 ? Loc.Get("str.summary.myrank", rank)        // 글로벌
+                         : rank > 0       ? Loc.Get("str.summary.local_rank", rank)     // 로컬(이 기기)
+                         :                  Loc.Get("str.summary.rank_out");            // 순위권 밖
+
+        finishMyRankText.text = scoreLine + "  " + rankLine;
     }
 
     private System.Collections.IEnumerator FadeInFinishPanel(CanvasGroup cg)

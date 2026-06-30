@@ -122,6 +122,7 @@ public partial class SceneBootstrapper : MonoBehaviour
     private Text       finishStoneHeaderText;  // "획득한 도파민 스톤: N"
     private Text       finishDetailHeaderText; // "── 라운드별 상세 ──"
     private Text       finishFinalJellyText;   // "최종 보유: N"
+    private Text       finishMyRankText;        // S3/S4: "내 점수: N  글로벌/이 기기 N위" 배지
     private Button     finishNewGameButton;
     private Text       finishNewGameBtnText;
     private Button     finishTop100Button;
@@ -367,13 +368,6 @@ public partial class SceneBootstrapper : MonoBehaviour
         BuildLeaderboardPopup(leaderboardPopup.transform);
         leaderboardPopup.SetActive(false);
 
-        // SPEC-028 Step 3.2: GameOver UI 생성
-        _gameOverUI = new GameObject("GameOverUI");
-        _gameOverUI.transform.SetParent(root, false);
-        AddFullRect(_gameOverUI);
-        BuildGameOverUI(_gameOverUI.transform);
-        _gameOverUI.SetActive(false);
-
         // SPEC-028 Step 2.4: BetAmountModal 임시 레이아웃 생성
         BuildBetAmountModal(root);
 
@@ -403,7 +397,6 @@ public partial class SceneBootstrapper : MonoBehaviour
         resultUI.SetActive(false);
         countdownUI.SetActive(false);
         finishUI.SetActive(false);
-        if (_gameOverUI != null) _gameOverUI.SetActive(false);   // SPEC-028 Step 3.3
 
         switch (state)
         {
@@ -444,15 +437,18 @@ public partial class SceneBootstrapper : MonoBehaviour
             case GameManager.GameState.Finish:
                 DestroyArrows();
                 ShowAllRaceLabels();
-                // STEP8: Top100 자격 시 이름 입력 → 저장 후 Finish 화면 (미자격 시 바로 표시)
-                TryNameEntryThen(() => { finishUI.SetActive(true); ShowFinish(); });
+                // S5: 요약(Finish) 화면 먼저 표시(로컬등수 초기 노출) → 자격 시 등록 모달 over 요약 → 확정 후 배지 갱신
+                finishUI.SetActive(true);
+                ShowFinish(isGameOver: false);                       // 내부 RefreshMyRankBadge(0)로 로컬등수 1차 표시
+                TryNameEntryThen(rank => RefreshMyRankBadge(rank));   // 등록·제출 응답 후 배지 글로벌등수로 교체
                 break;
             case GameManager.GameState.GameOver:
-                // SPEC-028 Step 3.3: GAME OVER 진입 자동 표시
+                // S5: 게임오버를 Finish 화면으로 통일 — 요약 먼저 → 등록 시퀀스(전용 GameOver UI 폐기)
                 DestroyArrows();
                 ShowAllRaceLabels();
-                // STEP8: Top100 자격 시 이름 입력 → 저장 후 GameOver 화면 (미자격 시 바로 표시)
-                TryNameEntryThen(ShowGameOverPanel);
+                finishUI.SetActive(true);
+                ShowFinish(isGameOver: true);                         // 사유 헤더 + RefreshMyRankBadge(0) 로컬등수 1차 표시
+                TryNameEntryThen(rank => RefreshMyRankBadge(rank));   // 등록·제출 응답 후 배지 글로벌등수로 교체
                 break;
         }
     }
