@@ -184,6 +184,11 @@ public class CharacterInfoPopup : MonoBehaviour
             }
 
             skillDescLabel = FindText(layout3, "SkillDescLabel");
+            if (skillDescLabel != null)
+            {
+                skillDescLabel.verticalOverflow   = VerticalOverflow.Overflow;
+                skillDescLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
+            }
         }
 
         // 차트는 Show()에서 레이아웃 확정 후 초기화 (RectTransform 0 방지)
