@@ -6,6 +6,7 @@
 
 ## 2026-07-01
 
+- **[INGEST]** `시스템/V4_레이스_시스템.md` — §5 자동 테스트 도구 갱신(헤드리스 `RaceBacktestWindow` 주력·`AutoRaceRunnerWindow` 보조+프리징수정 반영) + 신규 §5b "패시브 스킬 & goyo 클러치 재설계"(LuckClutch 트리거, 확정수치 chance0.40×1.20, 80%→56% 결과). `아키텍처/주요_클래스.md` — `RaceBacktestWindow` 행 신규(헤드리스 API), `AutoRaceRunnerWindow`·`RacerController` 행 갱신(프리징수정·UpdateV4LuckClutch). 개발_타임라인 마일스톤 추가. tags에 `밸런스` 추가 ← Docs/history/헤드리스백테스트_goyo클러치_AutoRaceRunner_히스토리_20260701.md
 - **[INGEST]** `시스템/통화_시스템.md` — 환전/구제/고양이의 힘 섹션 → **럭키 잭팟(SPEC-051)** 전면 갱신 (마네키네코, 무캡 산식·게임오버 SSOT 재정의·0젤리 버그픽스·무캡 백테스트·GameSettings 필드·마네키네코 UI). 관련클래스 잭팟 API 반영. 상태/프론트매터 SPEC-051 추가 ← Docs/history/럭키잭팟_0젤리버그픽스_히스토리_20260701.md
 - **[UPDATE]** `SPEC_인덱스.md` — SPEC-051 럭키 잭팟 섹션 추가, 제목 spec001~051 갱신
 - **[UPDATE]** `히스토리/개발_타임라인.md` — 2026-07-01 마일스톤 2건 추가 (UI 흰배경통일+NameEntry 오버레이 격리 / 럭키 잭팟 SPEC-051)
