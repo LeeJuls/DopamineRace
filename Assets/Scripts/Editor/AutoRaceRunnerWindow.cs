@@ -159,6 +159,16 @@ public class AutoRaceRunnerWindow : EditorWindow
     //  자동 레이스 제어
     // ═══════════════════════════════════════
 
+    // MCP 자동화용 진입점 (private iterations/timeScale/StartAutoRace 우회)
+    public void ConfigureAndStart(int iters, float ts)
+    {
+        iterations    = Mathf.Clamp(iters, 1, 200);
+        timeScale     = Mathf.Clamp(ts, 1f, 20f);
+        saveClaudeLog = true;
+        StartAutoRace();
+    }
+    public bool IsRunningPublic => isRunning;
+
     private void StartAutoRace()
     {
         if (!EditorApplication.isPlaying) return;
@@ -366,6 +376,7 @@ public class AutoRaceRunnerWindow : EditorWindow
                 racerLog.spurtHpRatio = racer.V4SpurtHpRatio;
                 racerLog.emergencyBurstCount = racer.V4EmergencyBurstCount;
                 racerLog.spurtEntryRank = racer.V4SpurtEntryRank;
+                racerLog.finalHpRatio = racer.V4CurrentHpRatio;
             }
 
             roundLog.rankings.Add(racerLog);
@@ -711,6 +722,9 @@ public class AutoRaceRunnerWindow : EditorWindow
         var typeStats = new Dictionary<CharacterType, TypeStat>();
         // 캐릭터 통계
         var charStats = new Dictionary<string, CharStat>();
+        // 캐릭터×바퀴별 통계 (지배 검증) + 바퀴별 완주 HP (고갈 검증)
+        var charDistStats = new Dictionary<string, Dictionary<int, CharDistStat>>();
+        var finishHpStats = new Dictionary<int, FinishHpStat>();
 
         foreach (var game in gameLogs)
         {
@@ -746,11 +760,24 @@ public class AutoRaceRunnerWindow : EditorWindow
 
                     // 캐릭터 통계
                     string key = string.IsNullOrEmpty(r.charId) ? r.racerName : r.charId;
-                    if (!charStats.ContainsKey(key)) charStats[key] = new CharStat { name = r.racerName, type = r.type };
+                    if (!charStats.ContainsKey(key)) charStats[key] = new CharStat { id = key, name = r.racerName, type = r.type };
                     var cs = charStats[key];
                     cs.totalRank += r.rank; cs.count++;
                     if (r.rank == 1) cs.wins++;
                     if (r.rank <= 3) cs.top3++;
+
+                    // 캐릭터×바퀴별 통계 (특정 캐릭터 전 바퀴 지배 검증)
+                    if (!charDistStats.ContainsKey(key)) charDistStats[key] = new Dictionary<int, CharDistStat>();
+                    if (!charDistStats[key].ContainsKey(laps)) charDistStats[key][laps] = new CharDistStat();
+                    var cds = charDistStats[key][laps];
+                    cds.count++; cds.totalRank += r.rank;
+                    if (r.rank == 1) cds.wins++;
+
+                    // 바퀴별 완주 HP 통계 (6바퀴 고갈 검증)
+                    if (!finishHpStats.ContainsKey(laps)) finishHpStats[laps] = new FinishHpStat();
+                    var fh = finishHpStats[laps];
+                    fh.finalHpTotal += r.finalHpRatio; fh.count++;
+                    if (r.finalHpRatio <= 0.05f) fh.hp0Count++;
                 }
             }
         }
@@ -811,6 +838,40 @@ public class AutoRaceRunnerWindow : EditorWindow
             char tc = c.type == CharacterType.Runner ? 'R' : c.type == CharacterType.Leader ? 'L' : c.type == CharacterType.Chaser ? 'C' : 'K';
             float avg = c.count > 0 ? (float)c.totalRank / c.count : 0;
             sb.AppendFormat("{0}({1}) w={2} avg={3:F1}\n", c.name, tc, c.wins, avg);
+        }
+        sb.AppendLine();
+
+        // ── 캐릭터×바퀴별 1위율 (특정 캐릭터 전 바퀴 지배 검증) ──
+        // 전체 1위수 상위 12명만 표시(전 바퀴 고승률 = 지배 신호)
+        sortedLaps = new List<int>(finishHpStats.Keys); sortedLaps.Sort();
+        sb.Append("# CHAR×DIST win%  bylap[");
+        foreach (int lap in sortedLaps) sb.AppendFormat("{0}L ", lap);
+        sb.AppendLine("]");
+        int cc = 0;
+        foreach (var c in sortedChars)
+        {
+            if (cc++ >= 12) break;
+            char tc = c.type == CharacterType.Runner ? 'R' : c.type == CharacterType.Leader ? 'L' : c.type == CharacterType.Chaser ? 'C' : 'K';
+            sb.AppendFormat("{0}({1})", c.name, tc);
+            foreach (int lap in sortedLaps)
+            {
+                if (charDistStats.TryGetValue(c.id, out var byLap) && byLap.TryGetValue(lap, out var cds) && cds.count > 0)
+                    sb.AppendFormat(" {0:F0}%({1}/{2})", cds.wins * 100f / cds.count, cds.wins, cds.count);
+                else
+                    sb.Append(" —");
+            }
+            sb.AppendLine();
+        }
+        sb.AppendLine();
+
+        // ── 바퀴별 완주 HP (6바퀴 HP 고갈 검증) ──
+        sb.AppendLine("# FINISH-HP by dist  avgHP / hp≤5%ratio");
+        foreach (int lap in sortedLaps)
+        {
+            var fh = finishHpStats[lap];
+            float avgHp = fh.count > 0 ? fh.finalHpTotal / fh.count * 100f : 0f;
+            float hp0   = fh.count > 0 ? fh.hp0Count * 100f / fh.count : 0f;
+            sb.AppendFormat("{0}L: avgHP={1:F0}%  hp≤5%={2:F0}% (n={3})\n", lap, avgHp, hp0, fh.count);
         }
 
         return sb.ToString();
@@ -888,6 +949,7 @@ public class AutoRaceRunnerWindow : EditorWindow
         public float spurtHpRatio;       // 스퍼트 진입 시 HP 비율 (0=스퍼트 미진입)
         public int emergencyBurstCount;  // Emergency Burst 발동 횟수
         public int spurtEntryRank;       // 스퍼트 진입 시 순위 (0=미진입)
+        public float finalHpRatio;       // 완주 시점 HP 비율 (0~1) — 6바퀴 HP 고갈 검증용
     }
 
     private class TypeStat
@@ -914,8 +976,25 @@ public class AutoRaceRunnerWindow : EditorWindow
         public int spurtHpCount;
     }
 
+    // 캐릭터×바퀴별 통계 (특정 캐릭터 전 바퀴 지배 검증용)
+    private class CharDistStat
+    {
+        public int wins;
+        public int count;
+        public int totalRank;
+    }
+
+    // 바퀴별 완주 HP 통계 (6바퀴 고갈 검증용)
+    private class FinishHpStat
+    {
+        public float finalHpTotal;
+        public int count;
+        public int hp0Count;   // finalHpRatio <= 0.05 (사실상 고갈)
+    }
+
     private class CharStat
     {
+        public string id;   // charId (charDistStats 매핑용)
         public string name;
         public CharacterType type;
         public int totalRank;

@@ -161,7 +161,7 @@ public class CharacterInfoPopup : MonoBehaviour
             else
                 winRateLabel = FindText(layout2Left, "WinRateLabel");
 
-            // 펜 아이콘 (프리팹 PenIconBtn 참조 — 위치·크기는 프리팹에서 조정. 후속 작업서 팝업 연결)
+            // 펜 아이콘 (프리팹 PenIconBtn 참조 — 클릭 시 캐릭터 스토리 팝업 표시)
             Transform penObj = layout2Left.Find("PenIconBtn");
             if (penObj != null)
             {
@@ -172,6 +172,11 @@ public class CharacterInfoPopup : MonoBehaviour
                 {
                     Sprite penSpr = Resources.Load<Sprite>("Icon/pen");
                     if (penSpr != null) penIcon.sprite = penSpr;
+                }
+                if (penButton != null)
+                {
+                    penButton.onClick.RemoveListener(OnPenIconClicked); // Init 재호출 대비 중복 방지
+                    penButton.onClick.AddListener(OnPenIconClicked);
                 }
             }
         }
@@ -249,6 +254,9 @@ public class CharacterInfoPopup : MonoBehaviour
     {
         if (!isInitialized) Init();
         if (data == null) return;
+
+        // 다른 캐릭터로 갱신되는 경우 이전 캐릭터의 스토리 팝업이 열려 있으면 잔존 텍스트 방지
+        CharacterStoryPopup.Instance?.Hide();
 
         currentCharId = data.charId;
 
@@ -397,6 +405,16 @@ public class CharacterInfoPopup : MonoBehaviour
         RestorePngVisible();           // 다음 Show 위해 PNG 가시 복구
         currentCharId = null;
         gameObject.SetActive(false);
+
+        // 정보창이 닫히는데 스토리 팝업만 화면에 남는 것을 방지 (닫힘 연쇄)
+        CharacterStoryPopup.Instance?.Hide();
+    }
+
+    /// <summary>펜 아이콘 클릭 → 캐릭터 스토리 팝업 표시</summary>
+    private void OnPenIconClicked()
+    {
+        if (string.IsNullOrEmpty(currentCharId)) return;
+        CharacterStoryPopup.Instance?.Show(currentCharId);
     }
 
     // ═══ 라이브 포트레이트 콜백 (SPEC-049) ═══

@@ -54,6 +54,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     public bool V4InSlipstream => v4InSlipstream;
     public bool V4SlipstreamAccelActive => v4SlipstreamAccelActive;
     public float V4SpurtHpRatio => v4SpurtHpRatio;   // 스퍼트 진입 시 HP 비율 (0=미진입)
+    public float V4CurrentHpRatio => v4MaxStamina > 0f ? Mathf.Clamp01(v4CurrentStamina / v4MaxStamina) : 0f; // 현재(완주 시점) HP 비율
     public int V4EmergencyBurstCount => v4EmergencyBurstCount;  // Emergency Burst 발동 횟수
     public int V4SpurtEntryRank => v4SpurtEntryRank;            // 스퍼트 진입 순위 (0=미진입)
     private float v4ThinkTimer = 0f;
@@ -62,6 +63,10 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
     // Luck 크리티컬
     private float v4LuckTimer = 0f;
     private float v4CritBoostRemaining = 0f;
+
+    // Luck 클러치 (단발 도박 — LuckClutch 패시브, goyo)
+    private bool v4ClutchRolled = false;   // gate 도달 후 1회 굴림 완료 여부
+    private bool v4ClutchActive = false;   // 발동 성공 시 결승까지 true
     private float v4CritInitialDuration = 0f;   // 크리티컬 발동 시 계산된 지속시간 (로그용)
     public float V4CritInitialDuration => v4CritInitialDuration;
 
@@ -127,6 +132,8 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         v4LastProgress = 0f;
         v4LuckTimer   = 0f;
         v4CritBoostRemaining = 0f;
+        v4ClutchRolled = false;
+        v4ClutchActive = false;
         v4SkillHpTriggered   = false;
         v4SkillRankTriggered = false;
         v4PassedCheckpoints.Clear();
@@ -166,6 +173,9 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
         // V4 Luck 크리티컬 판정
         UpdateV4LuckCrit(gs4);
+
+        // V4 Luck 클러치 판정 (goyo 단발 도박)
+        UpdateV4LuckClutch(gs4);
     }
 
     // ──────────────────────────────────────────────
@@ -313,6 +323,10 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         // ── V4 Luck 크리티컬 배율 ──
         if (v4CritBoostRemaining > 0f)
             outputSpeed *= gs.v4_luckCritBoost;
+
+        // ── V4 Luck 클러치 배율 (단발 도박 성공 시 결승까지) ──
+        if (v4ClutchActive && charDataV4?.passiveData?.effectType == PassiveEffectType.SpeedBonus)
+            outputSpeed *= Mathf.Min(charDataV4.passiveData.effectValue, PassiveSkillData.CLUTCH_SPEED_MAX);
 
         // ── 액티브 SpeedBoost 배율 (currentSpeed 오염 방지: outputSpeed에만 적용) ──
         if (skillActive && charDataV4?.skillData?.effectType == SkillEffectType.SpeedBoost)
@@ -563,6 +577,33 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
 
                 Debug.Log($"★ [V4] 크리티컬! {charDataV4.charId} (luck:{charDataV4.v4Luck})");
             }
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    //  V4 Luck 클러치 (단발 도박): 진행도 gate 도달 시 1회 굴림 → 성공 시 결승까지 속도 상승
+    //  ※ 미러 필수 동시 수정: RaceBacktestWindow.SimUpdateV4LuckClutch
+    // ──────────────────────────────────────────────
+    private void UpdateV4LuckClutch(GameSettingsV4 gs)
+    {
+        if (charDataV4?.passiveData == null) return;
+        if (charDataV4.passiveData.triggerType != PassiveTriggerType.LuckClutch) return;
+        if (v4ClutchRolled) return;
+
+        float progress = GetOverallProgress();
+        if (progress < gs.v4_clutchGateProgress) return;
+
+        v4ClutchRolled = true;   // gate 도달 → 1회만 판정
+        if (UnityEngine.Random.value < gs.v4_clutchChance)
+        {
+            v4ClutchActive = true;
+
+            // VFX (크리티컬 연출 재사용)
+            var vfx = GetComponent<CollisionVFX>();
+            if (vfx == null) vfx = gameObject.AddComponent<CollisionVFX>();
+            vfx.Show(CollisionVFXType.Crit, 0.8f);
+
+            Debug.Log($"★ [V4] 클러치 발동! {charDataV4.charId} (chance:{gs.v4_clutchChance:P0})");
         }
     }
 

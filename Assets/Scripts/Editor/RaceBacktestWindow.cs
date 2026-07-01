@@ -40,6 +40,14 @@ public class RaceBacktestWindow : EditorWindow
     private string lastLogPath = "";
     private bool isRunning = false;
     private bool cancelRequested = false;
+    // ★ 헤드리스 배치 실행 (에디터 update 무관 동기 실행 — 백그라운드에서도 즉시 완료)
+    private bool headlessMode = false;
+    private int  headlessSeed = 0;
+    private int  headlessMaxTicks = 0;      // 스톨 진단: race당 최대 tick 수
+    private int  headlessStallRaces = 0;    // 스톨 진단: simTime>=300f 상한 도달 race 수 (0 기대)
+    // ★ 클러치 튜닝 오버라이드 (null이면 GameSettings/CSV값) — 스윕에서 조합 주입, 파일 수정 없이 격자 측정
+    private static float? headlessClutchChance = null;
+    private static float? headlessClutchBonus  = null;
     private List<SimRacer> _activeRacers; // V4 시뮬레이션에서 사용
     private Dictionary<string, CharacterDataV4> v4DataMap;
 
@@ -50,6 +58,14 @@ public class RaceBacktestWindow : EditorWindow
     public static void ShowWindow()
     {
         GetWindow<RaceBacktestWindow>("레이스 백테스팅");
+    }
+
+    // ★ 헤드리스 멀티랩 밸런스 스윕 — 메뉴 1클릭 실행 (Play 불필요, 결과 Console + Docs/logs 저장)
+    [MenuItem("DopamineRace/밸런스 스윕 (2~6바퀴 헤드리스)")]
+    public static void MenuRunLapSweep()
+    {
+        string r = RunLapSweepHeadless(800, new[] { 2, 3, 4, 5, 6 }, 8, 73101);
+        Debug.Log("[BalanceSweep] 완료\n" + r);
     }
 
     private void OnEnable()
@@ -218,6 +234,10 @@ public class RaceBacktestWindow : EditorWindow
         public bool passiveConditionActive;
         public float passiveCooldownTimer;
 
+        // ★ 클러치 도박 (LuckClutch 미러 — UpdateV4LuckClutch 대응)
+        public bool v4ClutchRolled;
+        public bool v4ClutchActive;
+
         // ★ 구간별 포지션 추적
         public bool[] segRecorded;        // 각 체크포인트 통과 여부
 
@@ -258,6 +278,16 @@ public class RaceBacktestWindow : EditorWindow
         public int top3Count;
         public int totalRank;
 
+        // ★ 완주 HP 집계 (헤드리스 밸런스 백테스트 — 6랩 전멸 판정용)
+        public float finishHpSum;   // 종료 시점 HP 비율 합 (완주=결승선 HP, 미완주=타임아웃 시점 HP)
+        public int   finishHpCount; // 집계 표본 수 (= raceCount)
+        public int   finishHpLow;   // HP ≤ 5% 로 종료한 수 (거의 고갈)
+        public int   dnfCount;      // 미완주(300s 타임아웃) 수 (HP 고갈로 완주 실패)
+
+        // ★ 클러치 발동/미발동 분리 집계 (LuckClutch 홀더만 — 튜닝 스윙 가시화)
+        public int clutchProcRaces, clutchProcWins;
+        public int clutchNoProcRaces, clutchNoProcWins;
+
         // 이벤트 합계
         public int totalCrits;
         public int totalCollisionWins;
@@ -288,6 +318,14 @@ public class RaceBacktestWindow : EditorWindow
         public float AvgDistLost => raceCount > 0 ? totalDistLost / raceCount : 0;
         public float AvgDistGained => raceCount > 0 ? totalDistGained / raceCount : 0;
         public float AvgNetGain => AvgDistGained - AvgDistLost;
+
+        // ★ 완주 HP 평균/비율
+        public float AvgFinishHp => finishHpCount > 0 ? finishHpSum / finishHpCount : 0;
+        public float LowHpRate   => finishHpCount > 0 ? (float)finishHpLow / finishHpCount : 0;
+        public float DnfRate     => finishHpCount > 0 ? (float)dnfCount / finishHpCount : 0;
+        public float ClutchProcWinRate   => clutchProcRaces   > 0 ? (float)clutchProcWins   / clutchProcRaces   : 0;
+        public float ClutchNoProcWinRate => clutchNoProcRaces > 0 ? (float)clutchNoProcWins / clutchNoProcRaces : 0;
+        public float ClutchProcRate      => (clutchProcRaces + clutchNoProcRaces) > 0 ? (float)clutchProcRaces / (clutchProcRaces + clutchNoProcRaces) : 0;
 
         // ★ 스탯 기여 평균
         public float AvgContrib_speed => raceCount > 0 ? totalContrib_speed / raceCount : 0;
@@ -573,6 +611,374 @@ public class RaceBacktestWindow : EditorWindow
     }
 
     // ══════════════════════════════════════
+    //  ★ 헤드리스 배치 진입점 (MCP/자동화용 — Play 불필요, 백그라운드 OK)
+    // ══════════════════════════════════════
+
+    /// <summary>
+    /// 단일 트랙(일반) N회 시뮬을 동기 실행하고 요약 문자열 반환.
+    /// EditorApplication.update 의존이 없어 백그라운드에서도 즉시 완료. Play 모드 불필요.
+    /// </summary>
+    public static string RunHeadless(int simCount, int laps, int racers, bool collision, int seed)
+    {
+        var w = CreateInstance<RaceBacktestWindow>();
+        try
+        {
+            w.simCount      = Mathf.Max(1, simCount);
+            w.simLaps       = Mathf.Clamp(laps, 1, 10);
+            w.simRacers     = Mathf.Clamp(racers, 2, 12);
+            w.simCollision  = collision;
+            w.selectedTrack = null;             // 일반 트랙
+            w.runAllTracks  = false;
+            w.statSweepMode = false;
+            w.headlessMode  = true;
+            w.headlessSeed  = seed;
+            w.headlessMaxTicks = 0;
+            w.headlessStallRaces = 0;
+            w.gameSettings  = Resources.Load<GameSettings>("GameSettings");
+            if (w.gameSettings == null) return "❌ GameSettings 로드 실패 (Resources/GameSettings)";
+
+            var allChars = w.LoadAllCharacters();
+            if (allChars == null || allChars.Count == 0) return "❌ 캐릭터 로드 실패";
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var result = w.RunSimulationCore(allChars, 0, 1, "headless");
+            sw.Stop();
+
+            return w.BuildHeadlessSummary(result, sw.ElapsedMilliseconds);
+        }
+        finally
+        {
+            Object.DestroyImmediate(w);
+        }
+    }
+
+    private string BuildHeadlessSummary(TrackResult result, long ms)
+    {
+        var sb = new StringBuilder();
+        sb.AppendFormat("[headless] {0}race x {1}lap x {2}racers | {3}ms\n", simCount, simLaps, simRacers, ms);
+        sb.AppendFormat("[stall] maxTick={0} (limit {1}) / stallRaces(simTime>=300)={2}\n",
+            headlessMaxTicks, Mathf.CeilToInt(300f / simTimeStep), headlessStallRaces);
+
+        // ★ FINISH-HP (전멸 판정): 전체 레이서 종료 시점 HP 집계
+        float sumHp = 0f; int cntHp = 0, lowHp = 0, dnf = 0;
+        foreach (var s in result.stats.Values) { sumHp += s.finishHpSum; cntHp += s.finishHpCount; lowHp += s.finishHpLow; dnf += s.dnfCount; }
+        sb.AppendFormat("[finish-hp] avgHP={0:P1} / hp<=5%={1}/{2}({3:P1}) / dnf={4}/{2}({5:P1})\n",
+            cntHp > 0 ? sumHp / cntHp : 0, lowHp, cntHp, cntHp > 0 ? (float)lowHp / cntHp : 0,
+            dnf, cntHp > 0 ? (float)dnf / cntHp : 0);
+
+        var sorted = result.stats.Values.Where(s => s.raceCount > 0).OrderByDescending(s => s.WinRate).ToList();
+        sb.AppendLine("top by win% (name win%(w/n) avgRank):");
+        int c = 0;
+        foreach (var s in sorted)
+        {
+            if (c++ >= 12) break;
+            sb.AppendFormat("  {0}  {1:P0}({2}/{3})  avg={4:F2}\n", s.name, s.WinRate, s.winCount, s.raceCount, s.AvgRank);
+        }
+        return sb.ToString();
+    }
+
+    // ══════════════════════════════════════
+    //  ★ 멀티랩 스윕 (2~6랩 자동 반복 + 로그 저장) — 최종 밸런스 판정 산출물
+    // ══════════════════════════════════════
+
+    private class CharLapStat   // charId × lap 승률 병합 단위
+    {
+        public int wins;
+        public int count;
+        public int totalRank;
+        public float WinRate => count > 0 ? (float)wins / count : 0;
+        public float AvgRank => count > 0 ? (float)totalRank / count : 0;
+    }
+
+    private class FinishHpStat  // lap별 완주 HP 병합 단위 (전멸 판정)
+    {
+        public float sumHp;
+        public int count;
+        public int hp0;   // hp <= 5%
+        public int dnf;   // 미완주(300s)
+        public float AvgHp   => count > 0 ? sumHp / count : 0;
+        public float LowRate => count > 0 ? (float)hp0 / count : 0;
+        public float DnfRate => count > 0 ? (float)dnf / count : 0;
+    }
+
+    /// <summary>
+    /// 여러 랩 거리(예: 2·3·4·5·6)를 각 perLapRaces회 시뮬 → charId 기준 병합 → 통합 리포트 저장.
+    /// 랩 간 동일 seed(페어드)로 race별 동일 출전 필드 → 거리 변수만 격리, 매트릭스 셀 누락 0.
+    /// </summary>
+    public static string RunLapSweepHeadless(int perLapRaces, int[] laps, int racers, int seed)
+    {
+        if (laps == null || laps.Length == 0) return "❌ laps 비어있음";
+        var w = CreateInstance<RaceBacktestWindow>();
+        try
+        {
+            w.simCount      = Mathf.Max(1, perLapRaces);
+            w.simRacers     = Mathf.Clamp(racers, 2, 12);
+            w.simCollision  = true;
+            w.selectedTrack = null;
+            w.runAllTracks  = false;
+            w.statSweepMode = false;
+            w.headlessMode  = true;
+            w.gameSettings  = Resources.Load<GameSettings>("GameSettings");
+            if (w.gameSettings == null) return "❌ GameSettings 로드 실패 (Resources/GameSettings)";
+
+            var allChars = w.LoadAllCharacters();
+            if (allChars == null || allChars.Count == 0) return "❌ 캐릭터 로드 실패";
+
+            var charLap = new Dictionary<string, Dictionary<int, CharLapStat>>();
+            var typeMap = new Dictionary<string, string>();
+            var hpByLap = new Dictionary<int, FinishHpStat>();
+            var stallByLap = new Dictionary<int, string>();
+
+            var swAll = System.Diagnostics.Stopwatch.StartNew();
+            foreach (int L in laps)
+            {
+                w.simLaps            = Mathf.Clamp(L, 1, 10);
+                w.headlessSeed       = seed;   // 페어드: 랩 무관 동일 필드 (거리 격리)
+                w.headlessMaxTicks   = 0;
+                w.headlessStallRaces = 0;
+
+                var tr = w.RunSimulationCore(allChars, 0, 1, "sweep-L" + L);
+
+                var hp = new FinishHpStat();
+                foreach (var kv in tr.stats)
+                {
+                    var s = kv.Value;
+                    if (s.raceCount == 0) continue;
+                    if (!typeMap.ContainsKey(kv.Key)) typeMap[kv.Key] = s.type;
+                    if (!charLap.ContainsKey(kv.Key)) charLap[kv.Key] = new Dictionary<int, CharLapStat>();
+                    charLap[kv.Key][L] = new CharLapStat { wins = s.winCount, count = s.raceCount, totalRank = s.totalRank };
+                    hp.sumHp += s.finishHpSum; hp.count += s.finishHpCount; hp.hp0 += s.finishHpLow; hp.dnf += s.dnfCount;
+                }
+                hpByLap[L] = hp;
+                stallByLap[L] = string.Format("L{0}: maxTick={1} / stall300s={2}", L, w.headlessMaxTicks, w.headlessStallRaces);
+            }
+            swAll.Stop();
+
+            string report = BuildSweepReport(laps, charLap, hpByLap, typeMap, stallByLap,
+                                             perLapRaces, w.simRacers, seed, allChars.Count, swAll.ElapsedMilliseconds);
+            string path = SaveSweepReport(report, seed);
+            return report + "\n\nsaved → " + path;
+        }
+        finally
+        {
+            Object.DestroyImmediate(w);
+        }
+    }
+
+    private static string BuildSweepReport(int[] laps,
+        Dictionary<string, Dictionary<int, CharLapStat>> charLap,
+        Dictionary<int, FinishHpStat> hpByLap,
+        Dictionary<string, string> typeMap,
+        Dictionary<int, string> stallByLap,
+        int perLapRaces, int racers, int seed, int totalChars, long ms)
+    {
+        var sb = new StringBuilder();
+        int totalRaces = perLapRaces * laps.Length;
+        sb.AppendLine("# 헤드리스 밸런스 스윕 리포트");
+        sb.AppendFormat("- 실행: {0}\n", System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+        sb.AppendFormat("- 설정: laps=[{0}] / perLap={1}race / racers={2} / seed={3} → 총 {4}race\n",
+            string.Join(",", laps), perLapRaces, racers, seed, totalRaces);
+        sb.AppendFormat("- 소요: {0}ms / 병합 charId={1} (전체 {2} — 누락/중복 0 기대)\n", ms, charLap.Count, totalChars);
+        sb.AppendLine();
+
+        // 캐릭터별 overall (전 랩 합산)
+        var overall = charLap.Select(kv =>
+        {
+            int wtot = 0, ctot = 0;
+            foreach (var ls in kv.Value.Values) { wtot += ls.wins; ctot += ls.count; }
+            return new { id = kv.Key, type = typeMap.ContainsKey(kv.Key) ? typeMap[kv.Key] : "?", win = ctot > 0 ? (float)wtot / ctot : 0f, nPerLap = ctot / Mathf.Max(1, laps.Length) };
+        }).OrderByDescending(x => x.win).ToList();
+
+        // CHAR×DIST
+        sb.AppendLine("## CHAR×DIST — 캐릭터별 랩 거리 win% (overall 내림차순)");
+        sb.AppendLine("```");
+        sb.Append("charId".PadRight(34)).Append("type".PadRight(10)).Append("overall".PadRight(9));
+        foreach (int L in laps) sb.Append(("L" + L).PadRight(8));
+        sb.AppendLine("n/lap");
+        foreach (var x in overall)
+        {
+            sb.Append(x.id.PadRight(34)).Append(x.type.PadRight(10)).Append(x.win.ToString("P0").PadRight(9));
+            foreach (int L in laps)
+            {
+                string cell = charLap[x.id].ContainsKey(L) ? charLap[x.id][L].WinRate.ToString("P0") : "-";
+                sb.Append(cell.PadRight(8));
+            }
+            sb.AppendLine(x.nPerLap.ToString());
+        }
+        sb.AppendLine("```");
+        sb.AppendLine();
+
+        // TYPE×DIST (타입은 typeMap에서 수집 — GetTypeName 표기 무관 정합)
+        var types = charLap.Keys.Select(id => typeMap.ContainsKey(id) ? typeMap[id] : "?").Distinct().OrderBy(t => t).ToList();
+        sb.AppendLine("## TYPE×DIST — 타입별 랩 거리 win%");
+        sb.AppendLine("```");
+        sb.Append("type".PadRight(12));
+        foreach (int L in laps) sb.Append(("L" + L).PadRight(9));
+        sb.AppendLine();
+        foreach (var tp in types)
+        {
+            sb.Append(tp.PadRight(12));
+            foreach (int L in laps)
+            {
+                int w = 0, c = 0;
+                foreach (var kv in charLap)
+                {
+                    if ((typeMap.ContainsKey(kv.Key) ? typeMap[kv.Key] : "?") != tp) continue;
+                    if (kv.Value.ContainsKey(L)) { w += kv.Value[L].wins; c += kv.Value[L].count; }
+                }
+                sb.Append((c > 0 ? ((float)w / c).ToString("P0") : "-").PadRight(9));
+            }
+            sb.AppendLine();
+        }
+        sb.AppendLine("```");
+        sb.AppendLine();
+
+        // FINISH-HP by lap
+        sb.AppendLine("## FINISH-HP — 랩별 완주 시점 HP (전멸 판정)");
+        sb.AppendLine("```");
+        sb.AppendLine("lap    avgHP      hp<=5%     dnf        samples");
+        foreach (int L in laps)
+        {
+            var hp = hpByLap[L];
+            sb.AppendFormat("L{0,-5} {1,-10} {2,-10} {3,-10} {4}\n", L,
+                hp.AvgHp.ToString("P1"), hp.LowRate.ToString("P1"), hp.DnfRate.ToString("P1"), hp.count);
+        }
+        sb.AppendLine("```");
+        sb.AppendLine();
+
+        // 스톨 계측 요약
+        sb.AppendLine("## STALL 계측 (simTime>=300s 도달 race 수 = 0 기대)");
+        sb.AppendLine("```");
+        foreach (int L in laps) sb.AppendLine(stallByLap.ContainsKey(L) ? stallByLap[L] : ("L" + L + ": -"));
+        sb.AppendLine("```");
+        sb.AppendLine();
+
+        // ★ 자동 판정 — (a) 전거리 지배 캐릭터 / (b) 랩별 전멸 위험
+        sb.AppendLine("## 판정 (자동 임계)");
+        sb.AppendLine("```");
+        float fair = racers > 0 ? 1f / racers : 0.125f;
+        sb.AppendFormat("공정승률(1/racers)={0:P1} | 지배임계: overall>=30% AND 전랩>=20% | 전멸임계: dnf>=5% OR avgHP<10%\n", fair);
+
+        var doms = overall.Where(x =>
+        {
+            if (x.win < 0.30f) return false;
+            foreach (int L in laps)
+                if (!charLap[x.id].ContainsKey(L) || charLap[x.id][L].WinRate < 0.20f) return false;
+            return true;
+        }).ToList();
+        if (doms.Count == 0)
+            sb.AppendLine("[지배] 없음 — 전 거리(2~6) 지배 캐릭터 미검출");
+        else
+            foreach (var d in doms)
+                sb.AppendFormat("[지배] {0} — overall {1:P0} (전 랩 20% 이상) → 타입/거리 무관 최상위\n", d.id, d.win);
+
+        bool anyWipe = false;
+        foreach (int L in laps)
+        {
+            var hp = hpByLap[L];
+            if (hp.DnfRate >= 0.05f || hp.AvgHp < 0.10f)
+            {
+                anyWipe = true;
+                sb.AppendFormat("[전멸] L{0} — dnf {1:P1} / avgHP {2:P1} (임계 초과)\n", L, hp.DnfRate, hp.AvgHp);
+            }
+        }
+        if (!anyWipe)
+            sb.AppendLine("[전멸] 없음 — 전 랩 완주 정상 (6바퀴 포함 실행 가능)");
+        sb.AppendLine("```");
+
+        return sb.ToString();
+    }
+
+    private static string SaveSweepReport(string content, int seed)
+    {
+        try
+        {
+            string root = Directory.GetParent(Application.dataPath).FullName;
+            string dir = Path.Combine(root, "Docs", "logs");
+            Directory.CreateDirectory(dir);
+            string ts = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string path = Path.Combine(dir, "backtest_sweep_" + ts + ".md");
+            File.WriteAllText(path, content, new System.Text.UTF8Encoding(false));
+            return path;
+        }
+        catch (System.Exception e)
+        {
+            return "저장 실패: " + e.Message;
+        }
+    }
+
+    // ══════════════════════════════════════
+    //  ★ 클러치 튜닝 스윕 (chance × bonus 격자) — goyo 운빨형 파라미터 탐색
+    // ══════════════════════════════════════
+
+    /// <summary>
+    /// 클러치 (chance × bonus) 격자 튜닝 스윕 — 대상 캐릭터의 overall/L2/L6 win% + 발동/미발동 win% 비교표.
+    /// 파일 수정 없이 static 오버라이드로 조합 주입. 동일 seed로 조합 간 공정 비교(RNG 시퀀스 동일).
+    /// </summary>
+    public static string RunClutchTuningSweep(int perComboRaces, int[] laps, int racers, int seed,
+                                              float[] chances, float[] bonuses, string targetId)
+    {
+        if (laps == null || laps.Length == 0 || chances == null || bonuses == null) return "❌ 인자 비어있음";
+        var w = CreateInstance<RaceBacktestWindow>();
+        float? savedChance = headlessClutchChance, savedBonus = headlessClutchBonus;
+        var sb = new StringBuilder();
+        try
+        {
+            w.simRacers     = Mathf.Clamp(racers, 2, 12);
+            w.simCollision  = true;
+            w.selectedTrack = null; w.runAllTracks = false; w.statSweepMode = false;
+            w.headlessMode  = true;
+            w.gameSettings  = Resources.Load<GameSettings>("GameSettings");
+            if (w.gameSettings == null) return "❌ GameSettings 로드 실패";
+            var allChars = w.LoadAllCharacters();
+            if (allChars == null || allChars.Count == 0) return "❌ 캐릭터 로드 실패";
+
+            sb.AppendLine("# 클러치 튜닝 스윕");
+            sb.AppendFormat("- 대상: {0} / laps=[{1}] / perCombo={2}race/랩 / racers={3} / seed={4}\n",
+                targetId, string.Join(",", laps), perComboRaces, w.simRacers, seed);
+            sb.AppendLine("- proc%=실제 발동율(≈chance sanity) / win|proc=발동 시 승률 / win|noproc=미발동 시 승률 (스윙 크기)");
+            sb.AppendLine("```");
+            sb.AppendLine("chance bonus | overall   L2      L6    | proc%  win|proc  win|noproc");
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            foreach (float ch in chances)
+            foreach (float bo in bonuses)
+            {
+                headlessClutchChance = ch;
+                headlessClutchBonus  = bo;
+                int wOv=0,nOv=0, wL2=0,nL2=0, wL6=0,nL6=0, pR=0,pW=0,nR=0,nW=0;
+                foreach (int L in laps)
+                {
+                    w.simCount = Mathf.Max(1, perComboRaces);
+                    w.simLaps  = Mathf.Clamp(L, 1, 10);
+                    w.headlessSeed = seed; w.headlessMaxTicks = 0; w.headlessStallRaces = 0;
+                    var tr = w.RunSimulationCore(allChars, 0, 1, "clutch");
+                    if (!tr.stats.TryGetValue(targetId, out var s)) continue;
+                    wOv += s.winCount; nOv += s.raceCount;
+                    pR += s.clutchProcRaces; pW += s.clutchProcWins;
+                    nR += s.clutchNoProcRaces; nW += s.clutchNoProcWins;
+                    if (L == 2) { wL2 += s.winCount; nL2 += s.raceCount; }
+                    if (L == 6) { wL6 += s.winCount; nL6 += s.raceCount; }
+                }
+                float ov = nOv>0?(float)wOv/nOv:0, l2 = nL2>0?(float)wL2/nL2:0, l6 = nL6>0?(float)wL6/nL6:0;
+                float prc = (pR+nR)>0?(float)pR/(pR+nR):0, wp = pR>0?(float)pW/pR:0, wn = nR>0?(float)nW/nR:0;
+                sb.AppendFormat("{0:0.00}   {1:0.00} | {2,6:P0} {3,6:P0} {4,6:P0} | {5,5:P0}  {6,6:P0}   {7,6:P0}\n",
+                    ch, bo, ov, l2, l6, prc, wp, wn);
+            }
+            sw.Stop();
+            sb.AppendFormat("```\n소요: {0}ms\n", sw.ElapsedMilliseconds);
+            string report = sb.ToString();
+            string path = SaveSweepReport(report, seed);
+            return report + "\nsaved → " + path;
+        }
+        finally
+        {
+            headlessClutchChance = savedChance;
+            headlessClutchBonus  = savedBonus;
+            Object.DestroyImmediate(w);
+        }
+    }
+
+    // ══════════════════════════════════════
     //  핵심 시뮬레이션 루프
     // ══════════════════════════════════════
 
@@ -631,6 +1037,7 @@ public class RaceBacktestWindow : EditorWindow
         {
             // ★ SPEC-033: 스윕 모드 시드 고정 (재현성·before/after 차분)
             if (statSweepMode) UnityEngine.Random.InitState(sweepSeedBase + race);
+            else if (headlessMode) UnityEngine.Random.InitState(headlessSeed + race);   // 재현성: 매 race 시드 고정
             int[] slotBucket = null;   // 슬롯i → 값버킷 (로테이션으로 위치편향 상쇄)
 
             // 선발
@@ -772,6 +1179,8 @@ public class RaceBacktestWindow : EditorWindow
                         racer.skillRankTriggered = false;
                         racer.passiveConditionActive = false;
                         racer.passiveCooldownTimer = 0f;
+                        racer.v4ClutchRolled = false;
+                        racer.v4ClutchActive = false;
                     }
                 }
 
@@ -948,6 +1357,14 @@ public class RaceBacktestWindow : EditorWindow
                 UpdateSimCooldowns();
             }
 
+            // ★ 헤드리스 스톨 진단: race당 최대 tick / 300s 상한 도달 카운트
+            if (headlessMode)
+            {
+                int ticks = Mathf.CeilToInt(simTime / simTimeStep);
+                if (ticks > headlessMaxTicks) headlessMaxTicks = ticks;
+                if (simTime >= 300f) headlessStallRaces++;
+            }
+
             // 미완주
             var unfinished = racers.Where(r => !r.finished).OrderByDescending(r => r.position).ToList();
             for (int i = 0; i < unfinished.Count; i++) { finishedCount++; unfinished[i].finishOrder = finishedCount; }
@@ -988,6 +1405,20 @@ public class RaceBacktestWindow : EditorWindow
                 if (r.finishOrder == 1) s.winCount++;
                 if (r.finishOrder <= 3) s.top3Count++;
 
+                // ★ 완주 HP 집계 (6랩 전멸 판정용) — 완주=결승선 HP, 미완주=타임아웃 시점 HP
+                float finHp = r.v4MaxStamina > 0f ? Mathf.Clamp01(r.v4Stamina / r.v4MaxStamina) : 0f;
+                s.finishHpSum += finHp;
+                s.finishHpCount++;
+                if (finHp <= 0.05f) s.finishHpLow++;
+                if (!r.finished)    s.dnfCount++;
+
+                // ★ 클러치 발동/미발동별 승패 (LuckClutch 홀더만)
+                if (r.dataV4?.passiveData?.triggerType == PassiveTriggerType.LuckClutch)
+                {
+                    if (r.v4ClutchActive) { s.clutchProcRaces++;   if (r.finishOrder == 1) s.clutchProcWins++; }
+                    else                  { s.clutchNoProcRaces++; if (r.finishOrder == 1) s.clutchNoProcWins++; }
+                }
+
                 // ★ SPEC-031.P2 INT 진단 수집 (V4 + burst 진입 기록 있는 레이서만)
                 if (r.dataV4 != null)
                 {
@@ -1021,7 +1452,7 @@ public class RaceBacktestWindow : EditorWindow
                 globalSlingshots += r.slingshotCount;
             }
 
-            if (race % 10 == 0)
+            if (!headlessMode && race % 10 == 0)
             {
                 float overallProgress = ((float)trackIndex * simCount + race) / (totalTracks * simCount);
                 string msg = string.Format("트랙 {0}/{1} [{2}]  레이스 {3}/{4}",
@@ -1031,7 +1462,7 @@ public class RaceBacktestWindow : EditorWindow
             }
         }
 
-        if (!runAllTracks) EditorUtility.ClearProgressBar();
+        if (!runAllTracks && !headlessMode) EditorUtility.ClearProgressBar();
 
         return new TrackResult
         {
@@ -1318,6 +1749,9 @@ public class RaceBacktestWindow : EditorWindow
         // ── 2b. 패시브 스킬 체크 (CheckPassiveSkill 미러) ──
         SimCheckPassiveV4(r, gs4, racers, progress);
 
+        // ── 2c. 클러치 도박 판정 (UpdateV4LuckClutch 미러) ──
+        SimUpdateV4LuckClutch(r, gs4, progress);
+
         // ── 3. 속도 계산 (CalcSpeedV4 미러) ──
         float baseSpeed = gs.globalSpeedMultiplier;
         float vmax = baseSpeed * (1f + (dv4.v4Speed * HiddenStatWeights.Speed) * gs4.v4_speedStatFactor)
@@ -1370,6 +1804,13 @@ public class RaceBacktestWindow : EditorWindow
         // 크리티컬 배율
         if (r.v4CritBoostRemaining > 0f)
             outputSpeed *= gs4.v4_luckCritBoost;
+
+        // 클러치 배율 (단발 도박 성공 시 결승까지) — bonus 오버라이드 가능(튜닝)
+        if (r.v4ClutchActive && r.dataV4?.passiveData?.effectType == PassiveEffectType.SpeedBonus)
+        {
+            float clutchBonus = headlessClutchBonus ?? r.dataV4.passiveData.effectValue;
+            outputSpeed *= Mathf.Min(clutchBonus, PassiveSkillData.CLUTCH_SPEED_MAX);
+        }
 
         // 액티브 SpeedBoost 배율 (CalcSpeedV4 미러)
         if (r.skillActive && r.dataV4?.skillData?.effectType == SkillEffectType.SpeedBoost)
@@ -1552,6 +1993,20 @@ public class RaceBacktestWindow : EditorWindow
                 r.critCount++;
             }
         }
+    }
+
+    /// <summary>V4 Luck 클러치 판정 (UpdateV4LuckClutch 미러) — 진행도 gate 도달 시 1회 굴림, 성공 시 결승까지 latch</summary>
+    private void SimUpdateV4LuckClutch(SimRacer r, GameSettingsV4 gs4, float progress)
+    {
+        var pd = r.dataV4?.passiveData;
+        if (pd == null || pd.triggerType != PassiveTriggerType.LuckClutch) return;
+        if (r.v4ClutchRolled) return;
+        if (progress < gs4.v4_clutchGateProgress) return;
+
+        r.v4ClutchRolled = true;   // gate 도달 → 1회만 판정 (roll은 chance 무관 항상 1회 소비 → 조합 간 RNG 동일)
+        float chance = headlessClutchChance ?? gs4.v4_clutchChance;
+        if (Random.value < chance)
+            r.v4ClutchActive = true;
     }
 
     /// <summary>패시브 스킬 체크 (CheckPassiveSkill 미러)</summary>

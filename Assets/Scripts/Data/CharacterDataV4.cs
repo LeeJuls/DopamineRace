@@ -11,6 +11,7 @@ using UnityEngine;
 ///   12:char_resource_prefabs, 13:char_attack_resource_prefabs
 ///   14:char_icon, 15:char_weapon
 ///   16:char_skill_desc, 17:char_illustration
+///   18:char_appearance_rate, 19:char_passive, 20:char_video, 21:char_story
 /// </summary>
 [System.Serializable]
 public class CharacterDataV4
@@ -38,6 +39,7 @@ public class CharacterDataV4
     public string charSkillDesc;
     public string charIllustration;
     public string charVideo;                       // 비디오 Resources 경로 (SPEC-049, 없으면 PNG 폴백)
+    public string charStory = "";                   // 스토리 본문 StringUID (col21, 없으면 빈 문자열)
     public SkillData skillData;
 
     // ─── 패시브 스킬 (col 19) ───
@@ -99,6 +101,8 @@ public class CharacterDataV4
         d.charPassive  = cols.Length > 19 ? cols[19].Trim() : "";
         // char_video (20번) — SPEC-049. 없으면 빈 문자열 → VideoResourcePath null → PNG 폴백
         d.charVideo    = cols.Length > 20 ? cols[20].Trim() : "";
+        // char_story (21번) — 스토리 본문 StringUID. 없으면 빈 문자열 → CharacterStoryPopup 폴백 문구
+        d.charStory    = cols.Length > 21 ? cols[21].Trim() : "";
 
         d.skillData   = ResolveSkill(d.charAbility, d.charAbilityTimeSec);
         d.passiveData = ResolvePassive(d.charPassive);

@@ -64,6 +64,8 @@ MonoBehaviour:
   v4_luckCritBoost: 1.4
   v4_luckCritDuration: 2
   v4_intDodgeChance: 0.02
+  v4_clutchGateProgress: 0.5
+  v4_clutchChance: 0.4
   v4_normalSpeedRatio: 0.88
   v4_burstSpeedRatio: 1.35
   v4_finalSpurtStart: 0.84

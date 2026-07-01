@@ -220,6 +220,19 @@ public class GameSettingsV4 : ScriptableObject
     public float v4_intDodgeChance = 0.02f;
 
     // ═══════════════════════════════════════════════
+    //  클러치 도박 (LuckClutch 패시브 — 운빨형)
+    //  진행도 gate 도달 시 1회 굴림, 성공 시 결승까지 속도 배율(배율은 패시브 effectValue)
+    // ═══════════════════════════════════════════════
+    [Header("═══ 클러치 도박 (LuckClutch) ═══")]
+    [Tooltip("클러치 발동 지점 (전체 진행도 기준, 0.5 = 트랙 절반)")]
+    [Range(0f, 1f)]
+    public float v4_clutchGateProgress = 0.5f;
+
+    [Tooltip("클러치 발동 확률 (0~1) — gate 도달 시 1회 판정 (goyo 튜닝 확정값 0.40)")]
+    [Range(0f, 1f)]
+    public float v4_clutchChance = 0.4f;
+
+    // ═══════════════════════════════════════════════
     //  구간제 속도 시스템 (M2 개편)
     //  전체 진행도(0~1) 기준 구간별 목표 속도
     // ═══════════════════════════════════════════════

@@ -29,3 +29,4 @@ skill.p.lastrank.hpheal.0_15,passive,P_LastRank:HpHeal:0.15:20,str.skill.p.lastr
 skill.p.toprank4.slip.1_30,passive,P_TopRank:4:SlipstreamRange:1.30,str.skill.p.toprank4.slip.1_30.name,str.skill.p.toprank4.slip.1_30.desc,Icon/skill/skill_p_toprank_slip_01
 skill.p.toprank6.drain.0_70,passive,P_TopRank:6:DrainReduce:0.70,str.skill.p.toprank6.drain.0_70.name,str.skill.p.toprank6.drain.0_70.desc,Icon/skill/skill_p_toprank_drain_01
 skill.p.lowhp25.hpheal.0_10,passive,P_LowHP:25:HpHeal:0.10:20,str.skill.p.lowhp25.hpheal.0_10.name,str.skill.p.lowhp25.hpheal.0_10.desc,Icon/skill/skill_p_lowhp_hpheal_02
+skill.p.luckclutch.spd.1_20,passive,P_LuckClutch:SpeedBonus:1.20,str.skill.p.luckclutch.spd.1_20.name,str.skill.p.luckclutch.spd.1_20.desc,Icon/skill/skill_p_always_spd_02

@@ -13,6 +13,7 @@ public enum PassiveTriggerType
     Spurt,      // 최종 스퍼트 구간(80%~) 중 조건
     Always,     // 항상 적용
     TopRank,    // N등 이내 유지 중 조건
+    LuckClutch, // 진행도 gate 도달 시 1회 확률 발동 → 성공 시 결승까지 지속 (운빨형 단발 도박)
 }
 
 /// <summary>
@@ -39,6 +40,7 @@ public enum PassiveEffectType
 ///   P_Spurt:SlipstreamRange:1.50      ← 스퍼트 구간 슬립스트림 범위 1.5배 (지속)
 ///   P_Always:CpRegen:0.08:20          ← 20초마다 CP 8% 재생
 ///   P_TopRank:3:SpeedBonus:1.08       ← 3등 이내 유지 시 속도 +8% (지속)
+///   P_LuckClutch:SpeedBonus:1.10      ← 진행도 gate 도달 시 1회 확률 발동, 성공 시 결승까지 속도 +10% (goyo 운빨형)
 ///
 /// 세그먼트 구조:
 ///   조건 없는 트리거:  P_LastRank/BurstZone/Spurt/Always → [triggerType]:[effectType]:[effectValue]:[cooldown?]
@@ -59,6 +61,7 @@ public class PassiveSkillData
     public const float SLIPSTREAM_RANGE_MAX  = 1.60f;
     public const float HP_HEAL_MAX           = 0.15f;
     public const float COOLDOWN_MIN          = 20f;
+    public const float CLUTCH_SPEED_MAX      = 1.40f;  // LuckClutch 전용 배율 상한 (단발 도박이라 상시 상한 1.15보다 큼)
 
     /// <summary>
     /// CSV char_passive 문자열 파싱
@@ -150,7 +153,8 @@ public class PassiveSkillData
         switch (data.effectType)
         {
             case PassiveEffectType.SpeedBonus:
-                data.effectValue = Mathf.Clamp(data.effectValue, 1.0f, SPEED_BONUS_MAX);
+                data.effectValue = Mathf.Clamp(data.effectValue, 1.0f,
+                    data.triggerType == PassiveTriggerType.LuckClutch ? CLUTCH_SPEED_MAX : SPEED_BONUS_MAX);
                 break;
             case PassiveEffectType.DrainReduce:
                 data.effectValue = Mathf.Clamp(data.effectValue, DRAIN_REDUCE_MIN, 1.0f);
@@ -194,6 +198,8 @@ public class PassiveSkillData
                 return true;
             case PassiveTriggerType.TopRank:
                 return currentRank > 0 && currentRank <= (int)triggerValue;
+            case PassiveTriggerType.LuckClutch:
+                return false;   // 클러치는 전용 latch 로직(UpdateV4LuckClutch)이 처리 — 상시 조건 아님
             default:
                 return false;
         }
