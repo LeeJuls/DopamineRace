@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,7 +14,12 @@ using UnityEngine.UI;
 ///   (ItemInfoPopup과 동일 원칙 — CharacterInfoPopup처럼 루트를 직접 끄는 방식과 혼동 금지).
 ///
 /// 프리팹: Assets/Prefabs/UI/CharacterStoryPopup.prefab
-/// 스토리 텍스트는 StringTable 키(str.char.NNN.story), CharacterDataV4.charStory 경유 조회.
+/// 스토리 텍스트는 StringTable 키(str.char.NNN.scenario), CharacterDataV4.charStory 경유 조회.
+///
+/// 가독성 개선(2026-07): 원문에 §TIP§ 마커로 "배경서사/배팅팁" 경계를 표시하면
+/// FormatStoryText가 본문은 2문장씩 문단 구분, 팁은 별도 색상 문단으로 분리한다.
+/// 콘텐츠에 [skill]...[/skill](능력치, 골드+bold), [key]...[/key](세계관 핵심어, 오렌지)
+/// 태그를 넣으면 색상 강조된다. 태그는 중첩 금지·한 문장 내에서만 사용할 것.
 /// </summary>
 public class CharacterStoryPopup : MonoBehaviour
 {
@@ -19,9 +27,19 @@ public class CharacterStoryPopup : MonoBehaviour
 
     [Header("UI 참조")]
     [SerializeField] private GameObject box;         // 보이기/숨기기 대상 (루트 아님)
+    [SerializeField] private Text titleText;         // 캐릭터 이름 헤더
     [SerializeField] private Text storyText;         // ScrollRect/Content 안의 본문 텍스트
     [SerializeField] private ScrollRect scrollRect;
     [SerializeField] private Button closeBtn;
+
+    private const string TIP_MARKER  = "§TIP§";
+    private const string COLOR_SKILL = "#A67C00";   // 골드(진하게, WCAG 대비 보강) — 능력치/패시브 수치
+    private const string COLOR_KEY   = "#D9622B";   // 오렌지 — 세계관 핵심 단어
+    private const string COLOR_TIP   = "#3B6EA5";   // 블루 — 배팅 팁 문단(자동 분리, 수동 태그 아님)
+
+    private static readonly Regex SkillTagRegex = new Regex(@"\[skill\](.*?)\[/skill\]", RegexOptions.Compiled);
+    private static readonly Regex KeyTagRegex   = new Regex(@"\[key\](.*?)\[/key\]", RegexOptions.Compiled);
+    private static readonly Regex SentenceSplitRegex = new Regex(@"(?<=[.!?])\s+", RegexOptions.Compiled);
 
     /// <summary>현재 표시 중인 캐릭터 UID</summary>
     public string CurrentCharId { get; private set; }
@@ -58,10 +76,14 @@ public class CharacterStoryPopup : MonoBehaviour
         {
             string resolved = !string.IsNullOrEmpty(storyKey) ? Loc.Get(storyKey) : "";
             // 키는 있으나 해당 언어 값이 비어있는 경우(예: 시나리오 미작성 캐릭터)도 폴백 처리
-            storyText.text = !string.IsNullOrEmpty(resolved)
+            string display = !string.IsNullOrEmpty(resolved)
                 ? resolved
                 : Loc.Get("str.char.story.empty");
+            storyText.text = FormatStoryText(display);
         }
+
+        if (titleText != null && v4 != null)
+            titleText.text = Loc.Get(v4.charName);
 
         if (box != null) box.SetActive(true);
 
@@ -91,5 +113,74 @@ public class CharacterStoryPopup : MonoBehaviour
 
         foreach (var t in GetComponentsInChildren<Text>(true))
             t.font = font;
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  가독성 포맷팅 — §TIP§ 분리 + 2문장 문단 그룹핑 + 시맨틱 컬러태그
+    // ══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// 원문(마커·태그 포함 가능)을 화면 표시용으로 가공.
+    /// 1) [skill]/[key] → &lt;color&gt; 치환(전체 1회, 문장분리 전)
+    /// 2) §TIP§ 마커로 본문/팁 분리(없으면 전체를 본문으로 취급 — 미번역 언어 안전 폴백)
+    /// 3) 본문은 2문장씩(단, 문단 최소 글자수 미달 시 다음 문장까지 병합) 빈 줄 구분
+    /// 4) 팁은 파란색+이탤릭 문단으로 덧붙임
+    /// </summary>
+    private static string FormatStoryText(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return raw;
+
+        raw = ApplySemanticTags(raw);
+
+        string profile = raw;
+        string tip = null;
+        int idx = raw.IndexOf(TIP_MARKER, System.StringComparison.Ordinal);
+        if (idx >= 0)
+        {
+            profile = raw.Substring(0, idx).Trim();
+            tip = raw.Substring(idx + TIP_MARKER.Length).Trim();
+        }
+
+        string formatted = GroupSentences(profile, perParagraph: 2, minChars: 15);
+        if (string.IsNullOrEmpty(tip))
+            return formatted;   // 마커 없음(미번역 언어 등) → 문단 청킹만 적용, 안전 폴백
+
+        return formatted + "\n\n<i><color=" + COLOR_TIP + ">" + tip + "</color></i>";
+    }
+
+    /// <summary>[skill]/[key] 태그 → Unity RichText &lt;color&gt; 변환. 중첩·미매칭은 콘텐츠 가이드로 금지(코드 방어 안 함).</summary>
+    private static string ApplySemanticTags(string text)
+    {
+        text = SkillTagRegex.Replace(text, "<color=" + COLOR_SKILL + "><b>$1</b></color>");
+        text = KeyTagRegex.Replace(text, "<color=" + COLOR_KEY + ">$1</color>");
+        return text;
+    }
+
+    /// <summary>문장 단위로 묶어 빈 줄(\n\n) 삽입. 문단이 minChars 미만이면 다음 문장까지 병합(단문체 캐릭터 대응).</summary>
+    private static string GroupSentences(string text, int perParagraph, int minChars)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+
+        string[] sentences = SentenceSplitRegex.Split(text);
+        var paragraphs = new List<string>();
+        var current = new StringBuilder();
+        int countInCurrent = 0;
+
+        foreach (var s in sentences)
+        {
+            if (current.Length > 0) current.Append(' ');
+            current.Append(s);
+            countInCurrent++;
+
+            if (countInCurrent >= perParagraph && current.Length >= minChars)
+            {
+                paragraphs.Add(current.ToString());
+                current.Clear();
+                countInCurrent = 0;
+            }
+        }
+        if (current.Length > 0) paragraphs.Add(current.ToString());
+
+        return string.Join("\n\n", paragraphs);
     }
 }

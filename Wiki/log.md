@@ -6,6 +6,8 @@
 
 ## 2026-07-02
 
+- **[INGEST]** 캐릭터 스토리 팝업 가독성 + 세계관 정본 + 32명 시나리오 8개 언어 번역 → `시스템/다국어_시스템.md`에 "캐릭터 시나리오 번역" 섹션 신규(224셀 번역·시맨틱 컬러태그 규약[skill]/[key]/§TIP§·스탯/캐릭터명 용어일치·**슬립 표준화** 气流/Sog/Rebufo/Vácuo/氣流·CSV안전 전각「」·검증 리터럴0/한글0·032미완성 잔여), frontmatter 8개언어→시나리오 병기·updated 갱신 ← Docs/history/캐릭터스토리팝업_가독성세계관다국어_히스토리_20260702.md
+- **[UPDATE]** `캐릭터/캐릭터_개요.md` — **★세계관 정본 확정** 섹션 신규(B안 단일 도파미나 제국 정본 / SPEC-040·세계관_A 5왕국안 폐기 / 정본 3문서 세계관_B·설정집_B안·시나리오집 표 / 폐기 배너·worldview-canon 메모리), "시나리오 정합 보강 3명"(022 주홍 선버스트 해안 재해석·크리스탈 혼동해소 / 028 초원 왕관야구모자 / 029 칵테일 천사날개), "캐릭터 스토리 팝업 가독성" 섹션 추가, frontmatter sources/related 갱신
 - **[INGEST]** SFX 시스템 후속 개선 4건 → `시스템/사운드_시스템.md`에 SFX 섹션 신규 작성(아키텍처 3층·SFXEntry 필드·12키 트리거표·하드코딩방지·클릭음 억제·Validator·미러규칙 예외·구현위치). 볼륨 3배 확장(`SFXEntry.volume` Range 0~3), `delay`/`loopInterval` 분리 구현(코루틴 기반 루프 재구현), buff.crit 편중 오인 진단(버그 아님, VFX 재사용+빈도차 확인), START 사운드를 배팅확정(`BetAmountModal.OnConfirm`)으로 이동+`SuppressAutoClick`으로 클릭음 억제, 카운트다운 사운드(`sfx.race.countdown`) 신규 연결 ← 대화 세션(커밋 전)
 - **[UPDATE]** `아키텍처/주요_클래스.md` — `SFXManager`/`SFXSettings`/`SFXKeys` 클래스 섹션 신규, 에디터 도구 표에 `SFXSettingsValidator` 행 추가
 - **[UPDATE]** `히스토리/개발_타임라인.md` — 2026-07-01 SFX 시스템 신설 마일스톤 + 2026-07-02 SFX 후속 개선 4건 마일스톤 추가

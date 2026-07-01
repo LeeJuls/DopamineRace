@@ -184,6 +184,12 @@ public static class CharacterStoryPopupPrefabFactory
             new Vector2(-48, 48), 30, TextAnchor.MiddleCenter, TEXT_COLOR, font);
 
         // ScrollArea (뷰포트)
+        // ⚠ 현재 라이브 프리팹(CharacterStoryPopup.prefab)은 CharacterStoryScrollbarPatcher 로
+        //   표준 3계층(ScrollArea → Viewport(RectMask2D) → Content) + 우측 세로 스크롤바가
+        //   in-place 추가된 상태다. 이 Factory 는 아직 2계층 구조를 생성하므로, 재실행(CreatePrefab)하면
+        //   스크롤바가 유실되고 StoryText fontSize(26↔34) 등 수동조정도 롤백된다.
+        //   재생성이 꼭 필요하면 먼저 이 블록을 3계층+스크롤바로 미러링한 뒤 오너 승인 하에 실행할 것.
+        //   미러링 참조: CharacterStoryScrollbarPatcher.cs, FinishLeaderboardUIPrefabCreator.cs:191-232
         var scrollAreaGo = new GameObject("ScrollArea");
         scrollAreaGo.transform.SetParent(box.transform, false);
         var scrollAreaRt = scrollAreaGo.AddComponent<RectTransform>();
