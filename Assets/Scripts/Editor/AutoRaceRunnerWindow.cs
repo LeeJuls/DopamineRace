@@ -16,6 +16,16 @@ public class AutoRaceRunnerWindow : EditorWindow
     private float timeScale = 10f;
     private bool saveClaudeLog = true;  // Claude용 컴팩트 요약 로그 저장
 
+    // ── Phase 0: 헤드리스 반복 스윕 (Play 불필요·백그라운드 안전 — RaceBacktestWindow 동기 루프 호출) ──
+    private int headlessRacesPerLap = 800;
+    private int headlessRacers = 8;
+    private int headlessSeed = 73101;
+    private string headlessResult = "";
+
+    // ── Phase 1: 스톨 감지 (실시간 기준, force-complete 안 함) ──
+    private double lastProgressTime = 0;   // EditorApplication.timeSinceStartup (마지막 상태전환 시각)
+    private bool gameOverStopped = false;  // GameOver(젤리소진)로 중단됨
+
     // ═══ 상태 ═══
     private bool isRunning;
     private bool isSubscribed;
@@ -100,6 +110,33 @@ public class AutoRaceRunnerWindow : EditorWindow
             }
         }
 
+        EditorGUILayout.Space(6);
+
+        // ── ⚡ 헤드리스 반복 스윕 (Play 불필요·백그라운드 OK·재현성 보장) ──
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        {
+            EditorGUILayout.LabelField("⚡ 헤드리스 반복 스윕 (Play 불필요·백그라운드 OK)", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(isRunning))
+            {
+                headlessRacesPerLap = Mathf.Max(1, EditorGUILayout.IntField("랩당 레이스 수", headlessRacesPerLap));
+                headlessRacers      = Mathf.Clamp(EditorGUILayout.IntField("출전 수", headlessRacers), 2, 12);
+                headlessSeed        = EditorGUILayout.IntField("시드", headlessSeed);
+                EditorGUILayout.LabelField("랩: 2·3·4·5·6 고정 (거리별)", EditorStyles.miniLabel);
+
+                if (GUILayout.Button("⚡ 헤드리스 스윕 실행 (동기 — 백그라운드에서도 완주)", GUILayout.Height(26)))
+                {
+                    headlessResult = RaceBacktestWindow.RunLapSweepHeadless(
+                        headlessRacesPerLap, new[] { 2, 3, 4, 5, 6 }, headlessRacers, headlessSeed);
+                    Debug.Log("[AutoRace] 헤드리스 스윕 완료\n" + headlessResult);
+                }
+            }
+            if (!string.IsNullOrEmpty(headlessResult))
+            {
+                int idx = headlessResult.LastIndexOf("saved");
+                EditorGUILayout.HelpBox(idx >= 0 ? headlessResult.Substring(idx) : "완료 (상세는 Console)", MessageType.Info);
+            }
+        }
+
         EditorGUILayout.Space(4);
 
         // ── 진행 상태 ──
@@ -119,6 +156,23 @@ public class AutoRaceRunnerWindow : EditorWindow
                 progress += (float)(gm.CurrentRound - 1) / gm.TotalRounds / iterations;
             EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(false, 18), progress,
                 string.Format("{0:P0}", progress));
+
+            // ── Phase 1: 백그라운드 안내 + 스톨 감지 (실시간, 강제완료 안 함) ──
+            double idleSec = EditorApplication.timeSinceStartup - lastProgressTime;
+            float stallLimit = 20f + 120f / Mathf.Max(1f, timeScale);   // 배속 반영 적응 임계
+            if (idleSec > stallLimit)
+            {
+                EditorGUILayout.HelpBox(
+                    string.Format("⚠️ {0:F0}초째 진행 없음 — 멈춤 가능성\n" +
+                        "· Unity 창 클릭해 포커스 유지(백그라운드 시 Play 정지)\n" +
+                        "· 또는 위 '⚡ 헤드리스 반복 스윕'(백그라운드 OK) 사용", idleSec),
+                    MessageType.Warning);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("백그라운드 전환 시 Play가 멈춤 — 포커스 유지 필요. 대량은 ⚡헤드리스 권장.",
+                    MessageType.Info);
+            }
         }
 
         EditorGUILayout.Space(4);
@@ -182,6 +236,9 @@ public class AutoRaceRunnerWindow : EditorWindow
         currentTestTimestamp = "test_" + DateTime.Now.ToString("yyMMddHHmmss");
 
         Time.timeScale = timeScale;
+        Application.runInBackground = true;   // Phase 2: best-effort (에디터 Play엔 부분효과지만 무해)
+        lastProgressTime = EditorApplication.timeSinceStartup;
+        gameOverStopped = false;
 
         Subscribe();
 
@@ -266,15 +323,25 @@ public class AutoRaceRunnerWindow : EditorWindow
 
     private void OnEditorUpdate()
     {
-        if (!isRunning || pendingAction == null) return;
+        if (!isRunning) return;
 
-        pendingFrames--;
-        if (pendingFrames <= 0)
+        // ScheduleNextFrame 지연 액션 처리
+        if (pendingAction != null)
         {
-            var action = pendingAction;
-            pendingAction = null;
-            action?.Invoke();
+            pendingFrames--;
+            if (pendingFrames <= 0)
+            {
+                var action = pendingAction;
+                pendingAction = null;
+                action?.Invoke();
+            }
         }
+
+        // ── Phase 2: best-effort 백그라운드 킥 ──
+        // 에디터 '비활성'(백그라운드)일 때만 player-loop 강제 틱 → 포커스 중엔 정상 루프라 중복/과호출 방지.
+        // ※ 완전 백그라운드에선 이 콜백 자체가 안 불릴 수 있어 best-effort. 불릴 때만 게임 전진.
+        if (EditorApplication.isPlaying && !UnityEditorInternal.InternalEditorUtility.isApplicationActive)
+            EditorApplication.QueuePlayerLoopUpdate();
     }
 
     // ═══════════════════════════════════════
@@ -284,6 +351,8 @@ public class AutoRaceRunnerWindow : EditorWindow
     private void OnStateChanged(GameManager.GameState state)
     {
         if (!isRunning) return;
+
+        lastProgressTime = EditorApplication.timeSinceStartup;  // 진행 신호 갱신 (스톨 감지 기준)
 
         switch (state)
         {
@@ -298,6 +367,13 @@ public class AutoRaceRunnerWindow : EditorWindow
 
             case GameManager.GameState.Finish:
                 OnGameFinished();
+                break;
+
+            case GameManager.GameState.GameOver:
+                // qa 발견: 젤리 소진 → GameOver, 러너 무핸들러라 이전엔 무한 대기. 안전 중단.
+                gameOverStopped = true;
+                AppendLog("\n⚠️ GameOver(젤리 소진) 감지 — 자동 실행 안전 중단");
+                StopAndSave();
                 break;
         }
     }
@@ -324,12 +400,45 @@ public class AutoRaceRunnerWindow : EditorWindow
             {
                 var g = GameManager.Instance;
                 if (g == null) g = UnityEngine.Object.FindFirstObjectByType<GameManager>();
-                if (isRunning) g?.StartRace();
+                if (!isRunning || g == null) return;
+
+                // ★ 프리징 수정: DelayedBettingUI→ResetBetting이 자동배팅 선택을 지웠으면 복구 후 시작
+                EnsureAutoBet(g);
+                g.StartRace();
+
+                // 안전망: 늦은 ResetBetting 이중경쟁으로 여전히 Betting이면 1회 재확정+재시도
+                if (g.CurrentState == GameManager.GameState.Betting)
+                    ScheduleNextFrame(() =>
+                    {
+                        var g2 = GameManager.Instance;
+                        if (g2 == null) g2 = UnityEngine.Object.FindFirstObjectByType<GameManager>();
+                        if (isRunning && g2 != null && g2.CurrentState == GameManager.GameState.Betting)
+                        {
+                            EnsureAutoBet(g2);
+                            g2.StartRace();
+                        }
+                    });
             });
         }
         else
         {
+            EnsureAutoBet(gm);
             gm.StartRace();
+        }
+    }
+
+    /// <summary>
+    /// StartRace 직전 자동배팅 선택 재확정 (프리징 근본수정).
+    /// Round≥2의 DelayedBettingUI→ResetBetting→SelectBetType이 CurrentBet을 빈 것으로 교체해
+    /// AddSelection(0)이 소멸하면, StartRace 가드(!IsComplete)에 걸려 Betting에 데드락되던 문제 방어.
+    /// </summary>
+    private void EnsureAutoBet(GameManager gm)
+    {
+        if (gm == null) return;
+        if (gm.CurrentBet == null || !gm.CurrentBet.IsComplete)
+        {
+            gm.SelectBetType(BetType.Win);
+            gm.AddSelection(0);
         }
     }
 
