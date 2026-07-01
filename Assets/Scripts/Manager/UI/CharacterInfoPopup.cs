@@ -19,6 +19,8 @@ public class CharacterInfoPopup : MonoBehaviour
     private Image skillIcon;
     private Image storyIcon;
     private Button closeBtn;
+    private Image  penIcon;      // 좌하단 오버레이 아이콘 (후속: 클릭 팝업 버튼)
+    private Button penButton;
 
     // 최근 경기기록 텍스트 (Layout1_TopArea)
     private Text recentRecordHeader;
@@ -158,6 +160,20 @@ public class CharacterInfoPopup : MonoBehaviour
                 winRateLabel = FindText(winRateBg, "WinRateLabel");
             else
                 winRateLabel = FindText(layout2Left, "WinRateLabel");
+
+            // 펜 아이콘 (프리팹 PenIconBtn 참조 — 위치·크기는 프리팹에서 조정. 후속 작업서 팝업 연결)
+            Transform penObj = layout2Left.Find("PenIconBtn");
+            if (penObj != null)
+            {
+                penIcon   = penObj.GetComponent<Image>();
+                penButton = penObj.GetComponent<Button>();
+                // 프리팹에 sprite가 비어있을 때만 로드(폴백)
+                if (penIcon != null && penIcon.sprite == null)
+                {
+                    Sprite penSpr = Resources.Load<Sprite>("Icon/pen");
+                    if (penSpr != null) penIcon.sprite = penSpr;
+                }
+            }
         }
 
         // Layout2_Right → RadarChartArea
