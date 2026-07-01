@@ -14,8 +14,8 @@ public class SFXEntry
     [Tooltip("재생할 클립 후보. 드래그앤드롭으로 교체. 비워두면 해당 키는 무음(에러 없음)")]
     public AudioClip[] clips;
 
-    [Tooltip("이 효과음만의 개별 볼륨 배율 (GameSettings.sfxVolume에 곱해짐)")]
-    [Range(0f, 2f)]
+    [Tooltip("이 효과음만의 개별 볼륨 배율 (GameSettings.sfxVolume에 곱해짐, 최대 3배)")]
+    [Range(0f, 3f)]
     public float volume = 1f;
 
     [Tooltip("체크 시 지속 루프 재생, 해제 시 1회만 재생")]
@@ -28,6 +28,10 @@ public class SFXEntry
     [Tooltip("재생 시작 지연 (초). 이벤트 발생 시점과 사운드 타이밍이 안 맞을 때 조절")]
     [Min(0f)]
     public float delay = 0f;
+
+    [Tooltip("루프 반복 사이 간격 (초). loop=true일 때만 적용 — 0이면 끊김없이 바로 이어붙임, 예: 0.1이면 매 반복마다 0.1초 쉬었다가 재생")]
+    [Min(0f)]
+    public float loopInterval = 0f;
 
     public AudioClip GetRandomClip()
     {

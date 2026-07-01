@@ -20,6 +20,7 @@ public class SFXManager : MonoBehaviour
     private SFXSettings sfxSettings;
     private AudioSource loopSource;                              // 전역 루프 채널 1개(마네키네코 등)
     private string _loopKey;                                     // 현재 재생 중인 루프 key(전환 판정용)
+    private Coroutine _loopCoroutine;                            // LoopRoutine 실행 참조(전환/정지 시 확실히 취소)
     private readonly Dictionary<string, int> _activeCounts = new Dictionary<string, int>(); // maxConcurrent 카운터
 
     private void Awake()
@@ -34,7 +35,7 @@ public class SFXManager : MonoBehaviour
 
         loopSource = gameObject.AddComponent<AudioSource>();
         loopSource.playOnAwake = false;
-        loopSource.loop = true;
+        loopSource.loop = false; // 반복은 LoopRoutine 코루틴이 직접 제어(entry.loopInterval 지원 위해)
 
         clickClip = Resources.Load<AudioClip>("Audio/click");
         if (clickClip == null)
@@ -132,27 +133,54 @@ public class SFXManager : MonoBehaviour
         _activeCounts[key] = Mathf.Max(0, now - 1);
     }
 
-    /// <summary>전역 루프 채널(1개)에서 key 재생. 동일 key 재호출=재시작, 다른 key=즉시 전환. entry.delay(초)만큼 재생 시작 지연.</summary>
+    /// <summary>전역 루프 채널(1개)에서 key 재생. 동일 key 재호출=재시작, 다른 key=즉시 전환.
+    /// entry.delay(초)만큼 최초 재생 지연, entry.loopInterval(초)만큼 매 반복 사이 간격.</summary>
     public void PlayLoop(string key)
     {
         if (_muted || sfxSettings == null) return;
         var entry = sfxSettings.Find(key);
-        var clip = entry != null ? entry.GetRandomClip() : null;
-        if (clip == null) return; // 무음 불변조건
+        if (entry == null) return;
 
-        float baseVol = GameSettings.Instance != null ? GameSettings.Instance.sfxVolume : 0.3f;
+        if (_loopCoroutine != null) { StopCoroutine(_loopCoroutine); _loopCoroutine = null; }
         loopSource.Stop();
-        loopSource.clip = clip;
-        loopSource.volume = baseVol * entry.volume;
-        loopSource.PlayDelayed(entry.delay); // delay=0이면 즉시 재생과 동일(Unity 내장 DSP 스케줄, 프레임 무관 정확)
         _loopKey = key;
+        _loopCoroutine = StartCoroutine(LoopRoutine(entry));
+    }
+
+    private IEnumerator LoopRoutine(SFXEntry entry)
+    {
+        if (entry.delay > 0f) yield return new WaitForSeconds(entry.delay);
+
+        while (true)
+        {
+            var clip = entry.GetRandomClip();
+            if (clip == null) yield break; // 무음 불변조건: clip 미할당 → 조용히 종료(에러 없음)
+
+            float baseVol = GameSettings.Instance != null ? GameSettings.Instance.sfxVolume : 0.3f;
+            loopSource.clip = clip;
+            loopSource.volume = baseVol * entry.volume;
+            loopSource.Play();
+            yield return new WaitForSeconds(clip.length + entry.loopInterval);
+        }
     }
 
     /// <summary>전역 루프 정지. 재생 중이 아니어도 안전(no-op).</summary>
     public void StopLoop()
     {
+        if (_loopCoroutine != null) { StopCoroutine(_loopCoroutine); _loopCoroutine = null; }
         if (loopSource != null) loopSource.Stop();
         _loopKey = null;
+    }
+
+    /// <summary>
+    /// 이 버튼에 자동 클릭음(click.mp3)이 붙지 않도록 미리 표시.
+    /// 전용 SFX(PlaySFX(key) 등)를 직접 재생하는 버튼에서, 일반 클릭음과 중복 재생되지 않게 할 때 호출.
+    /// 반드시 ScanAndAttachButtons()가 스캔하기 전(같은 프레임 또는 그 이전)에 호출해야 효과 있음.
+    /// </summary>
+    public void SuppressAutoClick(Button btn)
+    {
+        if (btn != null && btn.GetComponent<SFXClickTag>() == null)
+            btn.gameObject.AddComponent<SFXClickTag>();
     }
 
     // ══════════════════════════════════════

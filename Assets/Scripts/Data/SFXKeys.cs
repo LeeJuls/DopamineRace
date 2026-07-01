@@ -16,4 +16,5 @@ public static class SFXKeys
     public const string JackpotReveal = "sfx.jackpot.reveal";
     public const string JackpotOpen = "sfx.jackpot.open";
     public const string RaceStart = "sfx.race.start";
+    public const string RaceCountdown = "sfx.race.countdown";
 }

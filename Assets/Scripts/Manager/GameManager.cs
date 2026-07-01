@@ -196,7 +196,11 @@ public class GameManager : MonoBehaviour
 
             // SPEC-028 Step 1.10: enableRoundResume 강제 OFF — 라운드 복귀 저장 안 함
         }
-        if (s == GameState.Countdown) countdownTimer = 3f;
+        if (s == GameState.Countdown)
+        {
+            countdownTimer = 3f;
+            SFXManager.Instance?.PlaySFX(SFXKeys.RaceCountdown);
+        }
         if (s == GameState.Racing) OnRaceStart?.Invoke();
         if (s == GameState.Result) CalcScore();
         if (s == GameState.Finish)

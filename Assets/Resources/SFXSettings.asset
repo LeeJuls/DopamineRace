@@ -16,77 +16,96 @@ MonoBehaviour:
   - key: sfx.race.collision.hit
     clips:
     - {fileID: 8300000, guid: 9170166ff43098644ade302202c33a29, type: 3}
-    volume: 1
+    volume: 3
     loop: 0
     maxConcurrent: 0
     delay: 0
+    loopInterval: 0
   - key: sfx.race.collision.dodge
     clips:
     - {fileID: 8300000, guid: 279ecc467910bca40b03b0fd065e693a, type: 3}
-    volume: 1
-    loop: 0
-    maxConcurrent: 0
-    delay: 0
-  - key: sfx.race.collision.slingshot
-    clips:
-    - {fileID: 8300000, guid: d6130535b292ce044be8bd5b48e44619, type: 3}
-    volume: 1
-    loop: 0
-    maxConcurrent: 0
-    delay: 0
-  - key: sfx.race.buff.crit
-    clips:
-    - {fileID: 8300000, guid: a0ae31a0d55ac564ebc73e6f2b4c7cd7, type: 3}
-    volume: 1
-    loop: 0
-    maxConcurrent: 0
-    delay: 0
-  - key: sfx.race.buff.clutch
-    clips:
-    - {fileID: 8300000, guid: e7dfdff3c70e63c49944ee17d52ba789, type: 3}
-    volume: 1
-    loop: 0
-    maxConcurrent: 0
-    delay: 0
-  - key: sfx.race.buff.active
-    clips:
-    - {fileID: 8300000, guid: 36883731a3ef7dc418e77b56dc03f325, type: 3}
-    volume: 1
-    loop: 0
-    maxConcurrent: 0
-    delay: 0
-  - key: sfx.race.run
-    clips:
-    - {fileID: 8300000, guid: 3d0cf16112f0bdb43a79cf1a009e6044, type: 3}
-    volume: 1.1
-    loop: 1
-    maxConcurrent: 0
-    delay: 0
-  - key: sfx.jackpot.roll
-    clips:
-    - {fileID: 8300000, guid: b90212c5fcf5e2a4681e473db52e1fb6, type: 3}
-    volume: 1
-    loop: 1
-    maxConcurrent: 0
-    delay: 0
-  - key: sfx.jackpot.reveal
-    clips:
-    - {fileID: 8300000, guid: 71fa9ac01d6193347810b99c8eaede5e, type: 3}
-    volume: 1
-    loop: 0
-    maxConcurrent: 0
-    delay: 0
-  - key: sfx.jackpot.open
-    clips:
-    - {fileID: 8300000, guid: 7dfd36736090431458afe2db2e37ff10, type: 3}
     volume: 2
     loop: 0
     maxConcurrent: 0
     delay: 0
-  - key: sfx.race.start
+    loopInterval: 0
+  - key: sfx.race.collision.slingshot
     clips:
-    - {fileID: 8300000, guid: 8588e036076b4a64198a632560f03905, type: 3}
-    volume: 1
+    - {fileID: 8300000, guid: d6130535b292ce044be8bd5b48e44619, type: 3}
+    volume: 2
     loop: 0
     maxConcurrent: 0
     delay: 0
+    loopInterval: 0
+  - key: sfx.race.buff.crit
+    clips:
+    - {fileID: 8300000, guid: a0ae31a0d55ac564ebc73e6f2b4c7cd7, type: 3}
+    volume: 0.7
+    loop: 0
+    maxConcurrent: 0
+    delay: 0
+    loopInterval: 0
+  - key: sfx.race.buff.clutch
+    clips:
+    - {fileID: 8300000, guid: e7dfdff3c70e63c49944ee17d52ba789, type: 3}
+    volume: 2.8
+    loop: 0
+    maxConcurrent: 0
+    delay: 0
+    loopInterval: 0
+  - key: sfx.race.buff.active
+    clips:
+    - {fileID: 8300000, guid: 36883731a3ef7dc418e77b56dc03f325, type: 3}
+    volume: 2.8
+    loop: 0
+    maxConcurrent: 0
+    delay: 0
+    loopInterval: 0
+  - key: sfx.race.run
+    clips:
+    - {fileID: 8300000, guid: 3d0cf16112f0bdb43a79cf1a009e6044, type: 3}
+    volume: 0.7
+    loop: 1
+    maxConcurrent: 0
+    delay: 0
+    loopInterval: 0.1
+  - key: sfx.jackpot.roll
+    clips:
+    - {fileID: 8300000, guid: b90212c5fcf5e2a4681e473db52e1fb6, type: 3}
+    volume: 2.5
+    loop: 0
+    maxConcurrent: 0
+    delay: 0
+    loopInterval: 0
+  - key: sfx.jackpot.reveal
+    clips:
+    - {fileID: 8300000, guid: 71fa9ac01d6193347810b99c8eaede5e, type: 3}
+    volume: 2.5
+    loop: 0
+    maxConcurrent: 0
+    delay: 0.3
+    loopInterval: 0
+  - key: sfx.jackpot.open
+    clips:
+    - {fileID: 8300000, guid: 7dfd36736090431458afe2db2e37ff10, type: 3}
+    volume: 3
+    loop: 0
+    maxConcurrent: 0
+    delay: 0
+    loopInterval: 0
+  - key: sfx.race.start
+    clips:
+    - {fileID: 8300000, guid: 8588e036076b4a64198a632560f03905, type: 3}
+    volume: 3
+    loop: 0
+    maxConcurrent: 0
+    delay: 0
+    loopInterval: 0
+  - key: sfx.race.countdown
+    clips:
+    - {fileID: 8300000, guid: ffd577deb0f7e9445b5a3a1feaea2f8d, type: 3}
+    volume: 3
+    loop: 0
+    maxConcurrent: 0
+    delay: 0
+    loopInterval: 0

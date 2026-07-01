@@ -74,7 +74,11 @@ public class BetAmountModal : MonoBehaviour
         if (btnMinus1 != null) btnMinus1.onClick.AddListener(() => ApplyDelta(-1));
         if (btnPlus1 != null) btnPlus1.onClick.AddListener(() => ApplyDelta(+1));
         if (btnPlus10 != null) btnPlus10.onClick.AddListener(() => ApplyDelta(+10));
-        if (confirmButton != null) confirmButton.onClick.AddListener(OnConfirm);
+        if (confirmButton != null)
+        {
+            confirmButton.onClick.AddListener(OnConfirm);
+            SFXManager.Instance?.SuppressAutoClick(confirmButton); // 전용 sfx.race.start만 재생 — 일반 클릭음 제외
+        }
         if (cancelButton != null) cancelButton.onClick.AddListener(OnCancel);
         // 백드롭 클릭 = 취소 (모달 밖 영역 클릭 시 닫기)
         if (backdrop != null)
@@ -276,6 +280,8 @@ public class BetAmountModal : MonoBehaviour
 
         // betAmount 필드에 기록 (CalcScore에서 사용)
         if (_currentBet != null) _currentBet.betAmount = _amount;
+
+        SFXManager.Instance?.PlaySFX(SFXKeys.RaceStart);
 
         var cb = _onConfirmed;
         Hide();
