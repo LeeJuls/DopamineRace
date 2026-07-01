@@ -574,6 +574,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
                 var critVfx = GetComponent<CollisionVFX>();
                 if (critVfx == null) critVfx = gameObject.AddComponent<CollisionVFX>();
                 critVfx.Show(CollisionVFXType.Crit, 0.8f);
+                SFXManager.Instance?.PlaySFX(SFXKeys.RaceBuffCrit);
 
                 Debug.Log($"★ [V4] 크리티컬! {charDataV4.charId} (luck:{charDataV4.v4Luck})");
             }
@@ -602,6 +603,7 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
             var vfx = GetComponent<CollisionVFX>();
             if (vfx == null) vfx = gameObject.AddComponent<CollisionVFX>();
             vfx.Show(CollisionVFXType.Crit, 0.8f);
+            SFXManager.Instance?.PlaySFX(SFXKeys.RaceBuffClutch);
 
             Debug.Log($"★ [V4] 클러치 발동! {charDataV4.charId} (chance:{gs.v4_clutchChance:P0})");
         }

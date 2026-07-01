@@ -10,6 +10,10 @@ public partial class RacerController : MonoBehaviour
     private Animator animator;
     private Vector3 lastPosition;
 
+    // ── SFX: 발소리(베팅 선택 캐릭터만) ──
+    private bool _isMyBettingPick;      // StartRacing()에서 1회 캐싱 — 베팅 selections에 내 racerIndex 포함 여부
+    private AudioSource _runLoopSource; // loop=true 엔트리용 로컬 채널(지연 생성)
+
     // ── 이동 상태 ──
     private int currentWP = 0;
     private int currentLap = 0;
@@ -289,6 +293,34 @@ public partial class RacerController : MonoBehaviour
         }
 
         if (animator != null) animator.SetTrigger("Run");
+
+        // ── SFX: 베팅 선택 캐릭터만 발소리 (null-safe — 디버그 점프 등 CurrentBet null 경로 존재) ──
+        _isMyBettingPick = GameManager.Instance?.CurrentBet?.selections?.Contains(racerIndex) ?? false;
+        if (_isMyBettingPick)
+        {
+            var entry = SFXManager.Instance?.GetEntry(SFXKeys.RaceRun);
+            if (entry != null && entry.loop)
+            {
+                if (_runLoopSource == null)
+                {
+                    _runLoopSource = gameObject.AddComponent<AudioSource>();
+                    _runLoopSource.playOnAwake = false;
+                    _runLoopSource.loop = true;
+                }
+                var clip = entry.GetRandomClip();
+                if (clip != null)
+                {
+                    float baseVol = GameSettings.Instance != null ? GameSettings.Instance.sfxVolume : 0.3f;
+                    _runLoopSource.clip = clip;
+                    _runLoopSource.volume = baseVol * entry.volume;
+                    _runLoopSource.PlayDelayed(entry.delay); // delay=0이면 즉시 재생과 동일
+                }
+            }
+            else
+            {
+                SFXManager.Instance?.PlaySFX(SFXKeys.RaceRun);
+            }
+        }
     }
 
     public void ResetRacer(Vector3 pos)
@@ -332,6 +364,10 @@ public partial class RacerController : MonoBehaviour
         transform.position = pos;
         lastPosition = pos;
         if (animator != null) animator.SetTrigger("Idle");
+
+        // ── SFX 안전망: 라운드 전환 시 오브젝트 재사용(Destroy 없음) → 이전 라운드 발소리 루프 잔존 방지 ──
+        _runLoopSource?.Stop();
+        _isMyBettingPick = false;
     }
 
     // ══════════════════════════════════════
@@ -392,6 +428,7 @@ public partial class RacerController : MonoBehaviour
                 }
 
                 isFinished = true; isRacing = false; currentSpeed = 0f;
+                _runLoopSource?.Stop(); // SFX: 완주 시 발소리 루프 정지(다른 레이서 사운드엔 영향 없음 — 로컬 채널)
                 // ★ 골인 모션은 OnFinished 구독자(RaceManager)가 입상 여부에 따라 결정 (SPEC-026)
                 // → 여기서는 Idle 트리거 호출 안 함 (구독자가 AttackMagic / Death 트리거)
                 OnFinished?.Invoke(this);
@@ -751,6 +788,7 @@ public partial class RacerController : MonoBehaviour
                        : maxHP > 0f        ? maxHP * sd.effectValue : 0f;
             v4CurrentStamina = Mathf.Min(v4MaxStamina, v4CurrentStamina + heal);
             enduranceHP = v4CurrentStamina;
+            SFXManager.Instance?.PlaySFX(SFXKeys.RaceBuffActive);
             Debug.Log(string.Format("[스킬 발동] {0} → HP 즉발 회복 +{1:P0} ({2:F0}HP)",
                 displayName, sd.effectValue, heal));
         }
@@ -759,6 +797,7 @@ public partial class RacerController : MonoBehaviour
             // 타이머 기반 효과 (CollisionWin / SpeedBoost / DrainReduce)
             skillActive = true;
             skillRemainingTime = sd.durationSec;
+            SFXManager.Instance?.PlaySFX(SFXKeys.RaceBuffActive);
             Debug.Log(string.Format("[스킬 발동] {0} → {1} ({2}초)",
                 displayName, sd.effectType, sd.durationSec));
         }

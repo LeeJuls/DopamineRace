@@ -210,6 +210,7 @@ public class CollisionSystem : MonoBehaviour
             }
             if (gs.enableCollisionVFX)
                 ShowVFX(loser, CollisionVFXType.Dodge, 0.8f);
+            SFXManager.Instance?.PlaySFX(SFXKeys.RaceCollisionDodge);
             return;
         }
 
@@ -263,6 +264,7 @@ public class CollisionSystem : MonoBehaviour
             ShakeRacer(loser, gs.shakeLoserDuration, gs.shakeMagnitude);
 
             ShowVFX(winner, CollisionVFXType.Hit, 0.6f);
+            SFXManager.Instance?.PlaySFX(SFXKeys.RaceCollisionHit);
 
             bool attacked = winner.PlayAttackAnim();
             if (attacked)
@@ -313,6 +315,7 @@ public class CollisionSystem : MonoBehaviour
 
                 if (gs.enableCollisionVFX)
                     ShowVFX(res.racer, CollisionVFXType.Slingshot, 1.0f);
+                SFXManager.Instance?.PlaySFX(SFXKeys.RaceCollisionSlingshot);
 
                 slingshotQueue.RemoveAt(i);
             }

@@ -27,7 +27,11 @@ public class CatDecorationManager : MonoBehaviour
         }
     }
 
-    private void ShowExchangeModal() => _exchangeModal?.Show();
+    private void ShowExchangeModal()
+    {
+        SFXManager.Instance?.PlaySFX(SFXKeys.JackpotOpen);
+        _exchangeModal?.Show();
+    }
 
     private void Awake()
     {

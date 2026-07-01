@@ -87,6 +87,7 @@ public class ExchangeModal : MonoBehaviour
         if (_activeBurst != null) { Destroy(_activeBurst.gameObject); _activeBurst = null; }
         if (_rollOverlay != null) { Destroy(_rollOverlay); _rollOverlay = null; }
         _isRolling = false;
+        SFXManager.Instance?.StopLoop(); // SFX 안전망: 강제 비활성화 시 롤 사운드 잔존 방지
     }
 
     /// <summary>자발 진입 (고양이 클릭) — 닫기 허용.</summary>
@@ -187,6 +188,7 @@ public class ExchangeModal : MonoBehaviour
         if (holdingText != null)
         {
             holdingText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            holdingText.verticalOverflow   = VerticalWrapMode.Overflow;   // CJK 픽셀폰트(Fusion Pixel) 38pt 라인높이 ~50px > 박스 40px → Truncate면 한 줄이 통째로 잘려 사라짐(중국어 미표시 버그)
             holdingText.text = SafeLoc("str.exchange.modal.holding", "현재 보유: {0}개", stone);
         }
 
@@ -265,6 +267,8 @@ public class ExchangeModal : MonoBehaviour
     /// <summary>N 굴림 연출(간단 스크롤) → 결과 표시 → 획득 버스트.</summary>
     private IEnumerator PlayRollThenResult(int finalN, int jellyGain)
     {
+        SFXManager.Instance?.PlayLoop(SFXKeys.JackpotRoll);
+
         // 연출 강화 (SPEC-051): 글씨 뒤 반투명 검정 판 + 진노랑 글씨. 입력은 _isRolling가 차단.
         int origSibling = -1;
         if (rateDescText != null)
@@ -300,6 +304,8 @@ public class ExchangeModal : MonoBehaviour
             // 2) 확정 N
             rateDescText.text = SafeLoc("str.jackpot.result", "1 스톤 → {0} 젤리!", finalN);
         }
+        SFXManager.Instance?.StopLoop();
+        SFXManager.Instance?.PlaySFX(SFXKeys.JackpotReveal);
 
         // 결과 음미 (검정 판 위 확정 N 0.5s 유지) → 판 제거 + sibling 복원
         yield return new WaitForSeconds(0.5f);

@@ -678,6 +678,8 @@ public partial class SceneBootstrapper
     // ══════════════════════════════════════
     private void OnStartClicked()
     {
+        SFXManager.Instance?.PlaySFX(SFXKeys.RaceStart);
+
         // 팝업 열려있으면 닫기
         if (charInfoPopup != null)
             charInfoPopup.Hide();

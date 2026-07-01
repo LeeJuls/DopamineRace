@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -14,6 +16,12 @@ public class SFXManager : MonoBehaviour
     private AudioClip clickClip;
     private bool _muted;
 
+    // ── 키 기반 SFX (SFXSettings.asset) ──
+    private SFXSettings sfxSettings;
+    private AudioSource loopSource;                              // 전역 루프 채널 1개(마네키네코 등)
+    private string _loopKey;                                     // 현재 재생 중인 루프 key(전환 판정용)
+    private readonly Dictionary<string, int> _activeCounts = new Dictionary<string, int>(); // maxConcurrent 카운터
+
     private void Awake()
     {
         if (Instance != null) { Destroy(gameObject); return; }
@@ -24,9 +32,17 @@ public class SFXManager : MonoBehaviour
         sfxSource.playOnAwake = false;
         sfxSource.loop = false;
 
+        loopSource = gameObject.AddComponent<AudioSource>();
+        loopSource.playOnAwake = false;
+        loopSource.loop = true;
+
         clickClip = Resources.Load<AudioClip>("Audio/click");
         if (clickClip == null)
             Debug.LogWarning("[SFXManager] Resources/Audio/click 로드 실패");
+
+        sfxSettings = Resources.Load<SFXSettings>("SFXSettings");
+        if (sfxSettings == null)
+            Debug.LogWarning("[SFXManager] SFXSettings 로드 실패 — PlaySFX(key)/PlayLoop(key) 호출은 이후 전부 무음 처리됨");
     }
 
     private void OnEnable()
@@ -64,6 +80,79 @@ public class SFXManager : MonoBehaviour
             float vol = GameSettings.Instance != null ? GameSettings.Instance.sfxVolume : 0.3f;
             sfxSource.PlayOneShot(clip, vol * volumeScale);
         }
+    }
+
+    // ══════════════════════════════════════
+    //  키 기반 SFX (SFXKeys 상수 → SFXSettings.asset 조회)
+    //  ★ 무음 불변조건: entry 없음/clips 미할당 시 크래시 없이 조용히 return (경고 로그만)
+    // ══════════════════════════════════════
+
+    /// <summary>SFXSettings.asset의 원본 엔트리 조회(레이서 로컬 루프 등 외부에서 clip/volume/loop 직접 사용 시)</summary>
+    public SFXEntry GetEntry(string key) => sfxSettings != null ? sfxSettings.Find(key) : null;
+
+    /// <summary>key 기반 원샷 재생. entry.maxConcurrent(0=무제한) 상한 적용. entry.delay(초)만큼 재생 시작 지연.</summary>
+    public void PlaySFX(string key, float volumeScale = 1f)
+    {
+        if (_muted || sfxSettings == null) return;
+        var entry = sfxSettings.Find(key);
+        if (entry == null) { Debug.LogWarning("[SFXManager] 키 없음: " + key); return; }
+
+        if (entry.delay > 0f) { StartCoroutine(PlaySFXDelayed(entry, volumeScale)); return; }
+        PlaySFXImmediate(entry, volumeScale);
+    }
+
+    private IEnumerator PlaySFXDelayed(SFXEntry entry, float volumeScale)
+    {
+        yield return new WaitForSeconds(entry.delay);
+        PlaySFXImmediate(entry, volumeScale);
+    }
+
+    private void PlaySFXImmediate(SFXEntry entry, float volumeScale)
+    {
+        var clip = entry.GetRandomClip();
+        if (clip == null) return; // 무음 불변조건: clip 미할당 → 조용히 무음
+
+        if (entry.maxConcurrent > 0)
+        {
+            _activeCounts.TryGetValue(entry.key, out int cur);
+            if (cur >= entry.maxConcurrent) return;
+            StartCoroutine(TrackConcurrent(entry.key, clip.length));
+        }
+
+        float baseVol = GameSettings.Instance != null ? GameSettings.Instance.sfxVolume : 0.3f;
+        sfxSource.PlayOneShot(clip, baseVol * entry.volume * volumeScale);
+    }
+
+    private IEnumerator TrackConcurrent(string key, float duration)
+    {
+        _activeCounts.TryGetValue(key, out int cur);
+        _activeCounts[key] = cur + 1;
+        yield return new WaitForSeconds(duration);
+        _activeCounts.TryGetValue(key, out int now);
+        _activeCounts[key] = Mathf.Max(0, now - 1);
+    }
+
+    /// <summary>전역 루프 채널(1개)에서 key 재생. 동일 key 재호출=재시작, 다른 key=즉시 전환. entry.delay(초)만큼 재생 시작 지연.</summary>
+    public void PlayLoop(string key)
+    {
+        if (_muted || sfxSettings == null) return;
+        var entry = sfxSettings.Find(key);
+        var clip = entry != null ? entry.GetRandomClip() : null;
+        if (clip == null) return; // 무음 불변조건
+
+        float baseVol = GameSettings.Instance != null ? GameSettings.Instance.sfxVolume : 0.3f;
+        loopSource.Stop();
+        loopSource.clip = clip;
+        loopSource.volume = baseVol * entry.volume;
+        loopSource.PlayDelayed(entry.delay); // delay=0이면 즉시 재생과 동일(Unity 내장 DSP 스케줄, 프레임 무관 정확)
+        _loopKey = key;
+    }
+
+    /// <summary>전역 루프 정지. 재생 중이 아니어도 안전(no-op).</summary>
+    public void StopLoop()
+    {
+        if (loopSource != null) loopSource.Stop();
+        _loopKey = null;
     }
 
     // ══════════════════════════════════════
