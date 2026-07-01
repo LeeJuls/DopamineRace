@@ -21,7 +21,7 @@
 - [[도파민 프로젝트/시스템/다국어_시스템|다국어 시스템]] — StringTable, Loc.Get(), 8개 언어 (cn 간체·tw 번체 + Fusion Pixel 폰트)
 - [[도파민 프로젝트/시스템/스팀_도전과제|스팀 도전과제]] — AppID 4532310, 10종, DR_STEAM(Standalone) 조건부 컴파일, 멱등 Unlock
 - [[도파민 프로젝트/시스템/라이브_포트레이트|라이브 포트레이트]] — 캐릭터 정보창 PNG→mp4 비디오 (SPEC-049, 하이브리드 폴백·VideoPlayer→RT640²) 🔄
-- [[도파민 프로젝트/시스템/사운드_시스템|사운드 시스템]] — BGMManager 듀얼 크로스페이드, 상태별 BGM 전환 흐름
+- [[도파민 프로젝트/시스템/사운드_시스템|사운드 시스템]] — BGMManager 듀얼 크로스페이드(BGM) + SFXKeys/SFXSettings/SFXManager 키 기반 데이터 주도 SFX(충돌·버프·발소리·잭팟·카운트다운, 12키)
 
 ---
 

@@ -4,6 +4,15 @@
 
 ---
 
+## 2026-07-02
+
+- **[INGEST]** SFX 시스템 후속 개선 4건 → `시스템/사운드_시스템.md`에 SFX 섹션 신규 작성(아키텍처 3층·SFXEntry 필드·12키 트리거표·하드코딩방지·클릭음 억제·Validator·미러규칙 예외·구현위치). 볼륨 3배 확장(`SFXEntry.volume` Range 0~3), `delay`/`loopInterval` 분리 구현(코루틴 기반 루프 재구현), buff.crit 편중 오인 진단(버그 아님, VFX 재사용+빈도차 확인), START 사운드를 배팅확정(`BetAmountModal.OnConfirm`)으로 이동+`SuppressAutoClick`으로 클릭음 억제, 카운트다운 사운드(`sfx.race.countdown`) 신규 연결 ← 대화 세션(커밋 전)
+- **[UPDATE]** `아키텍처/주요_클래스.md` — `SFXManager`/`SFXSettings`/`SFXKeys` 클래스 섹션 신규, 에디터 도구 표에 `SFXSettingsValidator` 행 추가
+- **[UPDATE]** `히스토리/개발_타임라인.md` — 2026-07-01 SFX 시스템 신설 마일스톤 + 2026-07-02 SFX 후속 개선 4건 마일스톤 추가
+- **[UPDATE]** `Index.md` — 사운드 시스템 설명에 SFX(SFXKeys/SFXSettings/SFXManager, 12키) 추가
+
+---
+
 ## 2026-07-01
 
 - **[INGEST]** `시스템/V4_레이스_시스템.md` — §5 자동 테스트 도구 갱신(헤드리스 `RaceBacktestWindow` 주력·`AutoRaceRunnerWindow` 보조+프리징수정 반영) + 신규 §5b "패시브 스킬 & goyo 클러치 재설계"(LuckClutch 트리거, 확정수치 chance0.40×1.20, 80%→56% 결과). `아키텍처/주요_클래스.md` — `RaceBacktestWindow` 행 신규(헤드리스 API), `AutoRaceRunnerWindow`·`RacerController` 행 갱신(프리징수정·UpdateV4LuckClutch). 개발_타임라인 마일스톤 추가. tags에 `밸런스` 추가 ← Docs/history/헤드리스백테스트_goyo클러치_AutoRaceRunner_히스토리_20260701.md
@@ -14,6 +23,7 @@
 - **[UPDATE]** `히스토리/개발_타임라인.md` — 2026-07-01 BGM 크로스페이드 마일스톤 추가
 - **[UPDATE]** `Index.md` — 사운드 시스템 링크 추가
 - **[UPDATE]** `히스토리/개발_타임라인.md` — CharacterInfoPopup UI 폴리싱 마일스톤 추가 (제목 단순화·타입 영어명·BestFit·스킬 2줄 레이아웃)
+- **[INGEST]** SFX 시스템 신설 → `시스템/사운드_시스템.md` frontmatter/상태 갱신(BGM+SFX 병기). `SFXKeys`(키 상수)+`SFXSettings`(ScriptableObject)+`SFXManager`(PlaySFX/PlayLoop/StopLoop) 3단 구조, 무음 불변조건, 9키(충돌3·버프3·발소리·마네키네코2종)+이후 START·잭팟오픈 확장(12키), `SFXSettingsValidator`(reflection) ← 대화 세션(커밋 12e0025)
 
 ---
 
