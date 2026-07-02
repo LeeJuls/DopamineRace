@@ -36,7 +36,11 @@ public class ConfirmPopup : MonoBehaviour
     public void Show(string message, System.Action onConfirm)
     {
         if (messageLabel != null)
+        {
             messageLabel.text = message;
+            // 박스 325x75px 고정+Overflow라 긴 언어(es/br 2줄)가 그대로 삐져나옴 — 넘칠 때만 축소
+            UITextFit.Shrink(messageLabel, 12);
+        }
         if (yesLabel != null)
             yesLabel.text = Loc.Get("str.ui.option.yes");
         if (noLabel != null)
