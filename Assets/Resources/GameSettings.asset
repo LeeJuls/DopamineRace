@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameSettings
   racerCount: 9
   roundLaps: 0200000003000000
-  roundTracks: 0100000000000000
+  roundTracks: 0300000000000000
   payoutWin: 8
   payoutPlace: 3
   payoutQuinella: 31
@@ -174,7 +174,7 @@ MonoBehaviour:
   attackAnimCooldown: 0.6
   mainFont: {fileID: 12800000, guid: 967a67b8c17c46b4295390c687d1c8a1, type: 3}
   koreanFont: {fileID: 12800000, guid: 967a67b8c17c46b4295390c687d1c8a1, type: 3}
-  chineseSimplifiedFont: {fileID: 12800000, guid: 923198ca463ead04abad54380aa085c7,
+  chineseSimplifiedFont: {fileID: 12800000, guid: d7c6771370b5e334ab8b250156095881,
     type: 3}
   chineseTraditionalFont: {fileID: 12800000, guid: d7c6771370b5e334ab8b250156095881,
     type: 3}

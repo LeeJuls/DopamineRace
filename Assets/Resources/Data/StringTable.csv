@@ -67,16 +67,16 @@ str.chartype.runner,도주,Runner,逃げ,逃跑,Sprinter,Escapista,Escapista,逃
 str.chartype.leader,선행,Stalker,先行,领先,Anführer,Líder,Líder,領先
 str.chartype.chaser,선입,Tweener,差し,追赶,Verfolger,Perseguidor,Perseguidor,追趕
 str.chartype.reckoner,추입,Closer,追込,后追,Nachzügler,Remontador,Remontador,後追
-str.track.normal.name,일반,Normal,通常,普通,Normal,Normal,Normal,普通
+str.track.normal.name,도파민 팔라체,Dopamine Palace,ドーパミン宮殿,多巴胺宫殿,Dopamin-Palast,Palacio Dopamina,Palácio Dopamina,多巴胺宮殿
 str.track.normal.desc,표준 트랙. 순수 스탯 경쟁!,Standard track. Pure stat competition!,標準トラック,标准赛道。纯属性竞争！,Standardstrecke. Reiner Stat-Wettbewerb!,Pista estándar. ¡Competencia de stats!,Pista padrão. Competição de stats!,標準賽道。純屬性競爭！
-str.track.rainy.name,비,Rainy,雨,雨天,Regen,Lluvioso,Chuvoso,雨天
-str.track.rainy.desc,미끄러운 노면. calm 유리!,Slippery surface. Calm stat advantage!,滑りやすい路面,湿滑路面。冷静属性有利！,Rutschiger Boden. Calm-Vorteil!,Superficie resbaladiza. ¡Ventaja Calm!,Superfície escorregadia. Vantagem Calm!,濕滑路面。冷靜屬性有利！
-str.track.snow.name,설산,Snow,雪山,雪山,Schnee,Nieve,Neve,雪山
-str.track.snow.desc,"빙판+체력소모. endurance 유리!","Ice + stamina drain. Endurance advantage!",氷上+スタミナ消耗,冰面+体力消耗。耐力有利！,Eis + Ausdauerverbrauch. Endurance-Vorteil!,Hielo + desgaste. ¡Ventaja Endurance!,Gelo + desgaste. Vantagem Endurance!,冰面＋體力消耗。耐力有利！
-str.track.desert.name,사막,Desert,砂漠,沙漠,Wüste,Desierto,Deserto,沙漠
-str.track.desert.desc,"모래 저항+열사병. power 유리!","Sand resistance + heat. Power advantage!",砂の抵抗+熱中症,沙地阻力+中暑。力量有利！,Sandwiderstand + Hitze. Power-Vorteil!,Arena + calor. ¡Ventaja Power!,Areia + calor. Vantagem Power!,沙地阻力＋中暑。力量有利！
-str.track.highland.name,고산지대,Highland,高山地帯,高山,Hochland,Montaña,Montanha,高山
-str.track.highland.desc,"산소부족+오르막. brave 유리!","Oxygen depletion + slope. Brave advantage!",酸素不足+上り坂,缺氧+上坡。勇气有利！,Sauerstoffmangel + Anstieg. Brave-Vorteil!,Falta de oxígeno + subida. ¡Ventaja Brave!,Falta de oxigênio + subida. Vantagem Brave!,缺氧＋上坡。勇氣有利！
+str.track.rainy.name,아쿠아 코스트,Aqua Coast,アクアコースト,碧水海岸,Aqua-Küste,Costa Aqua,Costa Aqua,碧水海岸
+str.track.rainy.desc,미끄러운 노면. 운 유리!,Slippery surface. Luck advantage!,滑りやすい路面。運有利！,湿滑路面。幸运有利！,Rutschiger Boden. Glück-Vorteil!,Superficie resbaladiza. ¡Ventaja Suerte!,Superfície escorregadia. Vantagem Sorte!,濕滑路面。幸運有利！
+str.track.snow.name,블리자드 프론트,Blizzard Front,ブリザードフロント,暴风雪前线,Blizzard-Front,Frente de Ventisca,Frente de Nevasca,暴風雪前線
+str.track.snow.desc,"빙판+체력소모. 지구력 유리!","Ice + stamina drain. Stamina advantage!",氷上+スタミナ消耗。スタミナ有利！,冰面+体力消耗。耐力有利！,Eis + Ausdauerverbrauch. Ausdauer-Vorteil!,Hielo + desgaste. ¡Ventaja Aguante!,Gelo + desgaste. Vantagem Resistência!,冰面＋體力消耗。耐力有利！
+str.track.desert.name,사하라 리지,Sahara Ridge,サハラリッジ,撒哈拉岭,Sahara-Grat,Cresta del Sáhara,Crista do Saara,撒哈拉嶺
+str.track.desert.desc,"모래 저항+열사병. 힘 유리!","Sand resistance + heat. Power advantage!",砂の抵抗+熱中症。パワー有利！,沙地阻力+中暑。力量有利！,Sandwiderstand + Hitze. Stärke-Vorteil!,Arena + calor. ¡Ventaja Fuerza!,Areia + calor. Vantagem Força!,沙地阻力＋中暑。力量有利！
+str.track.highland.name,클라우드 피크,Cloud Peak,クラウドピーク,云端之巅,Wolkengipfel,Pico de las Nubes,Pico das Nuvens,雲端之巔
+str.track.highland.desc,"산소부족+오르막. 지능 유리!","Oxygen depletion + slope. Int advantage!",酸素不足+上り坂。知能有利！,缺氧+上坡。智力有利！,Sauerstoffmangel + Anstieg. Intelligenz-Vorteil!,Falta de oxígeno + subida. ¡Ventaja Inteligencia!,Falta de oxigênio + subida. Vantagem Inteligência!,缺氧＋上坡。智力有利！
 str.bet.win.name,단승,Win,単勝,独赢,Sieg,Ganador,Vencedor,獨贏
 str.bet.place.name,연승,Place,複勝,位置,Platz,Colocado,Colocado,位置
 str.bet.quinella.name,복승,Quinella,馬連,连赢,Quinella,Quinella,Quinella,連贏
