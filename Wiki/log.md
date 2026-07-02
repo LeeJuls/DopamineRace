@@ -6,6 +6,10 @@
 
 ## 2026-07-02
 
+- **[INGEST]** 트랙 스탯 상성 데이터 주도 V4 실연결 → 신규 `시스템/트랙_시스템.md` 생성(5트랙 개요·**V4 레버 Live/Dead 현황표**·stat_affinity 콜론 인코딩 스키마·공유 헬퍼 미러·feature flag·확장 T1/T2·밸런스). 사막=`Power:0.08`·고원=`Intelligence:0.10`. `TrackStatAffinity`(V4StatType enum+ParseList+ComputeVmaxMultiplier 공유헬퍼)·`GameSettingsV4.v4_enableTrackStatBonus` 플래그·`TrackStatAffinityValidator`(오타 검출)·헤드리스 `RunHeadless(...,trackId)` 하네스·백테스트 CSV소스화 신설. 기존 트랙 상성이 V1-V3 스탯 기준이라 V4서 死였음을 규명. leader·balance·client·feature-director·qa 3라운드 검토 ← 대화 세션(커밋 전)
+- **[UPDATE]** `Index.md` — 게임 시스템에 트랙 시스템 링크 추가
+- **[UPDATE]** `히스토리/개발_타임라인.md` — 2026-07-02 트랙 스탯 상성 마일스톤 추가
+- **[UPDATE]** `아키텍처/주요_클래스.md` — TrackStatAffinity/TrackData/TrackDatabase 섹션 + 에디터 도구에 TrackStatAffinityValidator 추가
 - **[INGEST]** 캐릭터 스토리 팝업 가독성 + 세계관 정본 + 32명 시나리오 8개 언어 번역 → `시스템/다국어_시스템.md`에 "캐릭터 시나리오 번역" 섹션 신규(224셀 번역·시맨틱 컬러태그 규약[skill]/[key]/§TIP§·스탯/캐릭터명 용어일치·**슬립 표준화** 气流/Sog/Rebufo/Vácuo/氣流·CSV안전 전각「」·검증 리터럴0/한글0·032미완성 잔여), frontmatter 8개언어→시나리오 병기·updated 갱신 ← Docs/history/캐릭터스토리팝업_가독성세계관다국어_히스토리_20260702.md
 - **[UPDATE]** `캐릭터/캐릭터_개요.md` — **★세계관 정본 확정** 섹션 신규(B안 단일 도파미나 제국 정본 / SPEC-040·세계관_A 5왕국안 폐기 / 정본 3문서 세계관_B·설정집_B안·시나리오집 표 / 폐기 배너·worldview-canon 메모리), "시나리오 정합 보강 3명"(022 주홍 선버스트 해안 재해석·크리스탈 혼동해소 / 028 초원 왕관야구모자 / 029 칵테일 천사날개), "캐릭터 스토리 팝업 가독성" 섹션 추가, frontmatter sources/related 갱신
 - **[INGEST]** SFX 시스템 후속 개선 4건 → `시스템/사운드_시스템.md`에 SFX 섹션 신규 작성(아키텍처 3층·SFXEntry 필드·12키 트리거표·하드코딩방지·클릭음 억제·Validator·미러규칙 예외·구현위치). 볼륨 3배 확장(`SFXEntry.volume` Range 0~3), `delay`/`loopInterval` 분리 구현(코루틴 기반 루프 재구현), buff.crit 편중 오인 진단(버그 아님, VFX 재사용+빈도차 확인), START 사운드를 배팅확정(`BetAmountModal.OnConfirm`)으로 이동+`SuppressAutoClick`으로 클릭음 억제, 카운트다운 사운드(`sfx.race.countdown`) 신규 연결 ← 대화 세션(커밋 전)
