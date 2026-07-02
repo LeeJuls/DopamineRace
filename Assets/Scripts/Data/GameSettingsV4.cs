@@ -296,9 +296,9 @@ public class GameSettingsV4 : ScriptableObject
     public bool v4_disableBurst = false;
 
     [Tooltip("컨디션(컨디션 배율) V4 레이스 적용 여부\n" +
-             "ON: 컨디션이 Vmax(최고속도)와 MaxStamina(HP)에 배율로 적용\n" +
-             "    컨디션 절정(×1.2) → Vmax·HP 20% 증가\n" +
-             "    컨디션 최저(×0.9) → Vmax·HP 10% 감소\n" +
+             "ON: 컨디션이 Vmax(최고속도)에 배율로 적용 (최소 0.3 클램프)\n" +
+             "    컨디션 절정(×1.2) → Vmax 20% 증가\n" +
+             "    컨디션 최저(×0.9) → Vmax 10% 감소\n" +
              "OFF: 컨디션 무시 — 밸런스 테스트에 권장")]
     public bool v4_applyCondition = false;
 
