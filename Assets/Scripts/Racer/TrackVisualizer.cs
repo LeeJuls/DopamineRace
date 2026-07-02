@@ -53,7 +53,10 @@ public class TrackVisualizer : MonoBehaviour
 
     private void Update()
     {
+        Camera cam = Camera.main;
+        bool aspectChanged = cam != null && !Mathf.Approximately(cam.aspect, _lastAspect);
         ApplyWideBGScale();
+        if (aspectChanged) ApplyBGCoverFit();
     }
 
     // 와이드 배경 초기 생성 (씬 진입 1회)
@@ -92,6 +95,22 @@ public class TrackVisualizer : MonoBehaviour
         _wideBG.transform.localScale = new Vector3(scale, scale, 1f);
     }
 
+    /// <summary>메인 트랙 배경 cover-fit — 배경이 카메라 프러스텀보다 좁으면(전 트랙 1344px 아트 실측 미달) 최소 확대.
+    /// wide_bg 슬리버 노출 방지. 절대 스케일 "대입"(곱 아님 — 멱등, sprite.bounds는 스케일 무관 고유값).</summary>
+    private void ApplyBGCoverFit()
+    {
+        if (currentBG == null) return;
+        var sr = currentBG.GetComponentInChildren<SpriteRenderer>();
+        var cam = Camera.main;
+        if (sr == null || sr.sprite == null || cam == null) return;
+        float bgW = sr.sprite.bounds.size.x, bgH = sr.sprite.bounds.size.y;
+        if (bgW <= 0f || bgH <= 0f) return;
+        float camW = cam.orthographicSize * 2f * cam.aspect;
+        float camH = cam.orthographicSize * 2f;
+        float scale = Mathf.Max(1f, Mathf.Max(camW / bgW, camH / bgH));
+        currentBG.transform.localScale = new Vector3(scale, scale, 1f);
+    }
+
     // ══════════════════════════════════════
     //  트랙 배경 로드 (외부 호출용)
     // ══════════════════════════════════════
@@ -120,6 +139,7 @@ public class TrackVisualizer : MonoBehaviour
                 currentBG = Instantiate(prefab, transform);
                 currentBG.name = "BG_Track_" + trackInfo.trackId;
                 currentBG.transform.position = BG_POSITION;
+                ApplyBGCoverFit();
                 Debug.Log("[TrackVisualizer] 프리팹 로드: " + trackInfo.bgPrefabPath);
                 return;
             }
@@ -191,6 +211,7 @@ public class TrackVisualizer : MonoBehaviour
         sr.sortingOrder = BG_SORTING_ORDER;
 
         currentBG.transform.position = BG_POSITION;
+        ApplyBGCoverFit();
         return true;
     }
 

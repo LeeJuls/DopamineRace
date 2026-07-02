@@ -60,16 +60,19 @@ public partial class SceneBootstrapper
         myBetText = MkText(parent, "",
             new Vector2(0.5f, 1), new Vector2(0.5f, 1),
             new Vector2(0, -10), new Vector2(600, 40), 26, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.3f));
+        AddTextOutline(myBetText);
 
         // ── 라운드+바퀴 (상단 우측) ──
         racingRoundText = MkText(parent, "",
             new Vector2(1, 1), new Vector2(1, 1),
             new Vector2(-15, -10), new Vector2(250, 30), 20, TextAnchor.MiddleRight, new Color(0.8f, 0.9f, 1f));
+        AddTextOutline(racingRoundText);
 
         // ── 타이머 ──
         raceTimerText = MkText(parent, Loc.Get("str.hud.timer", "0.0"),
             new Vector2(1, 1), new Vector2(1, 1),
             new Vector2(-15, -38), new Vector2(130, 30), 22, TextAnchor.MiddleRight, Color.white);
+        AddTextOutline(raceTimerText);
     }
 
     // ══════════════════════════════════════
@@ -113,6 +116,7 @@ public partial class SceneBootstrapper
         goalText.resizeTextForBestFit = true;
         goalText.resizeTextMinSize = FontHelper.ScaledFontSize(14);
         goalText.resizeTextMaxSize = FontHelper.ScaledFontSize(36);
+        AddTextOutline(goalText);
 
         // ── START 라벨 (패널 하단) ──
         Text startText = MkText(panel.transform, Loc.Get("str.hud.start"),
@@ -122,6 +126,7 @@ public partial class SceneBootstrapper
         startText.resizeTextForBestFit = true;
         startText.resizeTextMinSize = FontHelper.ScaledFontSize(14);
         startText.resizeTextMaxSize = FontHelper.ScaledFontSize(36);
+        AddTextOutline(startText);
 
         // ── 트랙 바 영역 (GOAL/START 라벨 사이) ──
         GameObject barArea = new GameObject("TrackBarArea");

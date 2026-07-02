@@ -179,6 +179,15 @@ public partial class SceneBootstrapper
         return t;
     }
 
+    /// <summary>레이싱 HUD 텍스트 가독성용 외곽선 — 밝은 트랙(설원 등)에서 텍스트 분리 (선례: BettingUIPrefabCreator Outline)</summary>
+    private static void AddTextOutline(Text t)
+    {
+        if (t == null || t.GetComponent<Outline>() != null) return;  // 멱등
+        var o = t.gameObject.AddComponent<Outline>();
+        o.effectColor = new Color(0.08f, 0.08f, 0.16f, 0.9f);
+        o.effectDistance = new Vector2(2f, 2f);
+    }
+
     // ══════════════════════════════════════
     //  폰트 일괄 적용
     // ══════════════════════════════════════
