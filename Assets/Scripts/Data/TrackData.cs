@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -93,14 +94,14 @@ public class TrackData : ScriptableObject
     [Range(0.0f, 2.0f)]
     public float lateBonusMultiplier = 1.0f;
 
-    [Header("═══ 특수 스탯 → 속도 변환 ═══")]
-    [Tooltip("power가 속도에 직접 기여하는 정도 (사막: 모래 저항)")]
-    [Range(0f, 0.3f)]
-    public float powerSpeedBonus = 0f;
+    [Header("═══ 트랙 스탯 상성 (데이터 주도) ═══")]
+    [Tooltip("트랙별 유리 스탯 → 속도 보너스. CSV stat_affinity 컬럼에서 파싱(예 사막=Power:0.06, 고원=Intelligence:0.07).")]
+    public List<TrackStatAffinity> statAffinities = new List<TrackStatAffinity>();
 
-    [Tooltip("brave가 속도에 직접 기여하는 정도 (고산: 의지력)")]
-    [Range(0f, 0.3f)]
-    public float braveSpeedBonus = 0f;
+    // ⚠ [DEPRECATED] V1-V3 잔재 필드. V4 데이터 주도(statAffinities)로 대체됨 — 참조처 없음.
+    //   현재 CSV·엔진·UI 어디서도 사용 안 함(=0 고정). 죽은 컬럼 정리 시 함께 제거 예정(차기 별건).
+    [System.NonSerialized] public float powerSpeedBonus = 0f;
+    [System.NonSerialized] public float braveSpeedBonus = 0f;
 
     [Header("═══ 운 (Luck) ═══")]
     [Tooltip("luck 효과 배율 (크리티컬 확률 + 충돌 회피에 곱해짐)")]

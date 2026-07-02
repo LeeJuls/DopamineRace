@@ -191,6 +191,13 @@ public partial class RacerController : MonoBehaviour  // partial — RacerContro
         float vmax      = baseSpeed * (1f + (charDataV4.v4Speed * HiddenStatWeights.Speed) * gs.v4_speedStatFactor)
                                    * (1f + (charDataV4.v4Power * HiddenStatWeights.Power) * gs.v4_powerSpeedFactor);
 
+        // ── 트랙 스탯 상성 (데이터 주도: 사막=Power·고원=Int 등) ──
+        // ★ 백테스트 SimTickV4와 동일한 공유 헬퍼(TrackStatAffinity.ComputeVmaxMultiplier) 호출 → 미러 드리프트 불가.
+        //   flag off 또는 track null 또는 빈 affinity → ×1.0(원동작 보존).
+        TrackData track = GameSettings.Instance.currentTrack;
+        if (gs.v4_enableTrackStatBonus && track != null)
+            vmax *= TrackStatAffinity.ComputeVmaxMultiplier(charDataV4, track.statAffinities);
+
         // 컨디션 적용: Vmax에 conditionMul 배율
         if (gs.v4_applyCondition)
         {

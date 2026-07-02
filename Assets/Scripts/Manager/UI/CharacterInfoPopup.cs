@@ -655,13 +655,36 @@ public class CharacterInfoPopup : MonoBehaviour
                 };
             }
 
-            // Phase 5: 트랙 보너스 스탯 하이라이트 (노란색 ★)
-            // TrackDB bonus 필드 > 0인 스탯 자동 노란색
+            // 트랙 스탯 상성 하이라이트 (노란색 ★) — 데이터 주도(statAffinities)
+            // 트랙의 stat_affinity에 포함된 스탯을 자동 노란색 → 데이터만 바꾸면 UI 자동 반영
             bool[] highlights = new bool[6];
-            if (!useV4 && trackInfo != null)
+            if (trackInfo != null)
             {
-                highlights[1] = trackInfo.powerSpeedBonus > 0f;  // power
-                highlights[2] = trackInfo.braveSpeedBonus > 0f;  // brave
+                if (useV4)
+                {
+                    // V4 statKeys 순서: speed0/accel1/stamina2/power3/intelligence4/luck5
+                    foreach (var aff in trackInfo.statAffinities)
+                    {
+                        if (aff == null || aff.bonus <= 0f) continue;
+                        int idx = aff.stat switch
+                        {
+                            V4StatType.Speed        => 0,
+                            V4StatType.Accel        => 1,
+                            V4StatType.Stamina      => 2,
+                            V4StatType.Power        => 3,
+                            V4StatType.Intelligence => 4,
+                            V4StatType.Luck         => 5,
+                            _ => -1
+                        };
+                        if (idx >= 0) highlights[idx] = true;
+                    }
+                }
+                else
+                {
+                    // V1-V3 레거시 순서(power1/brave2) — 현재 미사용 경로지만 회귀0 유지
+                    highlights[1] = trackInfo.powerSpeedBonus > 0f;
+                    highlights[2] = trackInfo.braveSpeedBonus > 0f;
+                }
             }
 
             for (int i = 0; i < statKeys.Length; i++)

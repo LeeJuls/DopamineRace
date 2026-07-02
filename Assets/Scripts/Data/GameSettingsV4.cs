@@ -302,6 +302,11 @@ public class GameSettingsV4 : ScriptableObject
              "OFF: 컨디션 무시 — 밸런스 테스트에 권장")]
     public bool v4_applyCondition = false;
 
+    [Tooltip("트랙 스탯 상성(stat_affinity) 적용 여부 — 데이터 주도 트랙 보너스 롤백 스위치\n" +
+             "ON(기본): 트랙별 유리 스탯(사막=Power, 고원=Int 등)이 Vmax에 곱보너스\n" +
+             "OFF: 트랙 스탯 보너스 완전 무효 → 원래 트랙 동작(문제 시 즉시 원복)")]
+    public bool v4_enableTrackStatBonus = true;
+
     // ═══════════════════════════════════════════════
     //  포지션별 목표 순위 범위
     // ═══════════════════════════════════════════════

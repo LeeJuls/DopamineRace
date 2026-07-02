@@ -1,9 +1,10 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
 /// 트랙 CSV 1행 데이터 클래스
 /// TrackDB.csv에서 파싱된 트랙 정보를 담는다.
-/// 
+///
 /// 사용: TrackDatabase에서 로드 → GameSettings.currentTrack에 반영
 /// </summary>
 public class TrackInfo
@@ -37,7 +38,10 @@ public class TrackInfo
     public float midBonusMultiplier = 1f;
     public float lateBonusMultiplier = 1f;
 
-    // ── 특수 스탯 → 속도 ──
+    // ── 트랙 스탯 상성 (데이터 주도) ──
+    public List<TrackStatAffinity> statAffinities = new List<TrackStatAffinity>();
+
+    // ⚠ [DEPRECATED] V1-V3 잔재. statAffinities로 대체됨(=0 고정, 미사용). 차기 죽은컬럼 정리 시 제거.
     public float powerSpeedBonus = 0f;
     public float braveSpeedBonus = 0f;
 
@@ -70,7 +74,8 @@ public class TrackInfo
     /// slingshot_mul,early_bonus_mul,mid_bonus_mul,late_bonus_mul,
     /// power_speed_bonus,brave_speed_bonus,luck_mul,
     /// has_mid_slow_zone,mid_slow_start,mid_slow_end,mid_slow_speed_mul,
-    /// loser_penalty_dur_mul,track_type
+    /// loser_penalty_dur_mul,track_type,stat_affinity
+    /// (power_speed_bonus·brave_speed_bonus는 [DEPRECATED] — stat_affinity로 대체, 차기 정리)
     /// </summary>
     public static TrackInfo ParseCSVLine(string line)
     {
@@ -128,6 +133,10 @@ public class TrackInfo
                     _ => TrackType.E_Base
                 };
             }
+
+            // stat_affinity (옵션, 데이터 주도 콜론 인코딩 — 없으면 빈 리스트=무효과)
+            if (i < cols.Length)
+                t.statAffinities = TrackStatAffinity.ParseList(cols[i++]);
         }
         catch (System.Exception e)
         {
@@ -163,8 +172,7 @@ public class TrackInfo
         td.earlyBonusMultiplier         = earlyBonusMultiplier;
         td.midBonusMultiplier           = midBonusMultiplier;
         td.lateBonusMultiplier          = lateBonusMultiplier;
-        td.powerSpeedBonus              = powerSpeedBonus;
-        td.braveSpeedBonus              = braveSpeedBonus;
+        td.statAffinities               = statAffinities;   // 데이터 주도 트랙 스탯 상성
         td.luckMultiplier               = luckMultiplier;
         td.hasMidSlowZone               = hasMidSlowZone;
         td.midSlowZoneStart             = midSlowZoneStart;

@@ -615,10 +615,32 @@ public class RaceBacktestWindow : EditorWindow
     // ══════════════════════════════════════
 
     /// <summary>
-    /// 단일 트랙(일반) N회 시뮬을 동기 실행하고 요약 문자열 반환.
+    /// CSV(TrackDB)에서 trackId로 TrackData를 즉석 빌드(Alt B: asset 미의존).
+    /// 런타임 TrackDatabase.ApplyTrackForRound과 동일 경로(TrackInfo.ToTrackData) → 백테스트=실게임 동일 데이터.
+    /// trackId null/미발견 → null(일반 트랙).
+    /// </summary>
+    private static TrackData BuildTrackFromCsv(string trackId)
+    {
+        if (string.IsNullOrEmpty(trackId)) return null;
+        var csv = Resources.Load<TextAsset>("Data/TrackDB");
+        if (csv == null) return null;
+        var lines = csv.text.Split('\n');
+        for (int i = 1; i < lines.Length; i++)
+        {
+            var line = lines[i].Trim();
+            if (string.IsNullOrEmpty(line)) continue;
+            var info = TrackInfo.ParseCSVLine(line);
+            if (info != null && info.trackId == trackId) return info.ToTrackData();
+        }
+        Debug.LogWarning("[BuildTrackFromCsv] trackId 미발견: " + trackId + " → 일반 트랙");
+        return null;
+    }
+
+    /// <summary>
+    /// 단일 트랙 N회 시뮬을 동기 실행하고 요약 문자열 반환. trackId 지정 시 해당 트랙(CSV 빌드), null이면 일반.
     /// EditorApplication.update 의존이 없어 백그라운드에서도 즉시 완료. Play 모드 불필요.
     /// </summary>
-    public static string RunHeadless(int simCount, int laps, int racers, bool collision, int seed)
+    public static string RunHeadless(int simCount, int laps, int racers, bool collision, int seed, string trackId = null)
     {
         var w = CreateInstance<RaceBacktestWindow>();
         try
@@ -627,7 +649,7 @@ public class RaceBacktestWindow : EditorWindow
             w.simLaps       = Mathf.Clamp(laps, 1, 10);
             w.simRacers     = Mathf.Clamp(racers, 2, 12);
             w.simCollision  = collision;
-            w.selectedTrack = null;             // 일반 트랙
+            w.selectedTrack = BuildTrackFromCsv(trackId);   // 지정 시 CSV 빌드, null이면 일반
             w.runAllTracks  = false;
             w.statSweepMode = false;
             w.headlessMode  = true;
@@ -705,7 +727,7 @@ public class RaceBacktestWindow : EditorWindow
     /// 여러 랩 거리(예: 2·3·4·5·6)를 각 perLapRaces회 시뮬 → charId 기준 병합 → 통합 리포트 저장.
     /// 랩 간 동일 seed(페어드)로 race별 동일 출전 필드 → 거리 변수만 격리, 매트릭스 셀 누락 0.
     /// </summary>
-    public static string RunLapSweepHeadless(int perLapRaces, int[] laps, int racers, int seed)
+    public static string RunLapSweepHeadless(int perLapRaces, int[] laps, int racers, int seed, string trackId = null)
     {
         if (laps == null || laps.Length == 0) return "❌ laps 비어있음";
         var w = CreateInstance<RaceBacktestWindow>();
@@ -714,7 +736,7 @@ public class RaceBacktestWindow : EditorWindow
             w.simCount      = Mathf.Max(1, perLapRaces);
             w.simRacers     = Mathf.Clamp(racers, 2, 12);
             w.simCollision  = true;
-            w.selectedTrack = null;
+            w.selectedTrack = BuildTrackFromCsv(trackId);
             w.runAllTracks  = false;
             w.statSweepMode = false;
             w.headlessMode  = true;
@@ -916,7 +938,7 @@ public class RaceBacktestWindow : EditorWindow
     /// 파일 수정 없이 static 오버라이드로 조합 주입. 동일 seed로 조합 간 공정 비교(RNG 시퀀스 동일).
     /// </summary>
     public static string RunClutchTuningSweep(int perComboRaces, int[] laps, int racers, int seed,
-                                              float[] chances, float[] bonuses, string targetId)
+                                              float[] chances, float[] bonuses, string targetId, string trackId = null)
     {
         if (laps == null || laps.Length == 0 || chances == null || bonuses == null) return "❌ 인자 비어있음";
         var w = CreateInstance<RaceBacktestWindow>();
@@ -926,7 +948,7 @@ public class RaceBacktestWindow : EditorWindow
         {
             w.simRacers     = Mathf.Clamp(racers, 2, 12);
             w.simCollision  = true;
-            w.selectedTrack = null; w.runAllTracks = false; w.statSweepMode = false;
+            w.selectedTrack = BuildTrackFromCsv(trackId); w.runAllTracks = false; w.statSweepMode = false;
             w.headlessMode  = true;
             w.gameSettings  = Resources.Load<GameSettings>("GameSettings");
             if (w.gameSettings == null) return "❌ GameSettings 로드 실패";
@@ -1756,6 +1778,11 @@ public class RaceBacktestWindow : EditorWindow
         float baseSpeed = gs.globalSpeedMultiplier;
         float vmax = baseSpeed * (1f + (dv4.v4Speed * HiddenStatWeights.Speed) * gs4.v4_speedStatFactor)
                               * (1f + (dv4.v4Power * HiddenStatWeights.Power) * gs4.v4_powerSpeedFactor);
+
+        // ── 트랙 스탯 상성 (CalcSpeedV4 미러: 동일 공유 헬퍼 호출 → 드리프트 불가) ──
+        TrackData track = selectedTrack;
+        if (gs4.v4_enableTrackStatBonus && track != null)
+            vmax *= TrackStatAffinity.ComputeVmaxMultiplier(dv4, track.statAffinities);
 
         // HP 임계값 기반 속도 배율
         float staminaRatio = r.v4MaxStamina > 0 ? r.v4Stamina / r.v4MaxStamina : 0f;
