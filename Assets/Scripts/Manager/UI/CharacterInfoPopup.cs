@@ -232,13 +232,16 @@ public class CharacterInfoPopup : MonoBehaviour
         // 폰트 일괄 적용 (모든 Text 컴포넌트에 GameSettings 한글 픽셀폰트)
         ApplyFontAll();
 
-        // 타입 배지 BestFit: 긴 타입명(de "Nachzügler", es/br "Perseguidor") 오버플로 방지
+        // 타입 배지 shrink-to-fit: 긴 타입명(de "Nachzügler", es/br "Perseguidor") 오버플로 방지.
+        // 프리팹의 Text가 stretch 앵커인데 anchoredPosition.x=+30이라 박스 자체가 칩 배경보다
+        // 30px 우측으로 삐져 있었음(S0 실측) — Best Fit이 걸려 있어도 박스 기준이 칩 밖이라 무의미.
+        // 좌측 시작점(+30 여백)은 보존하고 우측 끝을 칩 프레임 안쪽으로 정합한 뒤 축소를 건다.
         if (charTypeLabel != null)
         {
-            charTypeLabel.resizeTextForBestFit = true;
-            charTypeLabel.resizeTextMinSize    = 10;
-            charTypeLabel.resizeTextMaxSize    = 26;
-            charTypeLabel.horizontalOverflow   = HorizontalWrapMode.Wrap;
+            RectTransform crt = charTypeLabel.rectTransform;
+            crt.offsetMin = new Vector2(30f, 0f);   // 기존 좌측 여백 보존
+            crt.offsetMax = new Vector2(-6f, 0f);   // 우측을 칩 안쪽으로 (기존 +30 삐짐 제거)
+            UITextFit.Shrink(charTypeLabel, 10, 26);
         }
 
         isInitialized = true;
@@ -335,6 +338,8 @@ public class CharacterInfoPopup : MonoBehaviour
             }
 
             skillDescLabel.text = sb.ToString();
+            // 긴 언어/CJK(tw) 세로 삐짐 방지 — <size=30/26> 태그 비율 축소(스타일 유지), 넘칠 때만 발동
+            UITextFit.FitRichText(skillDescLabel);
         }
 
         // 4-b) 스킬 아이콘 — SkillRegistry 경유 (액티브 우선, 없으면 패시브)
@@ -501,6 +506,10 @@ public class CharacterInfoPopup : MonoBehaviour
         // 차트가 동적 생성한 Text에도 즉시 폰트 적용 (애니메이션 시작 전)
         ApplyFontAll();
 
+        // 스킬 rich text 최종 fit 재검증 — 첫 오픈 시 Show() 시점엔 스트레치 rect가 미확정일 수
+        // 있어(1프레임 대기 후 확정) 여기서 한 번 더. 이미 들어가면 무동작(멱등).
+        UITextFit.FitRichText(skillDescLabel);
+
         // ── 슬라이드인 + 레이더차트 스탯 선 애니메이션 (동시 진행) ──
         RectTransform rt = GetComponent<RectTransform>();
         Vector2 startPos = targetPosition + new Vector2(0, -200);
@@ -613,6 +622,32 @@ public class CharacterInfoPopup : MonoBehaviour
         radarChart.RefreshChart();
     }
 
+    /// <summary>
+    /// 레이더 축라벨 가용 폭(px) 계산 — 차트 중심에서 클리핑 마스크(Layout2_Right, RectMask2D)
+    /// 좌/우 가장자리까지의 여유 중 작은 쪽에서 반지름·패딩을 뺀 값.
+    /// ★ ×2(반폭 확장 가정) 금지: XCharts AdjustCircleLabelPos가 측면 라벨을 한쪽으로 전폭
+    /// 확장시키는 케이스가 있어(S4 실측: es 'Velocidad' 우측 잘림) 전폭 확장을 전제로 보수 계산.
+    /// 기하 이상 시 0 → FitFontSize가 원크기 유지.
+    /// </summary>
+    private float ComputeRadarLabelBudget(RadarCoord radar)
+    {
+        if (radarChartArea == null) return 0f;
+        RectTransform chartRt = radarChartArea.GetComponent<RectTransform>();
+        RectTransform maskRt  = chartRt != null ? chartRt.parent as RectTransform : null;
+        if (chartRt == null || maskRt == null) return 0f;
+
+        // 차트 중심(RadarCoord center 0.5,0.5 = rect 중앙)을 마스크 로컬 좌표로 변환
+        Vector3 centerWorld  = chartRt.TransformPoint(chartRt.rect.center);
+        Vector2 centerInMask = maskRt.InverseTransformPoint(centerWorld);
+
+        float radius = radar != null && radar.radius > 0f ? radar.radius
+                     : Mathf.Clamp(Mathf.Min(chartRt.rect.width, chartRt.rect.height) * 0.42f, 25f, 110f);
+
+        Rect mr = maskRt.rect;
+        float side = Mathf.Min(centerInMask.x - mr.xMin, mr.xMax - centerInMask.x) - radius - 6f;
+        return Mathf.Max(0f, side);
+    }
+
     private void UpdateRadarChart(CharacterData data, TrackInfo trackInfo = null)
     {
         if (radarChart == null || data == null)
@@ -687,16 +722,22 @@ public class CharacterInfoPopup : MonoBehaviour
                 }
             }
 
+            var indicatorLabels = new List<string>(statKeys.Length);
             for (int i = 0; i < statKeys.Length; i++)
             {
                 string label = Loc.Get(statKeys[i]);
                 if (highlights[i])
                     label = "<color=#FFD700>" + label + "★</color>";
+                indicatorLabels.Add(label);
                 radar.AddIndicator(label, 0, 20);
             }
 
             // RemoveData() 이후 axisName 스타일 재적용 (초기화 방지)
-            radar.axisName.labelStyle.textStyle.fontSize = 28;
+            // 라벨 크기: XCharts가 라벨 sizeDelta를 preferredWidth로 강제 재설정해(AdjustCircleLabelPos)
+            // 박스 제약/Best Fit이 불가능(3자 검토 P0) → 유일한 안전 레버인 textStyle.fontSize를
+            // 언어별 실측폭 기반으로 사전 축소. 마스크(Layout2_Right) 여유에 들어가는 언어는 28 유지(회귀 0).
+            radar.axisName.labelStyle.textStyle.fontSize =
+                UITextFit.FitFontSize(chartFont, indicatorLabels, 28, ComputeRadarLabelBudget(radar), 16);
             radar.axisName.labelStyle.textStyle.color = Color.black;
         }
 
@@ -802,13 +843,22 @@ public class CharacterInfoPopup : MonoBehaviour
             recentRecordHeader.text = Loc.Get("str.ui.char.recent_record", charName);
         }
 
-        // 거리별 라벨
+        // 거리별 라벨 — 언어별 길이 대응 shrink-to-fit (박스=행폭 22% stretch, 넘칠 때만 축소)
         if (shortDistLabel != null)
+        {
             shortDistLabel.text = Loc.Get("str.ui.track.short");
+            UITextFit.Shrink(shortDistLabel, 14);
+        }
         if (midDistLabel != null)
+        {
             midDistLabel.text = Loc.Get("str.ui.track.mid");
+            UITextFit.Shrink(midDistLabel, 14);
+        }
         if (longDistLabel != null)
+        {
             longDistLabel.text = Loc.Get("str.ui.track.long");
+            UITextFit.Shrink(longDistLabel, 14);
+        }
 
         // 거리별 독립 리스트에서 최대 MAX_DIST_DISPLAY개 추출
         List<int> shortRanks = Slice(record != null ? record.recentShortRanks : null);

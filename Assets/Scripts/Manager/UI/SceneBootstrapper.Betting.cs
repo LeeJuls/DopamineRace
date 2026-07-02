@@ -63,6 +63,7 @@ public partial class SceneBootstrapper
                 pointsLabelText   = FindText(oddsArea, "PointsLabel");
                 pointsFormulaText = FindText(oddsArea, "PointsFormula");
                 myPointLabel      = FindText(oddsArea, "MyPointLabel");
+                ApplyOddsAreaTextFit();
             }
             // OddsArea 밖으로 이동한 경우 BetDescText 하위에서 재탐색
             if (oddsText == null)
@@ -208,6 +209,7 @@ public partial class SceneBootstrapper
             if (tabText != null)
             {
                 tabText.text = BettingCalculator.GetTypeName(types[i]);
+                UITextFit.Shrink(tabText);   // 긴 언어(es "Colocado" 등) 잘림 방지 — max=프리팹 크기, 넘칠 때만 축소
                 betTypeBtnTexts[i]  = tabText;
                 tabTextBaseColors[i] = tabText.color;      // Inspector 값 캐싱
                 tabTextBaseStyles[i] = tabText.fontStyle;  // Inspector 값 캐싱
@@ -220,6 +222,9 @@ public partial class SceneBootstrapper
         }
 
         UpdateTabVisuals(0); // 기본: 단승(Win)
+
+        // 배당라벨 클리어존 재계산 — Cache 시점 레이아웃 미확정 대비 안전망(멱등, 같은 값으로 수렴)
+        ApplyOddsAreaTextFit();
     }
 
     // ══════════════════════════════════════
@@ -631,6 +636,50 @@ public partial class SceneBootstrapper
     // ══════════════════════════════════════
     //  배당률/포인트 실시간 갱신
     // ══════════════════════════════════════
+
+    /// <summary>
+    /// OddsArea 배당 라벨 다국어 대응 (S0 실측 기반):
+    /// PointsLabel/Formula가 point앵커+고정폭(280/295px)+H:Overflow라 es 장문
+    /// ("Ganador Piedra Dopamina" ≈530px@38)이 좌측 배팅타입 버튼까지 침범 →
+    /// ① X축을 OddsArea 폭 stretch로 전환(우측 정렬·Y밴드 유지) ② shrink-to-fit.
+    /// 프리팹 무변경(런타임 전환) — 롤백은 이 호출 제거. 갱신부(UpdateOddsDisplay)는
+    /// .text만 세팅해 rect를 되돌리지 않음(3자 검토 확인).
+    /// </summary>
+    private void ApplyOddsAreaTextFit()
+    {
+        // ⚠ BetTypeTabs가 aPos.x=+175 시프트로 OddsArea 좌측 ~92px과 원래 겹침(S4 실측) —
+        // 단순 전폭 stretch면 es 장문 글리프가 탭(Wide)을 침범. 탭 우측 끝을 실측해 클리어존 inset.
+        // 빌드 직후엔 레이아웃 미확정으로 inset이 과소 계산됨(S4 실측 46.8 vs 확정 104.4) → 강제 확정.
+        Canvas.ForceUpdateCanvases();
+        float leftInset = 8f;
+        RectTransform oddsRt = pointsLabelText != null ? pointsLabelText.rectTransform.parent as RectTransform : null;
+        RectTransform tabsRt = oddsRt != null && oddsRt.parent != null ? oddsRt.parent.Find("BetTypeTabs") as RectTransform : null;
+        if (tabsRt != null && oddsRt != null)
+        {
+            var c = new Vector3[4];
+            tabsRt.GetWorldCorners(c);                                  // c[2] = 우상단
+            float tabsRightLocal = oddsRt.InverseTransformPoint(c[2]).x - oddsRt.rect.xMin;
+            leftInset = Mathf.Max(leftInset, tabsRightLocal + 12f);     // 탭 우측 + 여백
+        }
+        ConvertToHorizontalStretch(pointsLabelText,   leftInset, 8f);
+        ConvertToHorizontalStretch(pointsFormulaText, leftInset, 8f);
+        UITextFit.Shrink(pointsLabelText);
+        UITextFit.Shrink(pointsFormulaText);
+        // myPointLabel은 OddsArea 내부에서만 좌측 확장(탭 미침범, S0 실측)이라 무변경
+    }
+
+    /// <summary>point앵커 Text의 X축만 부모 폭 stretch로 전환 (Y 앵커·높이는 유지)</summary>
+    private static void ConvertToHorizontalStretch(Text t, float leftPad, float rightPad)
+    {
+        if (t == null) return;
+        RectTransform rt = t.rectTransform;
+        rt.anchorMin        = new Vector2(0f, rt.anchorMin.y);
+        rt.anchorMax        = new Vector2(1f, rt.anchorMax.y);
+        rt.offsetMin        = new Vector2(leftPad,   rt.offsetMin.y);
+        rt.offsetMax        = new Vector2(-rightPad, rt.offsetMax.y);
+        // Y는 유지: offsetMin/Max.y가 기존 sizeDelta.y·aPos.y에서 유도된 값 그대로
+    }
+
     private void UpdateOddsDisplay()
     {
         var bet = GameManager.Instance?.CurrentBet;
