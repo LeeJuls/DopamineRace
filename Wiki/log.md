@@ -6,6 +6,9 @@
 
 ## 2026-07-02
 
+- **[INGEST]** UI 다국어 텍스트 자동축소(UITextFit) → `시스템/다국어_시스템.md` "텍스트 자동 축소 — UITextFit" 섹션 최신화(적용처에 트랙패널·배팅리스트 추가, 함정 메모 2건 추가: ⑤ 인접 고정좌표 라벨은 자기 Shrink만으론 충돌 방지 불가 ⑥ 서수기호 º는 폰트버그 아님·오독위험 없으면 원문자 유지). `아키텍처/주요_클래스.md`에 `UITextFit` 섹션 신규(API·적용처·수정규칙). es/tw 오버플로 신고 3건(타입칩·스킬설명 세로잘림·배당라벨 겹침) 해소 + 후속 확장(트랙패널 5라벨, 배팅리스트 전적·2위횟수 라벨충돌 — 8자↑ 전적이 이웃라벨 침범하는 언어무관 레이아웃 버그). ui-designer·client·qa 3자 플랜 검토로 레이더(XCharts sizeDelta 강제재설정)·배당라벨(point앵커 겹침) 설계 재검토 반영 ← 대화 세션(커밋 95bc837·2709b42·5e4ca5e, 미푸시)
+- **[UPDATE]** `히스토리/개발_타임라인.md` — 2026-07-02 UITextFit 마일스톤 추가
+- **[UPDATE]** `Index.md` — 다국어 시스템 설명에 UITextFit 언급 추가
 - **[INGEST]** 트랙 스탯 상성 데이터 주도 V4 실연결 → 신규 `시스템/트랙_시스템.md` 생성(5트랙 개요·**V4 레버 Live/Dead 현황표**·stat_affinity 콜론 인코딩 스키마·공유 헬퍼 미러·feature flag·확장 T1/T2·밸런스). 사막=`Power:0.08`·고원=`Intelligence:0.10`. `TrackStatAffinity`(V4StatType enum+ParseList+ComputeVmaxMultiplier 공유헬퍼)·`GameSettingsV4.v4_enableTrackStatBonus` 플래그·`TrackStatAffinityValidator`(오타 검출)·헤드리스 `RunHeadless(...,trackId)` 하네스·백테스트 CSV소스화 신설. 기존 트랙 상성이 V1-V3 스탯 기준이라 V4서 死였음을 규명. leader·balance·client·feature-director·qa 3라운드 검토 ← 대화 세션(커밋 전)
 - **[UPDATE]** `Index.md` — 게임 시스템에 트랙 시스템 링크 추가
 - **[UPDATE]** `히스토리/개발_타임라인.md` — 2026-07-02 트랙 스탯 상성 마일스톤 추가
