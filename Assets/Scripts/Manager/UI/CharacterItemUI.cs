@@ -23,6 +23,7 @@ public class CharacterItemUI : MonoBehaviour
     private Color oddsLabelBaseColor;  // Inspector 색상 캐싱
     private Text betOrderLabel;
     private Color betOrderLabelBaseColor; // Inspector 색상 캐싱
+    private float secondLabelDesignX;     // SecondLabel 원본 anchoredPosition.x (충돌 시 밀어낸 후 복원 기준)
 
     // ── 외부에서 사용하는 데이터 ──
     public CharacterData CharData { get; private set; }
@@ -51,6 +52,9 @@ public class CharacterItemUI : MonoBehaviour
         oddsLabelBaseColor    = oddsLabel     != null ? oddsLabel.color     : Color.white;
         betOrderLabel   = FindText("BetOrderLabel/Text");
         betOrderLabelBaseColor = betOrderLabel != null ? betOrderLabel.color : Color.white;
+
+        if (secondLabel != null)
+            secondLabelDesignX = secondLabel.rectTransform.anchoredPosition.x;
     }
 
     /// <summary>
@@ -102,6 +106,10 @@ public class CharacterItemUI : MonoBehaviour
             nameLabel.text = data.DisplayName;
 
         // 8-5: 전적 (N전 M승)
+        // ⚠ 고정 120px 박스 + 기존 Overflow라 총 출전수가 커지면(예: "1163C 1V")
+        //   폭을 넘어 우측 SecondLabel(x=460) 영역까지 침범 → 두 라벨이 붙어 보이고
+        //   es/br처럼 "2. {0}x" 앞머리가 인접해 소수점처럼 오독되는 원인이 됨(실측).
+        //   Shrink로 박스 안에 수납 — 넘칠 때만 축소, 대부분 원크기 유지(회귀 0).
         if (recordLabel != null)
         {
             if (record != null && record.TotalRaces > 0)
@@ -114,6 +122,7 @@ public class CharacterItemUI : MonoBehaviour
             {
                 recordLabel.text = Loc.Get("str.ui.char.record", 0, 0);
             }
+            UITextFit.Shrink(recordLabel, 10);
         }
 
         // 8-6: 2착 횟수
@@ -128,6 +137,24 @@ public class CharacterItemUI : MonoBehaviour
             {
                 secondLabel.text = Loc.Get("str.ui.char.second", 0);
             }
+            UITextFit.Shrink(secondLabel, 10);
+        }
+
+        // ⚠ RecordLabel·SecondLabel은 고정 좌표라 총 출전수 자릿수가 늘면(예: "1048C 1V")
+        //   실측 폭이 SecondLabel 시작 지점을 침범해 두 라벨이 붙어 보임(1~2자리 초과 시 재현).
+        //   레이아웃그룹 없이 point-anchor라 Shrink(자기 박스 내 축소)만으론 해결 불가 —
+        //   RecordLabel 실측 폭 기준으로 필요할 때만 SecondLabel을 오른쪽으로 밀어냄
+        //   (design 위치보다 왼쪽으로는 안 당김 → 짧은 전적은 기존 정렬된 모양 그대로 유지, 회귀 0).
+        if (recordLabel != null && secondLabel != null)
+        {
+            RectTransform rrt = recordLabel.rectTransform;
+            RectTransform srt = secondLabel.rectTransform;
+            float textEnd  = (rrt.anchoredPosition.x - rrt.sizeDelta.x * 0.5f) + recordLabel.preferredWidth;
+            const float minPadding = 8f;
+            float minSecStartX = textEnd + minPadding;
+            float designSecStartX = secondLabelDesignX - srt.sizeDelta.x * 0.5f;
+            float newSecX = Mathf.Max(secondLabelDesignX, secondLabelDesignX + (minSecStartX - designSecStartX));
+            srt.anchoredPosition = new Vector2(newSecX, srt.anchoredPosition.y);
         }
 
         // 배당률 배지는 RefreshOddsBadge()로 분리 — 선택 연동 조합 미리보기.
