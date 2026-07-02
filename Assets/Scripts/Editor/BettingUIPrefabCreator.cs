@@ -406,17 +406,23 @@ public static class BettingUIPrefabCreator
             0.03f, 0.82f, 0.03f, 0.82f, Vector2.zero, new Vector2(120, 30),
             20, TextAnchor.MiddleLeft, new Color(1f, 0.4f, 0.4f));
 
-        // CloseBtn (우상단 X — 차트보다 위에 렌더링되도록 마지막 생성)
+        // CloseBtn (우상단 X 아이콘 — Btn_Close_01~04 표준 스프라이트, 자식 없음. 차트보다 위에 렌더링되도록 마지막 생성)
         GameObject popupCloseBtn = MkChild(layout1, "CloseBtn",
-            0.97f, 0.88f, 0.97f, 0.88f, Vector2.zero, new Vector2(30, 30));
+            0.97f, 0.88f, 0.97f, 0.88f, Vector2.zero, new Vector2(63.1555f, 63.1555f));
         Image closeBg = popupCloseBtn.AddComponent<Image>();
-        closeBg.color = new Color(0.5f, 0.3f, 0.3f, 0.8f);
+        closeBg.sprite = Resources.Load<Sprite>("UI/Btn_Close_01");
+        closeBg.color = Color.white;
         closeBg.raycastTarget = true;
         Button closeBtnComp = popupCloseBtn.AddComponent<Button>();
         closeBtnComp.targetGraphic = closeBg;
-        MkTextObj(popupCloseBtn, "Text", font,
-            0.5f, 0.5f, 0.5f, 0.5f, Vector2.zero, new Vector2(30, 30),
-            18, TextAnchor.MiddleCenter, Color.white);
+        closeBtnComp.transition = Selectable.Transition.SpriteSwap;
+        closeBtnComp.spriteState = new SpriteState
+        {
+            highlightedSprite = Resources.Load<Sprite>("UI/Btn_Close_02"),
+            pressedSprite = Resources.Load<Sprite>("UI/Btn_Close_03"),
+            selectedSprite = Resources.Load<Sprite>("UI/Btn_Close_02"),
+            disabledSprite = Resources.Load<Sprite>("UI/Btn_Close_04"),
+        };
 
         // ── RecentRecordHeader ("최근 경기기록", 노란색) ──
         MkTextObj(layout1, "RecentRecordHeader", font,

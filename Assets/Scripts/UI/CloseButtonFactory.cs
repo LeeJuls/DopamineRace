@@ -15,7 +15,7 @@ using UnityEngine.UI;
 public static class CloseButtonFactory
 {
     private const string SPRITE_PATH = "UI/Btn_Close"; // _01~_04 접미사
-    private static readonly Vector2 DEFAULT_SIZE = new Vector2(53f, 39f); // 원본 픽셀 크기
+    private static readonly Vector2 DEFAULT_SIZE = new Vector2(63.1555f, 63.1555f); // CharacterInfoPopup CloseBtn 실측값 (정사각)
     private static readonly Vector2 DEFAULT_ANCHORED_POS = new Vector2(-30f, -25f);
 
     /// <summary>

@@ -98,14 +98,22 @@ public static class OptionPanelPrefabCreator
         GameObject quitBtn = MkButton(panelBg, "QuitButton", "QuitLabel", "게임 종료", font,
             new Vector2(0, -400), default, dangerRed);
 
-        // CloseButton (우상단 X)
+        // CloseButton (우상단 X 아이콘 — Btn_Close_01~04 표준 스프라이트, 자식 없음. CharacterInfoPopup CloseBtn과 동일 규약)
         GameObject closeBtn = MkChild(panelBg, "CloseButton",
-            1f, 1f, 1f, 1f, new Vector2(-30, -30), new Vector2(45, 45));
+            1f, 1f, 1f, 1f, new Vector2(-30, -30), new Vector2(63.1555f, 63.1555f));
         Image closeBg = closeBtn.AddComponent<Image>();
-        closeBg.color = new Color(0.6f, 0.1f, 0.1f, 0.9f);
+        closeBg.sprite = Resources.Load<Sprite>("UI/Btn_Close_01");
+        closeBg.color = Color.white;
         Button closeButtonComp = closeBtn.AddComponent<Button>();
         closeButtonComp.targetGraphic = closeBg;
-        MkTextInObj(closeBtn, "X", font, 20, TextAnchor.MiddleCenter, Color.white);
+        closeButtonComp.transition = Selectable.Transition.SpriteSwap;
+        closeButtonComp.spriteState = new SpriteState
+        {
+            highlightedSprite = Resources.Load<Sprite>("UI/Btn_Close_02"),
+            pressedSprite = Resources.Load<Sprite>("UI/Btn_Close_03"),
+            selectedSprite = Resources.Load<Sprite>("UI/Btn_Close_02"),
+            disabledSprite = Resources.Load<Sprite>("UI/Btn_Close_04"),
+        };
 
         // ── ConfirmPopup (초기 비활성) ──
         GameObject confirmRoot = new GameObject("ConfirmPopup");
