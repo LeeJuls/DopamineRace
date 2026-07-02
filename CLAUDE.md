@@ -24,6 +24,7 @@
 - **Sonnet**: 승인된 구현·에디터 툴 코드·커밋/푸시(커밋·push는 항상 Sonnet)
 - **Haiku**: 탐사·검색·파일 읽기·결정된 텍스트 단순 정리 (품질 민감한 다국어 정리는 Sonnet)
 - 기준: **틀리면 재작업 비용 큼**(판단·설계·밸런스) → Fable / **검증 가능·기계적** → Sonnet·Haiku / 애매하면 메인(Opus) 직접
+- 예시: **선례·가이드 있는 단순 기능 수정**(되돌리기 쉽고 결과 검증가능; 예: 재인코딩發 색경고 재수정) → **Opus 판단 + Sonnet/Haiku 실행, Fable 아님**
 
 ## 다국어
 - `Resources/Data/StringTable.csv` — 8개 언어 (ko·en·jp·cn·de·es·br·tw) — cn=간체, tw=번체(SPEC-048)
