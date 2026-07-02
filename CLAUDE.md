@@ -17,6 +17,14 @@
 ## 에이전트
 `.claude/agents/` — leader(PM) · balance(수치) · client(Unity) · qa(검증) · design(UX/UI) · marketing(Steam) · security(보안) · build(빌드) · director(오케스트레이션) · setting(세계관) · scenario(시나리오)
 
+## 모델 배분 (에이전트 위임)
+- **메인 루프는 한 모델 고정**(기본 Opus), 작업별로 서브에이전트를 해당 티어로 스폰 — 메인 모델 스위칭은 프롬프트 캐시 무효화라 지양
+- **Fable**: 깊은 판단·게임기획·밸런스 설계·플랜 적대적 검증·세계관/시나리오 창작. **Fable 막히면(불가/거부/미제공) → Opus 폴백**
+- **Opus**: 오케스트레이션(메인 루프)·난도 높은 구현·미러 정합 판단
+- **Sonnet**: 승인된 구현·에디터 툴 코드·커밋/푸시(커밋·push는 항상 Sonnet)
+- **Haiku**: 탐사·검색·파일 읽기·결정된 텍스트 단순 정리 (품질 민감한 다국어 정리는 Sonnet)
+- 기준: **틀리면 재작업 비용 큼**(판단·설계·밸런스) → Fable / **검증 가능·기계적** → Sonnet·Haiku / 애매하면 메인(Opus) 직접
+
 ## 다국어
 - `Resources/Data/StringTable.csv` — 8개 언어 (ko·en·jp·cn·de·es·br·tw) — cn=간체, tw=번체(SPEC-048)
 - **모든 문자열 하드코딩 절대 금지** — 사용자에게 노출되는 문자열은 예외 없이 StringTable.csv에 키 발급 후 `Loc.Get("str.xxx")` 사용
