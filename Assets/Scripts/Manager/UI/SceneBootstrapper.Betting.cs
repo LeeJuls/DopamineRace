@@ -358,15 +358,27 @@ public partial class SceneBootstrapper
         TrackInfo trackInfo = trackDB != null ? trackDB.CurrentTrackInfo : null;
 
         if (trackRoundLabel != null)
+        {
             trackRoundLabel.text = Loc.Get("str.ui.track.total_round", gs.TotalRounds);
+            UITextFit.Shrink(trackRoundLabel);
+        }
 
         if (trackNameLabel != null)
+        {
             trackNameLabel.text = trackInfo != null ? trackInfo.DisplayName : "???";
+            // ⚠ 프리팹 인스펙터에서 BestFit(max44)이 켜져 있으면 H=Overflow라 폭 제약 없이
+            //   세로 여유(70px)에 맞춰 44px까지 "확대"되어 ≫ 버튼 밑까지 침범(실측) —
+            //   Shrink가 max를 현재 fontSize(32)로 캡해 확대 차단 + 넘칠 때만 축소.
+            UITextFit.Shrink(trackNameLabel);
+        }
 
         int laps = gs.GetLapsForRound(gm.CurrentRound);
         string distKey = gs.GetDistanceKey(laps);
         if (distanceLabel != null)
+        {
             distanceLabel.text = Loc.Get("str.ui.track.distance", Loc.Get(distKey), laps);
+            UITextFit.Shrink(distanceLabel);
+        }
 
         // 경기장 상태 : {트랙타입} 형식으로 표시
         if (trackTypeLabel != null)
@@ -375,11 +387,15 @@ public partial class SceneBootstrapper
                 ? Loc.Get(TrackTypeUtil.GetTrackTypeKey(trackInfo.trackType))
                 : Loc.Get("str.ui.track.type_base");
             trackTypeLabel.text = Loc.Get("str.ui.track.type_label", typeStr);
+            UITextFit.Shrink(trackTypeLabel);
         }
 
-        // Phase 2: 트랙 설명 표시
+        // Phase 2: 트랙 설명 표시 (박스 315×176 Wrap — 긴 언어는 세로도 제약해 축소)
         if (trackDescLabel != null)
+        {
             trackDescLabel.text = trackInfo != null ? trackInfo.DisplayDesc : "";
+            UITextFit.Shrink(trackDescLabel);
+        }
     }
 
     /// <summary>
